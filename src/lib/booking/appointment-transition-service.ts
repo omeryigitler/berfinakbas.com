@@ -6,7 +6,7 @@ import {
 } from "@/domain/booking/appointment-status";
 import { getDatabase } from "@/lib/db";
 
-const databaseAppointmentStatuses = [
+export const databaseAppointmentStatuses = [
   "REQUESTED",
   "PENDING_REVIEW",
   "CONFIRMED",

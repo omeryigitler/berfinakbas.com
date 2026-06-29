@@ -4,7 +4,7 @@ const { getDatabaseMock } = vi.hoisted(() => ({ getDatabaseMock: vi.fn() }));
 
 vi.mock("@/lib/db", () => ({ getDatabase: getDatabaseMock }));
 
-import { canManageAppointmentApi } from "./appointment-api-access";
+import { canManageAppointmentApi, getAppointmentAccessWhere } from "./appointment-api-access";
 
 const appointmentId = "22222222-2222-4222-8222-222222222222";
 const userId = "11111111-1111-4111-8111-111111111111";
@@ -60,5 +60,24 @@ describe("canManageAppointmentApi", () => {
     await expect(
       canManageAppointmentApi({ appointmentId, roles: ["THERAPIST"], userId }),
     ).resolves.toBe(false);
+  });
+});
+
+describe("getAppointmentAccessWhere", () => {
+  it("returns no scope for a role without the requested permission", () => {
+    expect(getAppointmentAccessWhere({ mode: "read", roles: ["FINANCE"], userId })).toBeNull();
+  });
+
+  it.each([["SUPER_ADMIN"], ["ASSISTANT"]] as const)(
+    "returns full scope for the current %s appointment role",
+    (role) => {
+      expect(getAppointmentAccessWhere({ mode: "read", roles: [role], userId })).toEqual({});
+    },
+  );
+
+  it("limits therapists to their own practitioner record", () => {
+    expect(getAppointmentAccessWhere({ mode: "read", roles: ["THERAPIST"], userId })).toEqual({
+      practitioner: { is: { userId } },
+    });
   });
 });
