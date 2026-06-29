@@ -15,6 +15,7 @@ jobs:
     timeout-minutes: 15
     env:
       APP_URL: http://localhost:3000
+      AUTH_SECRET: ci-only-auth-secret-not-for-production-use
       BUSINESS_TIME_ZONE: Europe/Istanbul
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas?schema=public
       NEXT_TELEMETRY_DISABLED: "1"
