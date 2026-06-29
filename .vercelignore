@@ -1,0 +1,14 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+
+# Local/build artifacts
+.git/
+.next/
+node_modules/
+src/generated/prisma/
+coverage/
+work/
+outputs/
+*.tsbuildinfo
