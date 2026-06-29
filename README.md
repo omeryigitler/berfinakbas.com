@@ -4,7 +4,7 @@ Türkiye pazarı için tamamen Türkçe çalışan bir Dil ve Konuşma Terapisti
 
 ## Durum
 
-Faz 0 kapsamı ve Faz 1 teknik temel tamamlandı. Proje **Faz 2 — kimlik, yetki ve veri çekirdeği** aşamasındadır. Kapalı Google OAuth iskeleti, sunucu tarafı rol/izin matrisi, allowlist ile ilk girişte audit kayıtlı yönetici rolü ataması, hizmet doğrulaması, danışan/veli ve consent modelleri ile tasarım yönüne uyarlanmış public ana sayfa hazırdır. Gerçek OAuth bilgileri ve PostgreSQL migration uygulaması henüz yapılmamıştır.
+Faz 0 kapsamı ve Faz 1 teknik temel tamamlandı. Faz 2’nin kimlik, yetki ve veri çekirdeği ile gerçek PostgreSQL migration/erişim testleri hazırdır; proje **Faz 3 — randevu motoru** çalışmalarına geçmiştir. Kapalı Google OAuth iskeleti, sunucu tarafı rol/izin matrisi, allowlist ile audit kayıtlı ilk yönetici ataması, hizmet doğrulaması, danışan/veli ve consent modelleri ile tasarım yönüne uyarlanmış public yüzeyler hazırdır. Gerçek Google OAuth istemcisi ve MFA politikası canlıya çıkış öncesi dış yapılandırma kapısı olarak sürmektedir.
 
 ## Ürün özeti
 
@@ -75,7 +75,7 @@ Kalite komutları:
 
 ## Sonraki iş
 
-Faz 2’yi tamamlamak için gerçek PostgreSQL üzerinde migration/integration testleri çalıştırılacak, Google OAuth uygulaması tanımlanacak ve ilk yönetici rolü doğrulanacaktır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
+Faz 3’te randevu durum geçişlerinin transaction/audit temeli tamamlanmıştır. Sıradaki çekirdek iş, açık consent ve çocuk/veli kararları kapatıldıktan sonra hold’dan güvenli randevu talebi üretimi ve admin onay API’sidir. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
 
 ## Hukuki not
 

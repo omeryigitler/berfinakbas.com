@@ -38,8 +38,8 @@ Mevcut durum:
 - Ortam değişkeni doğrulaması, lint, format, typecheck ve test komutları eklendi.
 - İlk randevu süre/buffer ve durum geçiş testleri eklendi.
 - Production build doğrulandı.
-- CI workflow hazırlandı; gerçek Git deposunda çalıştırılması bekleniyor.
-- Gerçek PostgreSQL üzerinde migration ve integration test henüz çalıştırılmadı.
+- CI workflow gerçek GitHub deposunda çalışmakta ve `main` kalite kapısı geçmektedir.
+- Gerçek PostgreSQL 17 üzerinde migration ve integration test paketi çalışmaktadır.
 
 ## Faz 2 — kimlik, yetki ve veri çekirdeği
 
@@ -62,8 +62,9 @@ Mevcut durum:
 - Hizmet ayarı doğrulaması, değişmez snapshot üretimi ve audit kayıtlı admin API temeli eklendi.
 - Sentetik rol ve taslak hizmet seed’i hazırlandı.
 - ChatGPT proje klasöründeki tasarım yönü incelendi ve public ana sayfaya uygulandı.
-- 59 test, lint, typecheck, format kontrolü ve production build başarılıdır.
-- Gerçek PostgreSQL migration/integration testi ve gerçek Google OAuth bilgileri beklenmektedir.
+- Yetkili/izinsiz route testleri, lint, typecheck, format kontrolü ve production build başarılıdır.
+- Dört migration gerçek PostgreSQL 17 üzerinde uygulanmış; eşzamanlılık ve transaction integration testleri geçmiştir.
+- Gerçek Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici rolü doğrulaması yayın kapısı olarak beklenmektedir.
 
 ## Faz 3 — randevu motoru
 
@@ -85,7 +86,8 @@ Mevcut durum:
 - Hold oluşturma; süresi dolan hold temizliği, token hash, durum geçmişi, ortak allocation ve audit kaydını serializable transaction içinde yazar.
 - PostgreSQL exclusion constraint hold-hold, hold-randevu ve randevu-randevu çakışmasını tek noktada engeller.
 - Haftalık yerel çalışma kuralları ile kapalı gün, özel saat ve blok istisnaları için additive şema/migration ve çift katmanlı doğrulama hazırdır.
-- Gerçek PostgreSQL üzerinde migration ve eşzamanlı integration testi beklenmektedir.
+- Randevu durum geçişleri iyimser eşzamanlılık kontrolüyle appointment, status log ve audit kaydını aynı transaction içinde yazar; onay aktör/zamanını kaydeder ve ret/iptalde allocation’ı serbest bırakır.
+- Dört migration ve sekiz gerçek PostgreSQL integration testi; hold/randevu allocation yarışları ile aynı durumdan iki eşzamanlı geçişte yalnızca bir kazananı doğrular.
 - Hold süresinin canlı sistem ayarı `OPEN` durumundadır; public randevu gönderimi açılmamıştır.
 - Zorunlu consent belge türleri ve çocuk/veli yetki doğrulaması `OPEN` olduğu için hold’dan gerçek randevu talebi üretimi henüz açılmamıştır.
 
