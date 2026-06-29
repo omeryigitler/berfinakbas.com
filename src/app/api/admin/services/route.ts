@@ -42,7 +42,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Güvenilmeyen istek kaynağı." }, { status: 403 });
   }
 
-  const parsed = serviceConfigSchema.safeParse(await request.json());
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "İstek gövdesi geçerli JSON olmalıdır." }, { status: 400 });
+  }
+
+  const parsed = serviceConfigSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Hizmet ayarları geçersiz.", issues: parsed.error.flatten() },
