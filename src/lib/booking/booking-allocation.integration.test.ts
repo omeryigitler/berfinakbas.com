@@ -4,6 +4,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Pool, type PoolClient } from "pg";
 
 import { createAppointmentHold } from "@/lib/booking/appointment-hold-service";
+import {
+  AppointmentTransitionConflictError,
+  transitionAppointment,
+} from "@/lib/booking/appointment-transition-service";
 import { getDatabase } from "@/lib/db";
 
 type Owner = Readonly<{ id: string; type: "appointment" | "hold" }>;
@@ -239,7 +243,11 @@ afterAll(async () => {
   await pool.query(`DELETE FROM appointment_holds WHERE practitioner_id = ANY($1::uuid[])`, [
     fixture.practitionerIds,
   ]);
-  await pool.query(`DELETE FROM audit_logs WHERE correlation_id LIKE 'application-hold-race-%'`);
+  await pool.query(
+    `DELETE FROM audit_logs
+     WHERE correlation_id LIKE 'application-hold-race-%'
+        OR correlation_id LIKE 'application-appointment-transition-%'`,
+  );
   await pool.query(`DELETE FROM clients WHERE id = $1`, [fixture.clientId]);
   await pool.query(`DELETE FROM practitioners WHERE id = ANY($1::uuid[])`, [
     fixture.practitionerIds,
@@ -327,6 +335,135 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       [fulfilledHold.value.holdId],
     );
     expect(Number(activeAllocationCount.rows[0].count)).toBe(1);
+  });
+
+  it("persists appointment transitions, history, audit and allocation release atomically", async () => {
+    const busyStartsAt = new Date("2031-07-06T08:55:00.000Z");
+    const busyEndsAt = new Date("2031-07-06T09:55:00.000Z");
+    const appointment = await createAppointment(
+      fixture.practitionerIds[0],
+      busyStartsAt,
+      busyEndsAt,
+    );
+    const client = await pool.connect();
+    await insertAllocation(
+      client,
+      appointment,
+      fixture.practitionerIds[0],
+      busyStartsAt,
+      busyEndsAt,
+    );
+    client.release();
+
+    await transitionAppointment({
+      actorUserId: fixture.userIds[0],
+      appointmentId: appointment.id,
+      correlationId: "application-appointment-transition-review",
+      reasonCode: "ADMIN_REVIEW_STARTED",
+      toStatus: "PENDING_REVIEW",
+    });
+    const approvedAt = new Date("2031-06-01T09:00:00.000Z");
+    await transitionAppointment(
+      {
+        actorUserId: fixture.userIds[0],
+        appointmentId: appointment.id,
+        correlationId: "application-appointment-transition-confirmed",
+        reasonCode: "ADMIN_APPROVED",
+        toStatus: "CONFIRMED",
+      },
+      approvedAt,
+    );
+    const cancelledAt = new Date("2031-06-02T09:00:00.000Z");
+    await transitionAppointment(
+      {
+        actorUserId: fixture.userIds[0],
+        appointmentId: appointment.id,
+        correlationId: "application-appointment-transition-cancelled",
+        reasonCode: "PRACTITIONER_UNAVAILABLE",
+        toStatus: "CANCELLED_BY_PRACTITIONER",
+      },
+      cancelledAt,
+    );
+
+    const persisted = await pool.query<{
+      approved_at: Date;
+      approved_by_user_id: string;
+      cancellation_reason_code: string;
+      cancelled_at: Date;
+      status: string;
+    }>(
+      `SELECT status, approved_at, approved_by_user_id, cancelled_at,
+              cancellation_reason_code
+       FROM appointments WHERE id = $1`,
+      [appointment.id],
+    );
+    const history = await pool.query<{ to_status: string }>(
+      `SELECT to_status FROM appointment_status_logs
+       WHERE appointment_id = $1 ORDER BY created_at, id`,
+      [appointment.id],
+    );
+    const audit = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM audit_logs
+       WHERE correlation_id LIKE 'application-appointment-transition-%'
+         AND entity_id = $1`,
+      [appointment.id],
+    );
+    const allocation = await pool.query<{ released_at: Date; status: string }>(
+      `SELECT status, released_at FROM booking_allocations WHERE appointment_id = $1`,
+      [appointment.id],
+    );
+
+    expect(persisted.rows[0]).toMatchObject({
+      approved_by_user_id: fixture.userIds[0],
+      cancellation_reason_code: "PRACTITIONER_UNAVAILABLE",
+      status: "CANCELLED_BY_PRACTITIONER",
+    });
+    expect(persisted.rows[0].approved_at).toEqual(approvedAt);
+    expect(persisted.rows[0].cancelled_at).toEqual(cancelledAt);
+    expect(history.rows.map((row) => row.to_status)).toEqual([
+      "PENDING_REVIEW",
+      "CONFIRMED",
+      "CANCELLED_BY_PRACTITIONER",
+    ]);
+    expect(Number(audit.rows[0].count)).toBe(3);
+    expect(allocation.rows[0]).toMatchObject({ status: "RELEASED" });
+    expect(allocation.rows[0].released_at).toEqual(cancelledAt);
+  });
+
+  it("allows only one concurrent transition from the same appointment status", async () => {
+    const appointment = await createAppointment(
+      fixture.practitionerIds[0],
+      new Date("2031-07-07T08:55:00.000Z"),
+      new Date("2031-07-07T09:55:00.000Z"),
+    );
+    const results = await Promise.allSettled([
+      transitionAppointment({
+        actorUserId: fixture.userIds[0],
+        appointmentId: appointment.id,
+        correlationId: "application-appointment-transition-race-left",
+        reasonCode: "ADMIN_REVIEW_STARTED",
+        toStatus: "PENDING_REVIEW",
+      }),
+      transitionAppointment({
+        actorUserId: fixture.userIds[1],
+        appointmentId: appointment.id,
+        correlationId: "application-appointment-transition-race-right",
+        reasonCode: "ADMIN_REVIEW_STARTED",
+        toStatus: "PENDING_REVIEW",
+      }),
+    ]);
+    const fulfilled = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter((result) => result.status === "rejected");
+    const history = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM appointment_status_logs
+       WHERE appointment_id = $1`,
+      [appointment.id],
+    );
+
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]).toMatchObject({ reason: new AppointmentTransitionConflictError() });
+    expect(Number(history.rows[0].count)).toBe(1);
   });
 
   it("allows only one concurrent hold or appointment for the same range", async () => {

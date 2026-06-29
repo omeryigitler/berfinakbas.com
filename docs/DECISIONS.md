@@ -10,7 +10,7 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 
 ## ADR-002 — PostgreSQL kullanılacaktır
 
-- Durum: Önerildi, Faz 0 onayı bekliyor
+- Durum: Kabul edildi
 - Karar: İlişkisel bütünlük, transaction, çakışma önleme ve raporlama gereksinimleri nedeniyle PostgreSQL + Prisma.
 - Not: Prisma’nın desteklemediği gelişmiş constraint gerekirse SQL migration ile açıkça yönetilir.
 
@@ -93,3 +93,12 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - İşlem kuralı: Hold oluşturma; hold, ilk durum kaydı, allocation ve minimum audit kaydını aynı serializable transaction içinde üretir. Süresi dolan hold aynı transaction içinde serbest bırakılır ve geçmişi korunur.
 - Güvenlik: Ham tek kullanımlık hold token’ı saklanmaz; yalnızca SHA-256 özeti tutulur ve audit özetine eklenmez.
 - OPEN: Canlı ortamda kullanılacak hold süresi henüz ürün kararı değildir. Kod süreyi yapılandırılmış girdi olarak alır; public API açılmadan önce sistem ayarına bağlanacaktır.
+
+## ADR-016 — Randevu durum geçişleri atomik ve yarışa dayanıklı olacaktır
+
+- Durum: Kabul edildi
+- Karar: Her geçiş mevcut durum koşuluyla güncellenir; appointment, status log ve audit kaydı aynı transaction içinde yazılır. Aynı durumdan iki eşzamanlı komuttan yalnızca biri başarılı olabilir.
+- Onay: `confirmed` geçişi yetkili kullanıcı ve zamanı randevu üzerinde saklar.
+- Tahsis: Ret veya taraflardan birinin iptali aktif booking allocation’ı aynı transaction içinde serbest bırakır. `reschedule_proposed`, eski randevuyu yeni slot kesinleşmeden serbest bırakmaz.
+- Gizlilik: Audit özetleri yalnızca durum bilgisini taşır; danışan notu veya iletişim bilgisi audit özetine kopyalanmaz.
+- OPEN: Bildirim/Calendar yan etkileri outbox modeli eklendiğinde aynı transaction’a idempotent event olarak bağlanacaktır.

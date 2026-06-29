@@ -9,7 +9,13 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient(): PrismaClient {
   const environment = getServerEnvironment();
-  const adapter = new PrismaPg({ connectionString: environment.DATABASE_URL });
+  const adapter = new PrismaPg({
+    connectionString: environment.DATABASE_URL,
+    // The driver adapter serializes Date values as UTC text. Keeping every
+    // application connection in UTC prevents PostgreSQL from interpreting
+    // that text in the server or developer machine time zone.
+    options: "-c timezone=UTC",
+  });
 
   return new PrismaClient({
     adapter,
