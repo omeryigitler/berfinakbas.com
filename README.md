@@ -4,7 +4,7 @@ Türkiye pazarı için tamamen Türkçe çalışan bir Dil ve Konuşma Terapisti
 
 ## Durum
 
-Faz 0 kapsamı ve Faz 1 teknik temel tamamlandı. Proje **Faz 2 — kimlik, yetki ve veri çekirdeği** aşamasındadır. Kapalı Google OAuth iskeleti, sunucu tarafı rol/izin matrisi, hizmet doğrulaması, danışan/veli ve consent modelleri ile tasarım yönüne uyarlanmış public ana sayfa hazırdır. Gerçek OAuth bilgileri ve PostgreSQL migration uygulaması henüz yapılmamıştır.
+Faz 0 kapsamı ve Faz 1 teknik temel tamamlandı. Proje **Faz 2 — kimlik, yetki ve veri çekirdeği** aşamasındadır. Kapalı Google OAuth iskeleti, sunucu tarafı rol/izin matrisi, allowlist ile ilk girişte audit kayıtlı yönetici rolü ataması, hizmet doğrulaması, danışan/veli ve consent modelleri ile tasarım yönüne uyarlanmış public ana sayfa hazırdır. Gerçek OAuth bilgileri ve PostgreSQL migration uygulaması henüz yapılmamıştır.
 
 ## Ürün özeti
 

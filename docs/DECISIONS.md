@@ -75,6 +75,7 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Karar: Admin alanı parola saklamaz. Auth.js + Prisma oturumu ve izinli/davetli e-posta kontrolü kullanır. Çok faktörlü doğrulama Google hesabı/Workspace politikası üzerinden uygulanır.
 - Kısıt: OAuth istemcisi, zorunlu MFA politikası, yurt dışı veri aktarımı ve sağlayıcı sözleşmeleri onaylanmadan canlı giriş açılmaz.
 - Güvenlik: Suspended kullanıcı girişi reddedilir; roller sunucu tarafında kontrol edilir; hassas admin POST isteklerinde origin doğrulanır.
+- Bootstrap: Allowlist’teki yeni yönetici ilk girişte ancak `SUPER_ADMIN` rol kataloğu mevcutsa aktive edilir; rol ataması ve audit kaydı aynı transaction içinde yazılır. E-posta karşılaştırması locale bağımsız normalize edilir.
 
 ## ADR-014 — Public tasarım sıcak marka dili ve kontrollü teknoloji katmanı kullanacaktır
 

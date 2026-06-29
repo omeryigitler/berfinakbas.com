@@ -1,5 +1,6 @@
 import { getDatabase } from "../src/lib/db";
 import { getServerEnvironment } from "../src/lib/env";
+import { normalizeEmailAddress } from "../src/domain/auth/admin-access";
 
 const roleDefinitions = [
   ["SUPER_ADMIN", "Süper yönetici", "Tüm yönetim izinleri"],
@@ -48,7 +49,7 @@ async function seed() {
     where: { slug: "ornek-degerlendirme-gorusmesi" },
   });
 
-  const bootstrapEmail = environment.AUTH_BOOTSTRAP_ADMIN_EMAIL?.toLocaleLowerCase("tr-TR");
+  const bootstrapEmail = normalizeEmailAddress(environment.AUTH_BOOTSTRAP_ADMIN_EMAIL);
   if (bootstrapEmail) {
     const user = await database.user.upsert({
       create: { email: bootstrapEmail, status: "INVITED" },

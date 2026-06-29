@@ -56,12 +56,13 @@ Tamamlanma ölçütü: Yetkili/izinsiz erişim integration testleri ve migration
 Mevcut durum:
 
 - Auth.js + Prisma ile Google OAuth’a hazır, yalnızca davetli hesaplara açık giriş iskeleti eklendi.
+- Allowlist ile ilk kez oluşturulan yönetici hesabının `SUPER_ADMIN` rolü ve audit kaydı aynı transaction içinde atanır; suspended ve allowlist dışı hesaplar fail-closed reddedilir.
 - Sunucu tarafı rol/izin kataloğu ve izin testleri eklendi.
 - Kullanıcı/rol, Auth.js oturumu, danışan/veli ve consent modelleri ile SQL migration hazırlandı.
 - Hizmet ayarı doğrulaması, değişmez snapshot üretimi ve audit kayıtlı admin API temeli eklendi.
 - Sentetik rol ve taslak hizmet seed’i hazırlandı.
 - ChatGPT proje klasöründeki tasarım yönü incelendi ve public ana sayfaya uygulandı.
-- 22 test, lint, typecheck, format kontrolü ve production build başarılıdır.
+- 59 test, lint, typecheck, format kontrolü ve production build başarılıdır.
 - Gerçek PostgreSQL migration/integration testi ve gerçek Google OAuth bilgileri beklenmektedir.
 
 ## Faz 3 — randevu motoru
