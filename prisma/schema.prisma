@@ -1,0 +1,537 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  engineType   = "client"
+  runtime      = "nodejs"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ServiceStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum ApprovalMode {
+  MANUAL
+  AUTOMATIC
+}
+
+enum LocationType {
+  IN_PERSON
+  ONLINE
+  HYBRID
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+enum RoleKey {
+  SUPER_ADMIN
+  THERAPIST
+  ASSISTANT
+  FINANCE
+  DEVELOPER
+}
+
+enum ClientType {
+  ADULT
+  CHILD
+}
+
+enum ClientStatus {
+  PROSPECTIVE
+  ACTIVE
+  INACTIVE
+}
+
+enum ConsentStatus {
+  GRANTED
+  WITHDRAWN
+  EXPIRED
+}
+
+enum PractitionerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AppointmentHoldStatus {
+  ACTIVE
+  CONSUMED
+  EXPIRED
+  RELEASED
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  PENDING_REVIEW
+  CONFIRMED
+  REJECTED
+  RESCHEDULE_PROPOSED
+  CANCELLED_BY_CLIENT
+  CANCELLED_BY_PRACTITIONER
+  COMPLETED
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  WEB
+  ADMIN
+  PHONE
+}
+
+enum BookingAllocationStatus {
+  ACTIVE
+  RELEASED
+}
+
+enum AvailabilityRuleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AvailabilityExceptionType {
+  CLOSED
+  CUSTOM_HOURS
+  BLOCKED
+}
+
+enum AvailabilityExceptionStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model User {
+  id                      String                     @id @default(uuid()) @db.Uuid
+  name                    String?                    @db.VarChar(160)
+  email                   String?                    @unique @db.VarChar(320)
+  emailVerified           DateTime?                  @map("email_verified") @db.Timestamptz(3)
+  image                   String?
+  status                  UserStatus                 @default(INVITED)
+  mfaEnforcedAt           DateTime?                  @map("mfa_enforced_at") @db.Timestamptz(3)
+  lastLoginAt             DateTime?                  @map("last_login_at") @db.Timestamptz(3)
+  createdAt               DateTime                   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  accounts                Account[]
+  sessions                Session[]
+  roles                   UserRole[]                 @relation("UserRoleMember")
+  roleAssignmentsMade     UserRole[]                 @relation("UserRoleAssigner")
+  policiesCreated         ServicePolicy[]            @relation("ServicePolicyCreator")
+  consentsCaptured        Consent[]                  @relation("ConsentActor")
+  settingChanges          SettingChangeLog[]         @relation("SettingChangeActor")
+  auditEvents             AuditLog[]                 @relation("AuditActor")
+  practitioner            Practitioner?
+  appointmentsApproved    Appointment[]              @relation("AppointmentApprover")
+  appointmentStatusEvents AppointmentStatusLog[]     @relation("AppointmentStatusActor")
+  holdStatusEvents        AppointmentHoldStatusLog[] @relation("AppointmentHoldStatusActor")
+
+  @@index([status], map: "users_status_idx")
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String  @db.VarChar(40)
+  provider          String  @db.VarChar(80)
+  providerAccountId String  @map("provider_account_id") @db.VarChar(255)
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String? @db.VarChar(80)
+  scope             String? @db.Text
+  id_token          String? @db.Text
+  session_state     String? @db.VarChar(255)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "accounts_user_id_fkey")
+
+  @@unique([provider, providerAccountId], map: "accounts_provider_provider_account_id_key")
+  @@index([userId], map: "accounts_user_id_idx")
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique @map("session_token") @db.VarChar(255)
+  userId       String   @map("user_id") @db.Uuid
+  expires      DateTime @db.Timestamptz(3)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "sessions_user_id_fkey")
+
+  @@index([userId], map: "sessions_user_id_idx")
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String   @db.VarChar(320)
+  token      String   @db.VarChar(255)
+  expires    DateTime @db.Timestamptz(3)
+
+  @@unique([identifier, token], map: "verification_tokens_identifier_token_key")
+  @@map("verification_tokens")
+}
+
+model Role {
+  id          String     @id @default(uuid()) @db.Uuid
+  key         RoleKey    @unique
+  name        String     @db.VarChar(120)
+  description String?    @db.VarChar(500)
+  assignments UserRole[]
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId           String   @map("user_id") @db.Uuid
+  roleId           String   @map("role_id") @db.Uuid
+  assignedByUserId String?  @map("assigned_by_user_id") @db.Uuid
+  assignedAt       DateTime @default(now()) @map("assigned_at") @db.Timestamptz(3)
+  user             User     @relation("UserRoleMember", fields: [userId], references: [id], onDelete: Cascade, map: "user_roles_user_id_fkey")
+  role             Role     @relation(fields: [roleId], references: [id], onDelete: Restrict, map: "user_roles_role_id_fkey")
+  assignedBy       User?    @relation("UserRoleAssigner", fields: [assignedByUserId], references: [id], onDelete: SetNull, map: "user_roles_assigned_by_user_id_fkey")
+
+  @@id([userId, roleId])
+  @@index([roleId], map: "user_roles_role_id_idx")
+  @@map("user_roles")
+}
+
+model Client {
+  id            String           @id @default(uuid()) @db.Uuid
+  type          ClientType
+  firstName     String           @map("first_name") @db.VarChar(120)
+  lastName      String           @map("last_name") @db.VarChar(120)
+  preferredName String?          @map("preferred_name") @db.VarChar(120)
+  phone         String?          @db.VarChar(40)
+  email         String?          @db.VarChar(320)
+  birthYear     Int?             @map("birth_year")
+  status        ClientStatus     @default(PROSPECTIVE)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  guardians     ClientGuardian[]
+  consents      Consent[]
+  appointments  Appointment[]
+
+  @@index([status, createdAt], map: "clients_status_created_at_idx")
+  @@map("clients")
+}
+
+model Guardian {
+  id           String           @id @default(uuid()) @db.Uuid
+  firstName    String           @map("first_name") @db.VarChar(120)
+  lastName     String           @map("last_name") @db.VarChar(120)
+  phone        String           @db.VarChar(40)
+  email        String?          @db.VarChar(320)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  clients      ClientGuardian[]
+  consents     Consent[]
+  appointments Appointment[]
+
+  @@map("guardians")
+}
+
+model ClientGuardian {
+  clientId            String    @map("client_id") @db.Uuid
+  guardianId          String    @map("guardian_id") @db.Uuid
+  relationship        String    @db.VarChar(80)
+  isPrimary           Boolean   @default(false) @map("is_primary")
+  authorityVerifiedAt DateTime? @map("authority_verified_at") @db.Timestamptz(3)
+  verificationNote    String?   @map("verification_note") @db.VarChar(500)
+  client              Client    @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "client_guardians_client_id_fkey")
+  guardian            Guardian  @relation(fields: [guardianId], references: [id], onDelete: Restrict, map: "client_guardians_guardian_id_fkey")
+
+  @@id([clientId, guardianId])
+  @@index([guardianId], map: "client_guardians_guardian_id_idx")
+  @@map("client_guardians")
+}
+
+model ConsentDocument {
+  id            String    @id @default(uuid()) @db.Uuid
+  type          String    @db.VarChar(80)
+  version       String    @db.VarChar(40)
+  contentHash   String    @map("content_hash") @db.VarChar(128)
+  effectiveFrom DateTime  @map("effective_from") @db.Timestamptz(3)
+  retiredAt     DateTime? @map("retired_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  consents      Consent[]
+
+  @@unique([type, version], map: "consent_documents_type_version_key")
+  @@map("consent_documents")
+}
+
+model Consent {
+  id               String          @id @default(uuid()) @db.Uuid
+  clientId         String?         @map("client_id") @db.Uuid
+  guardianId       String?         @map("guardian_id") @db.Uuid
+  documentId       String          @map("document_id") @db.Uuid
+  status           ConsentStatus   @default(GRANTED)
+  capturedAt       DateTime        @default(now()) @map("captured_at") @db.Timestamptz(3)
+  withdrawnAt      DateTime?       @map("withdrawn_at") @db.Timestamptz(3)
+  captureChannel   String          @map("capture_channel") @db.VarChar(40)
+  evidenceMetadata Json?           @map("evidence_metadata")
+  actorUserId      String?         @map("actor_user_id") @db.Uuid
+  client           Client?         @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "consents_client_id_fkey")
+  guardian         Guardian?       @relation(fields: [guardianId], references: [id], onDelete: Restrict, map: "consents_guardian_id_fkey")
+  document         ConsentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, map: "consents_document_id_fkey")
+  actor            User?           @relation("ConsentActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "consents_actor_user_id_fkey")
+
+  @@index([clientId, capturedAt], map: "consents_client_id_captured_at_idx")
+  @@index([guardianId, capturedAt], map: "consents_guardian_id_captured_at_idx")
+  @@index([documentId, status], map: "consents_document_id_status_idx")
+  @@map("consents")
+}
+
+model Service {
+  id                         String            @id @default(uuid()) @db.Uuid
+  slug                       String            @unique @db.VarChar(120)
+  name                       String            @db.VarChar(160)
+  publicDescription          String?           @map("public_description")
+  status                     ServiceStatus     @default(DRAFT)
+  publicVisible              Boolean           @default(false) @map("public_visible")
+  approvalMode               ApprovalMode      @default(MANUAL) @map("approval_mode")
+  defaultDurationMinutes     Int               @map("default_duration_minutes")
+  defaultBufferBeforeMinutes Int               @default(0) @map("default_buffer_before_minutes")
+  defaultBufferAfterMinutes  Int               @default(0) @map("default_buffer_after_minutes")
+  locationType               LocationType      @default(IN_PERSON) @map("location_type")
+  sortOrder                  Int               @default(0) @map("sort_order")
+  createdAt                  DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                  DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  policies                   ServicePolicy[]
+  holds                      AppointmentHold[]
+  appointments               Appointment[]
+
+  @@index([status, publicVisible, sortOrder], map: "services_status_public_visible_sort_order_idx")
+  @@map("services")
+}
+
+model ServicePolicy {
+  id                        String   @id @default(uuid()) @db.Uuid
+  serviceId                 String   @map("service_id") @db.Uuid
+  effectiveFrom             DateTime @map("effective_from") @db.Timestamptz(3)
+  bookingMinNoticeMinutes   Int      @default(0) @map("booking_min_notice_minutes")
+  bookingMaxAdvanceDays     Int      @map("booking_max_advance_days")
+  cancellationWindowMinutes Int      @map("cancellation_window_minutes")
+  rescheduleWindowMinutes   Int      @map("reschedule_window_minutes")
+  maxDailyAppointments      Int?     @map("max_daily_appointments")
+  customFormSchema          Json?    @map("custom_form_schema")
+  createdByUserId           String?  @map("created_by_user_id") @db.Uuid
+  createdAt                 DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  service                   Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict, map: "service_policies_service_id_fkey")
+  createdBy                 User?    @relation("ServicePolicyCreator", fields: [createdByUserId], references: [id], onDelete: SetNull, map: "service_policies_created_by_user_id_fkey")
+
+  @@unique([serviceId, effectiveFrom], map: "service_policies_service_id_effective_from_key")
+  @@map("service_policies")
+}
+
+model Practitioner {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  userId                 String                  @unique @map("user_id") @db.Uuid
+  displayName            String                  @map("display_name") @db.VarChar(160)
+  timeZone               String                  @map("time_zone") @db.VarChar(80)
+  status                 PractitionerStatus      @default(ACTIVE)
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Restrict, map: "practitioners_user_id_fkey")
+  holds                  AppointmentHold[]
+  appointments           Appointment[]
+  allocations            BookingAllocation[]
+  availabilityRules      AvailabilityRule[]
+  availabilityExceptions AvailabilityException[]
+
+  @@index([status], map: "practitioners_status_idx")
+  @@map("practitioners")
+}
+
+model AvailabilityRule {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  practitionerId       String                 @map("practitioner_id") @db.Uuid
+  weekday              Int
+  localStartTime       String                 @map("local_start_time") @db.VarChar(5)
+  localEndTime         String                 @map("local_end_time") @db.VarChar(5)
+  validFrom            DateTime?              @map("valid_from") @db.Date
+  validUntil           DateTime?              @map("valid_until") @db.Date
+  slotIncrementMinutes Int                    @map("slot_increment_minutes")
+  status               AvailabilityRuleStatus @default(ACTIVE)
+  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  practitioner         Practitioner           @relation(fields: [practitionerId], references: [id], onDelete: Restrict, map: "availability_rules_practitioner_id_fkey")
+
+  @@index([practitionerId, status, weekday], map: "availability_rules_practitioner_status_weekday_idx")
+  @@map("availability_rules")
+}
+
+model AvailabilityException {
+  id             String                      @id @default(uuid()) @db.Uuid
+  practitionerId String                      @map("practitioner_id") @db.Uuid
+  localDate      DateTime                    @map("local_date") @db.Date
+  type           AvailabilityExceptionType
+  localStartTime String?                     @map("local_start_time") @db.VarChar(5)
+  localEndTime   String?                     @map("local_end_time") @db.VarChar(5)
+  reasonCode     String                      @map("reason_code") @db.VarChar(80)
+  privateNote    String?                     @map("private_note") @db.VarChar(500)
+  status         AvailabilityExceptionStatus @default(ACTIVE)
+  createdAt      DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+  practitioner   Practitioner                @relation(fields: [practitionerId], references: [id], onDelete: Restrict, map: "availability_exceptions_practitioner_id_fkey")
+
+  @@index([practitionerId, localDate, status], map: "availability_exceptions_practitioner_date_status_idx")
+  @@map("availability_exceptions")
+}
+
+model AppointmentHold {
+  id              String                     @id @default(uuid()) @db.Uuid
+  practitionerId  String                     @map("practitioner_id") @db.Uuid
+  serviceId       String                     @map("service_id") @db.Uuid
+  startsAt        DateTime                   @map("starts_at") @db.Timestamptz(3)
+  endsAt          DateTime                   @map("ends_at") @db.Timestamptz(3)
+  busyStartsAt    DateTime                   @map("busy_starts_at") @db.Timestamptz(3)
+  busyEndsAt      DateTime                   @map("busy_ends_at") @db.Timestamptz(3)
+  expiresAt       DateTime                   @map("expires_at") @db.Timestamptz(3)
+  holderTokenHash String                     @unique @map("holder_token_hash") @db.VarChar(64)
+  status          AppointmentHoldStatus      @default(ACTIVE)
+  createdAt       DateTime                   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  practitioner    Practitioner               @relation(fields: [practitionerId], references: [id], onDelete: Restrict, map: "appointment_holds_practitioner_id_fkey")
+  service         Service                    @relation(fields: [serviceId], references: [id], onDelete: Restrict, map: "appointment_holds_service_id_fkey")
+  allocation      BookingAllocation?
+  statusLogs      AppointmentHoldStatusLog[]
+
+  @@index([practitionerId, startsAt, expiresAt], map: "appointment_holds_practitioner_starts_expires_idx")
+  @@index([status, expiresAt], map: "appointment_holds_status_expires_idx")
+  @@map("appointment_holds")
+}
+
+model Appointment {
+  id                          String                 @id @default(uuid()) @db.Uuid
+  publicReference             String                 @unique @map("public_reference") @db.VarChar(32)
+  clientId                    String                 @map("client_id") @db.Uuid
+  guardianId                  String?                @map("guardian_id") @db.Uuid
+  practitionerId              String                 @map("practitioner_id") @db.Uuid
+  serviceId                   String                 @map("service_id") @db.Uuid
+  status                      AppointmentStatus      @default(REQUESTED)
+  startsAt                    DateTime               @map("starts_at") @db.Timestamptz(3)
+  endsAt                      DateTime               @map("ends_at") @db.Timestamptz(3)
+  busyStartsAt                DateTime               @map("busy_starts_at") @db.Timestamptz(3)
+  busyEndsAt                  DateTime               @map("busy_ends_at") @db.Timestamptz(3)
+  serviceNameSnapshot         String                 @map("service_name_snapshot") @db.VarChar(160)
+  durationMinutesSnapshot     Int                    @map("duration_minutes_snapshot")
+  bufferBeforeMinutesSnapshot Int                    @map("buffer_before_minutes_snapshot")
+  bufferAfterMinutesSnapshot  Int                    @map("buffer_after_minutes_snapshot")
+  locationTypeSnapshot        LocationType           @map("location_type_snapshot")
+  policySnapshot              Json                   @map("policy_snapshot")
+  requestNote                 String?                @map("request_note") @db.VarChar(500)
+  source                      AppointmentSource
+  approvedByUserId            String?                @map("approved_by_user_id") @db.Uuid
+  approvedAt                  DateTime?              @map("approved_at") @db.Timestamptz(3)
+  cancellationReasonCode      String?                @map("cancellation_reason_code") @db.VarChar(80)
+  cancelledAt                 DateTime?              @map("cancelled_at") @db.Timestamptz(3)
+  createdAt                   DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                   DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  client                      Client                 @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "appointments_client_id_fkey")
+  guardian                    Guardian?              @relation(fields: [guardianId], references: [id], onDelete: Restrict, map: "appointments_guardian_id_fkey")
+  practitioner                Practitioner           @relation(fields: [practitionerId], references: [id], onDelete: Restrict, map: "appointments_practitioner_id_fkey")
+  service                     Service                @relation(fields: [serviceId], references: [id], onDelete: Restrict, map: "appointments_service_id_fkey")
+  approvedBy                  User?                  @relation("AppointmentApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull, map: "appointments_approved_by_user_id_fkey")
+  allocation                  BookingAllocation?
+  statusLogs                  AppointmentStatusLog[]
+
+  @@index([practitionerId, startsAt], map: "appointments_practitioner_starts_idx")
+  @@index([clientId, startsAt(sort: Desc)], map: "appointments_client_starts_idx")
+  @@index([status, startsAt], map: "appointments_status_starts_idx")
+  @@map("appointments")
+}
+
+model BookingAllocation {
+  id             String                  @id @default(uuid()) @db.Uuid
+  practitionerId String                  @map("practitioner_id") @db.Uuid
+  holdId         String?                 @unique @map("hold_id") @db.Uuid
+  appointmentId  String?                 @unique @map("appointment_id") @db.Uuid
+  busyStartsAt   DateTime                @map("busy_starts_at") @db.Timestamptz(3)
+  busyEndsAt     DateTime                @map("busy_ends_at") @db.Timestamptz(3)
+  status         BookingAllocationStatus @default(ACTIVE)
+  releasedAt     DateTime?               @map("released_at") @db.Timestamptz(3)
+  createdAt      DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  practitioner   Practitioner            @relation(fields: [practitionerId], references: [id], onDelete: Restrict, map: "booking_allocations_practitioner_id_fkey")
+  hold           AppointmentHold?        @relation(fields: [holdId], references: [id], onDelete: Restrict, map: "booking_allocations_hold_id_fkey")
+  appointment    Appointment?            @relation(fields: [appointmentId], references: [id], onDelete: Restrict, map: "booking_allocations_appointment_id_fkey")
+
+  @@index([practitionerId, busyStartsAt, busyEndsAt], map: "booking_allocations_practitioner_busy_idx")
+  @@index([status, releasedAt], map: "booking_allocations_status_released_idx")
+  @@map("booking_allocations")
+}
+
+model AppointmentHoldStatusLog {
+  id          String                 @id @default(uuid()) @db.Uuid
+  holdId      String                 @map("hold_id") @db.Uuid
+  fromStatus  AppointmentHoldStatus? @map("from_status")
+  toStatus    AppointmentHoldStatus  @map("to_status")
+  reasonCode  String                 @map("reason_code") @db.VarChar(80)
+  actorType   String                 @map("actor_type") @db.VarChar(40)
+  actorUserId String?                @map("actor_user_id") @db.Uuid
+  createdAt   DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  hold        AppointmentHold        @relation(fields: [holdId], references: [id], onDelete: Restrict, map: "appointment_hold_status_logs_hold_id_fkey")
+  actor       User?                  @relation("AppointmentHoldStatusActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "appointment_hold_status_logs_actor_user_id_fkey")
+
+  @@index([holdId, createdAt], map: "appointment_hold_status_logs_hold_created_idx")
+  @@map("appointment_hold_status_logs")
+}
+
+model AppointmentStatusLog {
+  id            String             @id @default(uuid()) @db.Uuid
+  appointmentId String             @map("appointment_id") @db.Uuid
+  fromStatus    AppointmentStatus? @map("from_status")
+  toStatus      AppointmentStatus  @map("to_status")
+  reasonCode    String             @map("reason_code") @db.VarChar(80)
+  note          String?            @db.VarChar(500)
+  actorType     String             @map("actor_type") @db.VarChar(40)
+  actorUserId   String?            @map("actor_user_id") @db.Uuid
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  appointment   Appointment        @relation(fields: [appointmentId], references: [id], onDelete: Restrict, map: "appointment_status_logs_appointment_id_fkey")
+  actor         User?              @relation("AppointmentStatusActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "appointment_status_logs_actor_user_id_fkey")
+
+  @@index([appointmentId, createdAt], map: "appointment_status_logs_appointment_created_idx")
+  @@map("appointment_status_logs")
+}
+
+model SettingChangeLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  entityType  String   @map("entity_type") @db.VarChar(80)
+  entityId    String?  @map("entity_id") @db.VarChar(80)
+  settingKey  String   @map("setting_key") @db.VarChar(120)
+  oldValue    Json?    @map("old_value")
+  newValue    Json     @map("new_value")
+  reason      String   @db.VarChar(500)
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  actor       User?    @relation("SettingChangeActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "setting_change_logs_actor_user_id_fkey")
+
+  @@index([entityType, entityId, createdAt], map: "setting_change_logs_entity_created_at_idx")
+  @@map("setting_change_logs")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  actorType     String   @map("actor_type") @db.VarChar(40)
+  actorUserId   String?  @map("actor_user_id") @db.Uuid
+  action        String   @db.VarChar(120)
+  entityType    String   @map("entity_type") @db.VarChar(80)
+  entityId      String   @map("entity_id") @db.VarChar(80)
+  beforeSummary Json?    @map("before_summary")
+  afterSummary  Json?    @map("after_summary")
+  reason        String?  @db.VarChar(500)
+  correlationId String   @map("correlation_id") @db.VarChar(80)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  actor         User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "audit_logs_actor_user_id_fkey")
+
+  @@index([entityType, entityId, createdAt], map: "audit_logs_entity_created_at_idx")
+  @@index([actorUserId, createdAt], map: "audit_logs_actor_created_at_idx")
+  @@index([correlationId], map: "audit_logs_correlation_id_idx")
+  @@map("audit_logs")
+}

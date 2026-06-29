@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Generated Prisma client
+src/generated/prisma/
+
+# Tests and coverage
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local tooling
+*.tsbuildinfo
+.eslintcache
+.vercel/
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Project scratch/output folders
+work/
+outputs/
+
