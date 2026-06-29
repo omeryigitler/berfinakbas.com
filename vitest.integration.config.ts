@@ -10,7 +10,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    exclude: ["src/**/*.integration.test.ts"],
-    include: ["src/**/*.test.ts"],
+    fileParallelism: false,
+    hookTimeout: 15_000,
+    include: ["src/**/*.integration.test.ts"],
+    testTimeout: 15_000,
   },
 });
