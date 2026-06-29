@@ -21,6 +21,7 @@ const command = {
 
 function createDatabase(
   options: {
+    allocationStatus?: "ACTIVE" | "RELEASED" | null;
     currentStatus?: "REQUESTED" | "PENDING_REVIEW" | "CONFIRMED" | "RESCHEDULE_PROPOSED";
     exists?: boolean;
     updateCount?: number;
@@ -32,6 +33,10 @@ function createDatabase(
         options.exists === false
           ? null
           : {
+              allocation:
+                options.allocationStatus === null
+                  ? null
+                  : { status: options.allocationStatus ?? "ACTIVE" },
               id: command.appointmentId,
               status: options.currentStatus ?? "REQUESTED",
             },
@@ -119,6 +124,24 @@ describe("transitionAppointment", () => {
       },
       where: { id: command.appointmentId, status: "PENDING_REVIEW" },
     });
+  });
+
+  it("refuses confirmation without an active booking allocation", async () => {
+    const { database, transaction } = createDatabase({
+      allocationStatus: "RELEASED",
+      currentStatus: "PENDING_REVIEW",
+    });
+    getDatabaseMock.mockReturnValue(database);
+
+    await expect(
+      transitionAppointment({
+        ...command,
+        reasonCode: "ADMIN_APPROVED",
+        toStatus: "CONFIRMED",
+      }),
+    ).rejects.toBeInstanceOf(AppointmentTransitionConflictError);
+    expect(transaction.appointment.updateMany).not.toHaveBeenCalled();
+    expect(transaction.appointmentStatusLog.create).not.toHaveBeenCalled();
   });
 
   it("releases the active allocation when a confirmed appointment is cancelled", async () => {

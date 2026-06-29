@@ -52,6 +52,12 @@ export const transitionAppointmentSchema = z.object({
   toStatus: z.enum(databaseAppointmentStatuses),
 });
 
+export const transitionAppointmentRequestSchema = transitionAppointmentSchema.pick({
+  note: true,
+  reasonCode: true,
+  toStatus: true,
+});
+
 export class AppointmentNotFoundError extends Error {
   readonly code = "APPOINTMENT_NOT_FOUND";
 
@@ -85,7 +91,7 @@ export async function transitionAppointment(
 
   return database.$transaction(async (transaction) => {
     const appointment = await transaction.appointment.findUnique({
-      select: { id: true, status: true },
+      select: { allocation: { select: { status: true } }, id: true, status: true },
       where: { id: command.appointmentId },
     });
 
@@ -97,6 +103,9 @@ export async function transitionAppointment(
         domainStatusByDatabaseStatus[command.toStatus],
       );
     } catch {
+      throw new AppointmentTransitionConflictError();
+    }
+    if (command.toStatus === "CONFIRMED" && appointment.allocation?.status !== "ACTIVE") {
       throw new AppointmentTransitionConflictError();
     }
 

@@ -87,6 +87,7 @@ Mevcut durum:
 - PostgreSQL exclusion constraint hold-hold, hold-randevu ve randevu-randevu çakışmasını tek noktada engeller.
 - Haftalık yerel çalışma kuralları ile kapalı gün, özel saat ve blok istisnaları için additive şema/migration ve çift katmanlı doğrulama hazırdır.
 - Randevu durum geçişleri iyimser eşzamanlılık kontrolüyle appointment, status log ve audit kaydını aynı transaction içinde yazar; onay aktör/zamanını kaydeder ve ret/iptalde allocation’ı serbest bırakır.
+- Admin durum API’si aktif oturum, `appointments:manage`, güvenilir origin ve terapistin kendi practitioner kaydı sınırlarını uygular; geçersiz veya yarışta kaybeden geçişleri güvenli yanıtlara dönüştürür.
 - Dört migration ve sekiz gerçek PostgreSQL integration testi; hold/randevu allocation yarışları ile aynı durumdan iki eşzamanlı geçişte yalnızca bir kazananı doğrular.
 - Hold süresinin canlı sistem ayarı `OPEN` durumundadır; public randevu gönderimi açılmamıştır.
 - Zorunlu consent belge türleri ve çocuk/veli yetki doğrulaması `OPEN` olduğu için hold’dan gerçek randevu talebi üretimi henüz açılmamıştır.
