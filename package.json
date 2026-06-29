@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:integration": "node scripts/run-postgres-integration-tests.mjs",
     "test:watch": "vitest",
     "quality": "pnpm lint && pnpm typecheck && pnpm test && pnpm format:check",
     "db:validate": "prisma validate",
