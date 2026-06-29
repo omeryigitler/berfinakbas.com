@@ -45,6 +45,7 @@ Sadece renk ile anlam verilmez.
 
 Onay eylemi son bir transaction kontrolü yapar.
 Liste API’si serbest talep notu, iletişim bilgisi ve consent ayrıntısını varsayılan response’a eklemez; ayrıntı erişimi ayrı yetki ve kontrollü görünüm gerektirir.
+İlk admin ekranı bu minimum listeyi işletme saat diliminde gösterir; onay/ret eylemleri ayrı kontrollü akışta açılacaktır.
 
 ## 5. Hizmet yönetimi
 

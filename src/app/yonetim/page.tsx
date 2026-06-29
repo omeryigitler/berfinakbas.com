@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
@@ -23,7 +25,10 @@ export default async function AdminHomePage() {
           <p className="section-kicker">Berfin Akbaş · Yönetim</p>
           <h1>Hizmetler</h1>
         </div>
-        <p>{session.user.email}</p>
+        <div className="admin-header-actions">
+          <Link href="/yonetim/randevular">Bekleyen talepler</Link>
+          <span>{session.user.email}</span>
+        </div>
       </header>
 
       <section className="admin-panel" aria-labelledby="hizmet-listesi">

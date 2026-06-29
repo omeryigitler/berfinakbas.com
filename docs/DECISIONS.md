@@ -91,6 +91,7 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Karar: Hold ve randevuların buffer dâhil meşgul aralıkları ortak `booking_allocations` tablosuna bağlanır. Aynı terapistin aktif aralıkları PostgreSQL `btree_gist` ve `tstzrange` exclusion constraint ile çakışamaz.
 - Gerekçe: Ayrı hold ve appointment tablolarındaki application-level “önce sorgula, sonra ekle” kontrolü eşzamanlı isteklerde yeterli değildir.
 - İşlem kuralı: Hold oluşturma; hold, ilk durum kaydı, allocation ve minimum audit kaydını aynı serializable transaction içinde üretir. Süresi dolan hold aynı transaction içinde serbest bırakılır ve geçmişi korunur.
+- Yarış kuralı: PostgreSQL `40P01` deadlock ve `40001` serialization hataları en fazla üç transaction denemesiyle yeniden çalıştırılır; overlap constraint sonucu kullanıcıya güvenli slot conflict olarak döner.
 - Güvenlik: Ham tek kullanımlık hold token’ı saklanmaz; yalnızca SHA-256 özeti tutulur ve audit özetine eklenmez.
 - OPEN: Canlı ortamda kullanılacak hold süresi henüz ürün kararı değildir. Kod süreyi yapılandırılmış girdi olarak alır; public API açılmadan önce sistem ayarına bağlanacaktır.
 
