@@ -98,7 +98,8 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 
 - Durum: Kabul edildi
 - Karar: Her geçiş mevcut durum koşuluyla güncellenir; appointment, status log ve audit kaydı aynı transaction içinde yazılır. Aynı durumdan iki eşzamanlı komuttan yalnızca biri başarılı olabilir.
-- Onay: `confirmed` geçişi yetkili kullanıcı ve zamanı randevu üzerinde saklar.
+- Onay: `confirmed` geçişi aktif booking allocation ister; yetkili kullanıcı ve zamanı randevu üzerinde saklar.
 - Tahsis: Ret veya taraflardan birinin iptali aktif booking allocation’ı aynı transaction içinde serbest bırakır. `reschedule_proposed`, eski randevuyu yeni slot kesinleşmeden serbest bırakmaz.
 - Gizlilik: Audit özetleri yalnızca durum bilgisini taşır; danışan notu veya iletişim bilgisi audit özetine kopyalanmaz.
+- API sınırı: Durum değiştirme endpoint’i aktif oturum, `appointments:manage`, güvenilir origin ve terapist için kendi practitioner kaydına bağlı randevu kontrolü ister. Yetkisiz veya başka terapiste ait kayıtlar servis katmanına iletilmez.
 - OPEN: Bildirim/Calendar yan etkileri outbox modeli eklendiğinde aynı transaction’a idempotent event olarak bağlanacaktır.

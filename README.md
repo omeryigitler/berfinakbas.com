@@ -75,7 +75,7 @@ Kalite komutları:
 
 ## Sonraki iş
 
-Faz 3’te randevu durum geçişlerinin transaction/audit temeli tamamlanmıştır. Sıradaki çekirdek iş, açık consent ve çocuk/veli kararları kapatıldıktan sonra hold’dan güvenli randevu talebi üretimi ve admin onay API’sidir. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
+Faz 3’te randevu durum geçişlerinin transaction/audit temeli ve yetki/IDOR korumalı admin durum API’si tamamlanmıştır. Sıradaki çekirdek iş, açık consent ve çocuk/veli kararları kapatıldıktan sonra hold’dan güvenli randevu talebi üretimidir. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
 
 ## Hukuki not
 
