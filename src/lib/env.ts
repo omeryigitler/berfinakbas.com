@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { normalizeEmailAddress } from "@/domain/auth/admin-access";
+
 const timeZoneSchema = z
   .string()
   .min(1)
@@ -60,7 +62,7 @@ export function getServerEnvironment(): ServerEnvironment {
 export function getAllowedAdminEmails(environment: ServerEnvironment): Set<string> {
   return new Set(
     environment.AUTH_ALLOWED_EMAILS.split(",")
-      .map((email) => email.trim().toLocaleLowerCase("tr-TR"))
-      .filter(Boolean),
+      .map((email) => normalizeEmailAddress(email))
+      .filter((email): email is string => email !== null),
   );
 }

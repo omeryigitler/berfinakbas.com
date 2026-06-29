@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseServerEnvironment } from "./env";
+import { getAllowedAdminEmails, parseServerEnvironment } from "./env";
 
 const validEnvironment = {
   APP_URL: "http://localhost:3000",
@@ -31,5 +31,17 @@ describe("parseServerEnvironment", () => {
     expect(() =>
       parseServerEnvironment({ ...validEnvironment, AUTH_GOOGLE_ID: "client-id" }),
     ).toThrow();
+  });
+
+  it("normalizes and deduplicates allowed admin emails", () => {
+    const environment = parseServerEnvironment({
+      ...validEnvironment,
+      AUTH_ALLOWED_EMAILS: " INFO@EXAMPLE.COM, admin@example.com, info@example.com ",
+    });
+
+    expect([...getAllowedAdminEmails(environment)]).toEqual([
+      "info@example.com",
+      "admin@example.com",
+    ]);
   });
 });

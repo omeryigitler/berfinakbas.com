@@ -2,7 +2,13 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
+import {
+  canUseGoogleAdminSignIn,
+  isAllowedBootstrapAdmin,
+  normalizeEmailAddress,
+} from "@/domain/auth/admin-access";
 import type { RoleKey } from "@/domain/auth/permissions";
+import { activateBootstrapAdmin } from "@/lib/auth/bootstrap-admin";
 import { getDatabase } from "@/lib/db";
 import { getAllowedAdminEmails, getServerEnvironment } from "@/lib/env";
 
@@ -46,21 +52,35 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return session;
     },
     async signIn({ user }) {
-      const email = user.email?.trim().toLocaleLowerCase("tr-TR");
-      if (!email || !isGoogleAuthConfigured) return false;
+      const email = normalizeEmailAddress(user.email);
+      if (!email) return false;
 
       const existingUser = await database.user.findUnique({ where: { email } });
-      if (existingUser?.status === "SUSPENDED") return false;
-
-      return Boolean(existingUser) || allowedAdminEmails.has(email);
+      return canUseGoogleAdminSignIn({
+        allowedAdminEmails,
+        email,
+        existingUserStatus: existingUser?.status ?? null,
+        googleAuthConfigured: isGoogleAuthConfigured,
+      });
     },
   },
   events: {
     async createUser({ user }) {
-      await database.user.update({
-        data: { status: "ACTIVE" },
-        where: { id: user.id },
-      });
+      if (!user.id) {
+        throw new Error("Oluşturulan yönetici hesabında kullanıcı kimliği bulunamadı.");
+      }
+
+      const userId = user.id;
+
+      if (!isAllowedBootstrapAdmin(user.email, allowedAdminEmails)) {
+        await database.user.update({
+          data: { status: "SUSPENDED" },
+          where: { id: userId },
+        });
+        throw new Error("Allowlist dışında yönetici hesabı oluşturma girişimi reddedildi.");
+      }
+
+      await activateBootstrapAdmin(database, userId);
     },
     async signIn({ user }) {
       await database.user.update({
