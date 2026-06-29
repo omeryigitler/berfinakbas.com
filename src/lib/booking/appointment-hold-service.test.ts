@@ -1,9 +1,19 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createAppointmentHold, isAllocationConflictError } from "./appointment-hold-service";
+const { getDatabaseMock } = vi.hoisted(() => ({ getDatabaseMock: vi.fn() }));
+
+vi.mock("@/lib/db", () => ({ getDatabase: getDatabaseMock }));
+
+import { SlotConflictError } from "@/domain/booking/appointment-hold";
+
+import {
+  createAppointmentHold,
+  isAllocationConflictError,
+  isRetryableTransactionError,
+} from "./appointment-hold-service";
 
 const migrationPath = fileURLToPath(
   new URL(
@@ -11,6 +21,10 @@ const migrationPath = fileURLToPath(
     import.meta.url,
   ),
 );
+
+beforeEach(() => {
+  getDatabaseMock.mockReset();
+});
 
 describe("booking allocation database guard", () => {
   it("rejects invalid boundary identifiers before opening a database transaction", async () => {
@@ -23,6 +37,7 @@ describe("booking allocation database guard", () => {
         startsAt: new Date("2026-07-01T09:00:00.000Z"),
       }),
     ).rejects.toMatchObject({ name: "ZodError" });
+    expect(getDatabaseMock).not.toHaveBeenCalled();
   });
 
   it("maps the PostgreSQL overlap constraint to a safe slot conflict", () => {
@@ -33,6 +48,39 @@ describe("booking allocation database guard", () => {
       }),
     ).toBe(true);
     expect(isAllocationConflictError(new Error("unrelated database error"))).toBe(false);
+  });
+
+  it("recognizes PostgreSQL deadlock and serialization errors as retryable", () => {
+    expect(
+      isRetryableTransactionError(Object.assign(new Error("deadlock detected"), { code: "40P01" })),
+    ).toBe(true);
+    expect(isRetryableTransactionError({ meta: { database_error: "SQLSTATE 40001" } })).toBe(true);
+    expect(isRetryableTransactionError(new Error("validation failed"))).toBe(false);
+  });
+
+  it("retries a deadlock and maps the resulting overlap to a safe slot conflict", async () => {
+    const transaction = vi
+      .fn()
+      .mockRejectedValueOnce(Object.assign(new Error("deadlock detected"), { code: "40P01" }))
+      .mockRejectedValueOnce({
+        code: "P2004",
+        meta: { database_error: "booking_allocations_no_active_overlap (SQLSTATE 23P01)" },
+      });
+    getDatabaseMock.mockReturnValue({ $transaction: transaction });
+
+    await expect(
+      createAppointmentHold(
+        {
+          correlationId: "sentetik-deadlock-retry",
+          holdDurationMinutes: 8,
+          practitionerId: "11111111-1111-4111-8111-111111111111",
+          serviceId: "22222222-2222-4222-8222-222222222222",
+          startsAt: new Date("2031-07-01T09:00:00.000Z"),
+        },
+        new Date("2031-06-01T09:00:00.000Z"),
+      ),
+    ).rejects.toBeInstanceOf(SlotConflictError);
+    expect(transaction).toHaveBeenCalledTimes(2);
   });
 
   it("keeps hold and appointment allocations behind one active range exclusion", () => {
