@@ -44,6 +44,7 @@ Sadece renk ile anlam verilmez.
 - Onayla, reddet, alternatif öner
 
 Onay eylemi son bir transaction kontrolü yapar.
+Liste API’si serbest talep notu, iletişim bilgisi ve consent ayrıntısını varsayılan response’a eklemez; ayrıntı erişimi ayrı yetki ve kontrollü görünüm gerektirir.
 
 ## 5. Hizmet yönetimi
 
