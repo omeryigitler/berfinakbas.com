@@ -223,16 +223,17 @@ model Client {
 }
 
 model Guardian {
-  id           String           @id @default(uuid()) @db.Uuid
-  firstName    String           @map("first_name") @db.VarChar(120)
-  lastName     String           @map("last_name") @db.VarChar(120)
-  phone        String           @db.VarChar(40)
-  email        String?          @db.VarChar(320)
-  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
-  clients      ClientGuardian[]
-  consents     Consent[]
-  appointments Appointment[]
+  id              String           @id @default(uuid()) @db.Uuid
+  firstName       String           @map("first_name") @db.VarChar(120)
+  lastName        String           @map("last_name") @db.VarChar(120)
+  phone           String           @db.VarChar(40)
+  email           String?          @db.VarChar(320)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  clients         ClientGuardian[]
+  subjectConsents Consent[]        @relation("ConsentGuardianSubject")
+  grantedConsents Consent[]        @relation("ConsentGuardianGrantor")
+  appointments    Appointment[]
 
   @@map("guardians")
 }
@@ -267,23 +268,26 @@ model ConsentDocument {
 }
 
 model Consent {
-  id               String          @id @default(uuid()) @db.Uuid
-  clientId         String?         @map("client_id") @db.Uuid
-  guardianId       String?         @map("guardian_id") @db.Uuid
-  documentId       String          @map("document_id") @db.Uuid
-  status           ConsentStatus   @default(GRANTED)
-  capturedAt       DateTime        @default(now()) @map("captured_at") @db.Timestamptz(3)
-  withdrawnAt      DateTime?       @map("withdrawn_at") @db.Timestamptz(3)
-  captureChannel   String          @map("capture_channel") @db.VarChar(40)
-  evidenceMetadata Json?           @map("evidence_metadata")
-  actorUserId      String?         @map("actor_user_id") @db.Uuid
-  client           Client?         @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "consents_client_id_fkey")
-  guardian         Guardian?       @relation(fields: [guardianId], references: [id], onDelete: Restrict, map: "consents_guardian_id_fkey")
-  document         ConsentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, map: "consents_document_id_fkey")
-  actor            User?           @relation("ConsentActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "consents_actor_user_id_fkey")
+  id                  String          @id @default(uuid()) @db.Uuid
+  clientId            String?         @map("client_id") @db.Uuid
+  guardianId          String?         @map("guardian_id") @db.Uuid
+  grantedByGuardianId String?         @map("granted_by_guardian_id") @db.Uuid
+  documentId          String          @map("document_id") @db.Uuid
+  status              ConsentStatus   @default(GRANTED)
+  capturedAt          DateTime        @default(now()) @map("captured_at") @db.Timestamptz(3)
+  withdrawnAt         DateTime?       @map("withdrawn_at") @db.Timestamptz(3)
+  captureChannel      String          @map("capture_channel") @db.VarChar(40)
+  evidenceMetadata    Json?           @map("evidence_metadata")
+  actorUserId         String?         @map("actor_user_id") @db.Uuid
+  client              Client?         @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "consents_client_id_fkey")
+  guardian            Guardian?       @relation("ConsentGuardianSubject", fields: [guardianId], references: [id], onDelete: Restrict, map: "consents_guardian_id_fkey")
+  grantedByGuardian   Guardian?       @relation("ConsentGuardianGrantor", fields: [grantedByGuardianId], references: [id], onDelete: Restrict, map: "consents_granted_by_guardian_id_fkey")
+  document            ConsentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, map: "consents_document_id_fkey")
+  actor               User?           @relation("ConsentActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "consents_actor_user_id_fkey")
 
   @@index([clientId, capturedAt], map: "consents_client_id_captured_at_idx")
   @@index([guardianId, capturedAt], map: "consents_guardian_id_captured_at_idx")
+  @@index([grantedByGuardianId, capturedAt], map: "consents_granted_by_guardian_id_captured_at_idx")
   @@index([documentId, status], map: "consents_document_id_status_idx")
   @@map("consents")
 }

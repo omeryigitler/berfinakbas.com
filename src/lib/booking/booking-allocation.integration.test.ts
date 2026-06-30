@@ -271,7 +271,7 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       `SELECT 1 FROM pg_constraint WHERE conname = 'booking_allocations_no_active_overlap'`,
     );
 
-    expect(Number(migrations.rows[0].count)).toBeGreaterThanOrEqual(4);
+    expect(Number(migrations.rows[0].count)).toBeGreaterThanOrEqual(5);
     expect(extension.rowCount).toBe(1);
     expect(constraint.rowCount).toBe(1);
   });

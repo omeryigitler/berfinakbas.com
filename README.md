@@ -28,6 +28,7 @@ Backend randevular için tek gerçek kaynaktır. Google Calendar yalnızca senkr
 - [Public site ve içerik kuralları](docs/PUBLIC_SITE_CONTENT.md)
 - [Tasarım yönü](docs/DESIGN_DIRECTION.md)
 - [Güvenlik ve KVKK](docs/SECURITY_AND_KVKK.md)
+- [Consent ve çocuk/veli politikası](docs/CONSENT_AND_GUARDIAN_POLICY.md)
 - [Test kontrol listesi](docs/TESTING_CHECKLIST.md)
 - [Mimari karar kaydı](docs/DECISIONS.md)
 

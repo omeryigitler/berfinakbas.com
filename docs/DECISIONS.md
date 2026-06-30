@@ -106,3 +106,15 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Liste sınırı: Randevu listesi varsayılan olarak `pending_review` durumunu, en fazla 100 kayıtlık cursor sayfalama ile döndürür. Serbest talep notu, iletişim bilgisi ve consent ayrıntısı liste response’una alınmaz; terapist yalnızca kendi practitioner kapsamını görür.
 - Yönetim eylemi: Onay ve ret, etkisini ve geri dönüş yolunu açıklayan kullanıcı onayından sonra durum API’sine gönderilir. UI yetkisi yalnızca görünürlük sağlar; API aktif oturum, rol ve practitioner kapsamını her istekte yeniden denetler.
 - OPEN: Bildirim/Calendar yan etkileri outbox modeli eklendiğinde aynı transaction’a idempotent event olarak bağlanacaktır.
+
+## ADR-017 — Aydınlatma, açık rıza ve veli yetkisi ayrı kapılar olacaktır
+
+- Durum: Kabul edildi
+- Karar: `PRIVACY_NOTICE` ve `BOOKING_TERMS` ayrı acknowledgement kayıtlarıdır. `EXPLICIT_CONSENT` yalnızca onaylı veri envanterinde ilgili işleme faaliyeti açık rızaya dayanıyorsa ayrı beyan olarak istenir; pazarlama rızası randevu koşulu yapılmaz.
+- Sürüm: Capture anında yürürlükte olan tek belge sürümü ID, version ve content hash ile kaydedilir. Belge güncellemesi geçmiş kayıtları değiştirmez.
+- Çocuk: Public talepte veli ilişkisi beyan edilir; kimlik/velayet belgesi veya tam doğum tarihi yüklenmez. Randevu `confirmed` olmadan önce aynı çocuk–veli ilişkisinde `authority_verified_at` bulunmalıdır.
+- Veri modeli: Consent subject ile çocuk adına beyan veren guardian ayrı alanlarda tutulur. Tek `guardian_id` iki rol için kullanılamaz.
+- Uyuşmazlık: Birden fazla veli veya yetki uyuşmazlığı otomatik çözülmez; erişim/onay dondurulur ve manuel incelemeye alınır.
+- Geri çekme: Açık rızanın geri çekilmesi gelecekte o rızaya dayalı işlemi durdurur; geçmiş kaydı veya randevuyu sessizce silmez.
+- Yayın kapısı: Nihai metinler, hukuki sebepler ve veli yetkisi doğrulama prosedürü hukukçu onayı olmadan public gönderime açılmaz.
+- Ayrıntı: `docs/CONSENT_AND_GUARDIAN_POLICY.md`

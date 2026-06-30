@@ -18,7 +18,7 @@ Komut, migration’ları `prisma migrate deploy` ile uygular ve ardından yalnı
 
 ## GitHub CI
 
-Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` önce dört migration’ı uygular, ardından sekiz gerçek veritabanı testini çalıştırır.
+Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` beş migration’ı uygular, ardından on gerçek veritabanı testini çalıştırır.
 
 CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır. Production veya geliştirici veritabanı secret’ı kullanılmaz ve uzak veritabanına erişim açılmaz.
 
@@ -39,11 +39,15 @@ CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır
 - `btree_gist` ve `booking_allocations_no_active_overlap` constraint varlığı
 - Randevu durumu, status log, audit ve allocation serbest bırakmanın aynı transaction’da yazılması
 - Aynı başlangıç durumundan iki eşzamanlı geçişte yalnızca bir komutun kazanması
+- Çocuk danışanın consent subject, beyan veren velinin ayrı grantor olarak saklanması
+- Client subject bulunmadan guardian grantor yazılmasının PostgreSQL constraint’iyle reddedilmesi
 
 ## Doğrulanan yerel durum
 
 29 Haziran 2026 tarihinde PostgreSQL 17.10 üzerinde dört migration başarıyla uygulandı ve sekiz integration testi geçti. Test sonrasında sentetik kullanıcı, hizmet, hold, randevu, audit ve allocation kayıtlarının temizlendiği doğrulandı.
 
 30 Haziran 2026 tarihinde Draft PR #10’un `postgres-integration` işi PostgreSQL 17.10 servis konteynerinde aynı dört migration ve sekiz testi başarıyla tamamladı. CI yalnızca sentetik `berfinakbas_integration` veritabanına bağlandı.
+
+Aynı gün Draft PR #11’in işi beş migration ve on testi başarıyla tamamladı; yeni consent subject/guardian grantor foreign key ve check constraint senaryoları gerçek PostgreSQL üzerinde doğrulandı.
 
 Bu sonuç yerel gerçek PostgreSQL kapısını karşılar. GitHub CI’daki PostgreSQL 17 işi her değişiklikte aynı paketi yeniden çalıştırır. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL sürümü/bölgesi üzerinde de aynı komut yeniden çalıştırılmalıdır.

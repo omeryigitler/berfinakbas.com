@@ -36,7 +36,7 @@ Her pull request için:
 
 Yerel durum (29 Haziran 2026): PostgreSQL 17.10 üzerinde dört migration ve sekiz gerçek veritabanı integration testi geçti. `pnpm test:integration` hold–hold, deadlock/serialization retry içeren uygulama servisi hold yarışı, hold–randevu, randevu–randevu, farklı uzman, atomik randevu durum geçmişi/audit/allocation serbest bırakma ve aynı durumdan eşzamanlı geçiş senaryolarını doğrular. Son retry düzeltmesinden sonra paket üç ardışık turda geçmiştir. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL/CI ortamında aynı paket yeniden çalıştırılmalıdır.
 
-Sürekli doğrulama: GitHub Actions, PostgreSQL 17 servis konteynerinde dört migration ve sekiz integration testini her pull request ve `main` push’unda ayrı `postgres-integration` işi olarak çalıştırır. Bu iş production veya geliştirici veritabanına bağlanmaz.
+Sürekli doğrulama: GitHub Actions, PostgreSQL 17 servis konteynerinde beş migration ve on integration testini her pull request ve `main` push’unda ayrı `postgres-integration` işi olarak çalıştırır. Bu iş production veya geliştirici veritabanına bağlanmaz.
 
 - Aynı slota iki eşzamanlı istekten yalnızca birinin başarılı olması
 - Aktif hold ile randevu çakışması
@@ -58,6 +58,10 @@ Sürekli doğrulama: GitHub Actions, PostgreSQL 17 servis konteynerinde dört mi
 - Aynı danışana birden fazla veli
 - Consent document sürümü ve hash
 - Aydınlatma ile açık rızanın ayrı kaydı
+- Çocuk danışanın subject, beyan veren velinin ayrı grantor olarak kaydı
+- Public talepte beyan edilmiş veliye izin verip admin onayında doğrulanmış yetki arama
+- Yetişkin danışanda guardian alanını reddetme
+- Yapılandırılmış ayrı explicit-consent belgesinin eksikliğini fail-closed reddetme
 - Geri çekme audit’i
 - Eksik/expired consent uyarısı
 
