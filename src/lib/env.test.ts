@@ -12,7 +12,47 @@ const validEnvironment = {
 
 describe("parseServerEnvironment", () => {
   it("accepts a valid server environment", () => {
-    expect(parseServerEnvironment(validEnvironment)).toMatchObject(validEnvironment);
+    expect(parseServerEnvironment(validEnvironment)).toMatchObject({
+      ...validEnvironment,
+      BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: [],
+      PUBLIC_APPOINTMENT_REQUESTS_ENABLED: false,
+    });
+  });
+
+  it("keeps public appointment requests disabled by default", () => {
+    expect(parseServerEnvironment(validEnvironment).PUBLIC_APPOINTMENT_REQUESTS_ENABLED).toBe(
+      false,
+    );
+  });
+
+  it("parses the public request switch and configured explicit consent types", () => {
+    const environment = parseServerEnvironment({
+      ...validEnvironment,
+      BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES:
+        "EXPLICIT_CONSENT_RESEARCH, EXPLICIT_CONSENT_RECORDING",
+      PUBLIC_APPOINTMENT_REQUESTS_ENABLED: "true",
+    });
+
+    expect(environment.PUBLIC_APPOINTMENT_REQUESTS_ENABLED).toBe(true);
+    expect(environment.BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES).toEqual([
+      "EXPLICIT_CONSENT_RESEARCH",
+      "EXPLICIT_CONSENT_RECORDING",
+    ]);
+  });
+
+  it("rejects duplicate or malformed explicit consent document types", () => {
+    expect(() =>
+      parseServerEnvironment({
+        ...validEnvironment,
+        BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: "EXPLICIT_CONSENT,EXPLICIT_CONSENT",
+      }),
+    ).toThrow();
+    expect(() =>
+      parseServerEnvironment({
+        ...validEnvironment,
+        BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: "not-valid",
+      }),
+    ).toThrow();
   });
 
   it("rejects an invalid time zone", () => {

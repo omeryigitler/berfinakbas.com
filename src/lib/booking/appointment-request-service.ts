@@ -17,25 +17,30 @@ import { getDatabase } from "@/lib/db";
 
 const MAX_TRANSACTION_ATTEMPTS = 3;
 
-const appointmentRequestInputSchema = z.object({
-  clientId: z.uuid(),
-  consentIds: z
-    .array(z.uuid())
-    .min(1)
-    .max(20)
-    .refine((ids) => new Set(ids).size === ids.length, "Consent kimlikleri tekil olmalıdır."),
-  correlationId: z.string().trim().min(1).max(80),
-  guardianId: z.uuid().nullable().optional().default(null),
-  holdId: z.uuid(),
-  holderToken: z.string().min(32).max(512),
-  requestNote: z
-    .string()
-    .trim()
-    .max(500)
-    .nullable()
-    .optional()
-    .transform((value) => value || null),
-});
+export const appointmentRequestPayloadSchema = z
+  .object({
+    clientId: z.uuid(),
+    consentIds: z
+      .array(z.uuid())
+      .min(1)
+      .max(20)
+      .refine((ids) => new Set(ids).size === ids.length, "Consent kimlikleri tekil olmalıdır."),
+    guardianId: z.uuid().nullable().optional().default(null),
+    holdId: z.uuid(),
+    holderToken: z.string().min(32).max(512),
+    requestNote: z
+      .string()
+      .trim()
+      .max(500)
+      .nullable()
+      .optional()
+      .transform((value) => value || null),
+  })
+  .strict();
+
+const appointmentRequestInputSchema = appointmentRequestPayloadSchema
+  .extend({ correlationId: z.string().trim().min(1).max(80) })
+  .strict();
 
 const requiredDocumentTypesSchema = z
   .array(

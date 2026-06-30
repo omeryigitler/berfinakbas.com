@@ -1,12 +1,31 @@
 # Hold’dan Randevu Talebi Üretme Servisi
 
-Durum: Uygulandı ve gerçek PostgreSQL üzerinde doğrulandı — public sınır kapalı
+Durum: Uygulandı ve gerçek PostgreSQL üzerinde doğrulandı — public API varsayılan kapalı
 
 ## Amaç
 
 Aktif ve kullanıcı token’ıyla doğrulanmış bir appointment hold’u, ADR-017 consent/veli kapılarını uygulayarak tek transaction içinde `REQUESTED` randevuya dönüştürmek.
 
-Public API ve form bu servis tamamlanıp test edilmeden açılmaz.
+Public API sınırı uygulanmıştır; `PUBLIC_APPOINTMENT_REQUESTS_ENABLED` varsayılan olarak `false`
+olduğu için servis ve veritabanı çağrısı fail-closed engellenir. Public form henüz uygulanmamıştır.
+
+## Public API sınırı
+
+`POST /api/public/appointments/requests` yalnızca sunucu bayrağı açıkken çalışır ve şu kapıları
+uygular:
+
+- `Origin`, `APP_URL` ile aynı origin olmalıdır; header yoksa istek reddedilir.
+- Yalnızca `application/json` kabul edilir; gövde en fazla 16 KiB olabilir.
+- Strict Zod şeması tanımsız alanları reddeder; klinik öykü gibi kapsam dışı veri sessizce alınmaz.
+- Correlation ID güvenli header değerinden alınır veya sunucuda üretilir; istemci gövdesinden alınmaz.
+- Zorunlu explicit-consent belge türleri yalnızca
+  `BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES` sunucu ayarından gelir.
+- Yanıtlar `Cache-Control: no-store` taşır; hata gövdeleri ham token, danışan kimliği veya form
+  içeriğini geri yansıtmaz.
+
+Bayrağın açılması tek başına canlıya çıkış onayı değildir. Nihai hukuk metinleri, operasyonel
+veli prosedürü ve dağıtık rate-limit/abuse kontrolü tamamlanmadan production ortamında `false`
+kalır.
 
 ## Güvenilir girdiler
 
@@ -74,6 +93,14 @@ Bu tablo consent metnini veya form payload’ını kopyalamaz; yalnızca immutab
 
 Bir kaydın var olup olmadığı yetkisiz istemciye ayrıntılı açıklanmaz.
 
+API eşlemesi:
+
+- Kapalı özellik: `404 BOOKING_REQUESTS_DISABLED`
+- Güvenilmeyen origin: `403 UNTRUSTED_ORIGIN`
+- Geçersiz içerik/gövde: `400`, `413` veya `415`
+- Consent/veli kapısı: `422 BOOKING_CONSENT_GATE_FAILED`
+- Hold/kaynak/yarış çakışması: güvenli kodla `409`
+
 ## Test kapıları
 
 - Geçersiz token veritabanı yazması üretmez
@@ -95,3 +122,5 @@ Bir kaydın var olup olmadığı yetkisiz istemciye ayrıntılı açıklanmaz.
 - Yetişkin ve declared guardian kullanan çocuk talebi gerçek veritabanında geçer.
 - Eksik consent fail-closed davranır; ham token ve danışan adı audit özetine girmez.
 - Başka danışana ait veya aynı belge türünü çoğaltan consent kanıtı fail-closed reddedilir.
+- Public route; kapalı özellik, origin, content type, boyut, strict alan doğrulaması, correlation ID,
+  sunucu-owned consent policy ve güvenli hata eşlemeleriyle unit test edilir.

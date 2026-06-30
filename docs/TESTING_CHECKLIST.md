@@ -103,6 +103,8 @@ Yerel durum (30 Haziran 2026): `appointment_consents` migration’ı ve atomik h
 - Session fixation/expiration
 - MFA zorunluluğu
 - CSRF
+- Public request özelliği kapalıyken service/veritabanı çağrısı yapılmaması
+- Public request same-origin, JSON content type, gövde boyutu ve strict alan doğrulaması
 - XSS ve güvenli çıktı encode
 - Rate limit
 - Secret ve hassas verinin loglara düşmemesi
