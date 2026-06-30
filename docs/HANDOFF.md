@@ -4,9 +4,9 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: Bu oturumda `codex/booking-consent-decisions` dalı için açılacak.
+- Draft PR: `#11 — [codex] Define booking consent and guardian policy`
 - Dal: `codex/booking-consent-decisions`
-- Durum: PR #10 `main` dalına birleştirildi. Consent belge türleri, çocuk/veli aşamaları ve veri modeli ayrımı uygulanıyor.
+- Durum: PR #10 `main` dalına birleştirildi. PR #11’deki consent/veli politikası, additive migration, quality, PostgreSQL integration ve Vercel kontrolleri geçti; inceleme/birleştirme kararı bekliyor.
 
 ## Tamamlananlar
 
@@ -25,9 +25,9 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 ## Sıradaki
 
-1. Yeni Draft PR’da quality, beş migration/on PostgreSQL integration testi ve Vercel kontrollerini doğrula.
-2. Consent/veli temelini `main` dalına birleştir.
-3. Hold’dan `REQUESTED` randevu üreten application servisini ADR-017 kapılarıyla uygula.
+1. Draft PR #11’i incele; uygun olduğunda incelemeye hazır işaretle ve `main` dalına birleştir.
+2. Hold’dan `REQUESTED` randevu üreten application servisini ADR-017 kapılarıyla uygula.
+3. Public API/form açılmadan önce nihai hukuki metin ve veli prosedürü yayın kapılarını doğrula.
 
 ## Engeller ve açık kararlar
 
@@ -38,10 +38,10 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 ## Son doğrulama
 
-- `pnpm quality` öncesi hızlı paket: 22 test dosyası, 138 test geçti.
+- `pnpm quality`: 22 test dosyası, 138 test geçti.
 - `pnpm build`: başarılı.
 - GitHub `quality` ve Vercel deployment kontrolleri: başarılı.
-- GitHub `postgres-integration`: dört migration ve sekiz test başarılı.
+- GitHub `postgres-integration`: beş migration ve on test başarılı.
 - Migration/veri modeli değişikliği: additive `granted_by_guardian_id`, foreign key, index ve grantor/client constraint’i.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 
