@@ -99,6 +99,15 @@ beforeAll(async () => {
      ) VALUES ($1, $2, $3, 60, 730, 1440, 2880, 8)`,
     [randomUUID(), fixture.serviceId, new Date("2030-01-01T00:00:00.000Z")],
   );
+  for (let weekday = 0; weekday <= 6; weekday += 1) {
+    await pool.query(
+      `INSERT INTO availability_rules (
+         id, practitioner_id, weekday, local_start_time, local_end_time,
+         slot_increment_minutes, status, updated_at
+       ) VALUES ($1, $2, $3, '09:00', '17:00', 5, 'ACTIVE', NOW())`,
+      [randomUUID(), fixture.practitionerId, weekday],
+    );
+  }
   await pool.query(
     `INSERT INTO clients (id, type, first_name, last_name, status, updated_at)
      VALUES ($1, 'ADULT', 'Sentetik', 'Talep Danışanı', 'PROSPECTIVE', NOW())`,
@@ -205,6 +214,9 @@ afterAll(async () => {
   ]);
   await pool.query(`DELETE FROM service_policies WHERE service_id = $1`, [fixture.serviceId]);
   await pool.query(`DELETE FROM services WHERE id = $1`, [fixture.serviceId]);
+  await pool.query(`DELETE FROM availability_rules WHERE practitioner_id = $1`, [
+    fixture.practitionerId,
+  ]);
   await pool.query(`DELETE FROM practitioners WHERE id = $1`, [fixture.practitionerId]);
   await pool.query(`DELETE FROM users WHERE id = $1`, [fixture.userId]);
   await getDatabase().$disconnect();

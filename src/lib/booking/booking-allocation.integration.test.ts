@@ -3,6 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Pool, type PoolClient } from "pg";
 
+import { SlotConflictError } from "@/domain/booking/appointment-hold";
 import { createAppointmentHold } from "@/lib/booking/appointment-hold-service";
 import {
   AppointmentTransitionConflictError,
@@ -212,6 +213,15 @@ beforeAll(async () => {
     ) VALUES ($1, $2, $3, 60, 730, 1440, 2880, 8)`,
     [randomUUID(), fixture.serviceId, new Date("2030-01-01T00:00:00.000Z")],
   );
+  for (let weekday = 0; weekday <= 6; weekday += 1) {
+    await pool.query(
+      `INSERT INTO availability_rules (
+         id, practitioner_id, weekday, local_start_time, local_end_time,
+         slot_increment_minutes, status, updated_at
+       ) VALUES ($1, $2, $3, '09:00', '17:00', 5, 'ACTIVE', NOW())`,
+      [randomUUID(), fixture.practitionerIds[0], weekday],
+    );
+  }
   await pool.query(
     `INSERT INTO clients (id, type, first_name, last_name, status, updated_at)
      VALUES ($1, 'ADULT', 'Sentetik', 'Danışan', 'ACTIVE', NOW())`,
@@ -245,10 +255,16 @@ afterAll(async () => {
   ]);
   await pool.query(
     `DELETE FROM audit_logs
-     WHERE correlation_id LIKE 'application-hold-race-%'
+     WHERE correlation_id LIKE 'application-hold-%'
         OR correlation_id LIKE 'application-appointment-transition-%'`,
   );
   await pool.query(`DELETE FROM clients WHERE id = $1`, [fixture.clientId]);
+  await pool.query(`DELETE FROM availability_exceptions WHERE practitioner_id = ANY($1::uuid[])`, [
+    fixture.practitionerIds,
+  ]);
+  await pool.query(`DELETE FROM availability_rules WHERE practitioner_id = ANY($1::uuid[])`, [
+    fixture.practitionerIds,
+  ]);
   await pool.query(`DELETE FROM practitioners WHERE id = ANY($1::uuid[])`, [
     fixture.practitionerIds,
   ]);
@@ -335,6 +351,101 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       [fulfilledHold.value.holdId],
     );
     expect(Number(activeAllocationCount.rows[0].count)).toBe(1);
+  });
+
+  it("rejects a database-blocked local slot without creating a hold or audit record", async () => {
+    const localDate = new Date("2031-07-08T00:00:00.000Z");
+    await pool.query(
+      `INSERT INTO availability_exceptions (
+         id, practitioner_id, local_date, type, local_start_time,
+         local_end_time, reason_code, status, updated_at
+       ) VALUES ($1, $2, $3, 'BLOCKED', '11:00', '13:00',
+                 'SYNTHETIC_BLOCK', 'ACTIVE', NOW())`,
+      [randomUUID(), fixture.practitionerIds[0], localDate],
+    );
+
+    await expect(
+      createAppointmentHold(
+        {
+          correlationId: "application-hold-availability-blocked",
+          holdDurationMinutes: 8,
+          practitionerId: fixture.practitionerIds[0],
+          serviceId: fixture.serviceId,
+          startsAt: new Date("2031-07-08T09:00:00.000Z"),
+        },
+        new Date("2031-06-01T09:00:00.000Z"),
+      ),
+    ).rejects.toBeInstanceOf(SlotConflictError);
+
+    const holdCount = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM appointment_holds
+       WHERE practitioner_id = $1 AND starts_at = $2`,
+      [fixture.practitionerIds[0], new Date("2031-07-08T09:00:00.000Z")],
+    );
+    const auditCount = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM audit_logs
+       WHERE correlation_id = 'application-hold-availability-blocked'`,
+    );
+
+    expect(Number(holdCount.rows[0].count)).toBe(0);
+    expect(Number(auditCount.rows[0].count)).toBe(0);
+  });
+
+  it("allows only one of two different holds when one daily capacity remains", async () => {
+    await pool.query(
+      `UPDATE service_policies SET max_daily_appointments = 1 WHERE service_id = $1`,
+      [fixture.serviceId],
+    );
+
+    try {
+      const now = new Date("2031-06-01T09:00:00.000Z");
+      const results = await Promise.allSettled([
+        createAppointmentHold(
+          {
+            correlationId: "application-hold-capacity-left",
+            holdDurationMinutes: 8,
+            practitionerId: fixture.practitionerIds[0],
+            serviceId: fixture.serviceId,
+            startsAt: new Date("2031-07-09T07:00:00.000Z"),
+          },
+          now,
+        ),
+        createAppointmentHold(
+          {
+            correlationId: "application-hold-capacity-right",
+            holdDurationMinutes: 8,
+            practitionerId: fixture.practitionerIds[0],
+            serviceId: fixture.serviceId,
+            startsAt: new Date("2031-07-09T09:00:00.000Z"),
+          },
+          now,
+        ),
+      ]);
+      const fulfilled = results.filter((result) => result.status === "fulfilled");
+      const rejected = results.filter((result) => result.status === "rejected");
+      const activeHoldCount = await pool.query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM appointment_holds
+         WHERE practitioner_id = $1
+           AND starts_at >= $2 AND starts_at < $3
+           AND status = 'ACTIVE' AND expires_at > $4`,
+        [
+          fixture.practitionerIds[0],
+          new Date("2031-07-08T21:00:00.000Z"),
+          new Date("2031-07-09T21:00:00.000Z"),
+          now,
+        ],
+      );
+
+      expect(fulfilled).toHaveLength(1);
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0]).toMatchObject({ reason: new SlotConflictError() });
+      expect(Number(activeHoldCount.rows[0].count)).toBe(1);
+    } finally {
+      await pool.query(
+        `UPDATE service_policies SET max_daily_appointments = 8 WHERE service_id = $1`,
+        [fixture.serviceId],
+      );
+    }
   });
 
   it("persists appointment transitions, history, audit and allocation release atomically", async () => {

@@ -1,9 +1,13 @@
 import {
-  assertMinimumBookingNotice,
   BookingResourceUnavailableError,
   prepareAppointmentHold,
   SlotConflictError,
 } from "@/domain/booking/appointment-hold";
+import {
+  assertAppointmentHoldAvailability,
+  getZonedBookingDate,
+  getZonedBookingDayRange,
+} from "@/lib/booking/appointment-hold-availability";
 import { getDatabase } from "@/lib/db";
 import { z } from "zod";
 
@@ -92,7 +96,7 @@ export async function createAppointmentHold(
       const result = await database.$transaction(
         async (transaction) => {
           const practitioner = await transaction.practitioner.findUnique({
-            select: { id: true, status: true },
+            select: { id: true, status: true, timeZone: true },
             where: { id: command.practitionerId },
           });
           const service = await transaction.service.findUnique({
@@ -115,11 +119,110 @@ export async function createAppointmentHold(
             throw new BookingResourceUnavailableError();
           }
 
-          assertMinimumBookingNotice(
-            command.startsAt,
-            now,
-            service.policies[0].bookingMinNoticeMinutes,
+          const bookingDate = getZonedBookingDate(command.startsAt, practitioner.timeZone);
+          const bookingDateValue = new Date(`${bookingDate.localDate}T00:00:00.000Z`);
+          const bookingDayRange = getZonedBookingDayRange(
+            bookingDate.localDate,
+            practitioner.timeZone,
           );
+          const availabilityRules = await transaction.availabilityRule.findMany({
+            orderBy: [{ localStartTime: "asc" }, { localEndTime: "asc" }, { id: "asc" }],
+            select: {
+              localEndTime: true,
+              localStartTime: true,
+              slotIncrementMinutes: true,
+            },
+            where: {
+              AND: [
+                { OR: [{ validFrom: null }, { validFrom: { lte: bookingDateValue } }] },
+                { OR: [{ validUntil: null }, { validUntil: { gte: bookingDateValue } }] },
+              ],
+              practitionerId: command.practitionerId,
+              status: "ACTIVE",
+              weekday: bookingDate.weekday,
+            },
+          });
+          const availabilityExceptions = await transaction.availabilityException.findMany({
+            orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+            select: {
+              localEndTime: true,
+              localStartTime: true,
+              practitionerId: true,
+              reasonCode: true,
+              status: true,
+              type: true,
+            },
+            where: {
+              localDate: bookingDateValue,
+              practitionerId: command.practitionerId,
+              status: "ACTIVE",
+            },
+          });
+          const reservedBookingsCount = await transaction.bookingAllocation.count({
+            where: {
+              OR: [
+                {
+                  appointment: {
+                    is: {
+                      startsAt: { gte: bookingDayRange.startsAt, lt: bookingDayRange.endsAt },
+                    },
+                  },
+                },
+                {
+                  hold: {
+                    is: {
+                      expiresAt: { gt: now },
+                      startsAt: { gte: bookingDayRange.startsAt, lt: bookingDayRange.endsAt },
+                      status: "ACTIVE",
+                    },
+                  },
+                },
+              ],
+              practitionerId: command.practitionerId,
+              status: "ACTIVE",
+            },
+          });
+          const resolvedExceptions = availabilityExceptions.map((exception) => {
+            const common = {
+              localDate: bookingDate.localDate,
+              practitionerId: exception.practitionerId,
+              privateNote: null,
+              reasonCode: exception.reasonCode,
+              status: "ACTIVE" as const,
+            };
+            if (exception.type === "CLOSED") {
+              return {
+                ...common,
+                localEndTime: null,
+                localStartTime: null,
+                type: "CLOSED" as const,
+              };
+            }
+            if (exception.localEndTime === null || exception.localStartTime === null) {
+              throw new BookingResourceUnavailableError();
+            }
+            return {
+              ...common,
+              localEndTime: exception.localEndTime,
+              localStartTime: exception.localStartTime,
+              type: exception.type,
+            };
+          });
+
+          assertAppointmentHoldAvailability({
+            bookingMaxAdvanceDays: service.policies[0].bookingMaxAdvanceDays,
+            bookingMinNoticeMinutes: service.policies[0].bookingMinNoticeMinutes,
+            bufferAfterMinutes: service.defaultBufferAfterMinutes,
+            bufferBeforeMinutes: service.defaultBufferBeforeMinutes,
+            durationMinutes: service.defaultDurationMinutes,
+            exceptions: resolvedExceptions,
+            maxDailyAppointments: service.policies[0].maxDailyAppointments,
+            now,
+            reservedBookingsCount,
+            rules: availabilityRules,
+            startsAt: command.startsAt,
+            timeZone: practitioner.timeZone,
+          });
 
           const prepared = prepareAppointmentHold({
             bufferAfterMinutes: service.defaultBufferAfterMinutes,
