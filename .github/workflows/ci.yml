@@ -53,3 +53,48 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  postgres-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_URL: http://localhost:3000
+      AUTH_SECRET: ci-only-auth-secret-not-for-production-use
+      BUSINESS_TIME_ZONE: Europe/Istanbul
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas_integration?schema=public
+      NEXT_TELEMETRY_DISABLED: "1"
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas_integration?schema=public
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: berfinakbas_integration
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d berfinakbas_integration"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run PostgreSQL integration tests
+        run: pnpm test:integration
