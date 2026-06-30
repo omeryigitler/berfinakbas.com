@@ -108,6 +108,9 @@ Yerel durum (30 Haziran 2026): `appointment_consents` migration’ı ve atomik h
 - CSRF
 - Public request özelliği kapalıyken service/veritabanı çağrısı yapılmaması
 - Public request same-origin, JSON content type, gövde boyutu ve strict alan doğrulaması
+- Public hold özelliği kapalıyken gövde okunmaması ve service/veritabanı çağrısı yapılmaması
+- Public hold same-origin, JSON content type, 4 KiB gövde ve strict alan doğrulaması
+- Holder token’ın yalnızca `no-store` yanıtta bulunması; hata, log ve audit özetinde bulunmaması
 - XSS ve güvenli çıktı encode
 - Rate limit
 - Secret ve hassas verinin loglara düşmemesi

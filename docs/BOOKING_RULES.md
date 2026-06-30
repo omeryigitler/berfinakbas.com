@@ -55,6 +55,8 @@ Her alan için:
 - Hizmet süresi/buffer, minimum bildirim, maksimum ileri rezervasyon ve günlük kapasite hold transaction’ında tekrar uygulanır; kapasite süresi geçmemiş aktif hold ve randevu tahsislerini birlikte sayar.
 - Aynı gün için farklı slot artışları veya çelişen istisna tipleri otomatik çözümlenmez; yapılandırma düzeltilene kadar fail-closed reddedilir.
 - Aynı slotta iki aktif hold veya aktif randevu oluşmaması veritabanı/locking ile garanti edilir.
+- Public hold API sunucu bayrağıyla varsayılan kapalıdır; açıldığında yalnızca uzman, hizmet ve UTC slot başlangıcını kabul eder. Hold süresi, audit correlation ID veya ek kişisel/klinik alan istemciden alınmaz.
+- Ham holder token yalnızca `no-store` oluşturma yanıtında döner; URL, log veya audit özetine yazılmaz.
 - Kullanıcı formu geç gönderirse slot yeniden kontrol edilir; otomatik olarak başka saat verilmez.
 
 ## 6. Talep oluşturma
