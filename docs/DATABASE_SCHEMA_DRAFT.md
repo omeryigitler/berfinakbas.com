@@ -94,6 +94,7 @@ Bir çocuk danışan için gerçek randevu onayından önce en az bir yetkili ve
 - id
 - client_id (nullable)
 - guardian_id (nullable)
+- granted_by_guardian_id (nullable; çocuk danışan adına beyan veren veli/temsilci)
 - document_id
 - status: granted | withdrawn | expired
 - captured_at
@@ -103,6 +104,7 @@ Bir çocuk danışan için gerçek randevu onayından önce en az bir yetkili ve
 - actor_user_id (nullable)
 
 Aydınlatma metninin gösterilmesi ile açık rıza aynı kayıt/checkbox olarak modellenmez.
+`client_id`/`guardian_id` kaydın subject alanlarıdır; `granted_by_guardian_id` subject değildir. Çocuk danışan adına veli beyanında `client_id` ve `granted_by_guardian_id` birlikte bulunur.
 
 ## 5. Hizmet ve ayarlar
 

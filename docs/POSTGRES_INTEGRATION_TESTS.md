@@ -18,7 +18,7 @@ Komut, migration’ları `prisma migrate deploy` ile uygular ve ardından yalnı
 
 ## GitHub CI
 
-Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` önce dört migration’ı uygular, ardından sekiz gerçek veritabanı testini çalıştırır.
+Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` beş migration’ı uygular, ardından on gerçek veritabanı testini çalıştırır.
 
 CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır. Production veya geliştirici veritabanı secret’ı kullanılmaz ve uzak veritabanına erişim açılmaz.
 
@@ -39,6 +39,8 @@ CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır
 - `btree_gist` ve `booking_allocations_no_active_overlap` constraint varlığı
 - Randevu durumu, status log, audit ve allocation serbest bırakmanın aynı transaction’da yazılması
 - Aynı başlangıç durumundan iki eşzamanlı geçişte yalnızca bir komutun kazanması
+- Çocuk danışanın consent subject, beyan veren velinin ayrı grantor olarak saklanması
+- Client subject bulunmadan guardian grantor yazılmasının PostgreSQL constraint’iyle reddedilmesi
 
 ## Doğrulanan yerel durum
 

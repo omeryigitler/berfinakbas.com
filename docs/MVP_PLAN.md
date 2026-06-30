@@ -40,7 +40,7 @@ Mevcut durum:
 - Production build doğrulandı.
 - CI workflow gerçek GitHub deposunda çalışmakta ve `main` kalite kapısı geçmektedir.
 - Gerçek PostgreSQL 17 üzerinde migration ve integration test paketi çalışmaktadır.
-- PostgreSQL 17 servis konteyneri kullanan ayrı CI işi, migration ve sekiz gerçek veritabanı testini her pull request ve `main` push’unda çalıştırır.
+- PostgreSQL 17 servis konteyneri kullanan ayrı CI işi, beş migration ve on gerçek veritabanı testini her pull request ve `main` push’unda çalıştırır.
 
 ## Faz 2 — kimlik, yetki ve veri çekirdeği
 
@@ -60,11 +60,13 @@ Mevcut durum:
 - Allowlist ile ilk kez oluşturulan yönetici hesabının `SUPER_ADMIN` rolü ve audit kaydı aynı transaction içinde atanır; suspended ve allowlist dışı hesaplar fail-closed reddedilir.
 - Sunucu tarafı rol/izin kataloğu ve izin testleri eklendi.
 - Kullanıcı/rol, Auth.js oturumu, danışan/veli ve consent modelleri ile SQL migration hazırlandı.
+- Consent subject ile çocuk adına beyan veren guardian grantor ayrı alanlara taşındı; additive migration ve PostgreSQL constraint testi eklendi.
+- Aydınlatma acknowledgement, randevu koşulları, yapılandırılmış açık rıza ve veli yetkisi kapıları ADR-017 ile ayrıştırıldı.
 - Hizmet ayarı doğrulaması, değişmez snapshot üretimi ve audit kayıtlı admin API temeli eklendi.
 - Sentetik rol ve taslak hizmet seed’i hazırlandı.
 - ChatGPT proje klasöründeki tasarım yönü incelendi ve public ana sayfaya uygulandı.
 - Yetkili/izinsiz route testleri, lint, typecheck, format kontrolü ve production build başarılıdır.
-- Dört migration gerçek PostgreSQL 17 üzerinde uygulanmış; eşzamanlılık ve transaction integration testleri geçmiştir.
+- Beş migration gerçek PostgreSQL 17 CI kapısında uygulanır; eşzamanlılık, transaction ve consent bütünlüğü integration testleriyle doğrulanır.
 - Gerçek Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici rolü doğrulaması yayın kapısı olarak beklenmektedir.
 
 ## Faz 3 — randevu motoru
@@ -92,9 +94,9 @@ Mevcut durum:
 - Admin durum API’si aktif oturum, `appointments:manage`, güvenilir origin ve terapistin kendi practitioner kaydı sınırlarını uygular; geçersiz veya yarışta kaybeden geçişleri güvenli yanıtlara dönüştürür.
 - Admin liste API’si varsayılan olarak bekleyen talepleri döndürür; rol/practitioner kapsamı, sınırlandırılmış cursor sayfalama ve serbest not/iletişim ayrıntısını dışarıda bırakan minimum veri seçimi uygular.
 - Admin bekleyen talepler ekranı minimum liste alanlarını işletme saat diliminde gösterir; yükleme, boş, hata, yenileme ve cursor ile daha fazla kayıt durumları erişilebilir biçimde hazırlanmıştır. Onay/ret eylemleri sonuç ve geri dönüş bilgisini işlem öncesinde gösterir, başarılı kaydı kuyruktan çıkarır ve sunucu yetkisini yeniden doğrular.
-- Dört migration ve sekiz gerçek PostgreSQL integration testi; hold/randevu allocation yarışları ile aynı durumdan iki eşzamanlı geçişte yalnızca bir kazananı doğrular.
+- Beş migration ve on gerçek PostgreSQL integration testi; hold/randevu allocation yarışları, aynı durumdan iki eşzamanlı geçiş ve consent subject/grantor bütünlüğünü doğrular.
 - Hold süresinin canlı sistem ayarı `OPEN` durumundadır; public randevu gönderimi açılmamıştır.
-- Zorunlu consent belge türleri ve çocuk/veli yetki doğrulaması `OPEN` olduğu için hold’dan gerçek randevu talebi üretimi henüz açılmamıştır.
+- Zorunlu acknowledgement/consent türleri ve çocuk/veli doğrulama aşamaları ADR-017 ile kapatılmıştır. Hold’dan gerçek randevu talebi üreten application servisi henüz uygulanmadığı ve nihai hukuki metinler onaylanmadığı için public gönderim kapalıdır.
 
 ## Faz 4 — public site 🟡
 

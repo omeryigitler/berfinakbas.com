@@ -166,13 +166,12 @@ Bildirim gönderilmemesi durum değişikliğini geri almaz; admin retry durumunu
 ## 15. Açık kararlar
 
 - Varsayılan hold süresi
-- Randevu talebi için zorunlu consent belge türleri ve sürüm seçme kuralı
-- Çocuk/veli yetki kanıtının hangi aşamada ve nasıl doğrulanacağı
 - Aynı tarihte `closed`, `custom_hours` ve `blocked` istisnalarının öncelik sırası
 - Hizmet bazında manual/automatic onay
 - Minimum/maximum süre ve buffer
 - İptal ve no-show politikaları
 - Günlük kapasite
-- Çocuk için yaş/eşleştirme doğrulaması
 - Admin tarafından walk-in/telefon randevusu oluşturma akışı
 - Çalışma saatleri ve resmi tatil yaklaşımı
+
+Consent belge türleri, sürüm seçimi, çocuk/veli aşamaları ve yaş verisi minimizasyonu ADR-017 ile kapatılmıştır. Teknik politika `docs/CONSENT_AND_GUARDIAN_POLICY.md` dosyasındadır; nihai metinler ve yetki doğrulama prosedürü hukuki yayın kapısıdır.
