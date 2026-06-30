@@ -44,4 +44,6 @@ CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır
 
 29 Haziran 2026 tarihinde PostgreSQL 17.10 üzerinde dört migration başarıyla uygulandı ve sekiz integration testi geçti. Test sonrasında sentetik kullanıcı, hizmet, hold, randevu, audit ve allocation kayıtlarının temizlendiği doğrulandı.
 
+30 Haziran 2026 tarihinde Draft PR #10’un `postgres-integration` işi PostgreSQL 17.10 servis konteynerinde aynı dört migration ve sekiz testi başarıyla tamamladı. CI yalnızca sentetik `berfinakbas_integration` veritabanına bağlandı.
+
 Bu sonuç yerel gerçek PostgreSQL kapısını karşılar. GitHub CI’daki PostgreSQL 17 işi her değişiklikte aynı paketi yeniden çalıştırır. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL sürümü/bölgesi üzerinde de aynı komut yeniden çalıştırılmalıdır.
