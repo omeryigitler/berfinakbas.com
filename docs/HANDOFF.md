@@ -6,7 +6,7 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 - Draft PR: `#9 — [codex] Add pending appointments admin screen`
 - Dal: `codex/admin-pending-appointments-ui`
-- Durum: Bekleyen talepler ekranı, transaction retry düzeltmesi ve onay/ret eylemleri hazır; Draft PR güncellenip kalite kapısından geçirilecek.
+- Durum: Bekleyen talepler ekranı, transaction retry düzeltmesi, onay/ret eylemleri ve cihazlar arası devir teslim düzeni hazır. GitHub kalite ve Vercel kontrolleri geçti; Draft PR inceleme/birleştirme kararı bekliyor.
 
 ## Tamamlananlar
 
@@ -19,7 +19,7 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 ## Sıradaki
 
-1. Draft PR #9 kontrollerini doğrula ve incelemeye hazır olduğunda birleştir.
+1. Draft PR #9’u incele; uygun olduğunda incelemeye hazır işaretle ve birleştir.
 2. Hold’dan randevu talebi üretmeden önce zorunlu consent türleri ile çocuk/veli yetki kararlarını kapat.
 3. Yönetilen PostgreSQL/CI ortamında gerçek integration paketini yeniden çalıştır.
 
@@ -34,6 +34,7 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 - `pnpm quality`: 21 test dosyası, 131 test geçti.
 - `pnpm build`: başarılı.
+- GitHub `quality` ve Vercel deployment kontrolleri: başarılı.
 - Migration/veri modeli değişikliği: yok.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 
