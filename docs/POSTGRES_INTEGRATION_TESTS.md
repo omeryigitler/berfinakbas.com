@@ -31,9 +31,11 @@ Komut, migration’ları `prisma migrate deploy` ile uygular ve ardından yalnı
 - Aynı uzmanda randevu–randevu çakışması
 - Farklı uzmanlarda aynı saat aralığının birbirini engellememesi
 - `btree_gist` ve `booking_allocations_no_active_overlap` constraint varlığı
+- Randevu durumu, status log, audit ve allocation serbest bırakmanın aynı transaction’da yazılması
+- Aynı başlangıç durumundan iki eşzamanlı geçişte yalnızca bir komutun kazanması
 
 ## Doğrulanan yerel durum
 
-29 Haziran 2026 tarihinde PostgreSQL 17.10 üzerinde dört migration başarıyla uygulandı ve altı integration testi geçti. Test sonrasında sentetik kullanıcı, hizmet, hold, randevu, audit ve allocation kayıtlarının temizlendiği doğrulandı.
+29 Haziran 2026 tarihinde PostgreSQL 17.10 üzerinde dört migration başarıyla uygulandı ve sekiz integration testi geçti. Test sonrasında sentetik kullanıcı, hizmet, hold, randevu, audit ve allocation kayıtlarının temizlendiği doğrulandı.
 
 Bu sonuç yerel gerçek PostgreSQL kapısını karşılar. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL sürümü/bölgesi üzerinde aynı komutun CI ortamında yeniden çalıştırılması gerekir.

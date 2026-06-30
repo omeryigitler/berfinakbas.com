@@ -34,7 +34,7 @@ Her pull request için:
 
 > **CANLIYA ÇIKIŞ ENGELİ:** `20260629030000_booking_hold_core` migration’ı gerçek PostgreSQL üzerinde uygulanıp aşağıdaki hold/appointment eşzamanlılık senaryoları geçmeden public randevu gönderimi veya admin onayı açılmaz. Bu engel, randevu çekirdeğiyle ilgili her teslimde yeniden belirtilir.
 
-Yerel durum (29 Haziran 2026): PostgreSQL 17.10 üzerinde dört migration ve sekiz gerçek veritabanı integration testi geçti. `pnpm test:integration` hold–hold, uygulama servisi hold yarışı, hold–randevu, randevu–randevu, farklı uzman, atomik randevu durum geçmişi/audit/allocation serbest bırakma ve aynı durumdan eşzamanlı geçiş senaryolarını doğrular. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL/CI ortamında aynı paket yeniden çalıştırılmalıdır.
+Yerel durum (29 Haziran 2026): PostgreSQL 17.10 üzerinde dört migration ve sekiz gerçek veritabanı integration testi geçti. `pnpm test:integration` hold–hold, deadlock/serialization retry içeren uygulama servisi hold yarışı, hold–randevu, randevu–randevu, farklı uzman, atomik randevu durum geçmişi/audit/allocation serbest bırakma ve aynı durumdan eşzamanlı geçiş senaryolarını doğrular. Son retry düzeltmesinden sonra paket üç ardışık turda geçmiştir. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL/CI ortamında aynı paket yeniden çalıştırılmalıdır.
 
 - Aynı slota iki eşzamanlı istekten yalnızca birinin başarılı olması
 - Aktif hold ile randevu çakışması
@@ -89,6 +89,8 @@ Yerel durum (29 Haziran 2026): PostgreSQL 17.10 üzerinde dört migration ve sek
 - Her rol için izin verilen erişim
 - Her rol için reddedilen erişim
 - UI’da gizli olsa bile API’nin reddetmesi
+- Admin onay/ret eyleminde işlem öncesi sonuç ve geri dönüş uyarısı
+- Başarılı onay/ret sonrası kaydın bekleyen kuyruktan çıkması; API hatasında görünür güvenli hata
 - IDOR: başka danışan/randevu kimliğiyle erişememe
 - Session fixation/expiration
 - MFA zorunluluğu

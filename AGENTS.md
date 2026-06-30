@@ -2,6 +2,33 @@
 
 Bu dosya, projede çalışan geliştirici ve kod ajanları için bağlayıcı çalışma kurallarını tanımlar.
 
+## Cihazlar arası çalışma ve devir teslim
+
+GitHub deposu tek gerçek kaynaktır. Aynı anda yalnızca bir aktif Draft PR bulunur; bu PR’ın dalı Windows ve macOS cihazları arasında devam eden çalışmayı temsil eder.
+
+Her çalışma oturumunun başında:
+
+1. Yerel değişiklikleri ve mevcut dalı kontrol et; kullanıcıya ait veya açıklanamayan değişiklikleri ezme.
+2. `git fetch --all --prune` ile uzak dalları güncelle.
+3. GitHub’daki açık Draft PR’ları kontrol et. Tam olarak bir Draft PR varsa onun dalına geç ve `git pull --ff-only` uygula.
+4. Birden fazla Draft PR varsa görev seçimini tahmin etme. Draft PR yoksa güncel `main` üzerinden açıkça adlandırılmış `codex/<görev>` dalı oluştur.
+5. Draft PR açıklamasını, `docs/HANDOFF.md`, `docs/MVP_PLAN.md` ve `docs/DECISIONS.md` dosyalarını okuyarak kaldığın bağlamı kur.
+
+Her çalışma oturumunun sonunda:
+
+1. İlgili testleri, `pnpm quality` ve değişiklik gerektiriyorsa `pnpm build` komutunu çalıştır.
+2. `docs/HANDOFF.md` içindeki aktif dal/PR, tamamlananlar, sıradaki iş, engeller ve son doğrulama alanlarını güncelle.
+3. Draft PR açıklamasını aynı bilgilerle güncelle.
+4. Yalnızca göreve ait dosyaları commit et ve aktif dalı push et.
+5. `git status` çıktısının temiz ve dalın uzak karşılığıyla eşit olduğunu doğrula.
+
+Ek kurallar:
+
+- Aynı dal iki cihazda eşzamanlı düzenlenmez. Cihaz değiştirmeden önce commit ve push zorunludur.
+- `.env` ve secret değerler commit edilmez; cihazlara parola yöneticisi veya güvenli kanal üzerinden ayrı kurulur.
+- Çalışma klasörü iCloud, OneDrive veya Dropbox ile senkronize edilmez; her cihaz kendi clone’unu kullanır.
+- Satır sonu ve editör davranışı `.gitattributes` ile `.editorconfig`, Node sürümü `.nvmrc` ve `.node-version`, pnpm sürümü `packageManager` alanı tarafından belirlenir.
+
 ## Dil ve ürün bağlamı
 
 - Kullanıcıya görünen tüm metinler varsayılan olarak Türkçe yazılır.

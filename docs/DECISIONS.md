@@ -91,6 +91,7 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Karar: Hold ve randevuların buffer dâhil meşgul aralıkları ortak `booking_allocations` tablosuna bağlanır. Aynı terapistin aktif aralıkları PostgreSQL `btree_gist` ve `tstzrange` exclusion constraint ile çakışamaz.
 - Gerekçe: Ayrı hold ve appointment tablolarındaki application-level “önce sorgula, sonra ekle” kontrolü eşzamanlı isteklerde yeterli değildir.
 - İşlem kuralı: Hold oluşturma; hold, ilk durum kaydı, allocation ve minimum audit kaydını aynı serializable transaction içinde üretir. Süresi dolan hold aynı transaction içinde serbest bırakılır ve geçmişi korunur.
+- Yarış kuralı: PostgreSQL `40P01` deadlock ve `40001` serialization hataları en fazla üç transaction denemesiyle yeniden çalıştırılır; overlap constraint sonucu kullanıcıya güvenli slot conflict olarak döner.
 - Güvenlik: Ham tek kullanımlık hold token’ı saklanmaz; yalnızca SHA-256 özeti tutulur ve audit özetine eklenmez.
 - OPEN: Canlı ortamda kullanılacak hold süresi henüz ürün kararı değildir. Kod süreyi yapılandırılmış girdi olarak alır; public API açılmadan önce sistem ayarına bağlanacaktır.
 
@@ -103,4 +104,5 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Gizlilik: Audit özetleri yalnızca durum bilgisini taşır; danışan notu veya iletişim bilgisi audit özetine kopyalanmaz.
 - API sınırı: Durum değiştirme endpoint’i aktif oturum, `appointments:manage`, güvenilir origin ve terapist için kendi practitioner kaydına bağlı randevu kontrolü ister. Yetkisiz veya başka terapiste ait kayıtlar servis katmanına iletilmez.
 - Liste sınırı: Randevu listesi varsayılan olarak `pending_review` durumunu, en fazla 100 kayıtlık cursor sayfalama ile döndürür. Serbest talep notu, iletişim bilgisi ve consent ayrıntısı liste response’una alınmaz; terapist yalnızca kendi practitioner kapsamını görür.
+- Yönetim eylemi: Onay ve ret, etkisini ve geri dönüş yolunu açıklayan kullanıcı onayından sonra durum API’sine gönderilir. UI yetkisi yalnızca görünürlük sağlar; API aktif oturum, rol ve practitioner kapsamını her istekte yeniden denetler.
 - OPEN: Bildirim/Calendar yan etkileri outbox modeli eklendiğinde aynı transaction’a idempotent event olarak bağlanacaktır.

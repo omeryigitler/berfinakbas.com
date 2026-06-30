@@ -45,6 +45,7 @@ Sadece renk ile anlam verilmez.
 
 Onay eylemi son bir transaction kontrolü yapar.
 Liste API’si serbest talep notu, iletişim bilgisi ve consent ayrıntısını varsayılan response’a eklemez; ayrıntı erişimi ayrı yetki ve kontrollü görünüm gerektirir.
+Onay/ret düğmeleri işlem sonucunu ve geri dönüş yöntemini gönderimden önce açıklar; başarılı işlem kuyruktan çıkarılır, yarış veya yetki hatasında kayıt sessizce değiştirilmez.
 
 ## 5. Hizmet yönetimi
 

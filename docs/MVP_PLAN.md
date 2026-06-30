@@ -84,11 +84,13 @@ Mevcut durum:
 - UTC/IANA saat dilimi kullanan saf slot üretimi; custom süre, buffer, minimum bildirim, kapasite ve yaz/kış saati testleri hazırdır.
 - Practitioner, hold, appointment, durum geçmişi ve ortak booking allocation şeması için additive migration hazırlanmıştır.
 - Hold oluşturma; süresi dolan hold temizliği, token hash, durum geçmişi, ortak allocation ve audit kaydını serializable transaction içinde yazar.
+- Hold yarışı PostgreSQL deadlock/serialization hatalarında üç denemeyle sınırlı retry uygular; retry sonrası overlap güvenli slot conflict’e çevrilir.
 - PostgreSQL exclusion constraint hold-hold, hold-randevu ve randevu-randevu çakışmasını tek noktada engeller.
 - Haftalık yerel çalışma kuralları ile kapalı gün, özel saat ve blok istisnaları için additive şema/migration ve çift katmanlı doğrulama hazırdır.
 - Randevu durum geçişleri iyimser eşzamanlılık kontrolüyle appointment, status log ve audit kaydını aynı transaction içinde yazar; onay aktör/zamanını kaydeder ve ret/iptalde allocation’ı serbest bırakır.
 - Admin durum API’si aktif oturum, `appointments:manage`, güvenilir origin ve terapistin kendi practitioner kaydı sınırlarını uygular; geçersiz veya yarışta kaybeden geçişleri güvenli yanıtlara dönüştürür.
 - Admin liste API’si varsayılan olarak bekleyen talepleri döndürür; rol/practitioner kapsamı, sınırlandırılmış cursor sayfalama ve serbest not/iletişim ayrıntısını dışarıda bırakan minimum veri seçimi uygular.
+- Admin bekleyen talepler ekranı minimum liste alanlarını işletme saat diliminde gösterir; yükleme, boş, hata, yenileme ve cursor ile daha fazla kayıt durumları erişilebilir biçimde hazırlanmıştır. Onay/ret eylemleri sonuç ve geri dönüş bilgisini işlem öncesinde gösterir, başarılı kaydı kuyruktan çıkarır ve sunucu yetkisini yeniden doğrular.
 - Dört migration ve sekiz gerçek PostgreSQL integration testi; hold/randevu allocation yarışları ile aynı durumdan iki eşzamanlı geçişte yalnızca bir kazananı doğrular.
 - Hold süresinin canlı sistem ayarı `OPEN` durumundadır; public randevu gönderimi açılmamıştır.
 - Zorunlu consent belge türleri ve çocuk/veli yetki doğrulaması `OPEN` olduğu için hold’dan gerçek randevu talebi üretimi henüz açılmamıştır.
