@@ -4,9 +4,9 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: `#11 — [codex] Define booking consent and guardian policy`
-- Dal: `codex/booking-consent-decisions`
-- Durum: PR #10 `main` dalına birleştirildi. PR #11’deki consent/veli politikası, additive migration, quality, PostgreSQL integration ve Vercel kontrolleri geçti; inceleme/birleştirme kararı bekliyor.
+- Draft PR: Bu oturumda `codex/booking-request-service` dalı için açılacak.
+- Dal: `codex/booking-request-service`
+- Durum: PR #11 `main` dalına birleştirildi. Hold’dan `REQUESTED` randevu üreten transaction servisi için uygulama sözleşmesi ve consent kanıtı join-table gereksinimi hazırlandı.
 
 ## Tamamlananlar
 
@@ -22,12 +22,14 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 - PR #10 squash merge ile `main` dalına alındı.
 - ADR-017 ile aydınlatma, açık rıza, randevu koşulları ve veli yetkisi ayrı kapılar olarak kabul edildi.
 - Consent subject ile çocuk adına beyan veren guardian grantor ayrı alanlara taşındı.
+- PR #11 squash merge ile `main` dalına alındı.
+- Hold tüketimi, randevu, allocation devri ve consent kanıt bağlarını atomik yazacak application service sözleşmesi hazırlandı.
 
 ## Sıradaki
 
-1. Draft PR #11’i incele; uygun olduğunda incelemeye hazır işaretle ve `main` dalına birleştir.
-2. Hold’dan `REQUESTED` randevu üreten application servisini ADR-017 kapılarıyla uygula.
-3. Public API/form açılmadan önce nihai hukuki metin ve veli prosedürü yayın kapılarını doğrula.
+1. `appointment_consents` additive migration ve PostgreSQL integrity testini ekle.
+2. Hold’dan `REQUESTED` randevu üreten application servisini transaction ve yarış testleriyle uygula.
+3. Servis tamamlandıktan sonra public API/form sınırını ayrı PR’da aç.
 
 ## Engeller ve açık kararlar
 
