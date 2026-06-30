@@ -60,7 +60,7 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 - `pnpm quality`: 25 test dosyası, 165 test başarılı.
 - `pnpm build`: sentetik build-time ortam değerleriyle başarılı.
 - PR #14 için GitHub `quality`, `postgres-integration` ve Vercel başarılıydı.
-- PR #15 için GitHub `quality`, `postgres-integration`, Vercel ve preview comment: push sonrasında çalışacak.
+- PR #15 için GitHub `quality`, gerçek PostgreSQL `postgres-integration`, Vercel ve preview comment kontrolleri başarılı.
 - Migration/veri modeli değişikliği: yok.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 
