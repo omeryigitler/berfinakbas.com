@@ -111,6 +111,10 @@ Yerel durum (30 Haziran 2026): `appointment_consents` migration’ı ve atomik h
 - Public hold özelliği kapalıyken gövde okunmaması ve service/veritabanı çağrısı yapılmaması
 - Public hold same-origin, JSON content type, 4 KiB gövde ve strict alan doğrulaması
 - Holder token’ın yalnızca `no-store` yanıtta bulunması; hata, log ve audit özetinde bulunmaması
+- Public slot özelliği kapalıyken sorgu/service/veritabanı çağrısı yapılmaması
+- Public slot sorgusunda strict UUID/takvim tarihi, duplicate alan ve bilinmeyen alan reddi
+- Slot yanıtında yalnızca UTC başlangıç/bitiş; private exception notu veya iç kural ayrıntısı bulunmaması
+- Slot okuma ile hold yarışı olduğunda hold transaction’ının yeniden doğrulaması
 - XSS ve güvenli çıktı encode
 - Rate limit
 - Secret ve hassas verinin loglara düşmemesi

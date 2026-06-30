@@ -30,6 +30,7 @@ Backend randevular için tek gerçek kaynaktır. Google Calendar yalnızca senkr
 - [Güvenlik ve KVKK](docs/SECURITY_AND_KVKK.md)
 - [Consent ve çocuk/veli politikası](docs/CONSENT_AND_GUARDIAN_POLICY.md)
 - [Public appointment hold API](docs/APPOINTMENT_HOLD_API.md)
+- [Public appointment slots API](docs/APPOINTMENT_SLOTS_API.md)
 - [Test kontrol listesi](docs/TESTING_CHECKLIST.md)
 - [Mimari karar kaydı](docs/DECISIONS.md)
 
@@ -85,7 +86,7 @@ Kalite komutları:
 
 ## Sonraki iş
 
-Faz 3’te randevu durum geçişlerinin transaction/audit temeli, yetki/IDOR korumalı admin API’leri, minimum verili bekleyen talepler ekranı ve hold’dan atomik `REQUESTED` randevu üreten application service tamamlanmıştır. Consent kanıtları metin kopyalanmadan immutable foreign key ilişkisiyle randevuya bağlanır. Hold süresi sunucu ayarına bağlanmış, public hold API sınırı varsayılan kapalı bayrak ve güvenli istek/yanıt sözleşmesiyle eklenmiştir; production değeri onaylanmadığında servis fail-closed kalır. Sıradaki çekirdek iş, public slot okuma ile client/consent edinim akışını ayrı ve varsayılan kapalı teslimler halinde tasarlamaktır; nihai hukuki metinler onaylanmadan form ve canlı gönderim açılmaz. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
+Faz 3’te randevu durum geçişlerinin transaction/audit temeli, yetki/IDOR korumalı admin API’leri, minimum verili bekleyen talepler ekranı ve hold’dan atomik `REQUESTED` randevu üreten application service tamamlanmıştır. Consent kanıtları metin kopyalanmadan immutable foreign key ilişkisiyle randevuya bağlanır. Hold süresi sunucu ayarına bağlanmış; public slot okuma ve hold API sınırları ayrı, varsayılan kapalı bayraklarla eklenmiştir. Slot listesi yalnızca aday UTC saatleri döndürür ve hold transaction’ı son karar kapısıdır. Sıradaki çekirdek iş client/guardian/consent edinim akışını ayrı, varsayılan kapalı ve veri minimizasyonlu teslimler halinde tasarlamaktır; nihai hukuki metinler onaylanmadan form ve canlı gönderim açılmaz. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
 
 ## Hukuki not
 

@@ -30,6 +30,8 @@ Slotlar şu girdilerden üretilir:
 - Günlük kapasite
 - Mevcut aktif hold ve randevular
 
+Public slot okuma sonucu kesin rezervasyon değildir. Yanıt yalnızca aday UTC başlangıç/bitiş saatlerini taşır, cache edilmez ve hold oluşturma transaction’ında aynı kurallarla yeniden doğrulanır.
+
 Bir slot, randevu süresinin yanında buffer aralıklarıyla da çakışmamalıdır.
 
 ## 4. Preset ve özel değer

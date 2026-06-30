@@ -98,6 +98,8 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Süre yapılandırması: Hold süresi çağıran veya public istemci girdisi değildir; yalnızca doğrulanmış `BOOKING_HOLD_DURATION_MINUTES` sunucu ayarından alınır. Ayar tanımsızsa hold servisi veritabanına erişmeden fail-closed durur.
 - Public API sınırı: `POST /api/public/appointments/holds`, `PUBLIC_APPOINTMENT_HOLDS_ENABLED` sunucu bayrağıyla varsayılan kapalıdır. Kapalıyken istek gövdesi okunmaz ve servis/veritabanı çağrılmaz. Açıkken same-origin, strict ve 4 KiB ile sınırlı JSON, güvenli correlation ID ve `no-store` yanıt uygular.
 - Token yanıtı: Ham holder token yalnızca başarılı oluşturma yanıtında istemciye verilir; URL, log, audit veya veritabanına ham biçimde yazılmaz. İstemci akışı token’ı kalıcı tarayıcı depolamasına koymadan sonraki request adımına taşımalıdır.
+- Public slot okuma: `GET /api/public/appointments/slots`, `PUBLIC_APPOINTMENT_SLOTS_ENABLED` ile varsayılan kapalıdır. Yalnızca uzman, hizmet ve yerel gün girdisi alır; aktif kurallar/istisnalar, hizmet politikası, kapasite ve aktif tahsislerden aday UTC başlangıç/bitiş saatleri üretir. Özel not veya iç kural ayrıntısı dönmez.
+- Yarış sınırı: Public slot yanıtı `no-store` ve tavsiye niteliğindedir. Okuma ile seçim arasındaki değişiklik hold transaction’ında yeniden doğrulanır; eski bir yanıt kesin rezervasyon veya çakışma garantisi sayılmaz.
 - OPEN: Canlı ortamda kullanılacak `BOOKING_HOLD_DURATION_MINUTES` değeri henüz ürün kararı değildir. Test ve CI değeri production varsayımı sayılmaz.
 - OPEN: Aynı yerel gün için farklı aktif availability rule kayıtlarında farklı slot artışları desteklenecekse öncelik/çözüm kuralı ürün kararı olarak tanımlanmalıdır; o zamana kadar servis fail-closed davranır.
 

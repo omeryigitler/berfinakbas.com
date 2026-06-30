@@ -4,9 +4,9 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 
 ## Aktif çalışma
 
-- Draft PR: `#16 — [codex] Add a fail-closed public appointment hold API`
-- Dal: `codex/public-appointment-hold-api`
-- Durum: PR #15 `main` dalına birleştirildi. PR #16’da same-origin, strict/limited JSON ve güvenli hata sözleşmeli public hold API sınırı ekleniyor; sunucu bayrağı varsayılan kapalıdır ve public form açılmıyor.
+- Draft PR: `#17 — [codex] Add a fail-closed public appointment slots API`
+- Dal: `codex/public-appointment-slots-api`
+- Durum: PR #16 `main` dalına birleştirildi. PR #17’de kişisel veri döndürmeyen, aktif kurallar/istisnalar ve tahsislerden aday slot üreten public okuma API’si ekleniyor; sunucu bayrağı varsayılan kapalıdır ve public form açılmıyor.
 
 ## Tamamlananlar
 
@@ -41,11 +41,15 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 - Public hold endpoint’i `POST /api/public/appointments/holds` olarak eklendi; süre istemciden alınmaz.
 - Endpoint varsayılan kapalı sunucu bayrağı, same-origin, JSON content type, 4 KiB gövde sınırı, strict alan doğrulaması ve güvenli correlation ID uygular.
 - Holder token yalnızca `no-store` oluşturma yanıtında döner; public form ve canlı özellik etkinleştirilmedi.
+- PR #16 squash merge ile `main` dalına alındı.
+- Public slot endpoint’i `GET /api/public/appointments/slots` olarak eklendi; yalnızca UTC başlangıç/bitiş saatlerini döndürür.
+- Slot servisi aktif availability rule/exception, hizmet süresi-buffer, minimum/maksimum rezervasyon sınırı, günlük kapasite ve aktif hold/randevu tahsislerini uygular.
+- Slot sonucu adaydır; gerçek uygunluk hold transaction’ında yeniden doğrulanır ve public form etkinleştirilmez.
 
 ## Sıradaki
 
-1. Draft PR #16’nın GitHub quality, PostgreSQL integration ve Vercel kontrollerini tamamla; uygunsa birleştir.
-2. Public slot okuma ve client/consent edinim akışlarını ayrı, varsayılan kapalı teslimler halinde tasarla.
+1. Draft PR #17’nin GitHub quality, PostgreSQL integration ve Vercel kontrollerini tamamla; uygunsa birleştir.
+2. Client/guardian/consent edinim akışını ayrı, varsayılan kapalı ve veri minimizasyonlu teslimler halinde tasarla.
 3. Production hold süresi ile dağıtık abuse kontrolü onaylanmadan public hold yazımını etkinleştirme.
 4. Dağıtık rate-limit/abuse kontrolü ve nihai hukuk onayı olmadan production bayrağını veya public formu etkinleştirme.
 
@@ -60,11 +64,11 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 
 ## Son doğrulama
 
-- Hedefli env/public hold route doğrulama: 2 test dosyası, 19 test başarılı.
-- `pnpm quality`: 26 test dosyası, 174 test başarılı.
+- Hedefli env/public slot service-route doğrulama: 3 test dosyası, 22 test başarılı.
+- `pnpm quality`: 28 test dosyası, 186 test başarılı.
 - `pnpm build`: sentetik build-time ortam değerleriyle başarılı.
-- PR #15 için GitHub `quality`, gerçek PostgreSQL `postgres-integration`, Vercel ve preview comment kontrolleri başarılı.
 - PR #16 için GitHub `quality`, gerçek PostgreSQL `postgres-integration`, Vercel ve preview comment kontrolleri başarılı.
+- PR #17 için GitHub `quality`, `postgres-integration`, Vercel ve preview comment: push sonrasında çalışacak.
 - Migration/veri modeli değişikliği: yok.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 
