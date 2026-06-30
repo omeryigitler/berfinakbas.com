@@ -16,6 +16,7 @@ jobs:
     env:
       APP_URL: http://localhost:3000
       AUTH_SECRET: ci-only-auth-secret-not-for-production-use
+      BOOKING_HOLD_DURATION_MINUTES: "8"
       BUSINESS_TIME_ZONE: Europe/Istanbul
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas?schema=public
       NEXT_TELEMETRY_DISABLED: "1"
@@ -60,6 +61,7 @@ jobs:
     env:
       APP_URL: http://localhost:3000
       AUTH_SECRET: ci-only-auth-secret-not-for-production-use
+      BOOKING_HOLD_DURATION_MINUTES: "8"
       BUSINESS_TIME_ZONE: Europe/Istanbul
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas_integration?schema=public
       NEXT_TELEMETRY_DISABLED: "1"

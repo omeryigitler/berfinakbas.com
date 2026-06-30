@@ -25,6 +25,27 @@ describe("parseServerEnvironment", () => {
     );
   });
 
+  it("keeps hold duration unset until an explicit server value is approved", () => {
+    expect(parseServerEnvironment(validEnvironment).BOOKING_HOLD_DURATION_MINUTES).toBeUndefined();
+    expect(
+      parseServerEnvironment({
+        ...validEnvironment,
+        BOOKING_HOLD_DURATION_MINUTES: "8",
+      }).BOOKING_HOLD_DURATION_MINUTES,
+    ).toBe(8);
+  });
+
+  it("rejects invalid hold duration settings", () => {
+    for (const value of ["0", "1.5", "1441", "not-a-number"]) {
+      expect(() =>
+        parseServerEnvironment({
+          ...validEnvironment,
+          BOOKING_HOLD_DURATION_MINUTES: value,
+        }),
+      ).toThrow();
+    }
+  });
+
   it("parses the public request switch and configured explicit consent types", () => {
     const environment = parseServerEnvironment({
       ...validEnvironment,

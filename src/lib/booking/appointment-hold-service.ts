@@ -9,6 +9,7 @@ import {
   getZonedBookingDayRange,
 } from "@/lib/booking/appointment-hold-availability";
 import { getDatabase } from "@/lib/db";
+import { getServerEnvironment } from "@/lib/env";
 import { z } from "zod";
 
 const ALLOCATION_CONFLICT_CONSTRAINT = "booking_allocations_no_active_overlap";
@@ -16,7 +17,6 @@ const MAX_TRANSACTION_ATTEMPTS = 3;
 
 export type CreateAppointmentHoldInput = Readonly<{
   correlationId: string;
-  holdDurationMinutes: number;
   practitionerId: string;
   serviceId: string;
   startsAt: Date;
@@ -24,7 +24,6 @@ export type CreateAppointmentHoldInput = Readonly<{
 
 const createAppointmentHoldInputSchema = z.object({
   correlationId: z.string().trim().min(1).max(80),
-  holdDurationMinutes: z.number().int().min(1).max(1_440),
   practitionerId: z.uuid(),
   serviceId: z.uuid(),
   startsAt: z.date(),
@@ -89,6 +88,12 @@ export async function createAppointmentHold(
   now = new Date(),
 ): Promise<CreatedAppointmentHold> {
   const command = createAppointmentHoldInputSchema.parse(input);
+  const holdDurationMinutes = getServerEnvironment().BOOKING_HOLD_DURATION_MINUTES;
+
+  if (holdDurationMinutes === undefined) {
+    throw new BookingResourceUnavailableError();
+  }
+
   const database = getDatabase();
 
   for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
@@ -228,7 +233,7 @@ export async function createAppointmentHold(
             bufferAfterMinutes: service.defaultBufferAfterMinutes,
             bufferBeforeMinutes: service.defaultBufferBeforeMinutes,
             durationMinutes: service.defaultDurationMinutes,
-            holdDurationMinutes: command.holdDurationMinutes,
+            holdDurationMinutes,
             now,
             startsAt: command.startsAt,
           });
