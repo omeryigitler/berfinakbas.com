@@ -6,7 +6,7 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 - Draft PR: `#12 — [codex] Design appointment request transaction`
 - Dal: `codex/booking-request-service`
-- Durum: PR #11 `main` dalına birleştirildi. Hold’dan `REQUESTED` randevu üreten transaction servisi için uygulama sözleşmesi ve consent kanıtı join-table gereksinimi hazırlandı.
+- Durum: PR #11 `main` dalına birleştirildi. PR #12’de additive `appointment_consents` migration’ı ve hold’dan `REQUESTED` randevu üreten atomik application service uygulandı; yerel kalite/PostgreSQL doğrulaması geçiyor.
 
 ## Tamamlananlar
 
@@ -24,27 +24,29 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 - Consent subject ile çocuk adına beyan veren guardian grantor ayrı alanlara taşındı.
 - PR #11 squash merge ile `main` dalına alındı.
 - Hold tüketimi, randevu, allocation devri ve consent kanıt bağlarını atomik yazacak application service sözleşmesi hazırlandı.
+- `appointment_consents` additive migration’ı, Prisma ilişkileri ve integrity testleri eklendi.
+- Hold tüketimi, snapshot, appointment, allocation devri, consent bağları, status geçmişi ve audit aynı transaction’da uygulandı.
 
 ## Sıradaki
 
-1. `appointment_consents` additive migration ve PostgreSQL integrity testini ekle.
-2. Hold’dan `REQUESTED` randevu üreten application servisini transaction ve yarış testleriyle uygula.
-3. Servis tamamlandıktan sonra public API/form sınırını ayrı PR’da aç.
+1. Draft PR #12’nin GitHub quality, PostgreSQL integration ve Vercel kontrollerini tamamla; uygunsa birleştir.
+2. Application service için güvenli public request API sınırını ayrı PR’da aç.
+3. Nihai hukuk onayı olmadan public formu/canlı gönderimi etkinleştirme.
 
 ## Engeller ve açık kararlar
 
 - Hold süresinin canlı sistem ayarı açık karardır.
 - Nihai aydınlatma/açık rıza metinleri ve operasyonel veli yetkisi doğrulama prosedürü hukukçu onayı bekler.
 - Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır.
-- Bu cihazda yerel PostgreSQL çalışmadığı için integration paketi yerelde tekrar koşturulmadı; GitHub CI PostgreSQL 17.10 üzerinde doğrulamayı tamamladı.
+- Yönetilen PostgreSQL sağlayıcısı/bölgesi ve nihai hukuk onayı canlı yayın öncesi hâlâ seçilmelidir; yerel PostgreSQL 17 integration paketi çalışmaktadır.
 
 ## Son doğrulama
 
-- `pnpm quality`: 22 test dosyası, 138 test geçti.
+- `pnpm quality`: 23 test dosyası, 143 test geçti.
 - `pnpm build`: başarılı.
-- GitHub `quality` ve Vercel deployment kontrolleri: başarılı.
-- GitHub `postgres-integration`: beş migration ve on test başarılı.
-- Migration/veri modeli değişikliği: additive `granted_by_guardian_id`, foreign key, index ve grantor/client constraint’i.
+- Yerel `pnpm test:integration`: altı migration ve on altı test başarılı.
+- GitHub `quality`, `postgres-integration` ve Vercel: yeni commit push edildikten sonra yeniden çalışacak.
+- Migration/veri modeli değişikliği: additive `appointment_consents` composite key, iki `ON DELETE RESTRICT` foreign key ve consent index’i.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 
 ## Kaynak önceliği

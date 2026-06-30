@@ -1,6 +1,6 @@
 # Hold’dan Randevu Talebi Üretme Servisi
 
-Durum: Uygulama sözleşmesi — kodlama için hazır
+Durum: Uygulandı ve gerçek PostgreSQL üzerinde doğrulandı — public sınır kapalı
 
 ## Amaç
 
@@ -40,7 +40,7 @@ Public istemci zorunlu belge listesini azaltamaz veya değiştiremez.
 
 Herhangi bir adım başarısızsa hold tüketimi, randevu, allocation devri ve kanıt bağlantıları birlikte rollback olur.
 
-## Gerekli additive veri modeli
+## Uygulanan additive veri modeli
 
 ### appointment_consents
 
@@ -85,3 +85,13 @@ Bir kaydın var olup olmadığı yetkisiz istemciye ayrıntılı açıklanmaz.
 - Aynı hold’u iki eşzamanlı tüketme denemesinde yalnızca bir randevu
 - Transaction rollback’inde hold ve allocation’ın aktif kalması
 - Audit/log içinde ham token, iletişim veya sağlık notu bulunmaması
+
+## Güncel doğrulama
+
+- Altı migration gerçek PostgreSQL 17 üzerinde uygulanır.
+- Atomik hold tüketimi, appointment/allocation/consent link/status/audit yazımı geçer.
+- Aynı hold’u iki eşzamanlı tüketmede yalnızca bir `REQUESTED` randevu oluşur.
+- Appointment create hatasında hold ve allocation aktif kalır.
+- Yetişkin ve declared guardian kullanan çocuk talebi gerçek veritabanında geçer.
+- Eksik consent fail-closed davranır; ham token ve danışan adı audit özetine girmez.
+- Başka danışana ait veya aynı belge türünü çoğaltan consent kanıtı fail-closed reddedilir.

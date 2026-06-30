@@ -259,6 +259,14 @@ Hold ve randevuların zaman blokları bu ortak tabloda tutulur. Aynı terapiste 
 
 Durum geçişleri serbest string güncellemesiyle değil domain state machine ile yapılır.
 
+### appointment_consents
+
+- appointment_id
+- consent_id
+- created_at
+
+Randevu talebinde kullanılan immutable consent kayıtlarını composite primary key ve `ON DELETE RESTRICT` foreign key’lerle appointment’a bağlar. Belge metni, form payload’ı veya iletişim verisi kopyalanmaz.
+
 ### appointment_status_logs
 
 - id

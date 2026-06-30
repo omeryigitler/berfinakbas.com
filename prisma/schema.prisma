@@ -268,22 +268,23 @@ model ConsentDocument {
 }
 
 model Consent {
-  id                  String          @id @default(uuid()) @db.Uuid
-  clientId            String?         @map("client_id") @db.Uuid
-  guardianId          String?         @map("guardian_id") @db.Uuid
-  grantedByGuardianId String?         @map("granted_by_guardian_id") @db.Uuid
-  documentId          String          @map("document_id") @db.Uuid
-  status              ConsentStatus   @default(GRANTED)
-  capturedAt          DateTime        @default(now()) @map("captured_at") @db.Timestamptz(3)
-  withdrawnAt         DateTime?       @map("withdrawn_at") @db.Timestamptz(3)
-  captureChannel      String          @map("capture_channel") @db.VarChar(40)
-  evidenceMetadata    Json?           @map("evidence_metadata")
-  actorUserId         String?         @map("actor_user_id") @db.Uuid
-  client              Client?         @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "consents_client_id_fkey")
-  guardian            Guardian?       @relation("ConsentGuardianSubject", fields: [guardianId], references: [id], onDelete: Restrict, map: "consents_guardian_id_fkey")
-  grantedByGuardian   Guardian?       @relation("ConsentGuardianGrantor", fields: [grantedByGuardianId], references: [id], onDelete: Restrict, map: "consents_granted_by_guardian_id_fkey")
-  document            ConsentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, map: "consents_document_id_fkey")
-  actor               User?           @relation("ConsentActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "consents_actor_user_id_fkey")
+  id                  String               @id @default(uuid()) @db.Uuid
+  clientId            String?              @map("client_id") @db.Uuid
+  guardianId          String?              @map("guardian_id") @db.Uuid
+  grantedByGuardianId String?              @map("granted_by_guardian_id") @db.Uuid
+  documentId          String               @map("document_id") @db.Uuid
+  status              ConsentStatus        @default(GRANTED)
+  capturedAt          DateTime             @default(now()) @map("captured_at") @db.Timestamptz(3)
+  withdrawnAt         DateTime?            @map("withdrawn_at") @db.Timestamptz(3)
+  captureChannel      String               @map("capture_channel") @db.VarChar(40)
+  evidenceMetadata    Json?                @map("evidence_metadata")
+  actorUserId         String?              @map("actor_user_id") @db.Uuid
+  client              Client?              @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "consents_client_id_fkey")
+  guardian            Guardian?            @relation("ConsentGuardianSubject", fields: [guardianId], references: [id], onDelete: Restrict, map: "consents_guardian_id_fkey")
+  grantedByGuardian   Guardian?            @relation("ConsentGuardianGrantor", fields: [grantedByGuardianId], references: [id], onDelete: Restrict, map: "consents_granted_by_guardian_id_fkey")
+  document            ConsentDocument      @relation(fields: [documentId], references: [id], onDelete: Restrict, map: "consents_document_id_fkey")
+  actor               User?                @relation("ConsentActor", fields: [actorUserId], references: [id], onDelete: SetNull, map: "consents_actor_user_id_fkey")
+  appointments        AppointmentConsent[]
 
   @@index([clientId, capturedAt], map: "consents_client_id_captured_at_idx")
   @@index([guardianId, capturedAt], map: "consents_guardian_id_captured_at_idx")
@@ -445,11 +446,24 @@ model Appointment {
   approvedBy                  User?                  @relation("AppointmentApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull, map: "appointments_approved_by_user_id_fkey")
   allocation                  BookingAllocation?
   statusLogs                  AppointmentStatusLog[]
+  consents                    AppointmentConsent[]
 
   @@index([practitionerId, startsAt], map: "appointments_practitioner_starts_idx")
   @@index([clientId, startsAt(sort: Desc)], map: "appointments_client_starts_idx")
   @@index([status, startsAt], map: "appointments_status_starts_idx")
   @@map("appointments")
+}
+
+model AppointmentConsent {
+  appointmentId String      @map("appointment_id") @db.Uuid
+  consentId     String      @map("consent_id") @db.Uuid
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Restrict, map: "appointment_consents_appointment_id_fkey")
+  consent       Consent     @relation(fields: [consentId], references: [id], onDelete: Restrict, map: "appointment_consents_consent_id_fkey")
+
+  @@id([appointmentId, consentId])
+  @@index([consentId], map: "appointment_consents_consent_id_idx")
+  @@map("appointment_consents")
 }
 
 model BookingAllocation {

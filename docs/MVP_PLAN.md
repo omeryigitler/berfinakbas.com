@@ -40,7 +40,7 @@ Mevcut durum:
 - Production build doğrulandı.
 - CI workflow gerçek GitHub deposunda çalışmakta ve `main` kalite kapısı geçmektedir.
 - Gerçek PostgreSQL 17 üzerinde migration ve integration test paketi çalışmaktadır.
-- PostgreSQL 17 servis konteyneri kullanan ayrı CI işi, beş migration ve on gerçek veritabanı testini her pull request ve `main` push’unda çalıştırır.
+- PostgreSQL 17 servis konteyneri kullanan ayrı CI işi, altı migration ve on altı gerçek veritabanı testini her pull request ve `main` push’unda çalıştırır.
 
 ## Faz 2 — kimlik, yetki ve veri çekirdeği
 
@@ -66,7 +66,7 @@ Mevcut durum:
 - Sentetik rol ve taslak hizmet seed’i hazırlandı.
 - ChatGPT proje klasöründeki tasarım yönü incelendi ve public ana sayfaya uygulandı.
 - Yetkili/izinsiz route testleri, lint, typecheck, format kontrolü ve production build başarılıdır.
-- Beş migration gerçek PostgreSQL 17 CI kapısında uygulanır; eşzamanlılık, transaction ve consent bütünlüğü integration testleriyle doğrulanır.
+- Altı migration gerçek PostgreSQL 17 CI kapısında uygulanır; eşzamanlılık, transaction ve consent bütünlüğü integration testleriyle doğrulanır.
 - Gerçek Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici rolü doğrulaması yayın kapısı olarak beklenmektedir.
 
 ## Faz 3 — randevu motoru
@@ -94,9 +94,9 @@ Mevcut durum:
 - Admin durum API’si aktif oturum, `appointments:manage`, güvenilir origin ve terapistin kendi practitioner kaydı sınırlarını uygular; geçersiz veya yarışta kaybeden geçişleri güvenli yanıtlara dönüştürür.
 - Admin liste API’si varsayılan olarak bekleyen talepleri döndürür; rol/practitioner kapsamı, sınırlandırılmış cursor sayfalama ve serbest not/iletişim ayrıntısını dışarıda bırakan minimum veri seçimi uygular.
 - Admin bekleyen talepler ekranı minimum liste alanlarını işletme saat diliminde gösterir; yükleme, boş, hata, yenileme ve cursor ile daha fazla kayıt durumları erişilebilir biçimde hazırlanmıştır. Onay/ret eylemleri sonuç ve geri dönüş bilgisini işlem öncesinde gösterir, başarılı kaydı kuyruktan çıkarır ve sunucu yetkisini yeniden doğrular.
-- Beş migration ve on gerçek PostgreSQL integration testi; hold/randevu allocation yarışları, aynı durumdan iki eşzamanlı geçiş ve consent subject/grantor bütünlüğünü doğrular.
+- Altı migration ve on altı gerçek PostgreSQL integration testi; hold/randevu allocation yarışları, atomik hold→request dönüşümü, rollback, consent IDOR, aynı durumdan iki eşzamanlı geçiş ve consent subject/grantor bütünlüğünü doğrular.
 - Hold süresinin canlı sistem ayarı `OPEN` durumundadır; public randevu gönderimi açılmamıştır.
-- Zorunlu acknowledgement/consent türleri ve çocuk/veli doğrulama aşamaları ADR-017 ile kapatılmıştır. Hold’dan gerçek randevu talebi üreten application servisi henüz uygulanmadığı ve nihai hukuki metinler onaylanmadığı için public gönderim kapalıdır.
+- Zorunlu acknowledgement/consent türleri ve çocuk/veli doğrulama aşamaları ADR-017 ile kapatılmıştır. Hold’dan `REQUESTED` randevu üreten application service atomik consent kanıt bağlarıyla uygulanmıştır; public API/form ve nihai hukuki metin onayı tamamlanmadığı için canlı gönderim kapalıdır.
 
 ## Faz 4 — public site 🟡
 
