@@ -69,6 +69,7 @@ export const serverEnvironmentSchema = z
     BUSINESS_TIME_ZONE: timeZoneSchema,
     DATABASE_URL: z.string().min(1).startsWith("postgresql://"),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    PUBLIC_APPOINTMENT_HOLDS_ENABLED: disabledByDefaultBoolean,
     PUBLIC_APPOINTMENT_REQUESTS_ENABLED: disabledByDefaultBoolean,
   })
   .superRefine((environment, context) => {

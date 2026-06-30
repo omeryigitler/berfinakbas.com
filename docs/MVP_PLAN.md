@@ -90,6 +90,7 @@ Mevcut durum:
 - Hold yarışı PostgreSQL deadlock/serialization hatalarında üç denemeyle sınırlı retry uygular; retry sonrası overlap güvenli slot conflict’e çevrilir.
 - Hold başlangıcı uzmanın saat diliminde aktif availability rule/exception, hizmet süresi-buffer, minimum/maksimum rezervasyon sınırı ve günlük kapasiteyle transaction içinde yeniden doğrulanır; yapılandırma belirsizliği fail-closed kalır.
 - Hold süresi çağıran girdisinden çıkarılmıştır; yalnızca doğrulanmış sunucu ayarı kullanılır ve ayar tanımsızken veritabanı yazımı başlamaz. Production dakika değeri açık ürün kararıdır.
+- Public hold API sınırı varsayılan kapalı bayrak, same-origin, strict/limited JSON, güvenli correlation ID ve `no-store` holder-token yanıtıyla uygulanmıştır; form ve production özelliği açılmamıştır.
 - PostgreSQL exclusion constraint hold-hold, hold-randevu ve randevu-randevu çakışmasını tek noktada engeller.
 - Haftalık yerel çalışma kuralları ile kapalı gün, özel saat ve blok istisnaları için additive şema/migration ve çift katmanlı doğrulama hazırdır.
 - Randevu durum geçişleri iyimser eşzamanlılık kontrolüyle appointment, status log ve audit kaydını aynı transaction içinde yazar; onay aktör/zamanını kaydeder ve ret/iptalde allocation’ı serbest bırakır.
@@ -97,7 +98,7 @@ Mevcut durum:
 - Admin liste API’si varsayılan olarak bekleyen talepleri döndürür; rol/practitioner kapsamı, sınırlandırılmış cursor sayfalama ve serbest not/iletişim ayrıntısını dışarıda bırakan minimum veri seçimi uygular.
 - Admin bekleyen talepler ekranı minimum liste alanlarını işletme saat diliminde gösterir; yükleme, boş, hata, yenileme ve cursor ile daha fazla kayıt durumları erişilebilir biçimde hazırlanmıştır. Onay/ret eylemleri sonuç ve geri dönüş bilgisini işlem öncesinde gösterir, başarılı kaydı kuyruktan çıkarır ve sunucu yetkisini yeniden doğrular.
 - Altı migration ve on sekiz gerçek PostgreSQL integration testi; hold/randevu allocation yarışları, availability dışı hold reddi, günlük kapasitedeki son yer için farklı-slot hold yarışı, atomik hold→request dönüşümü, rollback, consent IDOR, aynı durumdan iki eşzamanlı geçiş ve consent subject/grantor bütünlüğünü doğrular.
-- Hold süresinin production değeri `OPEN` durumundadır; sunucu ayarı tanımsızken hold yazımı fail-closed kalır ve public randevu gönderimi açılmamıştır.
+- Hold süresinin production değeri ve dağıtık abuse kontrolü `OPEN` durumundadır; sunucu ayarı/bayrağı kapalıyken hold yazımı fail-closed kalır ve public randevu formu açılmamıştır.
 - Zorunlu acknowledgement/consent türleri ve çocuk/veli doğrulama aşamaları ADR-017 ile kapatılmıştır. Hold’dan `REQUESTED` randevu üreten application service atomik consent kanıt bağlarıyla uygulanmıştır; public API/form ve nihai hukuki metin onayı tamamlanmadığı için canlı gönderim kapalıdır.
 
 ## Faz 4 — public site 🟡
