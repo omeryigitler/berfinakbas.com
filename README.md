@@ -84,7 +84,7 @@ Kalite komutları:
 
 ## Sonraki iş
 
-Faz 3’te randevu durum geçişlerinin transaction/audit temeli, yetki/IDOR korumalı admin API’leri, minimum verili bekleyen talepler ekranı ve hold’dan atomik `REQUESTED` randevu üreten application service tamamlanmıştır. Consent kanıtları metin kopyalanmadan immutable foreign key ilişkisiyle randevuya bağlanır. Sıradaki çekirdek iş public request API sınırıdır; nihai hukuki metinler onaylanmadan form ve canlı gönderim açılmaz. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
+Faz 3’te randevu durum geçişlerinin transaction/audit temeli, yetki/IDOR korumalı admin API’leri, minimum verili bekleyen talepler ekranı ve hold’dan atomik `REQUESTED` randevu üreten application service tamamlanmıştır. Consent kanıtları metin kopyalanmadan immutable foreign key ilişkisiyle randevuya bağlanır. Hold süresi çağıran girdisinden çıkarılıp sunucu ayarına bağlanmıştır; production değeri onaylanmadığında servis fail-closed kalır. Sıradaki çekirdek iş, public hold ile client/consent edinim akışını ayrı ve varsayılan kapalı teslimler halinde tasarlamaktır; nihai hukuki metinler onaylanmadan form ve canlı gönderim açılmaz. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
 
 ## Hukuki not
 

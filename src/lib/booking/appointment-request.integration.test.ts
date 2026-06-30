@@ -41,7 +41,6 @@ async function createHold(day: number) {
   return createAppointmentHold(
     {
       correlationId: `appointment-request-hold-${day}`,
-      holdDurationMinutes: 10,
       practitionerId: fixture.practitionerId,
       serviceId: fixture.serviceId,
       startsAt: new Date(`2031-08-${String(day).padStart(2, "0")}T09:00:00.000Z`),

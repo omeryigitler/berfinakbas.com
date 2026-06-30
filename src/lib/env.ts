@@ -27,6 +27,11 @@ const disabledByDefaultBoolean = z
   .default("false")
   .transform((value) => value === "true");
 
+const optionalHoldDurationMinutes = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.coerce.number().int().min(1).max(1_440).optional(),
+);
+
 const bookingDocumentTypes = z
   .string()
   .default("")
@@ -59,6 +64,7 @@ export const serverEnvironmentSchema = z
     AUTH_GOOGLE_ID: optionalNonEmptyString,
     AUTH_GOOGLE_SECRET: optionalNonEmptyString,
     AUTH_SECRET: z.string().min(32),
+    BOOKING_HOLD_DURATION_MINUTES: optionalHoldDurationMinutes,
     BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: bookingDocumentTypes,
     BUSINESS_TIME_ZONE: timeZoneSchema,
     DATABASE_URL: z.string().min(1).startsWith("postgresql://"),

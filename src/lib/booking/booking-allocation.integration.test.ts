@@ -314,7 +314,6 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       createAppointmentHold(
         {
           correlationId: "application-hold-race-left",
-          holdDurationMinutes: 8,
           practitionerId: fixture.practitionerIds[0],
           serviceId: fixture.serviceId,
           startsAt,
@@ -324,7 +323,6 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       createAppointmentHold(
         {
           correlationId: "application-hold-race-right",
-          holdDurationMinutes: 8,
           practitionerId: fixture.practitionerIds[0],
           serviceId: fixture.serviceId,
           startsAt,
@@ -368,7 +366,6 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       createAppointmentHold(
         {
           correlationId: "application-hold-availability-blocked",
-          holdDurationMinutes: 8,
           practitionerId: fixture.practitionerIds[0],
           serviceId: fixture.serviceId,
           startsAt: new Date("2031-07-08T09:00:00.000Z"),
@@ -403,7 +400,6 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
         createAppointmentHold(
           {
             correlationId: "application-hold-capacity-left",
-            holdDurationMinutes: 8,
             practitionerId: fixture.practitionerIds[0],
             serviceId: fixture.serviceId,
             startsAt: new Date("2031-07-09T07:00:00.000Z"),
@@ -413,7 +409,6 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
         createAppointmentHold(
           {
             correlationId: "application-hold-capacity-right",
-            holdDurationMinutes: 8,
             practitionerId: fixture.practitionerIds[0],
             serviceId: fixture.serviceId,
             startsAt: new Date("2031-07-09T09:00:00.000Z"),

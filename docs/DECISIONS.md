@@ -95,7 +95,8 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Fail-closed yapılandırma: Aynı gün için birden fazla aktif slot artışı veya çelişen istisna tipi varsa hold oluşturulmaz; otomatik öncelik uydurulmaz.
 - Yarış kuralı: PostgreSQL `40P01` deadlock ve `40001` serialization hataları en fazla üç transaction denemesiyle yeniden çalıştırılır; overlap constraint sonucu kullanıcıya güvenli slot conflict olarak döner.
 - Güvenlik: Ham tek kullanımlık hold token’ı saklanmaz; yalnızca SHA-256 özeti tutulur ve audit özetine eklenmez.
-- OPEN: Canlı ortamda kullanılacak hold süresi henüz ürün kararı değildir. Kod süreyi yapılandırılmış girdi olarak alır; public API açılmadan önce sistem ayarına bağlanacaktır.
+- Süre yapılandırması: Hold süresi çağıran veya public istemci girdisi değildir; yalnızca doğrulanmış `BOOKING_HOLD_DURATION_MINUTES` sunucu ayarından alınır. Ayar tanımsızsa hold servisi veritabanına erişmeden fail-closed durur.
+- OPEN: Canlı ortamda kullanılacak `BOOKING_HOLD_DURATION_MINUTES` değeri henüz ürün kararı değildir. Test ve CI değeri production varsayımı sayılmaz.
 - OPEN: Aynı yerel gün için farklı aktif availability rule kayıtlarında farklı slot artışları desteklenecekse öncelik/çözüm kuralı ürün kararı olarak tanımlanmalıdır; o zamana kadar servis fail-closed davranır.
 
 ## ADR-016 — Randevu durum geçişleri atomik ve yarışa dayanıklı olacaktır

@@ -48,6 +48,7 @@ Her alan için:
 ## 5. Hold kuralı
 
 - Hold süresi ayarlanabilir, güvenli varsayılan önerisi 5–10 dakikadır.
+- Hold süresi public istemci veya route girdisinden alınmaz; yalnızca doğrulanmış sunucu ayarı kullanılır. Onaylı değer tanımlı değilse hold yazımı veritabanına erişmeden fail-closed durur.
 - Hold tek kullanımlık token/hash ile ilişkilidir.
 - Süresi dolan hold otomatik `expired` olur.
 - Hold yalnızca uzmanın IANA saat diliminde aktif haftalık kural ve gün istisnalarından yeniden üretilen bir slot başlangıcı için oluşturulur; istemcinin gönderdiği UTC değer doğrudan kabul edilmez.

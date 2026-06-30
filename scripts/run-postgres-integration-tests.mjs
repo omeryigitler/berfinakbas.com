@@ -36,6 +36,7 @@ const environment = {
   APP_URL: process.env.APP_URL ?? "http://localhost:3000",
   AUTH_SECRET:
     process.env.AUTH_SECRET ?? "integration-test-secret-that-is-at-least-32-characters-long",
+  BOOKING_HOLD_DURATION_MINUTES: process.env.BOOKING_HOLD_DURATION_MINUTES ?? "8",
   BUSINESS_TIME_ZONE: process.env.BUSINESS_TIME_ZONE ?? "Europe/Istanbul",
   DATABASE_URL: testDatabaseUrl,
   NODE_ENV: "test",

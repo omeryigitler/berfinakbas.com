@@ -3,9 +3,13 @@ import { fileURLToPath } from "node:url";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getDatabaseMock } = vi.hoisted(() => ({ getDatabaseMock: vi.fn() }));
+const { getDatabaseMock, getServerEnvironmentMock } = vi.hoisted(() => ({
+  getDatabaseMock: vi.fn(),
+  getServerEnvironmentMock: vi.fn(),
+}));
 
 vi.mock("@/lib/db", () => ({ getDatabase: getDatabaseMock }));
+vi.mock("@/lib/env", () => ({ getServerEnvironment: getServerEnvironmentMock }));
 
 import { SlotConflictError } from "@/domain/booking/appointment-hold";
 
@@ -24,6 +28,8 @@ const migrationPath = fileURLToPath(
 
 beforeEach(() => {
   getDatabaseMock.mockReset();
+  getServerEnvironmentMock.mockReset();
+  getServerEnvironmentMock.mockReturnValue({ BOOKING_HOLD_DURATION_MINUTES: 8 });
 });
 
 describe("booking allocation database guard", () => {
@@ -31,12 +37,25 @@ describe("booking allocation database guard", () => {
     await expect(
       createAppointmentHold({
         correlationId: "sentetik-correlation",
-        holdDurationMinutes: 8,
         practitionerId: "not-a-uuid",
         serviceId: "also-not-a-uuid",
         startsAt: new Date("2026-07-01T09:00:00.000Z"),
       }),
     ).rejects.toMatchObject({ name: "ZodError" });
+    expect(getDatabaseMock).not.toHaveBeenCalled();
+  });
+
+  it("fails closed before database access when hold duration is not configured", async () => {
+    getServerEnvironmentMock.mockReturnValue({ BOOKING_HOLD_DURATION_MINUTES: undefined });
+
+    await expect(
+      createAppointmentHold({
+        correlationId: "sentetik-eksik-hold-suresi",
+        practitionerId: "11111111-1111-4111-8111-111111111111",
+        serviceId: "22222222-2222-4222-8222-222222222222",
+        startsAt: new Date("2031-07-01T09:00:00.000Z"),
+      }),
+    ).rejects.toMatchObject({ code: "BOOKING_RESOURCE_UNAVAILABLE" });
     expect(getDatabaseMock).not.toHaveBeenCalled();
   });
 
@@ -72,7 +91,6 @@ describe("booking allocation database guard", () => {
       createAppointmentHold(
         {
           correlationId: "sentetik-deadlock-retry",
-          holdDurationMinutes: 8,
           practitionerId: "11111111-1111-4111-8111-111111111111",
           serviceId: "22222222-2222-4222-8222-222222222222",
           startsAt: new Date("2031-07-01T09:00:00.000Z"),
