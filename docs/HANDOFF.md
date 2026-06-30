@@ -4,7 +4,7 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: Bu oturumda `codex/booking-request-service` dalı için açılacak.
+- Draft PR: `#12 — [codex] Design appointment request transaction`
 - Dal: `codex/booking-request-service`
 - Durum: PR #11 `main` dalına birleştirildi. Hold’dan `REQUESTED` randevu üreten transaction servisi için uygulama sözleşmesi ve consent kanıtı join-table gereksinimi hazırlandı.
 
