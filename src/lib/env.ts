@@ -22,6 +22,35 @@ const optionalNonEmptyString = z.preprocess(
   z.string().min(1).optional(),
 );
 
+const disabledByDefaultBoolean = z
+  .enum(["true", "false"])
+  .default("false")
+  .transform((value) => value === "true");
+
+const bookingDocumentTypes = z
+  .string()
+  .default("")
+  .transform((value) =>
+    value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+  )
+  .pipe(
+    z
+      .array(
+        z
+          .string()
+          .min(1)
+          .max(80)
+          .regex(/^[A-Z0-9_]+$/),
+      )
+      .max(20)
+      .refine((values) => new Set(values).size === values.length, {
+        message: "Randevu belge türleri tekil olmalıdır.",
+      }),
+  );
+
 export const serverEnvironmentSchema = z
   .object({
     APP_URL: z.url(),
@@ -30,9 +59,11 @@ export const serverEnvironmentSchema = z
     AUTH_GOOGLE_ID: optionalNonEmptyString,
     AUTH_GOOGLE_SECRET: optionalNonEmptyString,
     AUTH_SECRET: z.string().min(32),
+    BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: bookingDocumentTypes,
     BUSINESS_TIME_ZONE: timeZoneSchema,
     DATABASE_URL: z.string().min(1).startsWith("postgresql://"),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    PUBLIC_APPOINTMENT_REQUESTS_ENABLED: disabledByDefaultBoolean,
   })
   .superRefine((environment, context) => {
     const hasGoogleId = Boolean(environment.AUTH_GOOGLE_ID);
