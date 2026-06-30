@@ -4,9 +4,9 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: `#9 — [codex] Add pending appointments admin screen`
-- Dal: `codex/admin-pending-appointments-ui`
-- Durum: Bekleyen talepler ekranı, transaction retry düzeltmesi, onay/ret eylemleri ve cihazlar arası devir teslim düzeni hazır. GitHub kalite ve Vercel kontrolleri geçti; Draft PR inceleme/birleştirme kararı bekliyor.
+- Draft PR: Bu oturumda `codex/postgres-integration-ci` dalı için açılacak.
+- Dal: `codex/postgres-integration-ci`
+- Durum: PR #9 `main` dalına birleştirildi. Gerçek PostgreSQL migration ve yarış testlerini her pull requestte çalıştıracak ayrı CI işi hazırlanıyor.
 
 ## Tamamlananlar
 
@@ -16,25 +16,28 @@ Son güncelleme: 30 Haziran 2026, Europe/Berlin
 - Başarılı işlem kuyruktan çıkarılıyor; yetki, yarış ve API hataları güvenli biçimde gösteriliyor.
 - PostgreSQL deadlock/serialization yarışları sınırlı retry ile ele alınıyor.
 - Windows ve macOS için LF satır sonu, UTF-8 editör ayarı ve Node.js 24.14.0 sabitlendi.
+- PR #9 squash merge ile `main` dalına alındı.
+- PostgreSQL 17 servis konteynerli integration CI işi eklendi.
 
 ## Sıradaki
 
-1. Draft PR #9’u incele; uygun olduğunda incelemeye hazır işaretle ve birleştir.
-2. Hold’dan randevu talebi üretmeden önce zorunlu consent türleri ile çocuk/veli yetki kararlarını kapat.
-3. Yönetilen PostgreSQL/CI ortamında gerçek integration paketini yeniden çalıştır.
+1. Yeni Draft PR’da GitHub `quality`, `postgres-integration` ve Vercel kontrollerini doğrula.
+2. CI işi geçtikten sonra PR’ı inceleyip `main` dalına birleştir.
+3. Hold’dan randevu talebi üretmeden önce zorunlu consent türleri ile çocuk/veli yetki kararlarını kapat.
 
 ## Engeller ve açık kararlar
 
 - Hold süresinin canlı sistem ayarı açık karardır.
 - Zorunlu consent belgeleri ve çocuk/veli doğrulama kuralı açık karardır.
 - Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır.
-- Bu cihazda yerel PostgreSQL çalışmadığı için integration paketi tekrar koşturulmadı; önceki doğrulamada sekiz test üç ardışık turda geçti.
+- Bu cihazda yerel PostgreSQL çalışmadığı için integration paketi yerelde tekrar koşturulmadı; yeni GitHub CI işi gerçek PostgreSQL 17 üzerinde doğrulama sağlayacak.
 
 ## Son doğrulama
 
 - `pnpm quality`: 21 test dosyası, 131 test geçti.
 - `pnpm build`: başarılı.
 - GitHub `quality` ve Vercel deployment kontrolleri: başarılı.
+- Yeni `postgres-integration` CI işi: GitHub doğrulaması bekleniyor.
 - Migration/veri modeli değişikliği: yok.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 

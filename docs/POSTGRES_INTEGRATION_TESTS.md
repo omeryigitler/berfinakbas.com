@@ -16,6 +16,12 @@ Bu paket, randevu tahsislerinin gerçek PostgreSQL exclusion constraint davranı
 
 Komut, migration’ları `prisma migrate deploy` ile uygular ve ardından yalnızca `*.integration.test.ts` dosyalarını çalıştırır. Normal `pnpm test`, veritabanı gerektirmeyen hızlı test paketidir.
 
+## GitHub CI
+
+Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` önce dört migration’ı uygular, ardından sekiz gerçek veritabanı testini çalıştırır.
+
+CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır. Production veya geliştirici veritabanı secret’ı kullanılmaz ve uzak veritabanına erişim açılmaz.
+
 ## Güvenlik korkulukları
 
 - Veritabanı adı `test` veya `integration` içermiyorsa komut çalışmaz.
@@ -38,4 +44,4 @@ Komut, migration’ları `prisma migrate deploy` ile uygular ve ardından yalnı
 
 29 Haziran 2026 tarihinde PostgreSQL 17.10 üzerinde dört migration başarıyla uygulandı ve sekiz integration testi geçti. Test sonrasında sentetik kullanıcı, hizmet, hold, randevu, audit ve allocation kayıtlarının temizlendiği doğrulandı.
 
-Bu sonuç yerel gerçek PostgreSQL kapısını karşılar. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL sürümü/bölgesi üzerinde aynı komutun CI ortamında yeniden çalıştırılması gerekir.
+Bu sonuç yerel gerçek PostgreSQL kapısını karşılar. GitHub CI’daki PostgreSQL 17 işi her değişiklikte aynı paketi yeniden çalıştırır. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL sürümü/bölgesi üzerinde de aynı komut yeniden çalıştırılmalıdır.

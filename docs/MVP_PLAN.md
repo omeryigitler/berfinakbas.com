@@ -40,6 +40,7 @@ Mevcut durum:
 - Production build doğrulandı.
 - CI workflow gerçek GitHub deposunda çalışmakta ve `main` kalite kapısı geçmektedir.
 - Gerçek PostgreSQL 17 üzerinde migration ve integration test paketi çalışmaktadır.
+- PostgreSQL 17 servis konteyneri kullanan ayrı CI işi, migration ve sekiz gerçek veritabanı testini her pull request ve `main` push’unda çalıştırır.
 
 ## Faz 2 — kimlik, yetki ve veri çekirdeği
 
