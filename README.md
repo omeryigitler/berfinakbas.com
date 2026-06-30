@@ -73,9 +73,17 @@ Kalite komutları:
 - `pnpm build`
 - `pnpm quality` — build dışındaki kalite kontrollerini birlikte çalıştırır
 
+## Windows ve macOS arasında çalışma
+
+- Her cihazda depo ayrı bir klasöre clone edilir; proje klasörü bulut depolama ile senkronize edilmez.
+- Çalışma başlamadan önce GitHub’daki tek açık Draft PR’ın dalı çekilir; çalışma bitince `docs/HANDOFF.md` ve PR açıklaması güncellenip commit/push yapılır.
+- Codex, oturum başında `AGENTS.md` içindeki cihazlar arası devir teslim protokolünü otomatik uygular.
+- Node.js sürümü `.nvmrc`/`.node-version`, pnpm sürümü `packageManager`, satır sonları `.gitattributes` ve `.editorconfig` tarafından sabitlenir.
+- `.env` dosyaları cihazlara özeldir ve repoya girmez; yalnızca `.env.example` paylaşılır.
+
 ## Sonraki iş
 
-Faz 3’te randevu durum geçişlerinin transaction/audit temeli, yetki/IDOR korumalı admin API’leri ve minimum verili bekleyen talepler ekranı tamamlanmıştır. Sıradaki çekirdek iş, açık consent ve çocuk/veli kararları kapatıldıktan sonra hold’dan güvenli randevu talebi üretimidir. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
+Faz 3’te randevu durum geçişlerinin transaction/audit temeli, yetki/IDOR korumalı admin API’leri ve minimum verili bekleyen talepler ekranı tamamlanmıştır. Yetkili kullanıcılar talepleri sonuçları açıklanan bir onay adımından sonra onaylayabilir veya reddedebilir. Sıradaki çekirdek iş, açık consent ve çocuk/veli kararları kapatıldıktan sonra hold’dan güvenli randevu talebi üretimidir. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
 
 ## Hukuki not
 

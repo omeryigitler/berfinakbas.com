@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppointmentQueue } from "@/components/admin/appointment-queue";
+import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getServerEnvironment } from "@/lib/env";
 
@@ -35,7 +36,10 @@ export default async function AdminAppointmentsPage() {
           <span className="admin-count">PENDING REVIEW</span>
         </div>
 
-        <AppointmentQueue businessTimeZone={environment.BUSINESS_TIME_ZONE} />
+        <AppointmentQueue
+          businessTimeZone={environment.BUSINESS_TIME_ZONE}
+          canManage={hasPermission(session.user.roles, "appointments:manage")}
+        />
       </section>
     </main>
   );

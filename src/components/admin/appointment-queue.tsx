@@ -19,11 +19,25 @@ type AppointmentQueueResponse = Readonly<{
   pagination: Readonly<{ nextCursor: string | null }>;
 }>;
 
+type AppointmentDecision = "confirm" | "reject";
+
 const clientTypeLabels = { ADULT: "Yetişkin", CHILD: "Çocuk" } as const;
 const locationLabels = {
   HYBRID: "Yüz yüze / çevrim içi",
   IN_PERSON: "Yüz yüze",
   ONLINE: "Çevrim içi",
+} as const;
+const decisionConfig = {
+  confirm: {
+    reasonCode: "ADMIN_APPROVED",
+    successLabel: "onaylandı",
+    toStatus: "CONFIRMED",
+  },
+  reject: {
+    reasonCode: "ADMIN_REJECTED",
+    successLabel: "reddedildi",
+    toStatus: "REJECTED",
+  },
 } as const;
 
 export function buildAppointmentListUrl(cursor: string | null): string {
@@ -38,6 +52,15 @@ export function formatAppointmentDate(value: string, timeZone: string): string {
     timeStyle: "short",
     timeZone,
   }).format(new Date(value));
+}
+
+export function buildAppointmentStatusUrl(appointmentId: string): string {
+  return `/api/admin/appointments/${encodeURIComponent(appointmentId)}/status`;
+}
+
+export function buildAppointmentDecisionBody(decision: AppointmentDecision) {
+  const config = decisionConfig[decision];
+  return Object.freeze({ reasonCode: config.reasonCode, toStatus: config.toStatus });
 }
 
 async function requestAppointmentPage(
@@ -55,19 +78,44 @@ async function requestAppointmentPage(
   return payload;
 }
 
+async function requestAppointmentDecision(
+  appointmentId: string,
+  decision: AppointmentDecision,
+): Promise<void> {
+  const response = await fetch(buildAppointmentStatusUrl(appointmentId), {
+    body: JSON.stringify(buildAppointmentDecisionBody(decision)),
+    headers: { accept: "application/json", "content-type": "application/json" },
+    method: "PATCH",
+  });
+  const payload = (await response.json().catch(() => ({}))) as { error?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error ?? "Randevu durumu güncellenemedi.");
+  }
+}
+
 function isAbortError(cause: unknown): boolean {
   return cause instanceof DOMException && cause.name === "AbortError";
 }
 
-export function AppointmentQueue({ businessTimeZone }: { businessTimeZone: string }) {
+export function AppointmentQueue({
+  businessTimeZone,
+  canManage,
+}: {
+  businessTimeZone: string;
+  canManage: boolean;
+}) {
+  const [actingAppointmentId, setActingAppointmentId] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<AppointmentQueueItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   const loadPage = useCallback(
     async (cursor: string | null, append: boolean, signal?: AbortSignal) => {
       setError(null);
+      setFeedback(null);
       setLoading(true);
 
       try {
@@ -80,6 +128,34 @@ export function AppointmentQueue({ businessTimeZone }: { businessTimeZone: strin
         setError(cause instanceof Error ? cause.message : "Liste alınamadı.");
       } finally {
         setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const decideAppointment = useCallback(
+    async (appointment: AppointmentQueueItem, decision: AppointmentDecision) => {
+      const confirmed = window.confirm(
+        decision === "confirm"
+          ? `${appointment.publicReference} numaralı talep onaylanacak. Gerekirse daha sonra iptal durumuna alınabilir. Devam edilsin mi?`
+          : `${appointment.publicReference} numaralı talep reddedilecek ve saat tahsisi serbest bırakılacak. Bu işlem geri alınamaz; yeni talep gerekir. Devam edilsin mi?`,
+      );
+      if (!confirmed) return;
+
+      setActingAppointmentId(appointment.id);
+      setError(null);
+      setFeedback(null);
+
+      try {
+        await requestAppointmentDecision(appointment.id, decision);
+        setAppointments((current) => current.filter((item) => item.id !== appointment.id));
+        setFeedback(
+          `${appointment.publicReference} numaralı talep ${decisionConfig[decision].successLabel}.`,
+        );
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Randevu durumu güncellenemedi.");
+      } finally {
+        setActingAppointmentId(null);
       }
     },
     [],
@@ -124,12 +200,19 @@ export function AppointmentQueue({ businessTimeZone }: { businessTimeZone: strin
     );
   }
 
-  if (appointments.length === 0) {
+  if (appointments.length === 0 && !nextCursor) {
     return (
-      <div className="admin-empty-state" role="status">
-        <strong>Bekleyen talep yok</strong>
-        <span>İncelemeye alınan yeni talepler burada görünecek.</span>
-      </div>
+      <>
+        {feedback ? (
+          <p className="admin-inline-success" role="status">
+            {feedback}
+          </p>
+        ) : null}
+        <div className="admin-empty-state" role="status">
+          <strong>Bekleyen talep yok</strong>
+          <span>İncelemeye alınan yeni talepler burada görünecek.</span>
+        </div>
+      </>
     );
   }
 
@@ -145,6 +228,7 @@ export function AppointmentQueue({ businessTimeZone }: { businessTimeZone: strin
               <th scope="col">Tarih ve saat</th>
               <th scope="col">Görüşme</th>
               <th scope="col">Referans</th>
+              <th scope="col">İşlem</th>
             </tr>
           </thead>
           <tbody>
@@ -168,6 +252,29 @@ export function AppointmentQueue({ businessTimeZone }: { businessTimeZone: strin
                 </td>
                 <td>
                   <code>{appointment.publicReference}</code>
+                </td>
+                <td>
+                  {canManage ? (
+                    <div className="admin-appointment-actions">
+                      <button
+                        type="button"
+                        disabled={actingAppointmentId !== null}
+                        onClick={() => void decideAppointment(appointment, "confirm")}
+                      >
+                        {actingAppointmentId === appointment.id ? "İşleniyor…" : "Onayla"}
+                      </button>
+                      <button
+                        className="danger"
+                        type="button"
+                        disabled={actingAppointmentId !== null}
+                        onClick={() => void decideAppointment(appointment, "reject")}
+                      >
+                        Reddet
+                      </button>
+                    </div>
+                  ) : (
+                    <span>Yalnızca görüntüleme</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -195,6 +302,11 @@ export function AppointmentQueue({ businessTimeZone }: { businessTimeZone: strin
       {error ? (
         <p className="admin-inline-error" role="alert">
           {error}
+        </p>
+      ) : null}
+      {feedback ? (
+        <p className="admin-inline-success" role="status">
+          {feedback}
         </p>
       ) : null}
     </>

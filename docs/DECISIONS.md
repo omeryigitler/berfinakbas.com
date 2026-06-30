@@ -104,4 +104,5 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Gizlilik: Audit özetleri yalnızca durum bilgisini taşır; danışan notu veya iletişim bilgisi audit özetine kopyalanmaz.
 - API sınırı: Durum değiştirme endpoint’i aktif oturum, `appointments:manage`, güvenilir origin ve terapist için kendi practitioner kaydına bağlı randevu kontrolü ister. Yetkisiz veya başka terapiste ait kayıtlar servis katmanına iletilmez.
 - Liste sınırı: Randevu listesi varsayılan olarak `pending_review` durumunu, en fazla 100 kayıtlık cursor sayfalama ile döndürür. Serbest talep notu, iletişim bilgisi ve consent ayrıntısı liste response’una alınmaz; terapist yalnızca kendi practitioner kapsamını görür.
+- Yönetim eylemi: Onay ve ret, etkisini ve geri dönüş yolunu açıklayan kullanıcı onayından sonra durum API’sine gönderilir. UI yetkisi yalnızca görünürlük sağlar; API aktif oturum, rol ve practitioner kapsamını her istekte yeniden denetler.
 - OPEN: Bildirim/Calendar yan etkileri outbox modeli eklendiğinde aynı transaction’a idempotent event olarak bağlanacaktır.

@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   AppointmentQueue,
+  buildAppointmentDecisionBody,
   buildAppointmentListUrl,
+  buildAppointmentStatusUrl,
   formatAppointmentDate,
 } from "./appointment-queue";
 
@@ -22,9 +24,26 @@ describe("appointment queue presentation", () => {
     expect(formatAppointmentDate("2031-07-01T09:00:00.000Z", "Europe/Istanbul")).toContain("12:00");
   });
 
+  it("builds bounded appointment decision requests", () => {
+    expect(buildAppointmentStatusUrl("22222222-2222-4222-8222-222222222222")).toBe(
+      "/api/admin/appointments/22222222-2222-4222-8222-222222222222/status",
+    );
+    expect(buildAppointmentDecisionBody("confirm")).toEqual({
+      reasonCode: "ADMIN_APPROVED",
+      toStatus: "CONFIRMED",
+    });
+    expect(buildAppointmentDecisionBody("reject")).toEqual({
+      reasonCode: "ADMIN_REJECTED",
+      toStatus: "REJECTED",
+    });
+  });
+
   it("renders an accessible loading state before requesting personal data", () => {
     const markup = renderToStaticMarkup(
-      createElement(AppointmentQueue, { businessTimeZone: "Europe/Istanbul" }),
+      createElement(AppointmentQueue, {
+        businessTimeZone: "Europe/Istanbul",
+        canManage: false,
+      }),
     );
 
     expect(markup).toContain('role="status"');

@@ -89,6 +89,8 @@ Yerel durum (29 Haziran 2026): PostgreSQL 17.10 üzerinde dört migration ve sek
 - Her rol için izin verilen erişim
 - Her rol için reddedilen erişim
 - UI’da gizli olsa bile API’nin reddetmesi
+- Admin onay/ret eyleminde işlem öncesi sonuç ve geri dönüş uyarısı
+- Başarılı onay/ret sonrası kaydın bekleyen kuyruktan çıkması; API hatasında görünür güvenli hata
 - IDOR: başka danışan/randevu kimliğiyle erişememe
 - Session fixation/expiration
 - MFA zorunluluğu
