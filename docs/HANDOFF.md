@@ -4,9 +4,9 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 
 ## Aktif çalışma
 
-- Draft PR: `#13 — [codex] Add a fail-closed public appointment request API`
-- Dal: `codex/public-appointment-request-api`
-- Durum: PR #12 `main` dalına birleştirildi. PR #13’te atomik application service için güvenli, varsayılan kapalı public API sınırı ve testleri uygulanıyor; public form açılmıyor.
+- Draft PR: `#14 — [codex] Validate appointment holds against availability`
+- Dal: `codex/validate-hold-availability`
+- Durum: PR #13 `main` dalına birleştirildi. PR #14’te hold başlangıcının aktif çalışma kuralı ve gün istisnasından gerçekten üretildiği transaction içinde doğrulanıyor; public hold endpoint’i açılmıyor.
 
 ## Tamamlananlar
 
@@ -30,16 +30,22 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 - Public appointment request endpoint’i strict/limited JSON, same-origin, güvenli correlation ID ve kontrollü hata sözleşmesiyle eklendi.
 - Endpoint sunucu bayrağıyla varsayılan kapalıdır; kapalıyken application service ve veritabanı çağrılmaz.
 - Zorunlu explicit-consent türleri yalnızca doğrulanmış sunucu ortam ayarından application service’e aktarılır.
+- PR #13 squash merge ile `main` dalına alındı.
+- Hold servisi uzmanın IANA saat diliminde availability rule/exception, hizmet süresi-buffer, minimum/maksimum rezervasyon sınırı ve günlük kapasiteyi yeniden uygular.
+- Çalışma dışı/bloklu başlangıçlar hiçbir hold, allocation veya audit yazmadan reddedilir.
+- Farklı aktif slot artışları ve çelişen istisna tipleri otomatik öncelik uydurmadan fail-closed reddedilir.
 
 ## Sıradaki
 
-1. Draft PR #13’ün GitHub quality, PostgreSQL integration ve Vercel kontrollerini tamamla; uygunsa birleştir.
-2. Public hold/client/consent edinim akışını ayrı ve varsayılan kapalı teslimler halinde tasarla.
-3. Dağıtık rate-limit/abuse kontrolü ve nihai hukuk onayı olmadan production bayrağını veya public formu etkinleştirme.
+1. Draft PR #14’ün GitHub quality, PostgreSQL integration ve Vercel kontrollerini tamamla; uygunsa birleştir.
+2. Hold süresini onaylı sunucu ayarına bağlamadan public hold endpoint’i açma.
+3. Public client/consent edinim akışını ayrı ve varsayılan kapalı teslimler halinde tasarla.
+4. Dağıtık rate-limit/abuse kontrolü ve nihai hukuk onayı olmadan production bayrağını veya public formu etkinleştirme.
 
 ## Engeller ve açık kararlar
 
 - Hold süresinin canlı sistem ayarı açık karardır.
+- Aynı gün için farklı aktif rule kayıtlarında farklı slot artışlarının öncelik/çözüm kuralı açık karardır; servis bu durumda fail-closed davranır.
 - Nihai aydınlatma/açık rıza metinleri ve operasyonel veli yetkisi doğrulama prosedürü hukukçu onayı bekler.
 - Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır.
 - Yönetilen PostgreSQL sağlayıcısı/bölgesi ve nihai hukuk onayı canlı yayın öncesi hâlâ seçilmelidir; yerel PostgreSQL 17 integration paketi çalışmaktadır.
@@ -47,11 +53,11 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 
 ## Son doğrulama
 
-- Hedefli unit doğrulama: 3 test dosyası, 22 test başarılı.
-- `pnpm quality`: 24 test dosyası, 157 test başarılı.
+- Hedefli availability/hold unit doğrulama: 2 test dosyası, 10 test başarılı.
+- `pnpm quality`: 25 test dosyası, 162 test başarılı.
 - `pnpm build`: sentetik build-time ortam değerleriyle başarılı.
-- Yerel `pnpm test:integration`: altı migration ve on altı gerçek PostgreSQL testi başarılı.
-- GitHub `quality`, `postgres-integration`, Vercel ve preview comment kontrolleri başarılı.
+- Yerel `pnpm test:integration`: altı migration ve on sekiz gerçek PostgreSQL testi başarılı.
+- GitHub `quality`, `postgres-integration`, Vercel ve preview comment: push sonrasında çalışacak.
 - Migration/veri modeli değişikliği: yok.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 

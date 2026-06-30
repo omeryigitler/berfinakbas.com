@@ -50,6 +50,9 @@ Her alan için:
 - Hold süresi ayarlanabilir, güvenli varsayılan önerisi 5–10 dakikadır.
 - Hold tek kullanımlık token/hash ile ilişkilidir.
 - Süresi dolan hold otomatik `expired` olur.
+- Hold yalnızca uzmanın IANA saat diliminde aktif haftalık kural ve gün istisnalarından yeniden üretilen bir slot başlangıcı için oluşturulur; istemcinin gönderdiği UTC değer doğrudan kabul edilmez.
+- Hizmet süresi/buffer, minimum bildirim, maksimum ileri rezervasyon ve günlük kapasite hold transaction’ında tekrar uygulanır; kapasite süresi geçmemiş aktif hold ve randevu tahsislerini birlikte sayar.
+- Aynı gün için farklı slot artışları veya çelişen istisna tipleri otomatik çözümlenmez; yapılandırma düzeltilene kadar fail-closed reddedilir.
 - Aynı slotta iki aktif hold veya aktif randevu oluşmaması veritabanı/locking ile garanti edilir.
 - Kullanıcı formu geç gönderirse slot yeniden kontrol edilir; otomatik olarak başka saat verilmez.
 

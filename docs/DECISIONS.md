@@ -91,9 +91,12 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Karar: Hold ve randevuların buffer dâhil meşgul aralıkları ortak `booking_allocations` tablosuna bağlanır. Aynı terapistin aktif aralıkları PostgreSQL `btree_gist` ve `tstzrange` exclusion constraint ile çakışamaz.
 - Gerekçe: Ayrı hold ve appointment tablolarındaki application-level “önce sorgula, sonra ekle” kontrolü eşzamanlı isteklerde yeterli değildir.
 - İşlem kuralı: Hold oluşturma; hold, ilk durum kaydı, allocation ve minimum audit kaydını aynı serializable transaction içinde üretir. Süresi dolan hold aynı transaction içinde serbest bırakılır ve geçmişi korunur.
+- Uygunluk kapısı: Hold başlangıcı; uzmanın IANA saat diliminde yürürlükte olan haftalık kurallar, gün istisnaları, hizmet süresi/buffer, minimum bildirim, maksimum ileri rezervasyon ve günlük kapasite ile yeniden üretilen adaylardan biri olmalıdır. Günlük kapasite hesabı süresi geçmemiş aktif hold ve randevu tahsislerini birlikte sayar. İstemciden gelen UTC zaman tek başına güvenilir sayılmaz.
+- Fail-closed yapılandırma: Aynı gün için birden fazla aktif slot artışı veya çelişen istisna tipi varsa hold oluşturulmaz; otomatik öncelik uydurulmaz.
 - Yarış kuralı: PostgreSQL `40P01` deadlock ve `40001` serialization hataları en fazla üç transaction denemesiyle yeniden çalıştırılır; overlap constraint sonucu kullanıcıya güvenli slot conflict olarak döner.
 - Güvenlik: Ham tek kullanımlık hold token’ı saklanmaz; yalnızca SHA-256 özeti tutulur ve audit özetine eklenmez.
 - OPEN: Canlı ortamda kullanılacak hold süresi henüz ürün kararı değildir. Kod süreyi yapılandırılmış girdi olarak alır; public API açılmadan önce sistem ayarına bağlanacaktır.
+- OPEN: Aynı yerel gün için farklı aktif availability rule kayıtlarında farklı slot artışları desteklenecekse öncelik/çözüm kuralı ürün kararı olarak tanımlanmalıdır; o zamana kadar servis fail-closed davranır.
 
 ## ADR-016 — Randevu durum geçişleri atomik ve yarışa dayanıklı olacaktır
 
