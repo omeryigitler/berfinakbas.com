@@ -89,6 +89,21 @@ describe("booking consent gate", () => {
     ).toContainEqual({ code: "DOCUMENT_GRANTOR_MISMATCH", documentType: "PRIVACY_NOTICE" });
   });
 
+  it("rejects a declared guardian without a child relationship record", () => {
+    expect(
+      evaluateBookingConsentGate(
+        {
+          clientId,
+          clientType: "CHILD",
+          consentRecords: records(guardianId),
+          guardianId,
+          guardianRelationshipExists: false,
+        },
+        "REQUEST",
+      ),
+    ).toContainEqual({ code: "GUARDIAN_RELATION_NOT_FOUND" });
+  });
+
   it("requires configured explicit-consent documents separately", () => {
     expect(
       evaluateBookingConsentGate(
@@ -104,6 +119,14 @@ describe("booking consent gate", () => {
       code: "MISSING_DOCUMENT",
       documentType: "HEALTH_DATA_EXPLICIT_CONSENT",
     });
+  });
+
+  it("rejects duplicate evidence for the same required document type", () => {
+    const consentRecords = [...records(null), records(null)[0]];
+
+    expect(
+      evaluateBookingConsentGate({ clientId, clientType: "ADULT", consentRecords }, "REQUEST"),
+    ).toContainEqual({ code: "DUPLICATE_DOCUMENT", documentType: "PRIVACY_NOTICE" });
   });
 
   it("treats withdrawn records as missing and exposes safe structured issues", () => {

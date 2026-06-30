@@ -18,7 +18,7 @@ Komut, migration’ları `prisma migrate deploy` ile uygular ve ardından yalnı
 
 ## GitHub CI
 
-Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` beş migration’ı uygular, ardından on gerçek veritabanı testini çalıştırır.
+Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` altı migration’ı uygular, ardından on altı gerçek veritabanı testini çalıştırır.
 
 CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır. Production veya geliştirici veritabanı secret’ı kullanılmaz ve uzak veritabanına erişim açılmaz.
 
@@ -49,5 +49,7 @@ CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır
 30 Haziran 2026 tarihinde Draft PR #10’un `postgres-integration` işi PostgreSQL 17.10 servis konteynerinde aynı dört migration ve sekiz testi başarıyla tamamladı. CI yalnızca sentetik `berfinakbas_integration` veritabanına bağlandı.
 
 Aynı gün Draft PR #11’in işi beş migration ve on testi başarıyla tamamladı; yeni consent subject/guardian grantor foreign key ve check constraint senaryoları gerçek PostgreSQL üzerinde doğrulandı.
+
+Aynı gün Draft PR #12’de altı migration ve on altı test geçti. `appointment_consents` foreign key/tekillik kuralları, atomik hold→request dönüşümü, aynı hold yarışı, rollback, yetişkin/çocuk guardian akışları, consent IDOR ve eksik consent fail-closed davranışı doğrulandı.
 
 Bu sonuç yerel gerçek PostgreSQL kapısını karşılar. GitHub CI’daki PostgreSQL 17 işi her değişiklikte aynı paketi yeniden çalıştırır. Canlıya çıkıştan önce seçilecek yönetilen PostgreSQL sürümü/bölgesi üzerinde de aynı komut yeniden çalıştırılmalıdır.

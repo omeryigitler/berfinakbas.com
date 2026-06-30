@@ -14,8 +14,11 @@ export type BookingConsentRecord = Readonly<{
 export type BookingConsentIssue = Readonly<{
   code:
     | "ADULT_GUARDIAN_NOT_ALLOWED"
+    | "DUPLICATE_DOCUMENT"
     | "DOCUMENT_GRANTOR_MISMATCH"
+    | "DOCUMENT_SUBJECT_MISMATCH"
     | "GUARDIAN_AUTHORITY_UNVERIFIED"
+    | "GUARDIAN_RELATION_NOT_FOUND"
     | "GUARDIAN_REQUIRED"
     | "MISSING_DOCUMENT";
   documentType?: string;
@@ -27,6 +30,7 @@ export type BookingConsentGateInput = Readonly<{
   consentRecords: readonly BookingConsentRecord[];
   guardianAuthorityVerifiedAt?: Date | null;
   guardianId?: string | null;
+  guardianRelationshipExists?: boolean;
   requiredExplicitConsentDocumentTypes?: readonly string[];
 }>;
 
@@ -52,6 +56,9 @@ export function evaluateBookingConsentGate(
   if (input.clientType === "CHILD" && !guardianId) {
     issues.push({ code: "GUARDIAN_REQUIRED" });
   }
+  if (input.clientType === "CHILD" && guardianId && input.guardianRelationshipExists === false) {
+    issues.push({ code: "GUARDIAN_RELATION_NOT_FOUND" });
+  }
   if (input.clientType === "CHILD" && stage === "CONFIRM" && !input.guardianAuthorityVerifiedAt) {
     issues.push({ code: "GUARDIAN_AUTHORITY_UNVERIFIED" });
   }
@@ -63,13 +70,17 @@ export function evaluateBookingConsentGate(
         record.subjectClientId === input.clientId &&
         record.status === "GRANTED",
     );
-    const hasMatchingGrantor = subjectRecords.some((record) =>
+    const matchingRecords = subjectRecords.filter((record) =>
       input.clientType === "CHILD"
         ? Boolean(guardianId) && record.grantedByGuardianId === guardianId
         : record.grantedByGuardianId === null,
     );
 
-    if (hasMatchingGrantor) continue;
+    if (matchingRecords.length === 1) continue;
+    if (matchingRecords.length > 1) {
+      issues.push({ code: "DUPLICATE_DOCUMENT", documentType });
+      continue;
+    }
 
     issues.push({
       code: subjectRecords.length > 0 ? "DOCUMENT_GRANTOR_MISMATCH" : "MISSING_DOCUMENT",

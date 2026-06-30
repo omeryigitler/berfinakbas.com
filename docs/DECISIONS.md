@@ -114,6 +114,7 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Sürüm: Capture anında yürürlükte olan tek belge sürümü ID, version ve content hash ile kaydedilir. Belge güncellemesi geçmiş kayıtları değiştirmez.
 - Çocuk: Public talepte veli ilişkisi beyan edilir; kimlik/velayet belgesi veya tam doğum tarihi yüklenmez. Randevu `confirmed` olmadan önce aynı çocuk–veli ilişkisinde `authority_verified_at` bulunmalıdır.
 - Veri modeli: Consent subject ile çocuk adına beyan veren guardian ayrı alanlarda tutulur. Tek `guardian_id` iki rol için kullanılamaz.
+- Kanıt bağı: Randevu talebinde kullanılan consent kayıtları metin veya form payload’ı kopyalanmadan `appointment_consents` üzerinden immutable foreign key ilişkisiyle appointment’a bağlanır.
 - Uyuşmazlık: Birden fazla veli veya yetki uyuşmazlığı otomatik çözülmez; erişim/onay dondurulur ve manuel incelemeye alınır.
 - Geri çekme: Açık rızanın geri çekilmesi gelecekte o rızaya dayalı işlemi durdurur; geçmiş kaydı veya randevuyu sessizce silmez.
 - Yayın kapısı: Nihai metinler, hukuki sebepler ve veli yetkisi doğrulama prosedürü hukukçu onayı olmadan public gönderime açılmaz.
