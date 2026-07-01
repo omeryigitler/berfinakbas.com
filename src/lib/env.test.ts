@@ -17,6 +17,7 @@ describe("parseServerEnvironment", () => {
       BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: [],
       PUBLIC_APPOINTMENT_HOLDS_ENABLED: false,
       PUBLIC_APPOINTMENT_REQUESTS_ENABLED: false,
+      PUBLIC_APPOINTMENT_SLOTS_ENABLED: false,
     });
   });
 
@@ -25,6 +26,7 @@ describe("parseServerEnvironment", () => {
     expect(parseServerEnvironment(validEnvironment).PUBLIC_APPOINTMENT_REQUESTS_ENABLED).toBe(
       false,
     );
+    expect(parseServerEnvironment(validEnvironment).PUBLIC_APPOINTMENT_SLOTS_ENABLED).toBe(false);
   });
 
   it("keeps hold duration unset until an explicit server value is approved", () => {
@@ -55,10 +57,12 @@ describe("parseServerEnvironment", () => {
         "EXPLICIT_CONSENT_RESEARCH, EXPLICIT_CONSENT_RECORDING",
       PUBLIC_APPOINTMENT_HOLDS_ENABLED: "true",
       PUBLIC_APPOINTMENT_REQUESTS_ENABLED: "true",
+      PUBLIC_APPOINTMENT_SLOTS_ENABLED: "true",
     });
 
     expect(environment.PUBLIC_APPOINTMENT_HOLDS_ENABLED).toBe(true);
     expect(environment.PUBLIC_APPOINTMENT_REQUESTS_ENABLED).toBe(true);
+    expect(environment.PUBLIC_APPOINTMENT_SLOTS_ENABLED).toBe(true);
     expect(environment.BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES).toEqual([
       "EXPLICIT_CONSENT_RESEARCH",
       "EXPLICIT_CONSENT_RECORDING",

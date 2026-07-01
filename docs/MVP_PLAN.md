@@ -91,6 +91,7 @@ Mevcut durum:
 - Hold başlangıcı uzmanın saat diliminde aktif availability rule/exception, hizmet süresi-buffer, minimum/maksimum rezervasyon sınırı ve günlük kapasiteyle transaction içinde yeniden doğrulanır; yapılandırma belirsizliği fail-closed kalır.
 - Hold süresi çağıran girdisinden çıkarılmıştır; yalnızca doğrulanmış sunucu ayarı kullanılır ve ayar tanımsızken veritabanı yazımı başlamaz. Production dakika değeri açık ürün kararıdır.
 - Public hold API sınırı varsayılan kapalı bayrak, same-origin, strict/limited JSON, güvenli correlation ID ve `no-store` holder-token yanıtıyla uygulanmıştır; form ve production özelliği açılmamıştır.
+- Public slot okuma API’si varsayılan kapalı bayrakla uygulanmıştır; yalnızca aday UTC başlangıç/bitiş saatlerini döndürür, aktif hold/randevu tahsislerini dışlar ve hold transaction’ını son karar kapısı olarak korur.
 - PostgreSQL exclusion constraint hold-hold, hold-randevu ve randevu-randevu çakışmasını tek noktada engeller.
 - Haftalık yerel çalışma kuralları ile kapalı gün, özel saat ve blok istisnaları için additive şema/migration ve çift katmanlı doğrulama hazırdır.
 - Randevu durum geçişleri iyimser eşzamanlılık kontrolüyle appointment, status log ve audit kaydını aynı transaction içinde yazar; onay aktör/zamanını kaydeder ve ret/iptalde allocation’ı serbest bırakır.

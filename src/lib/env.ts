@@ -71,6 +71,7 @@ export const serverEnvironmentSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PUBLIC_APPOINTMENT_HOLDS_ENABLED: disabledByDefaultBoolean,
     PUBLIC_APPOINTMENT_REQUESTS_ENABLED: disabledByDefaultBoolean,
+    PUBLIC_APPOINTMENT_SLOTS_ENABLED: disabledByDefaultBoolean,
   })
   .superRefine((environment, context) => {
     const hasGoogleId = Boolean(environment.AUTH_GOOGLE_ID);
