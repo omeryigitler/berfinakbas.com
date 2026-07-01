@@ -29,6 +29,18 @@ Ek kurallar:
 - Çalışma klasörü iCloud, OneDrive veya Dropbox ile senkronize edilmez; her cihaz kendi clone’unu kullanır.
 - Satır sonu ve editör davranışı `.gitattributes` ile `.editorconfig`, Node sürümü `.nvmrc` ve `.node-version`, pnpm sürümü `packageManager` alanı tarafından belirlenir.
 
+## Teslim boyutu ve kota verimliliği
+
+1 Temmuz 2026 tarihli kullanıcı kararı Windows ve macOS dâhil tüm cihazlarda bağlayıcıdır:
+
+- Mikro özellikler için ayrı PR açılmaz. Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren tek milestone PR’da birleştirilir.
+- Sıradaki milestone `#18 — public booking flow` olarak planlanır: hizmet/uzman seçimi, slot arayüzü, hold, minimum client/guardian verisi, consent edinimi, request gönderimi ve uçtan uca doğrulama aynı PR kapsamındadır.
+- Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
+- İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tekrar tekrar poll edilmez; tamamlanması için tek bekleme ve tek sonuç okuması yapılır.
+- Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı PR/merge onayı istenmez.
+- Yeni bir PR ancak bağımsız güvenlik hotfix’i, geri dönüşü riskli migration, dış engel veya gerçekten bağımsız milestone varsa açılır. Bölme gerekirse gerekçe iş başlamadan kullanıcıya açıklanır.
+- Mevcut teknik MVP için hedef, #18 dâhil en fazla yedi büyük milestone PR’dır; kapsam sessizce mikro PR’lara parçalanmaz.
+
 ## Dil ve ürün bağlamı
 
 - Kullanıcıya görünen tüm metinler varsayılan olarak Türkçe yazılır.

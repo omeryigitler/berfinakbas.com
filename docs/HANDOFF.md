@@ -1,12 +1,20 @@
 # Aktif Çalışma Devir Teslimi
 
-Son güncelleme: 30 Haziran 2026, Europe/Malta
+Son güncelleme: 1 Temmuz 2026, Europe/Malta
 
 ## Aktif çalışma
 
-- Draft PR: `#17 — [codex] Add a fail-closed public appointment slots API`
-- Dal: `codex/public-appointment-slots-api`
-- Durum: PR #16 `main` dalına birleştirildi. PR #17’de kişisel veri döndürmeyen, aktif kurallar/istisnalar ve tahsislerden aday slot üreten public okuma API’si ekleniyor; sunucu bayrağı varsayılan kapalıdır ve public form açılmıyor.
+- Draft PR: Yok
+- Dal: `main`
+- Durum: PR #17 `main` dalına birleştirildi. Sıradaki çalışma mikro PR’lara bölünmeden tek `#18 — public booking flow` milestone’unda tamamlanacak.
+
+## Bağlayıcı çalışma biçimi
+
+- Windows ve macOS’ta aynı kural geçerlidir: ilişkili işler küçük PR’lara bölünmez.
+- #18; hizmet/uzman seçimi, slot arayüzü, hold, minimum client/guardian verisi, consent edinimi, request gönderimi ve uçtan uca doğrulamayı birlikte teslim eder.
+- En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
+- CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
+- Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
 
 ## Tamamlananlar
 
@@ -45,13 +53,14 @@ Son güncelleme: 30 Haziran 2026, Europe/Malta
 - Public slot endpoint’i `GET /api/public/appointments/slots` olarak eklendi; yalnızca UTC başlangıç/bitiş saatlerini döndürür.
 - Slot servisi aktif availability rule/exception, hizmet süresi-buffer, minimum/maksimum rezervasyon sınırı, günlük kapasite ve aktif hold/randevu tahsislerini uygular.
 - Slot sonucu adaydır; gerçek uygunluk hold transaction’ında yeniden doğrulanır ve public form etkinleştirilmez.
+- PR #17 squash merge ile `main` dalına alındı.
 
 ## Sıradaki
 
-1. Draft PR #17’nin GitHub quality, PostgreSQL integration ve Vercel kontrollerini tamamla; uygunsa birleştir.
-2. Client/guardian/consent edinim akışını ayrı, varsayılan kapalı ve veri minimizasyonlu teslimler halinde tasarla.
-3. Production hold süresi ile dağıtık abuse kontrolü onaylanmadan public hold yazımını etkinleştirme.
-4. Dağıtık rate-limit/abuse kontrolü ve nihai hukuk onayı olmadan production bayrağını veya public formu etkinleştirme.
+1. Tek `#18 — public booking flow` milestone dalında görünür randevu akışını uçtan uca tamamla; mikro PR açma.
+2. Client/guardian/consent edinimini veri minimizasyonuyla slot→hold→request akışına bağla.
+3. Production hold süresi ile dağıtık abuse kontrolü onaylanmadan public yazma bayraklarını etkinleştirme.
+4. Nihai hukuk onayı olmadan production randevu formunu etkinleştirme.
 
 ## Engeller ve açık kararlar
 
