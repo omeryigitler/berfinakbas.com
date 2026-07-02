@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 import styles from "./about-highlight.module.css";
@@ -9,13 +10,13 @@ type ValueCard = {
 };
 
 type AboutHighlightProps = {
-  actionHref?: string;
+  actionHref?: Route;
   actionLabel?: string;
   headingId?: string;
   isPage?: boolean;
   lead?: string;
   paragraphs?: string[];
-  secondaryActionHref?: string;
+  secondaryActionHref?: Route;
   secondaryActionLabel?: string;
   sectionId?: string;
   showSecondaryAction?: boolean;
