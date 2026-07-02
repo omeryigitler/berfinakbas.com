@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { BerfinPortrait, SiteFooter, SiteHeader } from "@/components/public-shell";
+import AboutHighlight from "@/components/about-highlight";
+import { SiteFooter, SiteHeader } from "@/components/public-shell";
 
 export const metadata: Metadata = {
   description: "Berfin Akbaş’ın görüşme yaklaşımı ve çalışma prensipleri hakkında bilgi.",
@@ -12,33 +12,17 @@ export default function AboutPage() {
   return (
     <main className="inner-page">
       <SiteHeader />
-      <section className="inner-hero portrait-page-layout" aria-labelledby="about-page-title">
-        <BerfinPortrait page />
-        <div className="inner-copy">
-          <p className="section-kicker">Hakkımda</p>
-          <h1 id="about-page-title">İletişim ihtiyacını anlamak, doğru soruyla başlar.</h1>
-          <p className="inner-lead">
-            İlk görüşmede amaç hızlı bir etiket koymak değil; ihtiyacı, gündelik yaşamı ve uygun
-            sonraki adımı birlikte anlamaktır.
-          </p>
-          <p>
-            Her danışanın yaşı, iletişim ortamı ve destek ağı farklıdır. Bu nedenle süreç,
-            bilgilendirme ve değerlendirme sonrasında kişiye göre planlanır.
-          </p>
-          <p>
-            Çocuklarla yürütülen görüşmelerde aileyle iş birliği; yetişkin görüşmelerinde ise
-            kişinin hedefleri ve gündelik ihtiyaçları merkezdedir.
-          </p>
-          <div className="about-values">
-            <span>Dinlemeye alan açan</span>
-            <span>Anlaşılır bilgi sunan</span>
-            <span>Mahremiyete duyarlı</span>
-          </div>
-          <Link className="primary-button inner-action" href="/surec">
-            Süreci incele
-          </Link>
-        </div>
-      </section>
+      <AboutHighlight
+        page
+        title="İletişim ihtiyacını anlamak, doğru soruyla başlar."
+        lead="İlk görüşmede amaç hızlı bir etiket koymak değil; ihtiyacı, gündelik yaşamı ve uygun sonraki adımı birlikte anlamaktır."
+        paragraphs={[
+          "Her danışanın yaşı, iletişim ortamı ve destek ağı farklıdır. Bu nedenle süreç, bilgilendirme ve değerlendirme sonrasında kişiye göre planlanır.",
+          "Çocuklarla yürütülen görüşmelerde aileyle iş birliği; yetişkin görüşmelerinde ise kişinin hedefleri ve gündelik ihtiyaçları merkezdedir.",
+        ]}
+        values={["Dinlemeye alan açan", "Anlaşılır bilgi sunan", "Mahremiyete duyarlı"]}
+        actionLabel="Süreci incele"
+      />
 
       <section className="inner-band" aria-labelledby="principles-title">
         <div>
