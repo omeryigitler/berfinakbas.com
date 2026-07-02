@@ -68,7 +68,11 @@ export default function AboutHighlight({
         <div className={styles.portraitPanel}>
           <span className={styles.softCircle} aria-hidden="true" />
           <span className={styles.orbitLine} aria-hidden="true" />
-          <img src="/berfin-hero.png" alt="Berfin Akbaş, Dil ve Konuşma Terapisti" draggable="false" />
+          <img
+            src="/berfin-hero.png"
+            alt="Berfin Akbaş, Dil ve Konuşma Terapisti"
+            draggable="false"
+          />
         </div>
 
         <div className={styles.nameCard}>
@@ -85,7 +89,11 @@ export default function AboutHighlight({
 
       <div className={styles.copyColumn}>
         <p className="section-kicker">Hakkımda</p>
-        {isPage ? <h1 id={resolvedHeadingId}>{title}</h1> : <h2 id={resolvedHeadingId}>{title}</h2>}
+        {isPage ? (
+          <h1 id={resolvedHeadingId}>{title}</h1>
+        ) : (
+          <h2 id={resolvedHeadingId}>{title}</h2>
+        )}
         <p className={styles.leadText}>{lead}</p>
         {paragraphs.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
