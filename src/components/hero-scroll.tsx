@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { BrandMark } from "@/components/public-shell";
+import { berfinHeroSrc } from "./berfin-hero-src";
 import styles from "./hero-scroll.module.css";
 
 const heroHighlights = [
@@ -82,7 +83,7 @@ export default function HeroScroll() {
         <div className={styles.scrollHeroStage}>
           <div className={styles.scrollHeroPortrait}>
             <img
-              src="/images/berfin-hero.png"
+              src={berfinHeroSrc}
               alt="Berfin Akbaş, Dil ve Konuşma Terapisti"
               draggable="false"
             />
