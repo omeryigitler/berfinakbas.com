@@ -1,11 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
-
-import styles from "./berfin-portrait.module.css";
 
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <span className={`brand-mark${compact ? " brand-mark-compact" : ""}`}>
+    <span className={`brand-mark${compact ? "brand-mark-compact" : ""}`}>
       <span className="brand-symbol" aria-hidden="true">
         <svg viewBox="0 0 48 48">
           <path d="M29 8c-7 0-13 5.8-13 13 0 4.6 2.3 8.7 5.9 11.1V40l6.6-5.8H31c6.1 0 11-5 11-11.1C42 14.8 36.4 8 29 8Z" />
@@ -55,18 +52,9 @@ export function SiteFooter() {
 
 export function BerfinPortrait({ page = false }: { page?: boolean }) {
   return (
-    <div className={`${styles.portrait}${page ? ` ${styles.page}` : ""}`}>
-      <div className={styles.photoFrame}>
-        <Image
-          src="/berfin-hero.png"
-          alt="Berfin Akbaş"
-          fill
-          priority={page}
-          sizes={page ? "(max-width: 980px) 100vw, 430px" : "(max-width: 720px) 100vw, 380px"}
-          className={styles.photo}
-        />
-      </div>
-      <div className={`berfin-name-card ${styles.nameCard}`}>
+    <div className={`berfin-visual${page ? "berfin-visual-page" : ""}`}>
+      <div aria-label="Berfin Akbaş, beyaz kıyafetli portre" className="berfin-photo" role="img" />
+      <div className="berfin-name-card">
         <small>Tanışın</small>
         <strong>Berfin Akbaş</strong>
         <span>Dil ve Konuşma Terapisti</span>
