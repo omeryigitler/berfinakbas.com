@@ -28,10 +28,12 @@ export default function HeroScroll() {
       const rect = hero.getBoundingClientRect();
       const scrollableDistance = Math.max(hero.offsetHeight - window.innerHeight, 1);
       const progress = clamp(-rect.top / scrollableDistance, 0, 1);
+      const overlayProgress = clamp(progress / 0.42, 0, 1);
       const copyProgress = clamp((progress - 0.18) / 0.48, 0, 1);
       const navProgress = clamp(progress / 0.22, 0, 1);
       const cardProgress = clamp((progress - 0.52) / 0.3, 0, 1);
 
+      hero.style.setProperty("--hero-overlay-opacity", overlayProgress.toFixed(4));
       hero.style.setProperty("--hero-room-scale", (1.13 - progress * 0.13).toFixed(4));
       hero.style.setProperty("--hero-room-y", `${progress * -1.8}vh`);
       hero.style.setProperty("--hero-nav-y", `${-96 + navProgress * 116}px`);
