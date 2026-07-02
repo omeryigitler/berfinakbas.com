@@ -58,7 +58,6 @@ export default function HeroScroll() {
     <section className={styles.scrollHero} ref={heroRef} aria-labelledby="hero-scroll-title">
       <div className={styles.scrollHeroSticky}>
         <div className={styles.scrollHeroRoom} aria-hidden="true" style={{ backgroundImage: "url('/therapy-office-hero.png')" }} />
-
         <header className={styles.scrollHeroNav} aria-label="Ana menü">
           <Link href="/" aria-label="Berfin Akbaş ana sayfa"><BrandMark /></Link>
           <nav>
@@ -69,12 +68,10 @@ export default function HeroScroll() {
           </nav>
           <Link className={styles.scrollHeroNavCta} href="/randevu">Randevu Al</Link>
         </header>
-
         <div className={styles.scrollHeroStage}>
           <div className={styles.scrollHeroPortrait}>
             <img src="/berfin-hero.png" alt="Berfin Akbaş, Dil ve Konuşma Terapisti" draggable="false" />
           </div>
-
           <div className={styles.scrollHeroCopy}>
             <p className="section-kicker">Dil ve Konuşma Terapisi</p>
             <h1 id="hero-scroll-title"><span>Her kelime,</span><em>yeni bir başlangıç.</em></h1>
@@ -87,9 +84,7 @@ export default function HeroScroll() {
               {heroHighlights.map((item) => <li key={item}><span aria-hidden="true">✓</span>{item}</li>)}
             </ul>
           </div>
-
           <div className={styles.scrollSpeechLayer} aria-hidden="true"><span /><span /><span /><i /><i /></div>
-
           <div className={styles.scrollProgressCard} aria-hidden="true">
             <div><span>Gelişim takibi</span><small>Bu ay</small></div>
             <strong>86%</strong>
