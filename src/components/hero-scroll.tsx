@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { BrandMark } from "@/components/public-shell";
+import styles from "./hero-scroll.module.css";
 
 const heroHighlights = [
   "Kişiye göre planlama",
@@ -27,8 +28,24 @@ export default function HeroScroll() {
       const rect = hero.getBoundingClientRect();
       const scrollableDistance = Math.max(hero.offsetHeight - window.innerHeight, 1);
       const progress = clamp(-rect.top / scrollableDistance, 0, 1);
+      const copyProgress = clamp((progress - 0.2) / 0.55, 0, 1);
+      const navProgress = clamp(progress / 0.26, 0, 1);
+      const cardProgress = clamp((progress - 0.48) / 0.38, 0, 1);
 
       hero.style.setProperty("--hero-progress", progress.toFixed(4));
+      hero.style.setProperty("--hero-room-scale", (1.18 - progress * 0.18).toFixed(4));
+      hero.style.setProperty("--hero-room-x", `${progress * 4}vw`);
+      hero.style.setProperty("--hero-nav-y", `${-112 + navProgress * 132}px`);
+      hero.style.setProperty("--hero-nav-opacity", navProgress.toFixed(4));
+      hero.style.setProperty("--hero-copy-y", `${110 - copyProgress * 110}px`);
+      hero.style.setProperty("--hero-copy-opacity", copyProgress.toFixed(4));
+      hero.style.setProperty("--hero-portrait-left", `${50 - progress * 22}%`);
+      hero.style.setProperty("--hero-portrait-bottom", `${-3 + progress * 11}vh`);
+      hero.style.setProperty("--hero-portrait-width", `${650 - progress * 190}px`);
+      hero.style.setProperty("--hero-portrait-scale", (1.08 - progress * 0.18).toFixed(4));
+      hero.style.setProperty("--hero-card-y", `${38 - cardProgress * 38}px`);
+      hero.style.setProperty("--hero-card-opacity", cardProgress.toFixed(4));
+      hero.style.setProperty("--hero-speech-opacity", (0.18 + progress * 0.34).toFixed(4));
     };
 
     updateHeroProgress();
@@ -42,41 +59,41 @@ export default function HeroScroll() {
   }, []);
 
   return (
-    <section className="scroll-hero" ref={heroRef} aria-labelledby="hero-scroll-title">
-      <div className="scroll-hero-sticky">
-        <div className="scroll-hero-room" aria-hidden="true">
-          <span className="scroll-room-light" />
-          <span className="scroll-room-frame scroll-room-frame-one" />
-          <span className="scroll-room-frame scroll-room-frame-two" />
-          <span className="scroll-room-bookcase">
+    <section className={styles.scrollHero} ref={heroRef} aria-labelledby="hero-scroll-title">
+      <div className={styles.scrollHeroSticky}>
+        <div className={styles.scrollHeroRoom} aria-hidden="true">
+          <span className={styles.scrollRoomLight} />
+          <span className={`${styles.scrollRoomFrame} ${styles.scrollRoomFrameOne}`} />
+          <span className={`${styles.scrollRoomFrame} ${styles.scrollRoomFrameTwo}`} />
+          <span className={styles.scrollRoomBookcase}>
             <i />
             <i />
             <i />
             <b />
           </span>
-          <span className="scroll-room-plant scroll-room-plant-left">
+          <span className={`${styles.scrollRoomPlant} ${styles.scrollRoomPlantLeft}`}>
             <i />
             <i />
             <i />
             <b />
           </span>
-          <span className="scroll-room-plant scroll-room-plant-right">
+          <span className={`${styles.scrollRoomPlant} ${styles.scrollRoomPlantRight}`}>
             <i />
             <i />
             <i />
             <b />
           </span>
-          <span className="scroll-room-chair">
+          <span className={styles.scrollRoomChair}>
             <i />
             <b />
           </span>
-          <span className="scroll-room-table">
+          <span className={styles.scrollRoomTable}>
             <i />
           </span>
-          <span className="scroll-room-rug" />
+          <span className={styles.scrollRoomRug} />
         </div>
 
-        <header className="scroll-hero-nav" aria-label="Ana menü">
+        <header className={styles.scrollHeroNav} aria-label="Ana menü">
           <Link href="/" aria-label="Berfin Akbaş ana sayfa">
             <BrandMark />
           </Link>
@@ -86,21 +103,21 @@ export default function HeroScroll() {
             <Link href="/randevu">Randevu</Link>
             <Link href="/iletisim">İletişim</Link>
           </nav>
-          <Link className="scroll-hero-nav-cta" href="/randevu">
+          <Link className={styles.scrollHeroNavCta} href="/randevu">
             Randevu Al
           </Link>
         </header>
 
-        <div className="scroll-hero-stage">
-          <div className="scroll-hero-portrait" aria-label="Berfin Akbaş, Dil ve Konuşma Terapisti" role="img">
-            <span className="scroll-portrait-photo" />
-            <span className="scroll-portrait-card">
+        <div className={styles.scrollHeroStage}>
+          <div className={styles.scrollHeroPortrait} aria-label="Berfin Akbaş, Dil ve Konuşma Terapisti" role="img">
+            <span className={styles.scrollPortraitPhoto} />
+            <span className={styles.scrollPortraitCard}>
               <strong>Berfin Akbaş</strong>
               <small>Dil ve Konuşma Terapisti</small>
             </span>
           </div>
 
-          <div className="scroll-hero-copy">
+          <div className={styles.scrollHeroCopy}>
             <p className="section-kicker">Dil ve Konuşma Terapisi</p>
             <h1 id="hero-scroll-title">
               <span>Her kelime,</span>
@@ -110,7 +127,7 @@ export default function HeroScroll() {
               Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel iletişim
               desteği.
             </p>
-            <div className="scroll-hero-actions">
+            <div className={styles.scrollHeroActions}>
               <Link className="primary-button" href="/randevu">
                 Randevu Al
               </Link>
@@ -118,7 +135,7 @@ export default function HeroScroll() {
                 Hizmetleri İncele
               </Link>
             </div>
-            <ul className="scroll-hero-highlights" aria-label="Temel yaklaşım">
+            <ul className={styles.scrollHeroHighlights} aria-label="Temel yaklaşım">
               {heroHighlights.map((item) => (
                 <li key={item}>
                   <span aria-hidden="true">✓</span>
@@ -128,7 +145,7 @@ export default function HeroScroll() {
             </ul>
           </div>
 
-          <div className="scroll-speech-layer" aria-hidden="true">
+          <div className={styles.scrollSpeechLayer} aria-hidden="true">
             <span />
             <span />
             <span />
@@ -136,7 +153,7 @@ export default function HeroScroll() {
             <i />
           </div>
 
-          <div className="scroll-progress-card" aria-hidden="true">
+          <div className={styles.scrollProgressCard} aria-hidden="true">
             <div>
               <span>Gelişim takibi</span>
               <small>Bu ay</small>
