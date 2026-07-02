@@ -4,6 +4,7 @@
   min-height: 1100px;
   overflow: clip;
   background: var(--paper);
+  --hero-overlay-opacity: 0;
   --hero-room-scale: 1.13;
   --hero-room-y: 0vh;
   --hero-nav-y: -96px;
@@ -52,6 +53,7 @@
     transparent 100%
   );
   content: "";
+  opacity: var(--hero-overlay-opacity);
 }
 
 .scrollHeroStage {
