@@ -28,24 +28,24 @@ export default function HeroScroll() {
       const rect = hero.getBoundingClientRect();
       const scrollableDistance = Math.max(hero.offsetHeight - window.innerHeight, 1);
       const progress = clamp(-rect.top / scrollableDistance, 0, 1);
-      const copyProgress = clamp((progress - 0.2) / 0.55, 0, 1);
-      const navProgress = clamp(progress / 0.26, 0, 1);
-      const cardProgress = clamp((progress - 0.48) / 0.38, 0, 1);
+      const copyProgress = clamp((progress - 0.18) / 0.52, 0, 1);
+      const navProgress = clamp(progress / 0.24, 0, 1);
+      const cardProgress = clamp((progress - 0.52) / 0.34, 0, 1);
 
       hero.style.setProperty("--hero-progress", progress.toFixed(4));
-      hero.style.setProperty("--hero-room-scale", (1.18 - progress * 0.18).toFixed(4));
-      hero.style.setProperty("--hero-room-x", `${progress * 4}vw`);
-      hero.style.setProperty("--hero-nav-y", `${-112 + navProgress * 132}px`);
+      hero.style.setProperty("--hero-room-scale", (1.12 - progress * 0.12).toFixed(4));
+      hero.style.setProperty("--hero-room-x", `${progress * 2.4}vw`);
+      hero.style.setProperty("--hero-nav-y", `${-112 + navProgress * 130}px`);
       hero.style.setProperty("--hero-nav-opacity", navProgress.toFixed(4));
-      hero.style.setProperty("--hero-copy-y", `${110 - copyProgress * 110}px`);
+      hero.style.setProperty("--hero-copy-y", `${96 - copyProgress * 96}px`);
       hero.style.setProperty("--hero-copy-opacity", copyProgress.toFixed(4));
-      hero.style.setProperty("--hero-portrait-left", `${50 - progress * 22}%`);
-      hero.style.setProperty("--hero-portrait-bottom", `${-3 + progress * 11}vh`);
-      hero.style.setProperty("--hero-portrait-width", `${650 - progress * 190}px`);
-      hero.style.setProperty("--hero-portrait-scale", (1.08 - progress * 0.18).toFixed(4));
-      hero.style.setProperty("--hero-card-y", `${38 - cardProgress * 38}px`);
+      hero.style.setProperty("--hero-portrait-left", `${48 - progress * 20}%`);
+      hero.style.setProperty("--hero-portrait-bottom", `${0 + progress * 9}vh`);
+      hero.style.setProperty("--hero-portrait-width", `${560 - progress * 170}px`);
+      hero.style.setProperty("--hero-portrait-scale", (1.02 - progress * 0.1).toFixed(4));
+      hero.style.setProperty("--hero-card-y", `${34 - cardProgress * 34}px`);
       hero.style.setProperty("--hero-card-opacity", cardProgress.toFixed(4));
-      hero.style.setProperty("--hero-speech-opacity", (0.18 + progress * 0.34).toFixed(4));
+      hero.style.setProperty("--hero-speech-opacity", (0.14 + progress * 0.28).toFixed(4));
     };
 
     updateHeroProgress();
