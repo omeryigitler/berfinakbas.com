@@ -1,5 +1,6 @@
+import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
-import { BerfinPortrait, SiteFooter } from "@/components/public-shell";
+import { SiteFooter } from "@/components/public-shell";
 
 const audiences = [
   {
@@ -113,30 +114,7 @@ export default function Home() {
         </article>
       </section>
 
-      <section className="about-section" id="hakkimda" aria-labelledby="about-title">
-        <BerfinPortrait />
-
-        <div className="about-copy">
-          <p className="section-kicker">Hakkımda</p>
-          <h2 id="about-title">Sizi dinleyen, süreci anlaşılır kılan bir görüşme alanı.</h2>
-          <p>
-            Her iletişim ihtiyacı kendine özgüdür. İlk görüşmenin amacı ihtiyacı, gündelik yaşamı
-            ve uygun sonraki adımı birlikte anlamaktır.
-          </p>
-          <p>
-            Bu sitede hizmet alanları sade bir dille anlatılır. Randevu talebi seçilen saati önce
-            talep olarak kaydeder; uygunluk kontrolü sonrasında netleşir.
-          </p>
-          <div className="about-values">
-            <span>Dinlemeye alan açan</span>
-            <span>Aileyle iş birliğine açık</span>
-            <span>Mahremiyete duyarlı</span>
-          </div>
-          <a className="text-link" href="/surec">
-            Görüşme süreci nasıl işler? <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      </section>
+      <AboutHighlight />
 
       <section className="audience-section" id="destek-alanlari" aria-labelledby="audience-title">
         <div className="section-heading">
