@@ -17,7 +17,6 @@ export default function HeroScroll() {
 
   useEffect(() => {
     const hero = heroRef.current;
-
     if (!hero) return;
 
     const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -58,75 +57,43 @@ export default function HeroScroll() {
   return (
     <section className={styles.scrollHero} ref={heroRef} aria-labelledby="hero-scroll-title">
       <div className={styles.scrollHeroSticky}>
-        <div className={styles.scrollHeroRoom} aria-hidden="true" />
+        <div className={styles.scrollHeroRoom} aria-hidden="true" style={{ backgroundImage: "url('/therapy-office-hero.png')" }} />
 
         <header className={styles.scrollHeroNav} aria-label="Ana menü">
-          <Link href="/" aria-label="Berfin Akbaş ana sayfa">
-            <BrandMark />
-          </Link>
+          <Link href="/" aria-label="Berfin Akbaş ana sayfa"><BrandMark /></Link>
           <nav>
             <Link href="/hizmetler">Hizmetler</Link>
             <Link href="/hakkimda">Hakkımda</Link>
             <Link href="/randevu">Randevu</Link>
             <Link href="/iletisim">İletişim</Link>
           </nav>
-          <Link className={styles.scrollHeroNavCta} href="/randevu">
-            Randevu Al
-          </Link>
+          <Link className={styles.scrollHeroNavCta} href="/randevu">Randevu Al</Link>
         </header>
 
         <div className={styles.scrollHeroStage}>
-          <div className={styles.scrollHeroGhostTitle} aria-hidden="true">
-            <span>DİL VE</span>
-            <span>KONUŞMA</span>
-          </div>
-
           <div className={styles.scrollHeroPortrait}>
             <img src="/berfin-hero.png" alt="Berfin Akbaş, Dil ve Konuşma Terapisti" draggable="false" />
           </div>
 
           <div className={styles.scrollHeroCopy}>
             <p className="section-kicker">Dil ve Konuşma Terapisi</p>
-            <h1 id="hero-scroll-title">
-              <span>Her kelime,</span>
-              <em>yeni bir başlangıç.</em>
-            </h1>
+            <h1 id="hero-scroll-title"><span>Her kelime,</span><em>yeni bir başlangıç.</em></h1>
             <p>Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel iletişim desteği.</p>
             <div className={styles.scrollHeroActions}>
-              <Link className="primary-button" href="/randevu">
-                Randevu Al
-              </Link>
-              <Link className="secondary-button" href="/hizmetler">
-                Hizmetleri İncele
-              </Link>
+              <Link className="primary-button" href="/randevu">Randevu Al</Link>
+              <Link className="secondary-button" href="/hizmetler">Hizmetleri İncele</Link>
             </div>
             <ul className={styles.scrollHeroHighlights} aria-label="Temel yaklaşım">
-              {heroHighlights.map((item) => (
-                <li key={item}>
-                  <span aria-hidden="true">✓</span>
-                  {item}
-                </li>
-              ))}
+              {heroHighlights.map((item) => <li key={item}><span aria-hidden="true">✓</span>{item}</li>)}
             </ul>
           </div>
 
-          <div className={styles.scrollSpeechLayer} aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <i />
-            <i />
-          </div>
+          <div className={styles.scrollSpeechLayer} aria-hidden="true"><span /><span /><span /><i /><i /></div>
 
           <div className={styles.scrollProgressCard} aria-hidden="true">
-            <div>
-              <span>Gelişim takibi</span>
-              <small>Bu ay</small>
-            </div>
+            <div><span>Gelişim takibi</span><small>Bu ay</small></div>
             <strong>86%</strong>
-            <svg viewBox="0 0 180 70">
-              <path d="M5 54 C28 45, 37 58, 58 43 S91 36, 108 31 S141 23, 175 9" />
-            </svg>
+            <svg viewBox="0 0 180 70"><path d="M5 54 C28 45, 37 58, 58 43 S91 36, 108 31 S141 23, 175 9" /></svg>
             <small>Düzenli seans ile ilerleme takibi</small>
           </div>
         </div>
