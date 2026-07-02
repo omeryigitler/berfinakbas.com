@@ -28,24 +28,25 @@ export default function HeroScroll() {
       const rect = hero.getBoundingClientRect();
       const scrollableDistance = Math.max(hero.offsetHeight - window.innerHeight, 1);
       const progress = clamp(-rect.top / scrollableDistance, 0, 1);
-      const copyProgress = clamp((progress - 0.18) / 0.52, 0, 1);
+      const copyProgress = clamp((progress - 0.22) / 0.48, 0, 1);
       const navProgress = clamp(progress / 0.24, 0, 1);
-      const cardProgress = clamp((progress - 0.52) / 0.34, 0, 1);
+      const cardProgress = clamp((progress - 0.54) / 0.32, 0, 1);
 
       hero.style.setProperty("--hero-progress", progress.toFixed(4));
-      hero.style.setProperty("--hero-room-scale", (1.12 - progress * 0.12).toFixed(4));
-      hero.style.setProperty("--hero-room-x", `${progress * 2.4}vw`);
+      hero.style.setProperty("--hero-room-scale", (1.16 - progress * 0.16).toFixed(4));
+      hero.style.setProperty("--hero-room-x", `${progress * 1.8}vw`);
+      hero.style.setProperty("--hero-room-y", `${progress * -1.5}vh`);
       hero.style.setProperty("--hero-nav-y", `${-112 + navProgress * 130}px`);
       hero.style.setProperty("--hero-nav-opacity", navProgress.toFixed(4));
-      hero.style.setProperty("--hero-copy-y", `${96 - copyProgress * 96}px`);
+      hero.style.setProperty("--hero-copy-y", `${105 - copyProgress * 105}px`);
       hero.style.setProperty("--hero-copy-opacity", copyProgress.toFixed(4));
-      hero.style.setProperty("--hero-portrait-left", `${48 - progress * 20}%`);
-      hero.style.setProperty("--hero-portrait-bottom", `${0 + progress * 9}vh`);
-      hero.style.setProperty("--hero-portrait-width", `${560 - progress * 170}px`);
-      hero.style.setProperty("--hero-portrait-scale", (1.02 - progress * 0.1).toFixed(4));
+      hero.style.setProperty("--hero-portrait-left", `${50 - progress * 24}%`);
+      hero.style.setProperty("--hero-portrait-bottom", `${-2 + progress * 8}vh`);
+      hero.style.setProperty("--hero-portrait-width", `${520 - progress * 155}px`);
+      hero.style.setProperty("--hero-portrait-scale", (1.08 - progress * 0.16).toFixed(4));
       hero.style.setProperty("--hero-card-y", `${34 - cardProgress * 34}px`);
       hero.style.setProperty("--hero-card-opacity", cardProgress.toFixed(4));
-      hero.style.setProperty("--hero-speech-opacity", (0.14 + progress * 0.28).toFixed(4));
+      hero.style.setProperty("--hero-speech-opacity", (0.1 + progress * 0.3).toFixed(4));
     };
 
     updateHeroProgress();
@@ -61,37 +62,7 @@ export default function HeroScroll() {
   return (
     <section className={styles.scrollHero} ref={heroRef} aria-labelledby="hero-scroll-title">
       <div className={styles.scrollHeroSticky}>
-        <div className={styles.scrollHeroRoom} aria-hidden="true">
-          <span className={styles.scrollRoomLight} />
-          <span className={`${styles.scrollRoomFrame} ${styles.scrollRoomFrameOne}`} />
-          <span className={`${styles.scrollRoomFrame} ${styles.scrollRoomFrameTwo}`} />
-          <span className={styles.scrollRoomBookcase}>
-            <i />
-            <i />
-            <i />
-            <b />
-          </span>
-          <span className={`${styles.scrollRoomPlant} ${styles.scrollRoomPlantLeft}`}>
-            <i />
-            <i />
-            <i />
-            <b />
-          </span>
-          <span className={`${styles.scrollRoomPlant} ${styles.scrollRoomPlantRight}`}>
-            <i />
-            <i />
-            <i />
-            <b />
-          </span>
-          <span className={styles.scrollRoomChair}>
-            <i />
-            <b />
-          </span>
-          <span className={styles.scrollRoomTable}>
-            <i />
-          </span>
-          <span className={styles.scrollRoomRug} />
-        </div>
+        <div className={styles.scrollHeroRoom} aria-hidden="true" />
 
         <header className={styles.scrollHeroNav} aria-label="Ana menü">
           <Link href="/" aria-label="Berfin Akbaş ana sayfa">
@@ -109,12 +80,12 @@ export default function HeroScroll() {
         </header>
 
         <div className={styles.scrollHeroStage}>
-          <div className={styles.scrollHeroPortrait} aria-label="Berfin Akbaş, Dil ve Konuşma Terapisti" role="img">
-            <span className={styles.scrollPortraitPhoto} />
-            <span className={styles.scrollPortraitCard}>
-              <strong>Berfin Akbaş</strong>
-              <small>Dil ve Konuşma Terapisti</small>
-            </span>
+          <div className={styles.scrollHeroPortrait}>
+            <img
+              src="/images/berfin-hero.png"
+              alt="Berfin Akbaş, Dil ve Konuşma Terapisti"
+              draggable="false"
+            />
           </div>
 
           <div className={styles.scrollHeroCopy}>
