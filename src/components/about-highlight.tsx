@@ -2,7 +2,28 @@ import Link from "next/link";
 
 import styles from "./about-highlight.module.css";
 
-const values = [
+type ValueCard = {
+  label: string;
+  text: string;
+  title: string;
+};
+
+type AboutHighlightProps = {
+  actionHref?: string;
+  actionLabel?: string;
+  headingId?: string;
+  isPage?: boolean;
+  lead?: string;
+  paragraphs?: string[];
+  secondaryActionHref?: string;
+  secondaryActionLabel?: string;
+  sectionId?: string;
+  showSecondaryAction?: boolean;
+  title?: string;
+  values?: ValueCard[];
+};
+
+const defaultValues: ValueCard[] = [
   {
     label: "01",
     text: "İlk temasın aceleye gelmediği, ihtiyacın sakin biçimde anlaşıldığı bir görüşme alanı.",
@@ -20,9 +41,29 @@ const values = [
   },
 ];
 
-export default function AboutHighlight() {
+const defaultParagraphs = [
+  "Çocuklar, ergenler ve yetişkinler için değerlendirme, terapi planlama ve seans süreci; güven veren, mahremiyete duyarlı ve anlaşılır bir çerçevede ilerler.",
+];
+
+export default function AboutHighlight({
+  actionHref = "/surec",
+  actionLabel = "Süreci İncele",
+  headingId,
+  isPage = false,
+  lead = "Her bireyin iletişim süreci kendine özgüdür. İlk görüşmede ihtiyaçları anlamaya, süreci sadeleştirmeye ve size en uygun yol haritasını oluşturmaya odaklanıyorum.",
+  paragraphs = defaultParagraphs,
+  secondaryActionHref = "/hakkimda",
+  secondaryActionLabel = "Hakkımda Daha Fazla",
+  sectionId = "hakkimda",
+  showSecondaryAction = true,
+  title = "Sizi dinleyen, süreci anlaşılır kılan bir görüşme alanı.",
+  values = defaultValues,
+}: AboutHighlightProps) {
+  const resolvedHeadingId = headingId ?? (isPage ? "about-page-title" : "about-title");
+  const sectionClassName = `${styles.aboutSection}${isPage ? ` ${styles.pageSection}` : ""}`;
+
   return (
-    <section className={styles.aboutSection} id="hakkimda" aria-labelledby="about-title">
+    <section className={sectionClassName} id={sectionId} aria-labelledby={resolvedHeadingId}>
       <div className={styles.visualColumn}>
         <div className={styles.portraitPanel}>
           <span className={styles.softCircle} aria-hidden="true" />
@@ -44,15 +85,11 @@ export default function AboutHighlight() {
 
       <div className={styles.copyColumn}>
         <p className="section-kicker">Hakkımda</p>
-        <h2 id="about-title">Sizi dinleyen, süreci anlaşılır kılan bir görüşme alanı.</h2>
-        <p className={styles.leadText}>
-          Her bireyin iletişim süreci kendine özgüdür. İlk görüşmede ihtiyaçları anlamaya, süreci
-          sadeleştirmeye ve size en uygun yol haritasını oluşturmaya odaklanıyorum.
-        </p>
-        <p>
-          Çocuklar, ergenler ve yetişkinler için değerlendirme, terapi planlama ve seans süreci;
-          güven veren, mahremiyete duyarlı ve anlaşılır bir çerçevede ilerler.
-        </p>
+        {isPage ? <h1 id={resolvedHeadingId}>{title}</h1> : <h2 id={resolvedHeadingId}>{title}</h2>}
+        <p className={styles.leadText}>{lead}</p>
+        {paragraphs.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
 
         <div className={styles.valueGrid} aria-label="Çalışma yaklaşımı">
           {values.map((item) => (
@@ -65,12 +102,14 @@ export default function AboutHighlight() {
         </div>
 
         <div className={styles.actions}>
-          <Link className="primary-button" href="/surec">
-            Süreci İncele
+          <Link className="primary-button" href={actionHref}>
+            {actionLabel}
           </Link>
-          <Link className="secondary-button" href="/hakkimda">
-            Hakkımda Daha Fazla
-          </Link>
+          {showSecondaryAction ? (
+            <Link className="secondary-button" href={secondaryActionHref}>
+              {secondaryActionLabel}
+            </Link>
+          ) : null}
         </div>
       </div>
     </section>
