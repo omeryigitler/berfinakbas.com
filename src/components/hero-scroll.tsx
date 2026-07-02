@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { BrandMark } from "@/components/public-shell";
-import { berfinHeroSrc } from "./berfin-hero-src";
-import { officeHeroSrc } from "./office-hero-src";
 import styles from "./hero-scroll.module.css";
 
 const heroHighlights = [
@@ -14,17 +12,13 @@ const heroHighlights = [
   "Onaylı randevu akışı",
 ];
 
-const roomBackgroundImage = `linear-gradient(90deg, rgb(255 250 244 / 88%) 0%, rgb(255 250 244 / 46%) 34%, rgb(255 250 244 / 10%) 100%), linear-gradient(180deg, rgb(255 250 244 / 10%), rgb(255 250 244 / 28%)), url("${officeHeroSrc}")`;
-
 export default function HeroScroll() {
   const heroRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const hero = heroRef.current;
 
-    if (!hero) {
-      return;
-    }
+    if (!hero) return;
 
     const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -32,25 +26,23 @@ export default function HeroScroll() {
       const rect = hero.getBoundingClientRect();
       const scrollableDistance = Math.max(hero.offsetHeight - window.innerHeight, 1);
       const progress = clamp(-rect.top / scrollableDistance, 0, 1);
-      const copyProgress = clamp((progress - 0.22) / 0.48, 0, 1);
-      const navProgress = clamp(progress / 0.24, 0, 1);
-      const cardProgress = clamp((progress - 0.54) / 0.32, 0, 1);
+      const copyProgress = clamp((progress - 0.18) / 0.48, 0, 1);
+      const navProgress = clamp(progress / 0.22, 0, 1);
+      const cardProgress = clamp((progress - 0.52) / 0.3, 0, 1);
 
-      hero.style.setProperty("--hero-progress", progress.toFixed(4));
-      hero.style.setProperty("--hero-room-scale", (1.16 - progress * 0.16).toFixed(4));
-      hero.style.setProperty("--hero-room-x", `${progress * 1.8}vw`);
-      hero.style.setProperty("--hero-room-y", `${progress * -1.5}vh`);
-      hero.style.setProperty("--hero-nav-y", `${-112 + navProgress * 130}px`);
+      hero.style.setProperty("--hero-room-scale", (1.13 - progress * 0.13).toFixed(4));
+      hero.style.setProperty("--hero-room-y", `${progress * -1.8}vh`);
+      hero.style.setProperty("--hero-nav-y", `${-96 + navProgress * 116}px`);
       hero.style.setProperty("--hero-nav-opacity", navProgress.toFixed(4));
-      hero.style.setProperty("--hero-copy-y", `${105 - copyProgress * 105}px`);
+      hero.style.setProperty("--hero-copy-y", `${100 - copyProgress * 100}px`);
       hero.style.setProperty("--hero-copy-opacity", copyProgress.toFixed(4));
-      hero.style.setProperty("--hero-portrait-left", `${50 - progress * 24}%`);
-      hero.style.setProperty("--hero-portrait-bottom", `${-2 + progress * 8}vh`);
-      hero.style.setProperty("--hero-portrait-width", `${520 - progress * 155}px`);
-      hero.style.setProperty("--hero-portrait-scale", (1.08 - progress * 0.16).toFixed(4));
-      hero.style.setProperty("--hero-card-y", `${34 - cardProgress * 34}px`);
+      hero.style.setProperty("--hero-portrait-left", `${49 - progress * 23}%`);
+      hero.style.setProperty("--hero-portrait-bottom", `${-2 + progress * 7}vh`);
+      hero.style.setProperty("--hero-portrait-width", `${530 - progress * 155}px`);
+      hero.style.setProperty("--hero-portrait-scale", (1.06 - progress * 0.14).toFixed(4));
+      hero.style.setProperty("--hero-card-y", `${36 - cardProgress * 36}px`);
       hero.style.setProperty("--hero-card-opacity", cardProgress.toFixed(4));
-      hero.style.setProperty("--hero-speech-opacity", (0.1 + progress * 0.3).toFixed(4));
+      hero.style.setProperty("--hero-speech-opacity", (0.08 + progress * 0.3).toFixed(4));
     };
 
     updateHeroProgress();
@@ -66,11 +58,7 @@ export default function HeroScroll() {
   return (
     <section className={styles.scrollHero} ref={heroRef} aria-labelledby="hero-scroll-title">
       <div className={styles.scrollHeroSticky}>
-        <div
-          className={styles.scrollHeroRoom}
-          aria-hidden="true"
-          style={{ backgroundImage: roomBackgroundImage }}
-        />
+        <div className={styles.scrollHeroRoom} aria-hidden="true" />
 
         <header className={styles.scrollHeroNav} aria-label="Ana menü">
           <Link href="/" aria-label="Berfin Akbaş ana sayfa">
@@ -88,12 +76,13 @@ export default function HeroScroll() {
         </header>
 
         <div className={styles.scrollHeroStage}>
+          <div className={styles.scrollHeroGhostTitle} aria-hidden="true">
+            <span>DİL VE</span>
+            <span>KONUŞMA</span>
+          </div>
+
           <div className={styles.scrollHeroPortrait}>
-            <img
-              src={berfinHeroSrc}
-              alt="Berfin Akbaş, Dil ve Konuşma Terapisti"
-              draggable="false"
-            />
+            <img src="/berfin-hero.png" alt="Berfin Akbaş, Dil ve Konuşma Terapisti" draggable="false" />
           </div>
 
           <div className={styles.scrollHeroCopy}>
@@ -102,10 +91,7 @@ export default function HeroScroll() {
               <span>Her kelime,</span>
               <em>yeni bir başlangıç.</em>
             </h1>
-            <p>
-              Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel iletişim
-              desteği.
-            </p>
+            <p>Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel iletişim desteği.</p>
             <div className={styles.scrollHeroActions}>
               <Link className="primary-button" href="/randevu">
                 Randevu Al
