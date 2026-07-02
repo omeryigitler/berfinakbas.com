@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 
 import { BrandMark } from "@/components/public-shell";
 import { berfinHeroSrc } from "./berfin-hero-src";
+import { officeHeroSrc } from "./office-hero-src";
 import styles from "./hero-scroll.module.css";
 
 const heroHighlights = [
@@ -12,6 +13,8 @@ const heroHighlights = [
   "Yüz yüze veya online görüşme",
   "Onaylı randevu akışı",
 ];
+
+const roomBackgroundImage = `linear-gradient(90deg, rgb(255 250 244 / 88%) 0%, rgb(255 250 244 / 46%) 34%, rgb(255 250 244 / 10%) 100%), linear-gradient(180deg, rgb(255 250 244 / 10%), rgb(255 250 244 / 28%)), url("${officeHeroSrc}")`;
 
 export default function HeroScroll() {
   const heroRef = useRef<HTMLElement | null>(null);
@@ -63,7 +66,11 @@ export default function HeroScroll() {
   return (
     <section className={styles.scrollHero} ref={heroRef} aria-labelledby="hero-scroll-title">
       <div className={styles.scrollHeroSticky}>
-        <div className={styles.scrollHeroRoom} aria-hidden="true" />
+        <div
+          className={styles.scrollHeroRoom}
+          aria-hidden="true"
+          style={{ backgroundImage: roomBackgroundImage }}
+        />
 
         <header className={styles.scrollHeroNav} aria-label="Ana menü">
           <Link href="/" aria-label="Berfin Akbaş ana sayfa">
