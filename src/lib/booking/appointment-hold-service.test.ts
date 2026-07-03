@@ -71,6 +71,11 @@ describe("booking allocation database guard", () => {
 
   it("recognizes PostgreSQL deadlock and serialization errors as retryable", () => {
     expect(
+      isRetryableTransactionError(
+        Object.assign(new Error("Transaction failed due to a write conflict"), { code: "P2034" }),
+      ),
+    ).toBe(true);
+    expect(
       isRetryableTransactionError(Object.assign(new Error("deadlock detected"), { code: "40P01" })),
     ).toBe(true);
     expect(isRetryableTransactionError({ meta: { database_error: "SQLSTATE 40001" } })).toBe(true);
@@ -99,6 +104,28 @@ describe("booking allocation database guard", () => {
       ),
     ).rejects.toBeInstanceOf(SlotConflictError);
     expect(transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it("maps an exhausted Prisma transaction conflict to a safe slot conflict", async () => {
+    const transactionConflict = Object.assign(
+      new Error("Transaction failed due to a write conflict or a deadlock"),
+      { code: "P2034" },
+    );
+    const transaction = vi.fn().mockRejectedValue(transactionConflict);
+    getDatabaseMock.mockReturnValue({ $transaction: transaction });
+
+    await expect(
+      createAppointmentHold(
+        {
+          correlationId: "sentetik-p2034-deneme-siniri",
+          practitionerId: "11111111-1111-4111-8111-111111111111",
+          serviceId: "22222222-2222-4222-8222-222222222222",
+          startsAt: new Date("2031-07-01T09:00:00.000Z"),
+        },
+        new Date("2031-06-01T09:00:00.000Z"),
+      ),
+    ).rejects.toBeInstanceOf(SlotConflictError);
+    expect(transaction).toHaveBeenCalledTimes(3);
   });
 
   it("keeps hold and appointment allocations behind one active range exclusion", () => {

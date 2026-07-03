@@ -4,9 +4,9 @@ Son güncelleme: 3 Temmuz 2026, Europe/Malta
 
 ## Aktif çalışma
 
-- Aktif PR: `#18 — Ana sayfaya Figma hissiyatlı scroll hero ekle`
-- Dal: `feature/hero-scroll-animation`
-- Durum: PR #17 `main` dalına birleştirildi. PR #18; homepage scroll hero, Berfin portresi ve Hakkımda görsel düzenini tamamlıyor. Navbar, ana metin ve süreç kartı scroll ilerledikçe sıralı olarak görünür; reduced-motion tercihinde içerik statik kalır. Public booking flow bu PR’ın kapsamı değildir.
+- Aktif çalışma: Prisma `P2034` concurrency retry ve güvenli domain hata eşlemesi
+- Dal: `codex/harden-p2034-concurrency`
+- Durum: PR #18 `main` dalına birleştirildi ve main kalite kapıları geçti. Yeni dal; hold/request transaction çakışmalarını üç sınırlı denemeden sonra güvenli domain hatalarına eşliyor. Public booking UI bu sağlamlaştırma tamamlandıktan sonra başlayacak.
 
 ## Bağlayıcı çalışma biçimi
 
@@ -57,11 +57,9 @@ Son güncelleme: 3 Temmuz 2026, Europe/Malta
 
 ## Sıradaki
 
-1. PR #18’de içerik kuralları, erişilebilirlik, responsive görünüm ve kalite kapılarını tamamla.
-2. Vercel Preview ile homepage ve Hakkımda sayfasını masaüstü/mobil doğrula; kullanıcı onayından sonra merge et.
-3. Merge sonrası production smoke test yap.
-4. Sonraki milestone’da client/guardian/consent edinimini veri minimizasyonuyla slot→hold→request akışına bağla.
-5. Production hold süresi, dağıtık abuse kontrolü ve nihai hukuk onayı olmadan public yazma bayraklarını/formu etkinleştirme.
+1. `P2034` retry/domain-error sağlamlaştırmasını ayrı PR’da tamamla.
+2. Sonraki milestone’da client/guardian/consent edinimini veri minimizasyonuyla slot→hold→request akışına bağla.
+3. Production hold süresi, dağıtık abuse kontrolü ve nihai hukuk onayı olmadan public yazma bayraklarını/formu etkinleştirme.
 
 ## Engeller ve açık kararlar
 
@@ -75,11 +73,12 @@ Son güncelleme: 3 Temmuz 2026, Europe/Malta
 
 ## Son doğrulama
 
-- PR #18 hero model testi: 1 dosyada 3 test başarılı.
-- `pnpm quality`: lint, typecheck, format ve 29 dosyada 189 test başarılı.
+- PR #18 merge sonrası main `quality`, PostgreSQL integration ve Vercel deployment başarılı.
+- Production Vercel URL’i Deployment Protection nedeniyle giriş ekranına yönlendi; özel `berfinakbas.com` alan adı DNS’te çözülmediğinden dış smoke testi açık yayın kapısıdır.
+- `P2034` düzeltmesi hedefli unit doğrulama: 2 dosyada 11 test başarılı.
+- Gerçek PostgreSQL integration: 3 dosyada 18 test başarılı.
+- `pnpm quality`: lint, typecheck, format ve 29 dosyada 191 test başarılı.
 - `pnpm build`: sentetik build-time ortam değerleriyle başarılı.
-- PR #18’in önceki GitHub turunda PostgreSQL integration geçti; format kontrolü iki dosyada başarısız olmuştu. Güncel push sonrasında CI yeniden doğrulanacak.
-- In-app browser kontrol aracı bu oturumda sağlanmadı; desktop/mobile görsel doğrulama Vercel Preview’da manuel yayın kapısıdır.
 - Migration/veri modeli değişikliği: yok.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 

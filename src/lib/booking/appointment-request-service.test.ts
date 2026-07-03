@@ -5,6 +5,7 @@ const { getDatabaseMock } = vi.hoisted(() => ({ getDatabaseMock: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDatabase: getDatabaseMock }));
 
 import {
+  BookingRequestConflictError,
   createAppointmentRequest,
   createPublicAppointmentReference,
 } from "./appointment-request-service";
@@ -50,5 +51,19 @@ describe("appointment request boundary", () => {
       }),
     ).rejects.toMatchObject({ name: "ZodError" });
     expect(getDatabaseMock).not.toHaveBeenCalled();
+  });
+
+  it("maps an exhausted Prisma transaction conflict to a safe request conflict", async () => {
+    const transactionConflict = Object.assign(
+      new Error("Transaction failed due to a write conflict or a deadlock"),
+      { code: "P2034" },
+    );
+    const transaction = vi.fn().mockRejectedValue(transactionConflict);
+    getDatabaseMock.mockReturnValue({ $transaction: transaction });
+
+    await expect(createAppointmentRequest(validInput)).rejects.toBeInstanceOf(
+      BookingRequestConflictError,
+    );
+    expect(transaction).toHaveBeenCalledTimes(3);
   });
 });

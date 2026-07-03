@@ -76,6 +76,7 @@ export function isAllocationConflictError(error: unknown): boolean {
 export function isRetryableTransactionError(error: unknown): boolean {
   const details = getDatabaseErrorDetails(error).toLowerCase();
   return (
+    details.includes("p2034") ||
     details.includes("40p01") ||
     details.includes("40001") ||
     details.includes("deadlock detected") ||
@@ -342,7 +343,10 @@ export async function createAppointmentHold(
       });
     } catch (error) {
       if (isAllocationConflictError(error)) throw new SlotConflictError();
-      if (isRetryableTransactionError(error) && attempt < MAX_TRANSACTION_ATTEMPTS) continue;
+      if (isRetryableTransactionError(error)) {
+        if (attempt < MAX_TRANSACTION_ATTEMPTS) continue;
+        throw new SlotConflictError();
+      }
       throw error;
     }
   }
