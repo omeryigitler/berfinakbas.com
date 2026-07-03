@@ -9,6 +9,7 @@ import {
   BookingRequestConflictError,
   createAppointmentRequest,
 } from "@/lib/booking/appointment-request-service";
+import { submitPublicBookingRequest } from "@/lib/booking/public-booking-service";
 import { getDatabase } from "@/lib/db";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
@@ -131,12 +132,14 @@ beforeAll(async () => {
   for (const [index, documentType] of ["PRIVACY_NOTICE", "BOOKING_TERMS"].entries()) {
     await pool.query(
       `INSERT INTO consent_documents (
-         id, type, version, content_hash, effective_from
-       ) VALUES ($1, $2, 'appointment-request-v1', $3, $4)`,
+         id, type, version, content_hash, public_title, public_content, effective_from
+       ) VALUES ($1, $2, 'appointment-request-v1', $3, $4, $5, $6)`,
       [
         fixture.documentIds[index],
         documentType,
         `sha256:${String(index).repeat(64)}`,
+        `Synthetic ${documentType} title`,
+        `Synthetic approved ${documentType} content.`,
         new Date("2030-01-01T00:00:00.000Z"),
       ],
     );
@@ -199,10 +202,23 @@ afterAll(async () => {
   await pool.query(`DELETE FROM appointment_holds WHERE practitioner_id = $1`, [
     fixture.practitionerId,
   ]);
-  await pool.query(`DELETE FROM audit_logs WHERE correlation_id LIKE 'appointment-request-%'`);
-  await pool.query(`DELETE FROM consents WHERE id = ANY($1::uuid[])`, [
-    [...fixture.consentIds, ...fixture.childConsentIds],
-  ]);
+  await pool.query(
+    `DELETE FROM consents
+     WHERE id = ANY($1::uuid[])
+        OR evidence_metadata->>'correlationId' LIKE 'public-intake-%'`,
+    [[...fixture.consentIds, ...fixture.childConsentIds]],
+  );
+  await pool.query(
+    `DELETE FROM client_guardians
+     WHERE client_id IN (SELECT id FROM clients WHERE last_name LIKE 'Public Intake %')`,
+  );
+  await pool.query(`DELETE FROM guardians WHERE last_name LIKE 'Public Intake %'`);
+  await pool.query(`DELETE FROM clients WHERE last_name LIKE 'Public Intake %'`);
+  await pool.query(
+    `DELETE FROM audit_logs
+     WHERE correlation_id LIKE 'appointment-request-%'
+        OR correlation_id LIKE 'public-intake-%'`,
+  );
   await pool.query(`DELETE FROM consent_documents WHERE id = ANY($1::uuid[])`, [
     fixture.documentIds,
   ]);
@@ -346,6 +362,156 @@ describe.sequential("appointment request PostgreSQL transaction", () => {
     expect(appointment.rows[0]).toEqual({
       client_id: fixture.childClientId,
       guardian_id: fixture.guardianId,
+    });
+  });
+
+  it("creates an adult identity, consent evidence, and request in one public transaction", async () => {
+    const hold = await createHold(7);
+    const result = await submitPublicBookingRequest(
+      {
+        acknowledgedDocumentIds: [...fixture.documentIds],
+        correlationId: "public-intake-adult",
+        holdId: hold.holdId,
+        holderToken: hold.holderToken,
+        subject: {
+          email: "public-intake-adult@example.test",
+          firstName: "Synthetic",
+          lastName: "Public Intake Adult",
+          phone: "+900000000007",
+          type: "ADULT",
+        },
+      },
+      { now: requestNow, publicPractitionerId: fixture.practitionerId },
+    );
+    const appointment = await pool.query<{
+      client_type: string;
+      consent_count: string;
+      email: string;
+      status: string;
+    }>(
+      `SELECT c.type AS client_type, c.email, a.status,
+              COUNT(ac.consent_id)::text AS consent_count
+       FROM appointments a
+       JOIN clients c ON c.id = a.client_id
+       JOIN appointment_consents ac ON ac.appointment_id = a.id
+       WHERE a.id = $1
+       GROUP BY c.type, c.email, a.status`,
+      [result.appointmentId],
+    );
+    const audit = await pool.query<{ after_summary: unknown }>(
+      `SELECT after_summary FROM audit_logs WHERE correlation_id = 'public-intake-adult'`,
+    );
+
+    expect(appointment.rows[0]).toEqual({
+      client_type: "ADULT",
+      consent_count: "2",
+      email: "public-intake-adult@example.test",
+      status: "REQUESTED",
+    });
+    expect(JSON.stringify(audit.rows)).not.toContain("Public Intake Adult");
+    expect(JSON.stringify(audit.rows)).not.toContain("+900000000007");
+    expect(JSON.stringify(audit.rows)).not.toContain(hold.holderToken);
+  });
+
+  it("creates a child request with a declared guardian but no verified authority", async () => {
+    const hold = await createHold(8);
+    const result = await submitPublicBookingRequest(
+      {
+        acknowledgedDocumentIds: [...fixture.documentIds],
+        correlationId: "public-intake-child",
+        holdId: hold.holdId,
+        holderToken: hold.holderToken,
+        subject: {
+          firstName: "Synthetic",
+          guardian: {
+            email: "public-intake-guardian@example.test",
+            firstName: "Synthetic",
+            lastName: "Public Intake Guardian",
+            phone: "+900000000008",
+            relationship: "PARENT_DECLARED",
+          },
+          lastName: "Public Intake Child",
+          type: "CHILD",
+        },
+      },
+      { now: requestNow, publicPractitionerId: fixture.practitionerId },
+    );
+    const relationship = await pool.query<{
+      authority_verified_at: Date | null;
+      granted_count: string;
+      relationship: string;
+    }>(
+      `SELECT cg.authority_verified_at, cg.relationship,
+              COUNT(cn.id)::text AS granted_count
+       FROM appointments a
+       JOIN client_guardians cg
+         ON cg.client_id = a.client_id AND cg.guardian_id = a.guardian_id
+       JOIN consents cn
+         ON cn.client_id = a.client_id AND cn.granted_by_guardian_id = a.guardian_id
+       WHERE a.id = $1
+       GROUP BY cg.authority_verified_at, cg.relationship`,
+      [result.appointmentId],
+    );
+
+    expect(relationship.rows[0]).toEqual({
+      authority_verified_at: null,
+      granted_count: "2",
+      relationship: "PARENT_DECLARED",
+    });
+  });
+
+  it("rolls back the public identity, guardian, and consent records when request creation fails", async () => {
+    const hold = await createHold(9);
+
+    await expect(
+      submitPublicBookingRequest(
+        {
+          acknowledgedDocumentIds: [...fixture.documentIds],
+          correlationId: "public-intake-rollback",
+          holdId: hold.holdId,
+          holderToken: hold.holderToken,
+          subject: {
+            firstName: "Synthetic",
+            guardian: {
+              firstName: "Synthetic",
+              lastName: "Public Intake Rollback Guardian",
+              phone: "+900000000009",
+              relationship: "PARENT_DECLARED",
+            },
+            lastName: "Public Intake Rollback Child",
+            type: "CHILD",
+          },
+        },
+        {
+          now: requestNow,
+          publicPractitionerId: fixture.practitionerId,
+          referenceFactory: () => firstPublicReference,
+        },
+      ),
+    ).rejects.toMatchObject({ code: "P2002" });
+
+    const state = await pool.query<{
+      audit_count: string;
+      client_count: string;
+      consent_count: string;
+      guardian_count: string;
+      hold_status: string;
+    }>(
+      `SELECT
+         (SELECT COUNT(*)::text FROM clients WHERE last_name = 'Public Intake Rollback Child') AS client_count,
+         (SELECT COUNT(*)::text FROM guardians WHERE last_name = 'Public Intake Rollback Guardian') AS guardian_count,
+         (SELECT COUNT(*)::text FROM consents WHERE evidence_metadata->>'correlationId' = 'public-intake-rollback') AS consent_count,
+         (SELECT COUNT(*)::text FROM audit_logs WHERE correlation_id = 'public-intake-rollback') AS audit_count,
+         (SELECT status::text FROM appointment_holds WHERE id = $1) AS hold_status`,
+      [hold.holdId],
+    );
+
+    expect(state.rows[0]).toEqual({
+      audit_count: "0",
+      client_count: "0",
+      consent_count: "0",
+      guardian_count: "0",
+      hold_status: "ACTIVE",
     });
   });
 

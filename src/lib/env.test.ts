@@ -18,6 +18,7 @@ describe("parseServerEnvironment", () => {
       PUBLIC_APPOINTMENT_HOLDS_ENABLED: false,
       PUBLIC_APPOINTMENT_REQUESTS_ENABLED: false,
       PUBLIC_APPOINTMENT_SLOTS_ENABLED: false,
+      PUBLIC_BOOKING_FLOW_ENABLED: false,
     });
   });
 
@@ -27,6 +28,7 @@ describe("parseServerEnvironment", () => {
       false,
     );
     expect(parseServerEnvironment(validEnvironment).PUBLIC_APPOINTMENT_SLOTS_ENABLED).toBe(false);
+    expect(parseServerEnvironment(validEnvironment).PUBLIC_BOOKING_FLOW_ENABLED).toBe(false);
   });
 
   it("keeps hold duration unset until an explicit server value is approved", () => {
@@ -37,6 +39,12 @@ describe("parseServerEnvironment", () => {
         BOOKING_HOLD_DURATION_MINUTES: "8",
       }).BOOKING_HOLD_DURATION_MINUTES,
     ).toBe(8);
+    expect(
+      parseServerEnvironment({
+        ...validEnvironment,
+        BOOKING_PUBLIC_PRACTITIONER_ID: "11111111-1111-4111-8111-111111111111",
+      }).BOOKING_PUBLIC_PRACTITIONER_ID,
+    ).toBe("11111111-1111-4111-8111-111111111111");
   });
 
   it("rejects invalid hold duration settings", () => {
@@ -58,11 +66,13 @@ describe("parseServerEnvironment", () => {
       PUBLIC_APPOINTMENT_HOLDS_ENABLED: "true",
       PUBLIC_APPOINTMENT_REQUESTS_ENABLED: "true",
       PUBLIC_APPOINTMENT_SLOTS_ENABLED: "true",
+      PUBLIC_BOOKING_FLOW_ENABLED: "true",
     });
 
     expect(environment.PUBLIC_APPOINTMENT_HOLDS_ENABLED).toBe(true);
     expect(environment.PUBLIC_APPOINTMENT_REQUESTS_ENABLED).toBe(true);
     expect(environment.PUBLIC_APPOINTMENT_SLOTS_ENABLED).toBe(true);
+    expect(environment.PUBLIC_BOOKING_FLOW_ENABLED).toBe(true);
     expect(environment.BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES).toEqual([
       "EXPLICIT_CONSENT_RESEARCH",
       "EXPLICIT_CONSENT_RECORDING",

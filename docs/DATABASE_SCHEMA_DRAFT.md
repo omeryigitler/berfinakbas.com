@@ -86,6 +86,8 @@ Bir çocuk danışan için gerçek randevu onayından önce en az bir yetkili ve
 - type
 - version
 - content_hash
+- public_title (nullable; public yayında content ile birlikte zorunlu)
+- public_content (nullable; onaylı düz metin sunumu)
 - effective_from
 - retired_at (nullable)
 

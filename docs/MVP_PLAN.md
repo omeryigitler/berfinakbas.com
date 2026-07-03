@@ -102,6 +102,12 @@ Mevcut durum:
 - Hold süresinin production değeri ve dağıtık abuse kontrolü `OPEN` durumundadır; sunucu ayarı/bayrağı kapalıyken hold yazımı fail-closed kalır ve public randevu formu açılmamıştır.
 - Zorunlu acknowledgement/consent türleri ve çocuk/veli doğrulama aşamaları ADR-017 ile kapatılmıştır. Hold’dan `REQUESTED` randevu üreten application service atomik consent kanıt bağlarıyla uygulanmıştır; public API/form ve nihai hukuki metin onayı tamamlanmadığı için canlı gönderim kapalıdır.
 
+- Public booking bootstrap; açıkça yapılandırılmış uzmanı, aktif hizmetleri ve yürürlükteki onaylı belge sunumlarını minimum veriyle döndürür.
+- `/randevu`; hizmet/uzman, tarih/slot, hold, yetişkin veya çocuk/veli intake’ı, ayrı belge onayları ve talep referansını tek erişilebilir akışta birleştirir.
+- Client, guardian, ilişki, consent, hold tüketimi ve appointment aynı serializable transaction içinde yazılır; başarısız son adım hiçbir yetim kişisel kayıt bırakmaz.
+- Yedinci additive migration consent belgelerine birlikte yayınlanan `public_title`/`public_content` alanlarını ekler. Onaylı içerik yoksa akış fail-closed kalır.
+- Bütün public booking yüzeyi ana bayrak, route bayrakları, public practitioner ve sunucu hold süresi birlikte geçerli olmadan açılmaz.
+
 ## Faz 4 — public site 🟡
 
 Bu faz randevu motoruyla paralel ilerleyebilir; gerçek randevu gönderimi Faz 3 tamamlanmadan açılmaz.

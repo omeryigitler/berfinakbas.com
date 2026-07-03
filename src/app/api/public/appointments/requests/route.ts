@@ -4,10 +4,12 @@ import { BookingResourceUnavailableError } from "@/domain/booking/appointment-ho
 import { BookingConsentGateError } from "@/domain/consent/booking-consent";
 import {
   AppointmentHoldUnavailableError,
-  appointmentRequestPayloadSchema,
   BookingRequestConflictError,
-  createAppointmentRequest,
 } from "@/lib/booking/appointment-request-service";
+import {
+  publicBookingSubmissionPayloadSchema,
+  submitPublicBookingRequest,
+} from "@/lib/booking/public-booking-service";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
@@ -62,7 +64,11 @@ export async function POST(request: Request) {
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
   const environment = getServerEnvironment();
 
-  if (!environment.PUBLIC_APPOINTMENT_REQUESTS_ENABLED) {
+  if (
+    !environment.PUBLIC_BOOKING_FLOW_ENABLED ||
+    !environment.PUBLIC_APPOINTMENT_REQUESTS_ENABLED ||
+    !environment.BOOKING_PUBLIC_PRACTITIONER_ID
+  ) {
     return publicJsonResponse(
       correlationId,
       {
@@ -107,7 +113,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = appointmentRequestPayloadSchema.safeParse(body);
+  const parsed = publicBookingSubmissionPayloadSchema.safeParse(body);
   if (!parsed.success) {
     return publicJsonResponse(
       correlationId,
@@ -124,9 +130,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const appointment = await createAppointmentRequest(
+    const appointment = await submitPublicBookingRequest(
       { ...parsed.data, correlationId },
       {
+        publicPractitionerId: environment.BOOKING_PUBLIC_PRACTITIONER_ID,
         requiredExplicitConsentDocumentTypes:
           environment.BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES,
       },

@@ -6,6 +6,8 @@ Türkiye pazarı için tamamen Türkçe çalışan bir Dil ve Konuşma Terapisti
 
 Faz 0 kapsamı ve Faz 1 teknik temel tamamlandı. Faz 2’nin kimlik, yetki ve veri çekirdeği ile gerçek PostgreSQL migration/erişim testleri hazırdır; proje **Faz 3 — randevu motoru** çalışmalarına geçmiştir. Kapalı Google OAuth iskeleti, sunucu tarafı rol/izin matrisi, allowlist ile audit kayıtlı ilk yönetici ataması, hizmet doğrulaması, danışan/veli ve consent modelleri ile tasarım yönüne uyarlanmış public yüzeyler hazırdır. Gerçek Google OAuth istemcisi ve MFA politikası canlıya çıkış öncesi dış yapılandırma kapısı olarak sürmektedir.
 
+PR #21 milestone’unda public hizmet/uzman seçimi, canlı slot, hold, minimum yetişkin veya çocuk/veli intake’ı, ayrı consent onayları ve atomik randevu talebi tek görünür akışta birleştirildi. Akış production’da varsayılan kapalıdır; hukuki içerik ve abuse-control kapıları tamamlanmadan açılmaz.
+
 ## Ürün özeti
 
 Uygulama üç yüzeyden oluşur:
@@ -31,6 +33,7 @@ Backend randevular için tek gerçek kaynaktır. Google Calendar yalnızca senkr
 - [Consent ve çocuk/veli politikası](docs/CONSENT_AND_GUARDIAN_POLICY.md)
 - [Public appointment hold API](docs/APPOINTMENT_HOLD_API.md)
 - [Public appointment slots API](docs/APPOINTMENT_SLOTS_API.md)
+- [Public randevu talebi akışı](docs/PUBLIC_BOOKING_FLOW.md)
 - [Test kontrol listesi](docs/TESTING_CHECKLIST.md)
 - [Mimari karar kaydı](docs/DECISIONS.md)
 
@@ -86,7 +89,7 @@ Kalite komutları:
 
 ## Sonraki iş
 
-Faz 3’te randevu durum geçişlerinin transaction/audit temeli, yetki/IDOR korumalı admin API’leri, minimum verili bekleyen talepler ekranı ve hold’dan atomik `REQUESTED` randevu üreten application service tamamlanmıştır. Consent kanıtları metin kopyalanmadan immutable foreign key ilişkisiyle randevuya bağlanır. Hold süresi sunucu ayarına bağlanmış; public slot okuma ve hold API sınırları ayrı, varsayılan kapalı bayraklarla eklenmiştir. Slot listesi yalnızca aday UTC saatleri döndürür ve hold transaction’ı son karar kapısıdır. Sıradaki çekirdek iş client/guardian/consent edinim akışını ayrı, varsayılan kapalı ve veri minimizasyonlu teslimler halinde tasarlamaktır; nihai hukuki metinler onaylanmadan form ve canlı gönderim açılmaz. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır. Kullanıcının sağladığı beyaz kıyafetli görsel geçici portre olarak kullanılır; orijinal yüksek çözünürlüklü dosya geldiğinde aynı alanda değiştirilecektir.
+Faz 3’te randevu motoru, admin talep yönetimi ve public slot→hold→minimum intake→consent→request akışı tamamlanmıştır. Public intake kayıtları ve randevu aynı transaction içinde oluşur; başarısız gönderim yetim client/guardian/consent kaydı bırakmaz. Akış ve tüm yazma endpoint’leri varsayılan kapalıdır. Nihai hukuki metinler, production hold süresi ve dağıtık abuse kontrolü onaylanmadan canlı gönderim açılmaz. Sıradaki teknik milestone bildirim/outbox ve Calendar entegrasyon sınırlarıdır. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır.
 
 ## Hukuki not
 
