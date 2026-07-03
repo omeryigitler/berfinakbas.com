@@ -22,6 +22,11 @@ const optionalNonEmptyString = z.preprocess(
   z.string().min(1).optional(),
 );
 
+const optionalUuid = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.uuid().optional(),
+);
+
 const disabledByDefaultBoolean = z
   .enum(["true", "false"])
   .default("false")
@@ -65,6 +70,7 @@ export const serverEnvironmentSchema = z
     AUTH_GOOGLE_SECRET: optionalNonEmptyString,
     AUTH_SECRET: z.string().min(32),
     BOOKING_HOLD_DURATION_MINUTES: optionalHoldDurationMinutes,
+    BOOKING_PUBLIC_PRACTITIONER_ID: optionalUuid,
     BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: bookingDocumentTypes,
     BUSINESS_TIME_ZONE: timeZoneSchema,
     DATABASE_URL: z.string().min(1).startsWith("postgresql://"),
@@ -72,6 +78,7 @@ export const serverEnvironmentSchema = z
     PUBLIC_APPOINTMENT_HOLDS_ENABLED: disabledByDefaultBoolean,
     PUBLIC_APPOINTMENT_REQUESTS_ENABLED: disabledByDefaultBoolean,
     PUBLIC_APPOINTMENT_SLOTS_ENABLED: disabledByDefaultBoolean,
+    PUBLIC_BOOKING_FLOW_ENABLED: disabledByDefaultBoolean,
   })
   .superRefine((environment, context) => {
     const hasGoogleId = Boolean(environment.AUTH_GOOGLE_ID);

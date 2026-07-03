@@ -127,3 +127,14 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Geri çekme: Açık rızanın geri çekilmesi gelecekte o rızaya dayalı işlemi durdurur; geçmiş kaydı veya randevuyu sessizce silmez.
 - Yayın kapısı: Nihai metinler, hukuki sebepler ve veli yetkisi doğrulama prosedürü hukukçu onayı olmadan public gönderime açılmaz.
 - Ayrıntı: `docs/CONSENT_AND_GUARDIAN_POLICY.md`
+
+## ADR-018 — Public intake ve randevu talebi tek transaction olacaktır
+
+- Durum: Kabul edildi
+- Karar: Public form önce kalıcı client/guardian kaydı üretmez. Minimum kimlik, beyan edilen veli ilişkisi, consent kanıtları, hold tüketimi, appointment, allocation devri ve audit tek serializable transaction içinde yazılır.
+- Rollback: Hold doğrulaması veya appointment oluşturma başarısızsa client, guardian, ilişki, consent ve audit kayıtları birlikte geri alınır; yetim kişisel kayıt kalmaz.
+- Practitioner sınırı: Public akış yalnızca sunucuda `BOOKING_PUBLIC_PRACTITIONER_ID` ile açıkça yapılandırılmış aktif uzmanı kabul eder.
+- Token sınırı: Ham holder token yalnızca istemci belleğinde taşınır; URL veya kalıcı tarayıcı depolamasına yazılmaz.
+- Belge sunumu: Consent belgesinin hukuken onaylanmış public başlık/içeriği veritabanında version/hash’e bağlı tutulur. Eksik, boş veya aynı türde birden fazla yürürlükte sürüm varsa public akış fail-closed durur.
+- Yayın kapısı: Ana public booking bayrağı, üç route bayrağı, practitioner, hold süresi, onaylı metinler ve operasyonel güvenlik kapıları birlikte tamamlanmadan production gönderimi açılmaz.
+- Ayrıntı: `docs/PUBLIC_BOOKING_FLOW.md`

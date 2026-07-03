@@ -123,6 +123,13 @@ Yerel durum (30 Haziran 2026): `appointment_consents` migration’ı ve atomik h
 
 ## 8. Public form
 
+- Bootstrap/slot/hold/request bayraklarından biri veya public practitioner/hold süresi eksikken akışın fail-closed kalması
+- Yalnızca yapılandırılmış public practitioner ID’sinin kabul edilmesi
+- Yetişkin intake + consent + appointment kayıtlarının tek transaction içinde oluşması
+- Çocuk intake’ta veli ilişkisinin beyan edilmesi, yetkinin doğrulanmış sayılmaması
+- Son adım rollback’inde client, guardian, ilişki, consent ve audit yetim kaydı kalmaması
+- Her zorunlu belge için tek yürürlükte sürüm ve onaylı public başlık/içerik aranması
+- Holder token’ın URL/localStorage/sessionStorage’a yazılmaması
 - Klavye ile tamamlanabilme
 - Screen reader etiketleri
 - Hata özetleri ve alanla ilişki

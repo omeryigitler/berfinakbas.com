@@ -57,6 +57,24 @@ afterAll(async () => {
 });
 
 describe.sequential("consent guardian PostgreSQL integrity", () => {
+  it("requires public consent title and content to be published as a nonblank pair", async () => {
+    await expect(
+      pool.query(`UPDATE consent_documents SET public_title = 'Synthetic title' WHERE id = $1`, [
+        fixture.documentId,
+      ]),
+    ).rejects.toMatchObject({
+      code: "23514",
+      constraint: "consent_documents_public_content_pair",
+    });
+
+    await pool.query(
+      `UPDATE consent_documents
+       SET public_title = 'Synthetic title', public_content = 'Synthetic approved content.'
+       WHERE id = $1`,
+      [fixture.documentId],
+    );
+  });
+
   it("stores a child as subject and the declaring guardian as a separate grantor", async () => {
     await pool.query(
       `INSERT INTO consents (

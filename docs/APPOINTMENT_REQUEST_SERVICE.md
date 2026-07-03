@@ -1,13 +1,15 @@
 # Hold’dan Randevu Talebi Üretme Servisi
 
-Durum: Uygulandı ve gerçek PostgreSQL üzerinde doğrulandı — public API varsayılan kapalı
+Durum: Uygulandı; public intake ile aynı transaction’a bağlandı — public API varsayılan kapalı
 
 ## Amaç
 
 Aktif ve kullanıcı token’ıyla doğrulanmış bir appointment hold’u, ADR-017 consent/veli kapılarını uygulayarak tek transaction içinde `REQUESTED` randevuya dönüştürmek.
 
-Public API sınırı uygulanmıştır; `PUBLIC_APPOINTMENT_REQUESTS_ENABLED` varsayılan olarak `false`
-olduğu için servis ve veritabanı çağrısı fail-closed engellenir. Public form henüz uygulanmamıştır.
+Public API sınırı uygulanmıştır; `PUBLIC_BOOKING_FLOW_ENABLED` ve
+`PUBLIC_APPOINTMENT_REQUESTS_ENABLED` varsayılan olarak `false` olduğu için servis ve veritabanı
+çağrısı fail-closed engellenir. Public form uygulanmıştır ancak production yayın kapıları
+tamamlanmadan etkinleştirilmez.
 
 ## Public API sınırı
 
@@ -29,13 +31,13 @@ kalır.
 
 ## Güvenilir girdiler
 
-Public sınırdan doğrulanan:
+Alt seviye appointment servisine aynı transaction içindeki public intake servisinden aktarılan:
 
 - Hold ID ve ham tek kullanımlık holder token
-- Client ID
-- Çocuksa guardian ID
-- Kullanıcının sunduğu consent/acknowledgement record ID listesi
-- Sağlık ayrıntısı istemeyen, en fazla 500 karakterlik opsiyonel request note
+- Transaction içinde yeni oluşturulmuş Client ID
+- Çocuksa transaction içinde yeni oluşturulmuş guardian ID ve beyan edilen ilişki
+- Sunucunun yürürlükteki belge listesine göre transaction içinde üretilmiş consent/acknowledgement ID listesi
+- Public akışta `null` request note; serbest sağlık veya klinik metin alanı yoktur
 - Güvenli correlation ID
 
 Yalnızca sunucu yapılandırmasından gelen:

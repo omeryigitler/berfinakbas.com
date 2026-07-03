@@ -43,7 +43,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   getServerEnvironmentMock.mockReturnValue({
     APP_URL: "https://berfinakbas.com",
+    BOOKING_HOLD_DURATION_MINUTES: 8,
+    BOOKING_PUBLIC_PRACTITIONER_ID: "11111111-1111-4111-8111-111111111111",
     PUBLIC_APPOINTMENT_HOLDS_ENABLED: true,
+    PUBLIC_BOOKING_FLOW_ENABLED: true,
   });
 });
 
@@ -51,7 +54,10 @@ describe("POST /api/public/appointments/holds", () => {
   it("fails closed before reading input or calling the service when disabled", async () => {
     getServerEnvironmentMock.mockReturnValue({
       APP_URL: "https://berfinakbas.com",
+      BOOKING_HOLD_DURATION_MINUTES: 8,
+      BOOKING_PUBLIC_PRACTITIONER_ID: "11111111-1111-4111-8111-111111111111",
       PUBLIC_APPOINTMENT_HOLDS_ENABLED: false,
+      PUBLIC_BOOKING_FLOW_ENABLED: true,
     });
 
     const response = await POST(request("{", { origin: "https://attacker.example" }));
@@ -60,6 +66,23 @@ describe("POST /api/public/appointments/holds", () => {
     await expect(response.json()).resolves.toEqual({
       code: "BOOKING_HOLDS_DISABLED",
       error: "Randevu saati ayırma şu anda kullanıma açık değil.",
+    });
+    expect(createAppointmentHoldMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a practitioner other than the explicitly public practitioner", async () => {
+    const response = await POST(
+      request(
+        JSON.stringify({
+          ...validRequest,
+          practitionerId: "99999999-9999-4999-8999-999999999999",
+        }),
+      ),
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "BOOKING_RESOURCE_UNAVAILABLE",
     });
     expect(createAppointmentHoldMock).not.toHaveBeenCalled();
   });

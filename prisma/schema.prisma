@@ -258,6 +258,8 @@ model ConsentDocument {
   type          String    @db.VarChar(80)
   version       String    @db.VarChar(40)
   contentHash   String    @map("content_hash") @db.VarChar(128)
+  publicTitle   String?   @map("public_title") @db.VarChar(160)
+  publicContent String?   @map("public_content")
   effectiveFrom DateTime  @map("effective_from") @db.Timestamptz(3)
   retiredAt     DateTime? @map("retired_at") @db.Timestamptz(3)
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)

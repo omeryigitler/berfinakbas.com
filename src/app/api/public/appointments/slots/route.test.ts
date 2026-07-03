@@ -27,12 +27,20 @@ function request(query = validQuery, correlationId = "public-slots-test") {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getServerEnvironmentMock.mockReturnValue({ PUBLIC_APPOINTMENT_SLOTS_ENABLED: true });
+  getServerEnvironmentMock.mockReturnValue({
+    BOOKING_PUBLIC_PRACTITIONER_ID: "11111111-1111-4111-8111-111111111111",
+    PUBLIC_APPOINTMENT_SLOTS_ENABLED: true,
+    PUBLIC_BOOKING_FLOW_ENABLED: true,
+  });
 });
 
 describe("GET /api/public/appointments/slots", () => {
   it("fails closed before validating input or calling the service when disabled", async () => {
-    getServerEnvironmentMock.mockReturnValue({ PUBLIC_APPOINTMENT_SLOTS_ENABLED: false });
+    getServerEnvironmentMock.mockReturnValue({
+      BOOKING_PUBLIC_PRACTITIONER_ID: "11111111-1111-4111-8111-111111111111",
+      PUBLIC_APPOINTMENT_SLOTS_ENABLED: false,
+      PUBLIC_BOOKING_FLOW_ENABLED: true,
+    });
 
     const response = await GET(request("unexpected=secret"));
 
@@ -40,6 +48,23 @@ describe("GET /api/public/appointments/slots", () => {
     await expect(response.json()).resolves.toEqual({
       code: "BOOKING_SLOTS_DISABLED",
       error: "Randevu saatleri şu anda kullanıma açık değil.",
+    });
+    expect(listPublicAppointmentSlotsMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a practitioner other than the explicitly public practitioner", async () => {
+    const response = await GET(
+      request(
+        validQuery.replace(
+          "11111111-1111-4111-8111-111111111111",
+          "99999999-9999-4999-8999-999999999999",
+        ),
+      ),
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "BOOKING_RESOURCE_UNAVAILABLE",
     });
     expect(listPublicAppointmentSlotsMock).not.toHaveBeenCalled();
   });

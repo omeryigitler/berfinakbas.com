@@ -68,7 +68,12 @@ export async function POST(request: Request) {
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
   const environment = getServerEnvironment();
 
-  if (!environment.PUBLIC_APPOINTMENT_HOLDS_ENABLED) {
+  if (
+    !environment.PUBLIC_BOOKING_FLOW_ENABLED ||
+    !environment.PUBLIC_APPOINTMENT_HOLDS_ENABLED ||
+    !environment.BOOKING_PUBLIC_PRACTITIONER_ID ||
+    environment.BOOKING_HOLD_DURATION_MINUTES === undefined
+  ) {
     return publicJsonResponse(
       correlationId,
       {
@@ -127,6 +132,11 @@ export async function POST(request: Request) {
       },
       400,
     );
+  }
+
+  if (parsed.data.practitionerId !== environment.BOOKING_PUBLIC_PRACTITIONER_ID) {
+    const error = new BookingResourceUnavailableError();
+    return publicJsonResponse(correlationId, { code: error.code, error: error.message }, 409);
   }
 
   try {

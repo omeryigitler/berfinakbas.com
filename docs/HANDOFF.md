@@ -1,17 +1,18 @@
 # Aktif Çalışma Devir Teslimi
 
-Son güncelleme: 3 Temmuz 2026, Europe/Malta
+Son güncelleme: 3 Temmuz 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Aktif çalışma: Prisma `P2034` concurrency retry ve güvenli domain hata eşlemesi
-- Dal: `codex/harden-p2034-concurrency`
-- Durum: PR #18 `main` dalına birleştirildi ve main kalite kapıları geçti. Yeni dal; hold/request transaction çakışmalarını üç sınırlı denemeden sonra güvenli domain hatalarına eşliyor. Public booking UI bu sağlamlaştırma tamamlandıktan sonra başlayacak.
+- Draft PR: #21 açılacak; güncel `main` ile birleşim sonrası doğrulama sürüyor
+- Dal: `codex/public-booking-flow`
+- Durum: PR #18 görsel hero, PR #20 P2034 sağlamlaştırması olarak `main`e birleşti. Public booking milestone’u güncel `main` üzerine taşındı; yerel doğrulama tamamlandı ve tek push ile Draft PR #21 açılacak.
 
 ## Bağlayıcı çalışma biçimi
 
 - Windows ve macOS’ta aynı kural geçerlidir: Issue #19 güncel roadmap kaynağıdır.
-- #18 yalnızca homepage hero ve Hakkımda görsel kalitesini teslim eder; booking/domain kapsamı eklenmez.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını teslim etti. Aktif milestone Issue #19’daki public randevu UI’dır.
+- Public booking; hizmet/uzman, slot, hold, minimum client/guardian verisi, consent, request ve uçtan uca doğrulamayı tek PR’da teslim eder; mikro PR’a bölünmez.
 - En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
 - CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
 - Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
@@ -54,12 +55,18 @@ Son güncelleme: 3 Temmuz 2026, Europe/Malta
 - Slot servisi aktif availability rule/exception, hizmet süresi-buffer, minimum/maksimum rezervasyon sınırı, günlük kapasite ve aktif hold/randevu tahsislerini uygular.
 - Slot sonucu adaydır; gerçek uygunluk hold transaction’ında yeniden doğrulanır ve public form etkinleştirilmez.
 - PR #17 squash merge ile `main` dalına alındı.
+- Public booking bootstrap, hizmet/uzman seçimi, canlı slot, hold, minimum yetişkin veya çocuk/veli intake’ı, ayrı consent onayları ve talep referansı `/randevu` sayfasında tek akışta birleştirildi.
+- Public client/guardian/consent edinimi hold tüketimi ve appointment ile aynı serializable transaction’a alındı; rollback yetim kişisel kayıt bırakmaz.
+- Consent document public başlık/içeriği için yedinci additive migration eklendi; eksik, boş veya çakışan yürürlükte içerik public akışı fail-closed durdurur.
+- Ana `PUBLIC_BOOKING_FLOW_ENABLED` bayrağı ve açıkça yapılandırılmış public practitioner sınırı eklendi; production varsayılanları kapalı kaldı.
+- PR #20’nin P2034 retry kuralı public intake transaction’ına da uygulandı; üç deneme tükenince ham Prisma hatası yerine güvenli booking conflict döner.
 
 ## Sıradaki
 
-1. `P2034` retry/domain-error sağlamlaştırmasını ayrı PR’da tamamla.
-2. Sonraki milestone’da client/guardian/consent edinimini veri minimizasyonuyla slot→hold→request akışına bağla.
-3. Production hold süresi, dağıtık abuse kontrolü ve nihai hukuk onayı olmadan public yazma bayraklarını/formu etkinleştirme.
+1. Tek push ile Draft PR #21’i aç.
+2. GitHub CI, PostgreSQL integration ve Vercel sonucunu yalnızca bir kez oku.
+3. Production hold süresi ile dağıtık abuse kontrolü onaylanmadan public yazma bayraklarını etkinleştirme.
+4. Nihai hukuk onayı ve onaylı belge içerikleri olmadan production randevu formunu etkinleştirme.
 
 ## Engeller ve açık kararlar
 
@@ -79,8 +86,13 @@ Son güncelleme: 3 Temmuz 2026, Europe/Malta
 - Gerçek PostgreSQL integration: 3 dosyada 18 test başarılı.
 - `pnpm quality`: lint, typecheck, format ve 29 dosyada 191 test başarılı.
 - `pnpm build`: sentetik build-time ortam değerleriyle başarılı.
-- Migration/veri modeli değişikliği: yok.
-- Kişisel/sağlık verisi kapsamı: genişlemedi.
+- Public booking güncel `main` üzerinde hedefli doğrulama: 9 test dosyası, 62 test başarılı.
+- Public booking güncel `main` üzerinde `pnpm quality`: 31 test dosyası, 200 test başarılı; lint, typecheck ve format kontrolü geçti.
+- Public booking güncel `main` üzerinde `pnpm build`: 19 route ile başarılı.
+- Public booking tarayıcı doğrulaması: `/randevu` masaüstü ve mobil görünüm geçti; yatay taşma yok, kapalı bayrakta form/kişisel veri alanı üretilmiyor.
+- Yerel PostgreSQL servisi/`TEST_DATABASE_URL` bulunmadığı için yedinci migration ve yeni gerçek transaction senaryoları GitHub `postgres-integration` kapısında doğrulanacak.
+- Migration/veri modeli değişikliği: `public_title` ve `public_content` nullable/additive alanları eklendi.
+- Kişisel veri kapsamı: yalnızca minimum public intake uygulandı; sağlık verisi kapsamı genişlemedi.
 
 ## Kaynak önceliği
 
