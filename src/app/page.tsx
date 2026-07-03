@@ -1,31 +1,30 @@
-import { BerfinPortrait, SiteFooter, SiteHeader } from "@/components/public-shell";
+import AboutHighlight from "@/components/about-highlight";
+import HeroScroll from "@/components/hero-scroll";
+import { SiteFooter } from "@/components/public-shell";
 
 const audiences = [
   {
     accent: "peach",
-    description:
-      "İletişim ve konuşma alanındaki ihtiyaçların yaşa ve aile bağlamına göre ele alındığı görüşmeler.",
+    description: "Konuşma, dil ve iletişim gelişimini destekleyen sakin ve anlaşılır görüşmeler.",
     eyebrow: "Çocuklar için",
-    title: "Gelişimi anlamaya yönelik sakin bir başlangıç",
+    title: "Gelişimi anlamaya yönelik başlangıç",
   },
   {
     accent: "sage",
-    description:
-      "Ergenin gündelik iletişim ihtiyaçlarına saygılı, anlaşılır ve iş birliğine açık bir süreç.",
+    description: "Gündelik iletişim ihtiyaçlarına saygılı, açık ve iş birliğine dayalı bir süreç.",
     eyebrow: "Ergenler için",
-    title: "Kendini ifade etmeye alan açan görüşmeler",
+    title: "Kendini ifade etmeye alan açan destek",
   },
   {
     accent: "sand",
-    description:
-      "Yetişkinlerin iletişim hedefleri ve yaşam koşulları dikkate alınarak planlanan görüşmeler.",
+    description: "İletişim hedefleri ve yaşam düzeni dikkate alınarak planlanan görüşmeler.",
     eyebrow: "Yetişkinler için",
-    title: "Kişiye göre şekillenen destek süreci",
+    title: "Kişiye göre şekillenen görüşme alanı",
   },
   {
     accent: "rose",
     description:
-      "Ailelerin süreci anlamasına, doğru soruları sormasına ve sonraki adımı görmesine yardımcı olan buluşmalar.",
+      "Ailelerin süreci anlamasına ve sonraki adımı net görmesine yardımcı olan buluşmalar.",
     eyebrow: "Aileler için",
     title: "Bilgi ve iş birliği odaklı danışmanlık",
   },
@@ -87,104 +86,24 @@ function AudienceIllustration({ accent, index }: { accent: string; index: number
   );
 }
 
-function RoomIllustration() {
-  return (
-    <div
-      className="room-visual"
-      role="img"
-      aria-label="Sıcak ve sakin bir görüşme ortamını temsil eden illüstrasyon"
-    >
-      <span className="room-sunlight" />
-      <span className="room-frame room-frame-one" />
-      <span className="room-frame room-frame-two" />
-      <span className="room-shelf">
-        <i />
-        <i />
-        <i />
-      </span>
-      <span className="room-plant">
-        <i />
-        <i />
-        <i />
-        <b />
-      </span>
-      <span className="room-chair">
-        <i />
-        <b />
-      </span>
-      <span className="room-table">
-        <i />
-      </span>
-      <span className="room-rug" />
-      <div className="process-card">
-        <div className="process-card-heading">
-          <span>Randevu akışı</span>
-          <i aria-hidden="true" />
-        </div>
-        <strong>Talep → kontrol → onay</strong>
-        <div className="process-track" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </div>
-        <small>Seçilen saat, onaydan sonra kesinleşir.</small>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <main id="ana-icerik">
-      <SiteHeader />
-
-      <section className="hero-section" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <p className="section-kicker">İletişim yolculuğunda güvenli bir başlangıç</p>
-          <h1 id="hero-title">
-            Her kelime,
-            <em> yeni bir başlangıç.</em>
-          </h1>
-          <p className="hero-description">
-            Çocuklar, ergenler ve yetişkinler için anlaşılır bilgi; kişiye göre planlanan görüşme
-            süreci ve kontrollü randevu talebi.
-          </p>
-          <div className="hero-actions">
-            <a className="primary-button" href="/randevu">
-              Randevu sürecini incele
-            </a>
-            <a className="secondary-button" href="/hakkimda">
-              Berfin’i tanıyın
-            </a>
-          </div>
-          <ul className="hero-trust-list" aria-label="Temel yaklaşım">
-            <li>
-              <span aria-hidden="true">✓</span> Kişiye göre planlama
-            </li>
-            <li>
-              <span aria-hidden="true">✓</span> Minimum veri
-            </li>
-            <li>
-              <span aria-hidden="true">✓</span> Onaylı randevu
-            </li>
-          </ul>
-        </div>
-        <RoomIllustration />
-      </section>
+      <HeroScroll />
 
       <section className="principles-strip" aria-label="Çalışma ilkeleri">
         <article>
           <span>01</span>
           <div>
             <strong>Bilgilendirici yaklaşım</strong>
-            <small>Tanı veya sonuç vaadi yerine açık ve anlaşılır süreç.</small>
+            <small>Açık, anlaşılır ve sakin bir ilk temas.</small>
           </div>
         </article>
         <article>
           <span>02</span>
           <div>
-            <strong>Esnek görüşme biçimi</strong>
-            <small>Uygunluğa göre yüz yüze veya çevrim içi seçenekler.</small>
+            <strong>Kontrollü randevu</strong>
+            <small>Saat seçiminin yalnızca onay sonrasında kesinleşmesi.</small>
           </div>
         </article>
         <article>
@@ -196,30 +115,7 @@ export default function Home() {
         </article>
       </section>
 
-      <section className="about-section" id="hakkimda" aria-labelledby="about-title">
-        <BerfinPortrait />
-
-        <div className="about-copy">
-          <p className="section-kicker">Hakkımda</p>
-          <h2 id="about-title">Sizi dinleyen, süreci anlaşılır kılan bir görüşme alanı.</h2>
-          <p>
-            Her iletişim ihtiyacı kendine özgüdür. İlk görüşmenin amacı aceleyle bir sonuca varmak
-            değil; ihtiyacı, gündelik yaşamı ve uygun sonraki adımı birlikte anlamaktır.
-          </p>
-          <p>
-            Bu sitede hizmet alanları sade bir dille anlatılır. Randevu talebi ise seçilen saati
-            doğrudan kesinleştirmez; uygunluk kontrolü ve onay sonrasında netleşir.
-          </p>
-          <div className="about-values">
-            <span>Dinlemeye alan açan</span>
-            <span>Aileyle iş birliğine açık</span>
-            <span>Mahremiyete duyarlı</span>
-          </div>
-          <a className="text-link" href="/surec">
-            Görüşme süreci nasıl işler? <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      </section>
+      <AboutHighlight />
 
       <section className="audience-section" id="destek-alanlari" aria-labelledby="audience-title">
         <div className="section-heading">
@@ -228,8 +124,7 @@ export default function Home() {
             <h2 id="audience-title">Size nasıl destek olabilirim?</h2>
           </div>
           <p>
-            Aşağıdaki başlıklar bilgilendirme amaçlıdır; kişiye özel değerlendirme ilk görüşmeyle
-            şekillenir.
+            Aşağıdaki başlıklar bilgilendirme amaçlıdır; kişiye özel plan ilk görüşmeyle şekillenir.
           </p>
         </div>
 
@@ -252,8 +147,8 @@ export default function Home() {
           <p className="section-kicker">Süreç</p>
           <h2 id="process-title">İlk adımdan onaya kadar ne olacağını bilin.</h2>
           <p>
-            Sistem henüz randevu kabul etmiyor. Akış açıldığında seçiminiz önce talep olarak
-            kaydedilecek ve uygunluk doğrulandıktan sonra onaylanacak.
+            Akış açıldığında seçiminiz önce talep olarak kaydedilecek ve uygunluk doğrulandıktan
+            sonra onaylanacak.
           </p>
         </div>
         <ol className="process-steps">
@@ -273,7 +168,7 @@ export default function Home() {
         <div>
           <p className="section-kicker">Sık sorulan sorular</p>
           <h2 id="faq-title">Merak ettikleriniz</h2>
-          <p>Buradaki yanıtlar genel bilgilendirmedir; tanı veya kişiye özel öneri değildir.</p>
+          <p>Buradaki yanıtlar genel bilgilendirme içindir.</p>
         </div>
         <div className="faq-list">
           <details>
@@ -281,16 +176,13 @@ export default function Home() {
             <p>Hayır. Saat seçimi bir taleptir; uygunluk kontrolü ve onay sonrasında kesinleşir.</p>
           </details>
           <details>
-            <summary>İlk talepte ayrıntılı sağlık öyküsü istenir mi?</summary>
-            <p>
-              Hayır. İlk adımda yalnızca iletişim ve planlama için gerekli minimum bilgiler alınır.
-            </p>
+            <summary>İlk talepte hangi bilgiler istenir?</summary>
+            <p>İlk adımda yalnızca iletişim ve planlama için gerekli minimum bilgiler alınır.</p>
           </details>
           <details>
-            <summary>Çocuklar için başvuruyu kim yapar?</summary>
+            <summary>İlk görüşme nasıl planlanır?</summary>
             <p>
-              Çocuk danışanlarda veli veya yasal temsilci bilgisi ve yetkisi süreç içinde
-              doğrulanır.
+              Görüşme biçimi ve sonraki adım, ilk temas ve uygunluk değerlendirmesiyle netleşir.
             </p>
           </details>
         </div>

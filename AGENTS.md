@@ -31,15 +31,15 @@ Ek kurallar:
 
 ## Teslim boyutu ve kota verimliliği
 
-1 Temmuz 2026 tarihli kullanıcı kararı Windows ve macOS dâhil tüm cihazlarda bağlayıcıdır:
+GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda bağlayıcıdır:
 
-- Mikro özellikler için ayrı PR açılmaz. Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren tek milestone PR’da birleştirilir.
-- Sıradaki milestone `#18 — public booking flow` olarak planlanır: hizmet/uzman seçimi, slot arayüzü, hold, minimum client/guardian verisi, consent edinimi, request gönderimi ve uçtan uca doğrulama aynı PR kapsamındadır.
+- Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren, review edilebilir milestone PR’larında toplanır; ilişkisiz kapsamlar aynı PR’a doldurulmaz.
+- Aktif milestone `#18 — homepage scroll hero ve Hakkımda görsel düzeltmesi`dir. Public booking flow bu PR’ın kapsamına eklenmez; #18 kapandıktan sonraki milestone’dur.
+- Public booking flow; hizmet/uzman seçimi, slot arayüzü, hold, minimum client/guardian verisi, consent edinimi, request gönderimi ve uçtan uca doğrulamayı kapsar. Riskli veri/migration sınırı oluşursa bağımsız ve review edilebilir PR’lara bölünür.
 - Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
-- İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tekrar tekrar poll edilmez; tamamlanması için tek bekleme ve tek sonuç okuması yapılır.
-- Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı PR/merge onayı istenmez.
-- Yeni bir PR ancak bağımsız güvenlik hotfix’i, geri dönüşü riskli migration, dış engel veya gerçekten bağımsız milestone varsa açılır. Bölme gerekirse gerekçe iş başlamadan kullanıcıya açıklanır.
-- Mevcut teknik MVP için hedef, #18 dâhil en fazla yedi büyük milestone PR’dır; kapsam sessizce mikro PR’lara parçalanmaz.
+- İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tamamlandıktan sonra sonuç tek kez okunur.
+- Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı merge onayı istenmez.
+- `main` dalına doğrudan commit atılmaz. Her değişiklik branch + PR + yeşil kalite kapıları üzerinden ilerler.
 
 ## Dil ve ürün bağlamı
 
