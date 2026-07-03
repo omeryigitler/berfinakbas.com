@@ -372,7 +372,10 @@ export async function createAppointmentRequest(
         status: "REQUESTED" as const,
       });
     } catch (error) {
-      if (isRetryableTransactionError(error) && attempt < MAX_TRANSACTION_ATTEMPTS) continue;
+      if (isRetryableTransactionError(error)) {
+        if (attempt < MAX_TRANSACTION_ATTEMPTS) continue;
+        throw new BookingRequestConflictError();
+      }
       throw error;
     }
   }
