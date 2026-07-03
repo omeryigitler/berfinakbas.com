@@ -10,6 +10,8 @@ import styles from "./hero-scroll.module.css";
 
 export default function HeroScroll() {
   const heroRef = useRef<HTMLElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -19,12 +21,15 @@ export default function HeroScroll() {
     }
 
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const compactViewportQuery = window.matchMedia("(max-width: 980px)");
     let animationFrame: number | null = null;
     const motionProperties = [
       "--hero-overlay-opacity",
       "--hero-room-scale",
       "--hero-room-y",
+      "--hero-nav-y",
+      "--hero-nav-opacity",
+      "--hero-copy-y",
+      "--hero-copy-opacity",
       "--hero-portrait-left",
       "--hero-portrait-bottom",
       "--hero-portrait-width",
@@ -42,6 +47,10 @@ export default function HeroScroll() {
       hero.style.setProperty("--hero-overlay-opacity", state.overlayOpacity.toFixed(4));
       hero.style.setProperty("--hero-room-scale", state.roomScale.toFixed(4));
       hero.style.setProperty("--hero-room-y", `${state.roomY}vh`);
+      hero.style.setProperty("--hero-nav-y", `${state.navY}px`);
+      hero.style.setProperty("--hero-nav-opacity", state.navOpacity.toFixed(4));
+      hero.style.setProperty("--hero-copy-y", `${state.copyY}px`);
+      hero.style.setProperty("--hero-copy-opacity", state.copyOpacity.toFixed(4));
       hero.style.setProperty("--hero-portrait-left", `${state.portraitLeft}%`);
       hero.style.setProperty("--hero-portrait-bottom", `${state.portraitBottom}vh`);
       hero.style.setProperty("--hero-portrait-width", `${state.portraitWidth}px`);
@@ -49,6 +58,8 @@ export default function HeroScroll() {
       hero.style.setProperty("--hero-card-y", `${state.cardY}px`);
       hero.style.setProperty("--hero-card-opacity", state.cardOpacity.toFixed(4));
       hero.style.setProperty("--hero-speech-opacity", state.speechOpacity.toFixed(4));
+      if (navRef.current) navRef.current.inert = state.navOpacity < 0.2;
+      if (actionsRef.current) actionsRef.current.inert = state.copyOpacity < 0.2;
       animationFrame = null;
     };
 
@@ -59,30 +70,30 @@ export default function HeroScroll() {
     };
 
     const syncMotionMode = () => {
-      const shouldUseStaticMode = reducedMotionQuery.matches || compactViewportQuery.matches;
+      const shouldUseStaticMode = reducedMotionQuery.matches;
       hero.dataset.motion = shouldUseStaticMode ? "static" : "scroll";
 
       if (shouldUseStaticMode) {
         if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
         animationFrame = null;
         motionProperties.forEach((property) => hero.style.removeProperty(property));
+        if (navRef.current) navRef.current.inert = false;
+        if (actionsRef.current) actionsRef.current.inert = false;
         return;
       }
 
-      scheduleHeroUpdate();
+      updateHeroProgress();
     };
 
     syncMotionMode();
     window.addEventListener("scroll", scheduleHeroUpdate, { passive: true });
     window.addEventListener("resize", scheduleHeroUpdate);
     reducedMotionQuery.addEventListener("change", syncMotionMode);
-    compactViewportQuery.addEventListener("change", syncMotionMode);
 
     return () => {
       window.removeEventListener("scroll", scheduleHeroUpdate);
       window.removeEventListener("resize", scheduleHeroUpdate);
       reducedMotionQuery.removeEventListener("change", syncMotionMode);
-      compactViewportQuery.removeEventListener("change", syncMotionMode);
       if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
     };
   }, []);
@@ -94,7 +105,7 @@ export default function HeroScroll() {
           <Image alt="" fill priority sizes="100vw" src="/therapy-office-hero.png" />
         </div>
 
-        <header className={styles.scrollHeroNav} aria-label="Ana menü">
+        <header className={styles.scrollHeroNav} aria-label="Ana menü" ref={navRef}>
           <Link href="/" aria-label="Berfin Akbaş ana sayfa">
             <BrandMark />
           </Link>
@@ -132,7 +143,7 @@ export default function HeroScroll() {
               Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel iletişim
               desteği.
             </p>
-            <div className={styles.scrollHeroActions}>
+            <div className={styles.scrollHeroActions} ref={actionsRef}>
               <Link className="primary-button" href="/randevu">
                 {heroContent.primaryActionLabel}
               </Link>

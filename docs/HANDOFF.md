@@ -6,7 +6,7 @@ Son güncelleme: 3 Temmuz 2026, Europe/Malta
 
 - Aktif PR: `#18 — Ana sayfaya Figma hissiyatlı scroll hero ekle`
 - Dal: `feature/hero-scroll-animation`
-- Durum: PR #17 `main` dalına birleştirildi. PR #18; homepage scroll hero, Berfin portresi ve Hakkımda görsel düzenini tamamlıyor. Public booking flow bu PR’ın kapsamı değildir.
+- Durum: PR #17 `main` dalına birleştirildi. PR #18; homepage scroll hero, Berfin portresi ve Hakkımda görsel düzenini tamamlıyor. Navbar, ana metin ve süreç kartı scroll ilerledikçe sıralı olarak görünür; reduced-motion tercihinde içerik statik kalır. Public booking flow bu PR’ın kapsamı değildir.
 
 ## Bağlayıcı çalışma biçimi
 
@@ -75,8 +75,8 @@ Son güncelleme: 3 Temmuz 2026, Europe/Malta
 
 ## Son doğrulama
 
-- PR #18 hero model testi: 1 dosyada 2 test başarılı.
-- `pnpm quality`: lint, typecheck, format ve 29 dosyada 188 test başarılı.
+- PR #18 hero model testi: 1 dosyada 3 test başarılı.
+- `pnpm quality`: lint, typecheck, format ve 29 dosyada 189 test başarılı.
 - `pnpm build`: sentetik build-time ortam değerleriyle başarılı.
 - PR #18’in önceki GitHub turunda PostgreSQL integration geçti; format kontrolü iki dosyada başarısız olmuştu. Güncel push sonrasında CI yeniden doğrulanacak.
 - In-app browser kontrol aracı bu oturumda sağlanmadı; desktop/mobile görsel doğrulama Vercel Preview’da manuel yayın kapısıdır.
