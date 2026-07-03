@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Route } from "next";
 import Link from "next/link";
 
@@ -69,10 +70,13 @@ export default function AboutHighlight({
         <div className={styles.portraitPanel}>
           <span className={styles.softCircle} aria-hidden="true" />
           <span className={styles.orbitLine} aria-hidden="true" />
-          <img
+          <Image
             src="/berfin-hero.png"
-            alt="Berfin Akbaş, Dil ve Konuşma Terapisti"
-            draggable="false"
+            alt="Berfin Akbaş portresi"
+            draggable={false}
+            height={655}
+            sizes="(max-width: 720px) 76vw, 360px"
+            width={381}
           />
         </div>
 
@@ -90,11 +94,7 @@ export default function AboutHighlight({
 
       <div className={styles.copyColumn}>
         <p className="section-kicker">Hakkımda</p>
-        {isPage ? (
-          <h1 id={resolvedHeadingId}>{title}</h1>
-        ) : (
-          <h2 id={resolvedHeadingId}>{title}</h2>
-        )}
+        {isPage ? <h1 id={resolvedHeadingId}>{title}</h1> : <h2 id={resolvedHeadingId}>{title}</h2>}
         <p className={styles.leadText}>{lead}</p>
         {paragraphs.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>

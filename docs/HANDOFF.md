@@ -1,17 +1,17 @@
 # Aktif Çalışma Devir Teslimi
 
-Son güncelleme: 1 Temmuz 2026, Europe/Malta
+Son güncelleme: 3 Temmuz 2026, Europe/Malta
 
 ## Aktif çalışma
 
-- Draft PR: Yok
-- Dal: `main`
-- Durum: PR #17 `main` dalına birleştirildi. Sıradaki çalışma mikro PR’lara bölünmeden tek `#18 — public booking flow` milestone’unda tamamlanacak.
+- Aktif PR: `#18 — Ana sayfaya Figma hissiyatlı scroll hero ekle`
+- Dal: `feature/hero-scroll-animation`
+- Durum: PR #17 `main` dalına birleştirildi. PR #18; homepage scroll hero, Berfin portresi ve Hakkımda görsel düzenini tamamlıyor. Public booking flow bu PR’ın kapsamı değildir.
 
 ## Bağlayıcı çalışma biçimi
 
-- Windows ve macOS’ta aynı kural geçerlidir: ilişkili işler küçük PR’lara bölünmez.
-- #18; hizmet/uzman seçimi, slot arayüzü, hold, minimum client/guardian verisi, consent edinimi, request gönderimi ve uçtan uca doğrulamayı birlikte teslim eder.
+- Windows ve macOS’ta aynı kural geçerlidir: Issue #19 güncel roadmap kaynağıdır.
+- #18 yalnızca homepage hero ve Hakkımda görsel kalitesini teslim eder; booking/domain kapsamı eklenmez.
 - En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
 - CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
 - Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
@@ -57,10 +57,11 @@ Son güncelleme: 1 Temmuz 2026, Europe/Malta
 
 ## Sıradaki
 
-1. Tek `#18 — public booking flow` milestone dalında görünür randevu akışını uçtan uca tamamla; mikro PR açma.
-2. Client/guardian/consent edinimini veri minimizasyonuyla slot→hold→request akışına bağla.
-3. Production hold süresi ile dağıtık abuse kontrolü onaylanmadan public yazma bayraklarını etkinleştirme.
-4. Nihai hukuk onayı olmadan production randevu formunu etkinleştirme.
+1. PR #18’de içerik kuralları, erişilebilirlik, responsive görünüm ve kalite kapılarını tamamla.
+2. Vercel Preview ile homepage ve Hakkımda sayfasını masaüstü/mobil doğrula; kullanıcı onayından sonra merge et.
+3. Merge sonrası production smoke test yap.
+4. Sonraki milestone’da client/guardian/consent edinimini veri minimizasyonuyla slot→hold→request akışına bağla.
+5. Production hold süresi, dağıtık abuse kontrolü ve nihai hukuk onayı olmadan public yazma bayraklarını/formu etkinleştirme.
 
 ## Engeller ve açık kararlar
 
@@ -70,21 +71,23 @@ Son güncelleme: 1 Temmuz 2026, Europe/Malta
 - Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici doğrulaması yayın kapısıdır.
 - Yönetilen PostgreSQL sağlayıcısı/bölgesi ve nihai hukuk onayı canlı yayın öncesi hâlâ seçilmelidir; yerel PostgreSQL 17 integration paketi çalışmaktadır.
 - Public yazma endpoint’i etkinleştirilmeden önce dağıtık rate-limit/abuse altyapısı seçilmelidir; sağlayıcı tahmin edilmemiştir.
+- PR #18 görsellerinin yayın izni ve resmi mesleki unvan canlı yayın öncesi doğrulanmalıdır.
 
 ## Son doğrulama
 
-- Hedefli env/public slot service-route doğrulama: 3 test dosyası, 22 test başarılı.
-- `pnpm quality`: 28 test dosyası, 186 test başarılı.
+- PR #18 hero model testi: 1 dosyada 2 test başarılı.
+- `pnpm quality`: lint, typecheck, format ve 29 dosyada 188 test başarılı.
 - `pnpm build`: sentetik build-time ortam değerleriyle başarılı.
-- PR #16 için GitHub `quality`, gerçek PostgreSQL `postgres-integration`, Vercel ve preview comment kontrolleri başarılı.
-- PR #17 için GitHub `quality`, gerçek PostgreSQL `postgres-integration`, Vercel ve preview comment kontrolleri başarılı.
+- PR #18’in önceki GitHub turunda PostgreSQL integration geçti; format kontrolü iki dosyada başarısız olmuştu. Güncel push sonrasında CI yeniden doğrulanacak.
+- In-app browser kontrol aracı bu oturumda sağlanmadı; desktop/mobile görsel doğrulama Vercel Preview’da manuel yayın kapısıdır.
 - Migration/veri modeli değişikliği: yok.
 - Kişisel/sağlık verisi kapsamı: genişlemedi.
 
 ## Kaynak önceliği
 
-1. Tek açık Draft PR açıklaması
-2. Bu dosya
-3. `docs/MVP_PLAN.md` ve `docs/DECISIONS.md`
+1. GitHub Issue #19 roadmap
+2. Aktif PR açıklaması ve branch
+3. Bu dosya
+4. `docs/MVP_PLAN.md` ve `docs/DECISIONS.md`
 
 Her çalışma oturumunun sonunda bu dosya ve Draft PR açıklaması birlikte güncellenir.

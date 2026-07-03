@@ -23,7 +23,8 @@ const audiences = [
   },
   {
     accent: "rose",
-    description: "Ailelerin süreci anlamasına ve sonraki adımı net görmesine yardımcı olan buluşmalar.",
+    description:
+      "Ailelerin süreci anlamasına ve sonraki adımı net görmesine yardımcı olan buluşmalar.",
     eyebrow: "Aileler için",
     title: "Bilgi ve iş birliği odaklı danışmanlık",
   },
@@ -101,8 +102,8 @@ export default function Home() {
         <article>
           <span>02</span>
           <div>
-            <strong>Esnek görüşme biçimi</strong>
-            <small>Uygunluğa göre yüz yüze veya çevrim içi seçenekler.</small>
+            <strong>Kontrollü randevu</strong>
+            <small>Saat seçiminin yalnızca onay sonrasında kesinleşmesi.</small>
           </div>
         </article>
         <article>
@@ -123,8 +124,7 @@ export default function Home() {
             <h2 id="audience-title">Size nasıl destek olabilirim?</h2>
           </div>
           <p>
-            Aşağıdaki başlıklar bilgilendirme amaçlıdır; kişiye özel plan ilk görüşmeyle
-            şekillenir.
+            Aşağıdaki başlıklar bilgilendirme amaçlıdır; kişiye özel plan ilk görüşmeyle şekillenir.
           </p>
         </div>
 
@@ -180,8 +180,10 @@ export default function Home() {
             <p>İlk adımda yalnızca iletişim ve planlama için gerekli minimum bilgiler alınır.</p>
           </details>
           <details>
-            <summary>Online görüşme mümkün mü?</summary>
-            <p>Uygunluğa göre yüz yüze veya çevrim içi görüşme seçenekleri değerlendirilebilir.</p>
+            <summary>İlk görüşme nasıl planlanır?</summary>
+            <p>
+              Görüşme biçimi ve sonraki adım, ilk temas ve uygunluk değerlendirmesiyle netleşir.
+            </p>
           </details>
         </div>
       </section>
