@@ -173,16 +173,26 @@ export default function HeroScroll() {
 
           <div className={styles.scrollProgressCard} aria-hidden="true">
             <div className={styles.cardHeading}>
-              <span>Randevu süreci</span>
-              <small>Kontrollü akış</small>
+              <span className={styles.cardKicker}>
+                <i className={styles.statusDot} />
+                Randevu süreci
+              </span>
+              <small className={styles.cardTag}>Kontrollü akış</small>
             </div>
-            <strong>Talep</strong>
+            <div className={styles.cardStage}>
+              <strong>Talep</strong>
+              <span className={styles.cardStep}>1 / 3</span>
+            </div>
             <div className={styles.requestTrack}>
               <i />
               <i />
               <i />
             </div>
-            <small>{heroContent.processCardLabel}</small>
+            <div className={styles.cardSteps}>
+              <span className={styles.stepActive}>Talep</span>
+              <span>Kontrol</span>
+              <span>Onay</span>
+            </div>
           </div>
         </div>
       </div>
