@@ -20,8 +20,8 @@
 }
 
 .scrollHero[data-motion="scroll"] {
-  height: 210vh;
-  min-height: 1100px;
+  height: 300vh;
+  min-height: 1500px;
   --hero-overlay-opacity: 0;
   --hero-room-scale: 1.13;
   --hero-nav-y: -96px;
@@ -52,7 +52,7 @@
 
 .scrollHeroRoom {
   position: absolute;
-  inset: -6vh -4vw 0;
+  inset: -6vh -4vw -2vh;
   z-index: 1;
   transform: translate3d(0, var(--hero-room-y), 0) scale(var(--hero-room-scale));
   transform-origin: center bottom;
@@ -149,22 +149,27 @@
   filter: brightness(1) contrast(1.01) saturate(1.03);
 }
 
-/* Warm window light from the left, clipped to the portrait silhouette */
+/*
+ * Environment light-wrap: blends the figure into the warm room by casting the
+ * room's golden light from the left onto her via a soft-light gradient clipped
+ * to her silhouette. Warms her surface without flatly tinting the whole image.
+ */
 .scrollHeroPortrait::before {
   position: absolute;
   inset: 0;
   z-index: 1;
   background: linear-gradient(
     100deg,
-    rgb(255 186 120 / 12%) 0%,
-    rgb(255 196 140 / 5%) 42%,
-    rgb(70 45 32 / 6%) 100%
+    rgb(255 190 132 / 55%) 0%,
+    rgb(255 202 150 / 24%) 46%,
+    rgb(92 58 36 / 30%) 100%
   );
   content: "";
   mask-image: url("/berfin-hero-standing.png");
   mask-position: center bottom;
   mask-repeat: no-repeat;
   mask-size: contain;
+  mix-blend-mode: soft-light;
   pointer-events: none;
 }
 
@@ -372,8 +377,8 @@
   }
 
   .scrollHero[data-motion="scroll"] {
-    height: 190vh;
-    min-height: 1080px;
+    height: 270vh;
+    min-height: 1400px;
   }
 
   .scrollHeroSticky {

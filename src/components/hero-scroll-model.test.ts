@@ -49,9 +49,11 @@ describe("hero scroll model", () => {
     expect(earlyState.navOpacity).toBeGreaterThan(0);
     expect(earlyState.copyOpacity).toBe(0);
     expect(earlyState.cardOpacity).toBe(0);
-    expect(middleState.navOpacity).toBe(1);
+    expect(middleState.navOpacity).toBeGreaterThan(0.6);
+    expect(middleState.navOpacity).toBeLessThanOrEqual(1);
     expect(middleState.copyOpacity).toBeGreaterThan(0);
     expect(middleState.cardOpacity).toBe(0);
+    expect(lateState.navOpacity).toBe(1);
     expect(lateState.copyOpacity).toBe(1);
     expect(lateState.cardOpacity).toBeGreaterThan(0);
   });

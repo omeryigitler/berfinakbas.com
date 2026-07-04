@@ -29,7 +29,7 @@ export function getHeroMotionState(rawProgress: number): HeroMotionState {
   const progress = clamp(rawProgress, 0, 1);
   const overlayProgress = clamp(progress / 0.42, 0, 1);
   const copyProgress = clamp((progress - 0.18) / 0.48, 0, 1);
-  const navProgress = clamp(progress / 0.22, 0, 1);
+  const navProgress = clamp(progress / 0.5, 0, 1);
   const cardProgress = clamp((progress - 0.52) / 0.3, 0, 1);
 
   return Object.freeze({
@@ -45,7 +45,7 @@ export function getHeroMotionState(rawProgress: number): HeroMotionState {
     portraitScale: 1.26 - progress * 0.28,
     portraitWidth: 530 - progress * 155,
     roomScale: 1.13 - progress * 0.13,
-    roomY: progress * -1.8,
+    roomY: 0,
     speechOpacity: 0.08 + progress * 0.3,
   });
 }

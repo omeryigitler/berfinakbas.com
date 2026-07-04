@@ -41,8 +41,10 @@ export default function HeroScroll() {
 
     const updateHeroProgress = () => {
       const rect = hero.getBoundingClientRect();
-      const scrollableDistance = Math.max(hero.offsetHeight - window.innerHeight, 1);
-      const state = getHeroMotionState(-rect.top / scrollableDistance);
+      // Play the animation over ~1.15 screens of scroll, then hold the finished
+      // state for the remaining scroll so the hero dwells before releasing.
+      const animationDistance = Math.max(window.innerHeight * 1.15, 1);
+      const state = getHeroMotionState(-rect.top / animationDistance);
 
       hero.style.setProperty("--hero-overlay-opacity", state.overlayOpacity.toFixed(4));
       hero.style.setProperty("--hero-room-scale", state.roomScale.toFixed(4));
