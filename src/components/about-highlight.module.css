@@ -60,10 +60,11 @@
   position: relative;
   z-index: 2;
   width: auto;
-  height: 99%;
-  max-width: 88%;
+  height: 86%;
+  max-width: 82%;
   object-fit: contain;
   object-position: center bottom;
+  transform-origin: center bottom;
   user-select: none;
   filter: drop-shadow(0 24px 42px rgb(83 56 39 / 13%));
 }
@@ -327,16 +328,56 @@
       animation-timeline: view();
       animation-range: entry 0% exit 100%;
     }
+
+    /* Heading slides in from the woman's side toward the right */
+    .copyColumn h1,
+    .copyColumn h2 {
+      animation: aboutHeadingSlide linear both;
+      animation-timeline: view();
+      animation-range: entry 6% cover 46%;
+    }
+
+    /* Body copy comes forward from the back as it reveals */
+    .copyColumn .leadText,
+    .copyColumn p:not(.section-kicker):not(.leadText) {
+      animation: aboutCopyForward linear both;
+      animation-timeline: view();
+      animation-range: entry 16% cover 60%;
+    }
+  }
+}
+
+@keyframes aboutHeadingSlide {
+  from {
+    transform: translateX(-76px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutCopyForward {
+  from {
+    transform: translateY(16px) scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
   }
 }
 
 @keyframes aboutPortraitParallax {
   from {
-    transform: translateY(2px) scale(1.02);
+    transform: translateY(14px) scale(0.93);
   }
 
   to {
-    transform: translateY(-26px) scale(1);
+    transform: translateY(-8px) scale(1.05);
   }
 }
 
