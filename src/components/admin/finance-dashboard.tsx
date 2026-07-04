@@ -1,0 +1,674 @@
+"use client";
+
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+
+type Client = { firstName: string; id: string; lastName: string; status: string };
+type PaymentMethod = { id: string; key: string; name: string; status: string };
+type LedgerEntry = {
+  amountMinor: string;
+  id: string;
+  occurredAt: string;
+  reversesEntryId: string | null;
+  type: string;
+};
+type Installment = {
+  amountDueMinor: string;
+  dueDate: string;
+  id: string;
+  paidAmountMinor: string;
+  sequence: number;
+  state: "DUE" | "OVERDUE" | "PAID" | "PARTIALLY_PAID";
+};
+type Plan = {
+  balanceMinor: string;
+  client: { firstName: string; lastName: string };
+  clientId: string;
+  currency: string;
+  id: string;
+  installments: Installment[];
+  invoiceReference: string | null;
+  invoiceStatus: "NOT_REQUIRED" | "PENDING" | "ISSUED" | "SENT_TO_ACCOUNTING" | "CANCELLED";
+  ledgerEntries: LedgerEntry[];
+  name: string;
+  remainingSessions: string;
+  status: string;
+  totalAmountMinor: string;
+};
+type Overview = { clients: Client[]; paymentMethods: PaymentMethod[]; plans: Plan[] };
+type ApiResponse<T> = { code?: string; data?: T; error?: string };
+type InstallmentDraft = { amount: string; dueDate: string };
+
+const installmentStateLabels = {
+  DUE: "Bekliyor",
+  OVERDUE: "Gecikmiş",
+  PAID: "Ödendi",
+  PARTIALLY_PAID: "Kısmi",
+};
+
+const invoiceStatusLabels = {
+  CANCELLED: "İptal edildi",
+  ISSUED: "Düzenlendi",
+  NOT_REQUIRED: "Gerekli değil",
+  PENDING: "Bekliyor",
+  SENT_TO_ACCOUNTING: "Muhasebeye iletildi",
+} as const;
+
+const financeEntryLabels = {
+  ACCRUAL: "Tahakkuk",
+  ADJUSTMENT: "Düzeltme",
+  PAYMENT: "Ödeme",
+  REFUND: "İade",
+  REVERSAL: "Ters kayıt",
+} as const;
+
+const planStatusLabels = {
+  ACTIVE: "Aktif",
+  CANCELLED: "İptal",
+  COMPLETED: "Tamamlandı",
+  EXPIRED: "Süresi doldu",
+} as const;
+
+export function amountToMinor(value: string): string | null {
+  if (!/^\d+(?:[.,]\d{1,2})?$/.test(value.trim())) return null;
+  const [whole, fraction = ""] = value.trim().replace(",", ".").split(".");
+  const minor = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0"));
+  return minor > 0n ? minor.toString() : null;
+}
+
+export function formatMoney(amountMinor: string, currency: string): string {
+  const amount = BigInt(amountMinor);
+  const absolute = amount < 0n ? -amount : amount;
+  const fraction = (absolute % 100n).toString().padStart(2, "0");
+  const formatter = new Intl.NumberFormat("tr-TR", {
+    currency,
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    style: "currency",
+  });
+  const formatted = formatter
+    .formatToParts(absolute / 100n)
+    .map((part) => (part.type === "fraction" ? fraction : part.value))
+    .join("");
+  return amount < 0n ? `-${formatted}` : formatted;
+}
+
+function today(): string {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+}
+
+async function readResponse<T>(response: Response): Promise<ApiResponse<T>> {
+  try {
+    return (await response.json()) as ApiResponse<T>;
+  } catch {
+    return { error: "Beklenmeyen bir sunucu yanıtı alındı." };
+  }
+}
+
+async function requestFinanceOverview(
+  status: "ALL" | "DUE_7_DAYS" | "OVERDUE",
+  signal?: AbortSignal,
+): Promise<Overview> {
+  const response = await fetch(`/api/admin/finance?status=${status}`, {
+    cache: "no-store",
+    signal,
+  });
+  const payload = await readResponse<Overview>(response);
+  if (!response.ok || !payload.data) throw new Error(payload.error);
+  return payload.data;
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
+export function FinanceDashboard({ canManage }: { canManage: boolean }) {
+  const [overview, setOverview] = useState<Overview>({
+    clients: [],
+    paymentMethods: [],
+    plans: [],
+  });
+  const [filter, setFilter] = useState<"ALL" | "DUE_7_DAYS" | "OVERDUE">("ALL");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [installments, setInstallments] = useState<InstallmentDraft[]>([
+    { amount: "", dueDate: today() },
+  ]);
+  const [paymentPlanId, setPaymentPlanId] = useState("");
+
+  const load = useCallback(async (status: typeof filter) => {
+    try {
+      setOverview(await requestFinanceOverview(status));
+    } catch (error) {
+      setMessage(
+        error instanceof Error && error.message ? error.message : "Finans özeti yüklenemedi.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void requestFinanceOverview(filter, controller.signal)
+      .then(setOverview)
+      .catch((error: unknown) => {
+        if (!isAbortError(error)) {
+          setMessage(
+            error instanceof Error && error.message ? error.message : "Finans özeti yüklenemedi.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [filter]);
+
+  const reversedEntryIds = useMemo(
+    () =>
+      new Set(
+        overview.plans.flatMap((plan) =>
+          plan.ledgerEntries
+            .map((entry) => entry.reversesEntryId)
+            .filter((entryId): entryId is string => entryId !== null),
+        ),
+      ),
+    [overview.plans],
+  );
+  const paymentPlan = overview.plans.find((plan) => plan.id === paymentPlanId);
+
+  async function operation(body: unknown) {
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/finance", {
+        body: JSON.stringify(body),
+        headers: { "content-type": "application/json", "x-correlation-id": crypto.randomUUID() },
+        method: "POST",
+      });
+      const payload = await readResponse<unknown>(response);
+      if (!response.ok) throw new Error(payload.error);
+      await load(filter);
+      setMessage("İşlem kaydedildi.");
+      return true;
+    } catch (error) {
+      setMessage(error instanceof Error && error.message ? error.message : "İşlem kaydedilemedi.");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createMethod(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const success = await operation({
+      action: "CREATE_PAYMENT_METHOD",
+      key: String(data.get("key") ?? "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "_"),
+      name: String(data.get("name") ?? ""),
+      reason: String(data.get("reason") ?? ""),
+      sortOrder: 0,
+    });
+    if (success) form.reset();
+  }
+
+  async function createPlan(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const converted = installments.map((installment, index) => ({
+      amountMinor: amountToMinor(installment.amount),
+      dueDate: installment.dueDate,
+      sequence: index + 1,
+    }));
+    if (converted.some((installment) => !installment.amountMinor || !installment.dueDate)) {
+      setMessage("Taksit tutarı ve vade alanlarını kontrol edin.");
+      return;
+    }
+    const totalAmountMinor = converted.reduce(
+      (total, installment) => total + BigInt(installment.amountMinor ?? "0"),
+      0n,
+    );
+    const success = await operation({
+      action: "CREATE_PLAN",
+      clientId: String(data.get("clientId") ?? ""),
+      currency: String(data.get("currency") ?? "TRY").toUpperCase(),
+      idempotencyKey: crypto.randomUUID(),
+      installments: converted,
+      invoiceStatus: String(data.get("invoiceStatus") ?? "NOT_REQUIRED"),
+      name: String(data.get("name") ?? ""),
+      reason: String(data.get("reason") ?? ""),
+      sessionCount: Number(data.get("sessionCount")),
+      sessionDurationMinutes: Number(data.get("sessionDurationMinutes")),
+      source: "CUSTOM",
+      totalAmountMinor: totalAmountMinor.toString(),
+      validFrom: String(data.get("validFrom") ?? ""),
+      validUntil: String(data.get("validUntil") ?? "") || null,
+    });
+    if (success) {
+      form.reset();
+      setInstallments([{ amount: "", dueDate: today() }]);
+    }
+  }
+
+  async function recordPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const plan = overview.plans.find((item) => item.id === data.get("planId"));
+    const amountMinor = amountToMinor(String(data.get("amount") ?? ""));
+    if (!plan || !amountMinor) {
+      setMessage("Plan ve ödeme tutarını kontrol edin.");
+      return;
+    }
+    const success = await operation({
+      action: "RECORD_PAYMENT",
+      amountMinor,
+      clientId: plan.clientId,
+      currency: plan.currency,
+      externalReference: String(data.get("externalReference") ?? "") || null,
+      idempotencyKey: crypto.randomUUID(),
+      installmentId: String(data.get("installmentId") ?? ""),
+      note: null,
+      occurredAt: new Date(`${String(data.get("occurredDate"))}T12:00:00.000Z`).toISOString(),
+      paymentMethodId: String(data.get("paymentMethodId") ?? ""),
+      planId: plan.id,
+      reason: String(data.get("reason") ?? ""),
+    });
+    if (success) {
+      form.reset();
+      setPaymentPlanId("");
+    }
+  }
+
+  async function updateInvoiceStatus(event: FormEvent<HTMLFormElement>, planId: string) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    await operation({
+      action: "UPDATE_INVOICE_STATUS",
+      invoiceReference: String(data.get("invoiceReference") ?? "") || null,
+      invoiceStatus: String(data.get("invoiceStatus") ?? "NOT_REQUIRED"),
+      planId,
+      reason: String(data.get("reason") ?? ""),
+    });
+  }
+
+  async function reversePayment(entryId: string) {
+    const reason = window.prompt(
+      "Ters kayıt için gerekçeyi yazın. Orijinal ödeme silinmeyecek; dengeleyici hareket eklenecek.",
+    );
+    if (reason === null) return;
+    if (reason.trim().length < 8) {
+      setMessage("Ters kayıt gerekçesi en az 8 karakter olmalıdır.");
+      return;
+    }
+    await operation({
+      action: "REVERSE_PAYMENT",
+      entryId,
+      idempotencyKey: crypto.randomUUID(),
+      reason,
+    });
+  }
+
+  if (loading)
+    return (
+      <div className="admin-empty-state" aria-live="polite">
+        Finans özeti yükleniyor…
+      </div>
+    );
+
+  return (
+    <div className="finance-dashboard">
+      <div className="finance-toolbar">
+        <label>
+          <span>Vade filtresi</span>
+          <select
+            value={filter}
+            onChange={(event) => {
+              setLoading(true);
+              setMessage("");
+              setFilter(event.target.value as typeof filter);
+            }}
+          >
+            <option value="ALL">Tümü</option>
+            <option value="OVERDUE">Gecikmiş</option>
+            <option value="DUE_7_DAYS">7 gün içinde</option>
+          </select>
+        </label>
+        <span>{overview.plans.length} plan</span>
+      </div>
+
+      {canManage && (
+        <div className="finance-operation-grid">
+          <details className="finance-operation-card">
+            <summary>Ödeme yöntemi ekle</summary>
+            <form onSubmit={createMethod}>
+              <label>
+                Yöntem adı
+                <input name="name" required />
+              </label>
+              <label>
+                Katalog anahtarı
+                <input name="key" pattern="[A-Za-z][A-Za-z0-9 _-]+" required />
+              </label>
+              <label>
+                Gerekçe
+                <textarea minLength={8} name="reason" required />
+              </label>
+              <button disabled={busy} type="submit">
+                Yöntemi kaydet
+              </button>
+            </form>
+          </details>
+          <details className="finance-operation-card">
+            <summary>Danışan planı oluştur</summary>
+            <form onSubmit={createPlan}>
+              <label>
+                Danışan
+                <select name="clientId" required>
+                  <option value="">Seçin</option>
+                  {overview.clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.firstName} {client.lastName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Plan adı
+                <input name="name" required />
+              </label>
+              <div className="finance-inline-fields">
+                <label>
+                  Seans sayısı
+                  <input min="1" name="sessionCount" required type="number" />
+                </label>
+                <label>
+                  Süre (dk)
+                  <input min="5" name="sessionDurationMinutes" required type="number" />
+                </label>
+                <label>
+                  Para birimi
+                  <input defaultValue="TRY" maxLength={3} name="currency" required />
+                </label>
+              </div>
+              <div className="finance-inline-fields">
+                <label>
+                  Başlangıç
+                  <input defaultValue={today()} name="validFrom" required type="date" />
+                </label>
+                <label>
+                  Bitiş
+                  <input name="validUntil" type="date" />
+                </label>
+                <label>
+                  Belge durumu
+                  <select name="invoiceStatus">
+                    <option value="NOT_REQUIRED">Gerekli değil</option>
+                    <option value="PENDING">Bekliyor</option>
+                  </select>
+                </label>
+              </div>
+              <fieldset className="finance-installment-editor">
+                <legend>Taksitler</legend>
+                {installments.map((installment, index) => (
+                  <div className="finance-inline-fields" key={index}>
+                    <label>
+                      Tutar
+                      <input
+                        inputMode="decimal"
+                        onChange={(event) =>
+                          setInstallments((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index ? { ...item, amount: event.target.value } : item,
+                            ),
+                          )
+                        }
+                        required
+                        value={installment.amount}
+                      />
+                    </label>
+                    <label>
+                      Vade
+                      <input
+                        onChange={(event) =>
+                          setInstallments((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index ? { ...item, dueDate: event.target.value } : item,
+                            ),
+                          )
+                        }
+                        required
+                        type="date"
+                        value={installment.dueDate}
+                      />
+                    </label>
+                    {installments.length > 1 && (
+                      <button
+                        onClick={() =>
+                          setInstallments((current) =>
+                            current.filter((_, itemIndex) => itemIndex !== index),
+                          )
+                        }
+                        type="button"
+                      >
+                        Kaldır
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() =>
+                    setInstallments((current) => [...current, { amount: "", dueDate: today() }])
+                  }
+                  type="button"
+                >
+                  Taksit ekle
+                </button>
+              </fieldset>
+              <label>
+                Gerekçe
+                <textarea minLength={8} name="reason" required />
+              </label>
+              <button disabled={busy} type="submit">
+                Planı oluştur
+              </button>
+            </form>
+          </details>
+          <details className="finance-operation-card">
+            <summary>Ödeme kaydet</summary>
+            <form onSubmit={recordPayment}>
+              <label>
+                Plan
+                <select
+                  name="planId"
+                  onChange={(event) => setPaymentPlanId(event.target.value)}
+                  required
+                  value={paymentPlanId}
+                >
+                  <option value="">Seçin</option>
+                  {overview.plans
+                    .filter((plan) => plan.status === "ACTIVE")
+                    .map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.client.firstName} {plan.client.lastName} · {plan.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label>
+                Taksit
+                <select disabled={!paymentPlan} name="installmentId" required>
+                  <option value="">Seçin</option>
+                  {paymentPlan?.installments
+                    .filter((item) => item.state !== "PAID")
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.sequence}. taksit · kalan{" "}
+                        {formatMoney(
+                          (BigInt(item.amountDueMinor) - BigInt(item.paidAmountMinor)).toString(),
+                          paymentPlan.currency,
+                        )}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label>
+                Ödeme yöntemi
+                <select name="paymentMethodId" required>
+                  <option value="">Seçin</option>
+                  {overview.paymentMethods.map((method) => (
+                    <option key={method.id} value={method.id}>
+                      {method.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="finance-inline-fields">
+                <label>
+                  Tutar
+                  <input inputMode="decimal" name="amount" required />
+                </label>
+                <label>
+                  Ödeme tarihi
+                  <input defaultValue={today()} name="occurredDate" required type="date" />
+                </label>
+              </div>
+              <label>
+                Harici referans
+                <input name="externalReference" />
+              </label>
+              <label>
+                Gerekçe
+                <textarea minLength={8} name="reason" required />
+              </label>
+              <button disabled={busy || overview.paymentMethods.length === 0} type="submit">
+                Ödemeyi kaydet
+              </button>
+            </form>
+          </details>
+        </div>
+      )}
+
+      <p className="finance-message" aria-live="polite">
+        {message}
+      </p>
+      {overview.plans.length === 0 ? (
+        <div className="admin-empty-state">
+          <strong>Bu filtrede plan yok</strong>
+          <span>Yeni plan oluşturabilir veya vade filtresini değiştirebilirsiniz.</span>
+        </div>
+      ) : (
+        <div className="finance-plan-list">
+          {overview.plans.map((plan) => (
+            <article className="finance-plan-card" key={plan.id}>
+              <header>
+                <div>
+                  <small>
+                    {plan.client.firstName} {plan.client.lastName}
+                  </small>
+                  <h3>{plan.name}</h3>
+                </div>
+                <span>
+                  {planStatusLabels[plan.status as keyof typeof planStatusLabels] ?? plan.status}
+                </span>
+              </header>
+              <dl>
+                <div>
+                  <dt>Kalan bakiye</dt>
+                  <dd>{formatMoney(plan.balanceMinor, plan.currency)}</dd>
+                </div>
+                <div>
+                  <dt>Kalan seans</dt>
+                  <dd>{plan.remainingSessions}</dd>
+                </div>
+                <div>
+                  <dt>Plan toplamı</dt>
+                  <dd>{formatMoney(plan.totalAmountMinor, plan.currency)}</dd>
+                </div>
+              </dl>
+              <div className="finance-installments">
+                {plan.installments.map((installment) => (
+                  <div key={installment.id}>
+                    <span>
+                      {installment.sequence}. taksit · {installment.dueDate}
+                    </span>
+                    <strong>{formatMoney(installment.amountDueMinor, plan.currency)}</strong>
+                    <small>Ödenen {formatMoney(installment.paidAmountMinor, plan.currency)}</small>
+                    <small
+                      className={`finance-state finance-state--${installment.state.toLowerCase()}`}
+                    >
+                      {installmentStateLabels[installment.state]}
+                    </small>
+                  </div>
+                ))}
+              </div>
+              <details className="finance-history">
+                <summary>Belge durumu · {invoiceStatusLabels[plan.invoiceStatus]}</summary>
+                {canManage ? (
+                  <form
+                    key={`${plan.id}-${plan.invoiceStatus}-${plan.invoiceReference ?? ""}`}
+                    onSubmit={(event) => void updateInvoiceStatus(event, plan.id)}
+                  >
+                    <label>
+                      Durum
+                      <select defaultValue={plan.invoiceStatus} name="invoiceStatus">
+                        <option value="NOT_REQUIRED">Gerekli değil</option>
+                        <option value="PENDING">Bekliyor</option>
+                        <option value="ISSUED">Düzenlendi</option>
+                        <option value="SENT_TO_ACCOUNTING">Muhasebeye iletildi</option>
+                        <option value="CANCELLED">İptal edildi</option>
+                      </select>
+                    </label>
+                    <label>
+                      Belge referansı
+                      <input defaultValue={plan.invoiceReference ?? ""} name="invoiceReference" />
+                    </label>
+                    <label>
+                      Gerekçe
+                      <textarea minLength={8} name="reason" required />
+                    </label>
+                    <button disabled={busy} type="submit">
+                      Belge durumunu kaydet
+                    </button>
+                  </form>
+                ) : (
+                  <p>{plan.invoiceReference || "Belge referansı yok."}</p>
+                )}
+              </details>
+              <details className="finance-history">
+                <summary>Hareket geçmişi</summary>
+                <ul>
+                  {plan.ledgerEntries.map((entry) => (
+                    <li key={entry.id}>
+                      <span>
+                        {financeEntryLabels[entry.type as keyof typeof financeEntryLabels] ??
+                          entry.type}{" "}
+                        · {new Date(entry.occurredAt).toLocaleDateString("tr-TR")}
+                      </span>
+                      <strong>{formatMoney(entry.amountMinor, plan.currency)}</strong>
+                      {canManage && entry.type === "PAYMENT" && !reversedEntryIds.has(entry.id) && (
+                        <button
+                          disabled={busy}
+                          onClick={() => void reversePayment(entry.id)}
+                          type="button"
+                        >
+                          Ters kayıt
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

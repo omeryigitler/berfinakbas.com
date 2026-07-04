@@ -20,6 +20,9 @@ export default async function AdminAppointmentsPage() {
         </div>
         <div className="admin-header-actions">
           <Link href="/yonetim">Hizmetlere dön</Link>
+          {hasPermission(session.user.roles, "finance:read") ? (
+            <Link href="/yonetim/odemeler">Ödeme ve planlar</Link>
+          ) : null}
           <span>{session.user.email}</span>
         </div>
       </header>

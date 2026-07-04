@@ -138,6 +138,13 @@ Mevcut durum: Ana sayfa ile Hakkımda, Hizmetler, Süreç, İletişim ve Randevu
 
 Tamamlanma ölçütü: Kritik işlemlerde onay, yetki, audit ve düzeltme akışları test edilir.
 
+Mevcut durum:
+
+- Danışan özel planı, taksit/vade, append-only seans hakkı ve finans ledger’ı için additive PostgreSQL/Prisma modeli hazırlanmıştır.
+- Manuel/kısmi ödeme, plan ve taksit bazlı fazla ödeme koruması, idempotent kayıt, ters kayıt, belge durumu ve audit aynı yönetim modülünde uygulanmıştır.
+- Finans okuma/yönetme izinleri, same-origin ve sınırlı strict JSON API sınırı ile yetkisiz rollerden ayrılmıştır.
+- Hazır plan şablonu, otomatik seans tüketiminde plan seçimi, kısmi iade, ayrı izinli CSV export ve fatura dosyası açık kapsam olarak kalır.
+
 ## Faz 6 — kontrollü entegrasyonlar
 
 - E-posta outbox ve şablonlar

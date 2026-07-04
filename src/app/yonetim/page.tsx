@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
@@ -27,6 +28,9 @@ export default async function AdminHomePage() {
         </div>
         <div className="admin-header-actions">
           <Link href="/yonetim/randevular">Bekleyen talepler</Link>
+          {hasPermission(session.user.roles, "finance:read") ? (
+            <Link href="/yonetim/odemeler">Ödeme ve planlar</Link>
+          ) : null}
           <span>{session.user.email}</span>
         </div>
       </header>
