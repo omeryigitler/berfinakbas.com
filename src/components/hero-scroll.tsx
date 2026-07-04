@@ -126,10 +126,10 @@ export default function HeroScroll() {
               src="/berfin-hero-standing.png"
               alt="Berfin Akbaş portresi"
               draggable={false}
-              height={1400}
+              height={1361}
               priority
               sizes="(max-width: 980px) 40vw, 320px"
-              width={394}
+              width={415}
             />
           </div>
 
