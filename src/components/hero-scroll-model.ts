@@ -42,7 +42,7 @@ export function getHeroMotionState(rawProgress: number): HeroMotionState {
     overlayOpacity: overlayProgress,
     portraitBottom: -8 + progress * 15,
     portraitLeft: 49 - progress * 18,
-    portraitScale: 1.06 - progress * 0.08,
+    portraitScale: 1.26 - progress * 0.28,
     portraitWidth: 530 - progress * 155,
     roomScale: 1.13 - progress * 0.13,
     roomY: progress * -1.8,
