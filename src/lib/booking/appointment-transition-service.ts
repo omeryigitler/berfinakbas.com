@@ -5,6 +5,7 @@ import {
   type AppointmentStatus as DomainAppointmentStatus,
 } from "@/domain/booking/appointment-status";
 import { getDatabase } from "@/lib/db";
+import { enqueueAppointmentStatusChangedEvent } from "@/lib/integrations/appointment-outbox";
 
 export const databaseAppointmentStatuses = [
   "REQUESTED",
@@ -18,7 +19,7 @@ export const databaseAppointmentStatuses = [
   "NO_SHOW",
 ] as const;
 
-type DatabaseAppointmentStatus = (typeof databaseAppointmentStatuses)[number];
+export type DatabaseAppointmentStatus = (typeof databaseAppointmentStatuses)[number];
 
 const domainStatusByDatabaseStatus = {
   CANCELLED_BY_CLIENT: "cancelled_by_client",
@@ -125,7 +126,7 @@ export async function transitionAppointment(
 
     if (transition.count !== 1) throw new AppointmentTransitionConflictError();
 
-    await transaction.appointmentStatusLog.create({
+    const statusLog = await transaction.appointmentStatusLog.create({
       data: {
         actorType: "USER",
         actorUserId: command.actorUserId,
@@ -135,6 +136,7 @@ export async function transitionAppointment(
         reasonCode: command.reasonCode,
         toStatus: command.toStatus,
       },
+      select: { id: true },
     });
 
     if (allocationReleasingStatuses.has(command.toStatus)) {
@@ -156,6 +158,14 @@ export async function transitionAppointment(
         entityType: "APPOINTMENT",
         reason: command.reasonCode,
       },
+    });
+
+    await enqueueAppointmentStatusChangedEvent(transaction, {
+      appointmentId: appointment.id,
+      fromStatus: appointment.status,
+      occurredAt: now,
+      statusLogId: statusLog.id,
+      toStatus: command.toStatus,
     });
 
     return Object.freeze({

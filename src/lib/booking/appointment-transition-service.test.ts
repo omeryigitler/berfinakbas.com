@@ -43,9 +43,12 @@ function createDatabase(
       ),
       updateMany: vi.fn().mockResolvedValue({ count: options.updateCount ?? 1 }),
     },
-    appointmentStatusLog: { create: vi.fn().mockResolvedValue({}) },
+    appointmentStatusLog: {
+      create: vi.fn().mockResolvedValue({ id: "33333333-3333-4333-8333-333333333333" }),
+    },
     auditLog: { create: vi.fn().mockResolvedValue({}) },
     bookingAllocation: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+    outboxEvent: { create: vi.fn().mockResolvedValue({ id: "outbox-event" }) },
   };
   const database = {
     $transaction: vi.fn(async (callback: (value: typeof transaction) => Promise<unknown>) =>
@@ -89,6 +92,7 @@ describe("transitionAppointment", () => {
         reasonCode: command.reasonCode,
         toStatus: "PENDING_REVIEW",
       }),
+      select: { id: true },
     });
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
       data: {
@@ -104,6 +108,22 @@ describe("transitionAppointment", () => {
       },
     });
     expect(transaction.bookingAllocation.updateMany).not.toHaveBeenCalled();
+    expect(transaction.outboxEvent.create).toHaveBeenCalledWith({
+      data: {
+        aggregateId: command.appointmentId,
+        aggregateType: "APPOINTMENT",
+        eventType: "APPOINTMENT_STATUS_CHANGED",
+        idempotencyKey: "appointment-status-log:33333333-3333-4333-8333-333333333333",
+        payload: {
+          appointmentId: command.appointmentId,
+          fromStatus: "REQUESTED",
+          occurredAt: expect.any(String),
+          statusLogId: "33333333-3333-4333-8333-333333333333",
+          toStatus: "PENDING_REVIEW",
+        },
+      },
+      select: { id: true },
+    });
   });
 
   it("records the approving user and timestamp when confirming", async () => {
@@ -192,6 +212,7 @@ describe("transitionAppointment", () => {
     );
     expect(transaction.appointmentStatusLog.create).not.toHaveBeenCalled();
     expect(transaction.auditLog.create).not.toHaveBeenCalled();
+    expect(transaction.outboxEvent.create).not.toHaveBeenCalled();
   });
 
   it("returns a safe not-found error without creating history", async () => {
