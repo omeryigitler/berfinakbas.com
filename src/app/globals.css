@@ -2691,3 +2691,31 @@ summary:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * About "pinned scene": a tall track whose sticky child holds the About block
+ * full-screen while the section's scroll-timeline animations scrub. Enabled
+ * only where scroll-timeline is supported, motion is allowed, and there is room
+ * (desktop); everywhere else the block stays in normal flow, static.
+ */
+.about-pin {
+  position: relative;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 921px) {
+    .about-pin {
+      height: 260vh;
+      view-timeline-name: --aboutPin;
+      view-timeline-axis: block;
+    }
+
+    .about-pin-sticky {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      min-height: 100vh;
+    }
+  }
+}

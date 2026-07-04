@@ -115,7 +115,11 @@ export default function Home() {
         </article>
       </section>
 
-      <AboutHighlight />
+      <div className="about-pin">
+        <div className="about-pin-sticky">
+          <AboutHighlight />
+        </div>
+      </div>
 
       <section className="audience-section" id="destek-alanlari" aria-labelledby="audience-title">
         <div className="section-heading">

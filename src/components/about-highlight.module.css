@@ -291,65 +291,87 @@
 }
 
 /*
- * Small scroll-driven motion inside the About visual: a gentle parallax as the
- * panel passes through the viewport, with the floating cards easing in and the
- * decorative circle/orbit drifting. Progressive enhancement only — browsers
- * without scroll-timeline support (or reduced-motion users) get the static
- * layout unchanged.
+ * Pinned scroll reveal. The About block is wrapped in a tall `.about-pin`
+ * container (globals.css) that names a `--aboutPin` view-timeline; while its
+ * sticky child is pinned full-screen, these animations scrub across the pin so
+ * each piece reveals deliberately and in sequence: the portrait eases forward,
+ * the heading slides in from the woman's side toward the right, the body copy
+ * comes forward, then the floating cards rise. Progressive enhancement — with
+ * no scroll-timeline support (or under reduced-motion) the layout is static.
  */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .portraitPanel img {
-      animation: aboutPortraitParallax linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 100%;
+      animation: aboutPortraitFwd linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 0% contain 78%;
+    }
+
+    .copyColumn h1,
+    .copyColumn h2 {
+      animation: aboutHeadingSlide linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 6% contain 44%;
+    }
+
+    .copyColumn .leadText,
+    .copyColumn p:not(.section-kicker):not(.leadText) {
+      animation: aboutCopyForward linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 24% contain 60%;
+    }
+
+    .valueGrid {
+      animation: aboutRiseIn linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 34% contain 64%;
+    }
+
+    .actions {
+      animation: aboutRiseIn linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 46% contain 74%;
     }
 
     .noteCard {
       animation: aboutCardRise linear both;
-      animation-timeline: view();
-      animation-range: entry 12% cover 52%;
+      animation-timeline: --aboutPin;
+      animation-range: contain 30% contain 58%;
     }
 
     .nameCard {
       animation: aboutCardRise linear both;
-      animation-timeline: view();
-      animation-range: entry 20% cover 62%;
+      animation-timeline: --aboutPin;
+      animation-range: contain 40% contain 68%;
     }
 
     .softCircle {
       animation: aboutSoftDrift linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 100%;
+      animation-timeline: --aboutPin;
+      animation-range: contain 0% contain 100%;
     }
 
     .orbitLine {
       animation: aboutOrbitDrift linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 100%;
+      animation-timeline: --aboutPin;
+      animation-range: contain 0% contain 100%;
     }
+  }
+}
 
-    /* Heading slides in from the woman's side toward the right */
-    .copyColumn h1,
-    .copyColumn h2 {
-      animation: aboutHeadingSlide linear both;
-      animation-timeline: view();
-      animation-range: entry 6% cover 46%;
-    }
+@keyframes aboutPortraitFwd {
+  from {
+    transform: translateY(28px) scale(0.9);
+  }
 
-    /* Body copy comes forward from the back as it reveals */
-    .copyColumn .leadText,
-    .copyColumn p:not(.section-kicker):not(.leadText) {
-      animation: aboutCopyForward linear both;
-      animation-timeline: view();
-      animation-range: entry 16% cover 60%;
-    }
+  to {
+    transform: translateY(0) scale(1.02);
   }
 }
 
 @keyframes aboutHeadingSlide {
   from {
-    transform: translateX(-76px);
+    transform: translateX(-120px);
     opacity: 0;
   }
 
@@ -361,7 +383,7 @@
 
 @keyframes aboutCopyForward {
   from {
-    transform: translateY(16px) scale(0.95);
+    transform: translateY(28px) scale(0.92);
     opacity: 0;
   }
 
@@ -371,17 +393,19 @@
   }
 }
 
-@keyframes aboutPortraitParallax {
+@keyframes aboutCardRise {
   from {
-    transform: translateY(14px) scale(0.93);
+    transform: translateY(48px);
+    opacity: 0;
   }
 
   to {
-    transform: translateY(-8px) scale(1.05);
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-@keyframes aboutCardRise {
+@keyframes aboutRiseIn {
   from {
     transform: translateY(30px);
     opacity: 0;
@@ -395,22 +419,22 @@
 
 @keyframes aboutSoftDrift {
   from {
-    transform: translateY(22px) scale(0.9);
-    opacity: 0.45;
+    transform: translateY(24px) scale(0.85);
+    opacity: 0.4;
   }
 
   to {
-    transform: translateY(-18px) scale(1.08);
+    transform: translateY(-16px) scale(1.1);
     opacity: 1;
   }
 }
 
 @keyframes aboutOrbitDrift {
   from {
-    transform: rotate(-18deg) scale(0.9);
+    transform: rotate(-22deg) scale(0.85);
   }
 
   to {
-    transform: rotate(16deg) scale(1.06);
+    transform: rotate(18deg) scale(1.08);
   }
 }
