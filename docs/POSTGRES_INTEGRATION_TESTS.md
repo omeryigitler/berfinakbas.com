@@ -18,7 +18,7 @@ Komut, migration’ları `prisma migrate deploy` ile uygular ve ardından yalnı
 
 ## GitHub CI
 
-Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` altı migration’ı uygular, ardından on altı gerçek veritabanı testini çalıştırır.
+Her pull request ve `main` push’unda `postgres-integration` işi ayrı bir PostgreSQL 17 servis konteyneri başlatır. Konteyner yalnızca sentetik `berfinakbas_integration` veritabanını kullanır; `pnpm test:integration` dokuz migration’ı uygular, ardından otuz bir gerçek veritabanı testini çalıştırır.
 
 CI bağlantısı `TEST_DATABASE_URL` ile yalnızca workflow içinde tanımlanır. Production veya geliştirici veritabanı secret’ı kullanılmaz ve uzak veritabanına erişim açılmaz.
 

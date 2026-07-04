@@ -26,6 +26,7 @@ Backend randevular için tek gerçek kaynaktır. Google Calendar yalnızca senkr
 - [Veri modeli taslağı](docs/DATABASE_SCHEMA_DRAFT.md)
 - [Randevu kuralları](docs/BOOKING_RULES.md)
 - [Danışan planları ve ödeme](docs/PAYMENT_AND_CLIENT_PLANS.md)
+- [Transactional outbox](docs/TRANSACTIONAL_OUTBOX.md)
 - [Admin panel modülleri](docs/ADMIN_PANEL_MODULES.md)
 - [Public site ve içerik kuralları](docs/PUBLIC_SITE_CONTENT.md)
 - [Tasarım yönü](docs/DESIGN_DIRECTION.md)
@@ -89,7 +90,7 @@ Kalite komutları:
 
 ## Sonraki iş
 
-Faz 3’te randevu motoru, admin talep yönetimi ve public slot→hold→minimum intake→consent→request akışı tamamlanmıştır. Public intake kayıtları ve randevu aynı transaction içinde oluşur; başarısız gönderim yetim client/guardian/consent kaydı bırakmaz. Akış ve tüm yazma endpoint’leri varsayılan kapalıdır. Nihai hukuki metinler, production hold süresi ve dağıtık abuse kontrolü onaylanmadan canlı gönderim açılmaz. Sıradaki teknik milestone bildirim/outbox ve Calendar entegrasyon sınırlarıdır. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır.
+Faz 3’te randevu motoru, admin talep yönetimi ve public slot→hold→minimum intake→consent→request akışı tamamlanmıştır. Public intake kayıtları ve randevu aynı transaction içinde oluşur; başarısız gönderim yetim client/guardian/consent kaydı bırakmaz. Akış ve tüm yazma endpoint’leri varsayılan kapalıdır. Bildirim/Calendar için provider-neutral transactional outbox çekirdeği, atomik randevu olayları ve retry/dead-letter yaşam döngüsü hazırlanmıştır; gerçek adapter, şablon/alıcı kuralları ve worker çalışma ortamı sonraki milestone’dur. Nihai hukuki metinler, production hold süresi ve dağıtık abuse kontrolü onaylanmadan canlı gönderim açılmaz. Gerçek Google OAuth uygulaması, MFA politikası ve ilk canlı yönetici doğrulaması ayrıca yayın kapısıdır.
 
 ## Hukuki not
 

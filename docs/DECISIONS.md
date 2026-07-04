@@ -113,7 +113,7 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - API sınırı: Durum değiştirme endpoint’i aktif oturum, `appointments:manage`, güvenilir origin ve terapist için kendi practitioner kaydına bağlı randevu kontrolü ister. Yetkisiz veya başka terapiste ait kayıtlar servis katmanına iletilmez.
 - Liste sınırı: Randevu listesi varsayılan olarak `pending_review` durumunu, en fazla 100 kayıtlık cursor sayfalama ile döndürür. Serbest talep notu, iletişim bilgisi ve consent ayrıntısı liste response’una alınmaz; terapist yalnızca kendi practitioner kapsamını görür.
 - Yönetim eylemi: Onay ve ret, etkisini ve geri dönüş yolunu açıklayan kullanıcı onayından sonra durum API’sine gönderilir. UI yetkisi yalnızca görünürlük sağlar; API aktif oturum, rol ve practitioner kapsamını her istekte yeniden denetler.
-- OPEN: Bildirim/Calendar yan etkileri outbox modeli eklendiğinde aynı transaction’a idempotent event olarak bağlanacaktır.
+- Bildirim/Calendar yan etkileri ADR-019’daki provider-neutral outbox olayıyla aynı transaction’a bağlanır.
 
 ## ADR-017 — Aydınlatma, açık rıza ve veli yetkisi ayrı kapılar olacaktır
 
@@ -138,3 +138,14 @@ Bu dosya, görüşmelerde alınan kararları uygulanabilir ve değiştirilebilir
 - Belge sunumu: Consent belgesinin hukuken onaylanmış public başlık/içeriği veritabanında version/hash’e bağlı tutulur. Eksik, boş veya aynı türde birden fazla yürürlükte sürüm varsa public akış fail-closed durur.
 - Yayın kapısı: Ana public booking bayrağı, üç route bayrağı, practitioner, hold süresi, onaylı metinler ve operasyonel güvenlik kapıları birlikte tamamlanmadan production gönderimi açılmaz.
 - Ayrıntı: `docs/PUBLIC_BOOKING_FLOW.md`
+
+## ADR-019 — Entegrasyonlar transactional outbox üzerinden ilerleyecektir
+
+- Durum: Kabul edildi
+- Karar: İlk randevu kaydı ve sonraki durum geçişleri, ilgili status log kimliğinden türetilen unique idempotency key ile `APPOINTMENT_STATUS_CHANGED` olayını aynı veritabanı transaction’ında üretir.
+- Veri minimizasyonu: Event payload’ı appointment/status-log kimlikleri, önceki/yeni durum ve olay zamanıyla sınırlıdır. İletişim bilgisi, danışan adı, serbest not, consent içeriği, holder token veya sağlayıcı credential’ı outbox’a kopyalanmaz.
+- Worker yarışı: Due event’ler koşullu update ile claim edilir. Aynı adayı okuyan worker’lardan yalnızca biri `PROCESSING` durumuna geçebilir; süresi dolan lease tekrar alınabilir.
+- Retry/dead-letter: Teknik servis ürün politikası uydurmaz; doğrulanmış sonraki deneme zamanı ve maksimum deneme sayısını çağırandan alır. Terminal `SENT`/`DEAD` kayıtları silinmez.
+- Sağlayıcı sınırı: Outbox olayı provider-neutral’dır. E-posta/Calendar adapter’ı olayı işlerken gerekli minimum veriyi yetkili backend’den yükler; dış sistem hatası randevu transaction’ını geri alamaz.
+- OPEN: Sağlayıcı/bölge, şablon ve alıcı kuralları, retry/backoff politikası, worker scheduler/hosting, Calendar external-event kaydı ve operasyon sağlık yüzeyi sonraki milestone’da kararlaştırılacaktır.
+- Ayrıntı: `docs/TRANSACTIONAL_OUTBOX.md`

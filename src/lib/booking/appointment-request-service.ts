@@ -15,6 +15,7 @@ import {
 import type { Prisma } from "@/generated/prisma/client";
 import { isRetryableTransactionError } from "@/lib/booking/appointment-hold-service";
 import { getDatabase } from "@/lib/db";
+import { enqueueAppointmentStatusChangedEvent } from "@/lib/integrations/appointment-outbox";
 
 const MAX_TRANSACTION_ATTEMPTS = 3;
 
@@ -320,13 +321,14 @@ export async function createAppointmentRequest(
         toStatus: "CONSUMED",
       },
     });
-    await transaction.appointmentStatusLog.create({
+    const statusLog = await transaction.appointmentStatusLog.create({
       data: {
         actorType: "CLIENT",
         appointmentId: appointment.id,
         reasonCode: "PUBLIC_REQUEST_SUBMITTED",
         toStatus: "REQUESTED",
       },
+      select: { id: true },
     });
     await transaction.auditLog.createMany({
       data: [
@@ -354,6 +356,13 @@ export async function createAppointmentRequest(
           reason: "PUBLIC_REQUEST_SUBMITTED",
         },
       ],
+    });
+    await enqueueAppointmentStatusChangedEvent(transaction, {
+      appointmentId: appointment.id,
+      fromStatus: null,
+      occurredAt: now,
+      statusLogId: statusLog.id,
+      toStatus: "REQUESTED",
     });
 
     return { appointment, publicReference };

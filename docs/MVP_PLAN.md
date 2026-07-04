@@ -40,7 +40,7 @@ Mevcut durum:
 - Production build doğrulandı.
 - CI workflow gerçek GitHub deposunda çalışmakta ve `main` kalite kapısı geçmektedir.
 - Gerçek PostgreSQL 17 üzerinde migration ve integration test paketi çalışmaktadır.
-- PostgreSQL 17 servis konteyneri kullanan ayrı CI işi, altı migration ve on sekiz gerçek veritabanı testini her pull request ve `main` push’unda çalıştırır.
+- PostgreSQL 17 servis konteyneri kullanan ayrı CI işi, dokuz migration ve otuz bir gerçek veritabanı testini her pull request ve `main` push’unda çalıştırır.
 
 ## Faz 2 — kimlik, yetki ve veri çekirdeği
 
@@ -66,7 +66,7 @@ Mevcut durum:
 - Sentetik rol ve taslak hizmet seed’i hazırlandı.
 - ChatGPT proje klasöründeki tasarım yönü incelendi ve public ana sayfaya uygulandı.
 - Yetkili/izinsiz route testleri, lint, typecheck, format kontrolü ve production build başarılıdır.
-- Altı migration gerçek PostgreSQL 17 CI kapısında uygulanır; eşzamanlılık, transaction ve consent bütünlüğü integration testleriyle doğrulanır.
+- Dokuz migration gerçek PostgreSQL 17 CI kapısında uygulanır; eşzamanlılık, transaction, consent, finans ledger ve outbox bütünlüğü integration testleriyle doğrulanır.
 - Gerçek Google OAuth istemcisi, MFA politikası ve ilk canlı yönetici rolü doğrulaması yayın kapısı olarak beklenmektedir.
 
 ## Faz 3 — randevu motoru
@@ -98,7 +98,7 @@ Mevcut durum:
 - Admin durum API’si aktif oturum, `appointments:manage`, güvenilir origin ve terapistin kendi practitioner kaydı sınırlarını uygular; geçersiz veya yarışta kaybeden geçişleri güvenli yanıtlara dönüştürür.
 - Admin liste API’si varsayılan olarak bekleyen talepleri döndürür; rol/practitioner kapsamı, sınırlandırılmış cursor sayfalama ve serbest not/iletişim ayrıntısını dışarıda bırakan minimum veri seçimi uygular.
 - Admin bekleyen talepler ekranı minimum liste alanlarını işletme saat diliminde gösterir; yükleme, boş, hata, yenileme ve cursor ile daha fazla kayıt durumları erişilebilir biçimde hazırlanmıştır. Onay/ret eylemleri sonuç ve geri dönüş bilgisini işlem öncesinde gösterir, başarılı kaydı kuyruktan çıkarır ve sunucu yetkisini yeniden doğrular.
-- Altı migration ve on sekiz gerçek PostgreSQL integration testi; hold/randevu allocation yarışları, availability dışı hold reddi, günlük kapasitedeki son yer için farklı-slot hold yarışı, atomik hold→request dönüşümü, rollback, consent IDOR, aynı durumdan iki eşzamanlı geçiş ve consent subject/grantor bütünlüğünü doğrular.
+- Randevu çekirdeği integration senaryoları; hold/randevu allocation yarışları, availability dışı hold reddi, günlük kapasitedeki son yer için farklı-slot hold yarışı, atomik hold→request dönüşümü, rollback, consent IDOR, aynı durumdan iki eşzamanlı geçiş ve consent subject/grantor bütünlüğünü doğrular. Toplam PostgreSQL paketi dokuz migration ve otuz bir testtir.
 - Hold süresinin production değeri ve dağıtık abuse kontrolü `OPEN` durumundadır; sunucu ayarı/bayrağı kapalıyken hold yazımı fail-closed kalır ve public randevu formu açılmamıştır.
 - Zorunlu acknowledgement/consent türleri ve çocuk/veli doğrulama aşamaları ADR-017 ile kapatılmıştır. Hold’dan `REQUESTED` randevu üreten application service atomik consent kanıt bağlarıyla uygulanmıştır; public API/form ve nihai hukuki metin onayı tamamlanmadığı için canlı gönderim kapalıdır.
 
@@ -154,6 +154,13 @@ Mevcut durum:
 - Entegrasyon sağlık paneli
 
 Tamamlanma ölçütü: Her entegrasyon kapalıyken çekirdek sistem çalışmaya devam eder; tekrar denemeler duplicate üretmez.
+
+Mevcut durum:
+
+- Provider-neutral transactional outbox için dokuzuncu additive migration hazırlanmıştır.
+- Public request ve admin randevu durum geçişleri minimum, kişisel veri içermeyen ve status-log kimliğiyle idempotent olan olayı iş transaction’ında üretir.
+- Worker claim yarışı, lease recovery, çağıran kontrollü retry/dead-letter ve terminal tamamlama yaşam döngüsü uygulanmış; gerçek PostgreSQL üzerinde doğrulanmıştır.
+- E-posta/Calendar adapter’ları, onaylı şablon ve alıcı kuralları, worker scheduler/hosting, calendar sync kaydı ve entegrasyon sağlık paneli henüz uygulanmamıştır.
 
 ## Faz 7 — canlıya hazırlık
 

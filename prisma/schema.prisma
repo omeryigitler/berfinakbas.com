@@ -150,6 +150,14 @@ enum SessionCreditEntryType {
   CORRECTION
 }
 
+enum OutboxEventStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  DEAD
+}
+
 model User {
   id                      String                     @id @default(uuid()) @db.Uuid
   name                    String?                    @db.VarChar(160)
@@ -716,4 +724,25 @@ model AuditLog {
   @@index([actorUserId, createdAt], map: "audit_logs_actor_created_at_idx")
   @@index([correlationId], map: "audit_logs_correlation_id_idx")
   @@map("audit_logs")
+}
+
+model OutboxEvent {
+  id             String            @id @default(uuid()) @db.Uuid
+  aggregateType  String            @map("aggregate_type") @db.VarChar(80)
+  aggregateId    String            @map("aggregate_id") @db.VarChar(80)
+  eventType      String            @map("event_type") @db.VarChar(120)
+  payload        Json
+  idempotencyKey String            @unique @map("idempotency_key") @db.VarChar(160)
+  status         OutboxEventStatus @default(PENDING)
+  attemptCount   Int               @default(0) @map("attempt_count")
+  nextAttemptAt  DateTime          @default(now()) @map("next_attempt_at") @db.Timestamptz(3)
+  lockedAt       DateTime?         @map("locked_at") @db.Timestamptz(3)
+  lastErrorCode  String?           @map("last_error_code") @db.VarChar(120)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  processedAt    DateTime?         @map("processed_at") @db.Timestamptz(3)
+
+  @@index([status, nextAttemptAt], map: "outbox_events_status_next_attempt_idx")
+  @@index([aggregateType, aggregateId, createdAt], map: "outbox_events_aggregate_created_idx")
+  @@map("outbox_events")
 }

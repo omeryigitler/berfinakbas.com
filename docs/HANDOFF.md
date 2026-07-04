@@ -4,15 +4,15 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: #22, yerel kalite ve build doğrulamasından sonra tek push ile açılacak
-- Dal: `codex/admin-payment-operations`
-- Durum: PR #21 public booking akışını `b35bbb4d4d1085a583da8020ec2f99d1d7f0650a` ile `main`e teslim etti. Aktif milestone; danışan planı, taksit/vade, seans hakkı ledger’ı, manuel ödeme, bakiye, belge durumu ve ters kaydı tek finans operasyon PR’ında teslim etmektir.
+- Draft PR: `codex/notification-outbox-core` dalının ilk push’uyla açılacak
+- Dal: `codex/notification-outbox-core`
+- Durum: PR #22 admin ödeme operasyonunu `8be303988cae0edccf706d8040a2d2dcad052cc0` ile `main`e teslim etti. Aktif milestone; dış sağlayıcı seçmeden transactional outbox veri modeli, atomik randevu durum olayı ve güvenli worker yaşam döngüsünü teslim etmektir.
 
 ## Bağlayıcı çalışma biçimi
 
 - Windows ve macOS’ta aynı kural geçerlidir: Issue #19 güncel roadmap kaynağıdır.
-- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını teslim etti. Aktif milestone Issue #19’daki admin ödeme ve danışan planı operasyonudur.
-- Finans milestone’u veri modeli/migration, domain kuralları, transaction servisi, yetkili API, yönetim ekranı, belge durumu, ters kayıt ve PostgreSQL testini tek PR’da teslim eder; mikro PR’a bölünmez.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını ve PR #22 admin ödeme operasyonunu teslim etti.
+- Aktif outbox milestone’u veri modeli/migration, provider-neutral olay sözleşmesi, atomik producer, claim/retry/dead-letter servisi ve PostgreSQL yarış testini tek PR’da teslim eder. Gerçek e-posta/Calendar gönderimi ve entegrasyon sağlık ekranı sonraki review edilebilir milestone’lardır.
 - En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
 - CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
 - Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
@@ -65,11 +65,16 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 - Plan/taksit toplamı, kısmi ödeme, plan ve taksit bakiyesi, fazla ödeme reddi, idempotent kayıt, serializable retry, ters kayıt ve audit kuralları transaction servisinde uygulandı.
 - `finance:read`/`finance:manage` yetkili, same-origin, strict ve 32 KiB sınırlı admin API ile `/yonetim/odemeler` ekranı eklendi. Ödeme yöntemi katalogdan yönetilir; serbest metin değildir.
 - Belge durumu ve harici referansı audit kaydıyla güncellenir. Bu yüzey resmi muhasebe/e-belge üretmez ve dosya saklamaz.
+- PR #22 squash merge ile `main` dalına alındı; quality, build, PostgreSQL integration ve Vercel kapıları geçti.
+- Dokuzuncu additive migration ile `outbox_events` ve `OutboxEventStatus` eklendi; idempotency key, worker lease, attempt, retry zamanı, güvenli hata kodu ve terminal zamanını saklar.
+- Public request’in ilk `REQUESTED` kaydı ile admin randevu durum geçişleri, status log kimliğinden türetilen tekil `APPOINTMENT_STATUS_CHANGED` olayını aynı transaction’da üretir.
+- Outbox payload’ı yalnızca appointment/status-log kimlikleri, önceki/yeni durum ve olay zamanını taşır; ad, iletişim, not, consent metni veya holder token kopyalanmaz.
+- Worker servisi yarışta tek claim, süresi dolan lease’i geri alma, çağıranın belirlediği retry zamanı/deneme sınırı, başarılı tamamlama ve dead-letter geçişlerini iyimser koşullu güncellemeyle uygular.
 
 ## Sıradaki
 
-1. Finans paketi için tam `quality`, production `build` ve migration doğrulamasını çalıştır.
-2. En fazla iki yerel commit ve tek push ile Draft PR #22’yi aç.
+1. Outbox paketi için tam `quality` ve production `build` doğrulamasını çalıştır.
+2. En fazla iki yerel commit ve tek push ile Draft PR’ı aç.
 3. GitHub CI, PostgreSQL integration ve Vercel sonucunu yalnızca bir kez oku; sonucu PR açıklamasına yansıt.
 4. PR hazır olduğunda kullanıcıdan tek merge onayı iste.
 
@@ -79,6 +84,9 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 - Fazla ödeme politikası açık karardır; mevcut uygulama fail-closed davranarak plan veya seçilen taksit bakiyesini aşan ödemeyi reddeder.
 - Tek tahsilatın birden çok takside atomik dağıtımı, kısmi iade, plan uzatma, fatura dosyası ve otomatik seans hakkı tüketiminde birden fazla aktif plandan hangisinin seçileceği açık karardır; bu işlemler etkinleştirilmedi.
 - CSV export doküman kapsamındadır ancak ayrı export izni ve audit kuralı tanımlanmadığı için bu milestone’a sessizce eklenmedi.
+- E-posta/Calendar sağlayıcısı, onaylı mesaj şablonları, hangi durumun hangi alıcıya bildirim üreteceği ve worker çalışma ortamı henüz seçilmedi; outbox çekirdeği bu kararları uydurmaz.
+- Retry deneme sayısı ve backoff operasyon politikası açık karardır; servis doğrulanmış `maxAttempts` ve `nextAttemptAt` değerlerini çağırandan ister.
+- Calendar external-event eşlemesi, gerçek gönderim adapter’ları ve entegrasyon sağlık ekranı bu temel PR’ın dışında kalır.
 - `BOOKING_HOLD_DURATION_MINUTES` production değeri ürün onayı bekleyen açık karardır; ayar tanımsızken servis fail-closed kalır.
 - Aynı gün için farklı aktif rule kayıtlarında farklı slot artışlarının öncelik/çözüm kuralı açık karardır; servis bu durumda fail-closed davranır.
 - Nihai aydınlatma/açık rıza metinleri ve operasyonel veli yetkisi doğrulama prosedürü hukukçu onayı bekler.
@@ -89,6 +97,9 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 
 ## Son doğrulama
 
+- Outbox hedefli doğrulama: 3 dosyada 19 unit test ve TypeScript route/type kontrolü başarılı.
+- Güncel tam doğrulama: Prisma validate; `pnpm quality` ile lint, typecheck, format ve 35 dosyada 223 test; sentetik production ortamıyla `pnpm build` ve 20 sayfa başarılı.
+- Yerel gerçek PostgreSQL doğrulaması: dokuz migration uygulandı; 5 dosyada 31 integration testi claim yarışı, retry zamanı, lease recovery, eski worker sonucu reddi, dead-letter, idempotency ve atomik randevu event’leri dahil başarılı.
 - Finans doğrulaması: Prisma format/generate/validate geçti; `pnpm quality` lint, typecheck, format ve 34 dosyada 216 testi başarıyla tamamladı.
 - `pnpm build`: `/api/admin/finance` ve `/yonetim/odemeler` dahil production derlemesi, 20 statik sayfa üretimi ve route type kontrolü başarılı.
 - Yerel PostgreSQL servisi/`TEST_DATABASE_URL` bulunmadığı için sekizinci additive migration ile eşzamanlı idempotency/ledger integration senaryoları GitHub `postgres-integration` kapısında doğrulanacak.

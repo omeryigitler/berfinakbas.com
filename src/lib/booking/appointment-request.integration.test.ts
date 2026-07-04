@@ -175,6 +175,14 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await pool.query(
+    `DELETE FROM outbox_events
+     WHERE aggregate_type = 'APPOINTMENT'
+       AND aggregate_id IN (
+         SELECT id::text FROM appointments WHERE practitioner_id = $1
+       )`,
+    [fixture.practitionerId],
+  );
+  await pool.query(
     `DELETE FROM appointment_consents
      WHERE appointment_id IN (
        SELECT id FROM appointments WHERE practitioner_id = $1
@@ -284,6 +292,14 @@ describe.sequential("appointment request PostgreSQL transaction", () => {
        WHERE correlation_id = 'appointment-request-success'
        ORDER BY action`,
     );
+    const outbox = await pool.query<{
+      event_type: string;
+      payload: { appointmentId?: string; fromStatus?: string | null; toStatus?: string };
+    }>(
+      `SELECT event_type, payload FROM outbox_events
+       WHERE aggregate_type = 'APPOINTMENT' AND aggregate_id = $1`,
+      [result.appointmentId],
+    );
 
     expect(result).toMatchObject({ status: "REQUESTED" });
     expect(result.publicReference).toMatch(/^BR-[A-F0-9]{20}$/);
@@ -302,6 +318,18 @@ describe.sequential("appointment request PostgreSQL transaction", () => {
       [...fixture.consentIds].sort(),
     );
     expect(Number(statusHistory.rows[0].count)).toBe(1);
+    expect(outbox.rows).toEqual([
+      {
+        event_type: "APPOINTMENT_STATUS_CHANGED",
+        payload: expect.objectContaining({
+          appointmentId: result.appointmentId,
+          fromStatus: null,
+          toStatus: "REQUESTED",
+        }),
+      },
+    ]);
+    expect(JSON.stringify(outbox.rows)).not.toContain("Talep Danışanı");
+    expect(JSON.stringify(outbox.rows)).not.toContain(hold.holderToken);
     expect(JSON.stringify(audit.rows)).not.toContain(hold.holderToken);
     expect(JSON.stringify(audit.rows)).not.toContain("Talep Danışanı");
 
