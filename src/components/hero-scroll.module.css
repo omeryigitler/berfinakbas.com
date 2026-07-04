@@ -11,7 +11,7 @@
   --hero-copy-y: 0px;
   --hero-copy-opacity: 1;
   --hero-portrait-left: 31%;
-  --hero-portrait-bottom: 3vh;
+  --hero-portrait-bottom: 7vh;
   --hero-portrait-width: 375px;
   --hero-portrait-scale: 0.98;
   --hero-card-y: 0px;
@@ -170,30 +170,35 @@
   pointer-events: none;
 }
 
-/* Contact shadow that anchors the feet to the floor, offset away from the window light */
+/*
+ * Floor-projected shadow that travels with the figure. Skewed onto the floor
+ * plane and raked to the right so it reads as cast by the warm light from the
+ * left, anchoring her feet to the ground at every point of the scroll.
+ */
 .scrollHeroPortrait::after {
   position: absolute;
-  bottom: -2px;
+  bottom: 4px;
   left: 50%;
   z-index: -1;
-  width: 62%;
-  height: 26px;
+  width: 46%;
+  height: 30px;
   background:
     radial-gradient(
-      24% 40% at 50% 54%,
-      rgb(40 24 12 / 62%) 0%,
-      rgb(40 24 12 / 34%) 52%,
-      transparent 78%
+      20% 46% at 42% 52%,
+      rgb(38 22 11 / 66%) 0%,
+      rgb(38 22 11 / 32%) 50%,
+      transparent 76%
     ),
     radial-gradient(
-      50% 50% at 50% 50%,
-      rgb(56 34 20 / 34%) 0%,
-      rgb(56 34 20 / 16%) 52%,
-      transparent 78%
+      58% 50% at 58% 50%,
+      rgb(52 32 18 / 30%) 0%,
+      rgb(52 32 18 / 12%) 55%,
+      transparent 80%
     );
   content: "";
-  filter: blur(4px);
-  transform: translateX(-46%);
+  filter: blur(5px);
+  transform: translateX(-42%) skewX(-34deg) scaleY(0.7);
+  transform-origin: bottom left;
   pointer-events: none;
 }
 
