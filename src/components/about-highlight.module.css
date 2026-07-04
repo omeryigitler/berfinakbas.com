@@ -59,8 +59,9 @@
 .portraitPanel img {
   position: relative;
   z-index: 2;
-  width: min(74%, 360px);
-  height: 92%;
+  width: auto;
+  height: 99%;
+  max-width: 88%;
   object-fit: contain;
   object-position: center bottom;
   user-select: none;
@@ -236,7 +237,7 @@
   }
 
   .portraitPanel img {
-    width: min(78%, 330px);
+    max-width: 82%;
   }
 
   .valueGrid {
@@ -265,7 +266,7 @@
   }
 
   .portraitPanel img {
-    width: min(76%, 310px);
+    max-width: 78%;
   }
 
   .nameCard {
@@ -285,5 +286,90 @@
 
   .actions a {
     width: 100%;
+  }
+}
+
+/*
+ * Small scroll-driven motion inside the About visual: a gentle parallax as the
+ * panel passes through the viewport, with the floating cards easing in and the
+ * decorative circle/orbit drifting. Progressive enhancement only — browsers
+ * without scroll-timeline support (or reduced-motion users) get the static
+ * layout unchanged.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .portraitPanel img {
+      animation: aboutPortraitParallax linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+
+    .noteCard {
+      animation: aboutCardRise linear both;
+      animation-timeline: view();
+      animation-range: entry 12% cover 52%;
+    }
+
+    .nameCard {
+      animation: aboutCardRise linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 62%;
+    }
+
+    .softCircle {
+      animation: aboutSoftDrift linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+
+    .orbitLine {
+      animation: aboutOrbitDrift linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
+@keyframes aboutPortraitParallax {
+  from {
+    transform: translateY(2px) scale(1.02);
+  }
+
+  to {
+    transform: translateY(-26px) scale(1);
+  }
+}
+
+@keyframes aboutCardRise {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutSoftDrift {
+  from {
+    transform: translateY(22px) scale(0.9);
+    opacity: 0.45;
+  }
+
+  to {
+    transform: translateY(-18px) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutOrbitDrift {
+  from {
+    transform: rotate(-18deg) scale(0.9);
+  }
+
+  to {
+    transform: rotate(16deg) scale(1.06);
   }
 }

@@ -71,12 +71,12 @@ export default function AboutHighlight({
           <span className={styles.softCircle} aria-hidden="true" />
           <span className={styles.orbitLine} aria-hidden="true" />
           <Image
-            src="/berfin-hero.png"
+            src="/berfin-hero-standing.png"
             alt="Berfin Akbaş portresi"
             draggable={false}
-            height={655}
-            sizes="(max-width: 720px) 76vw, 360px"
-            width={381}
+            height={1353}
+            sizes="(max-width: 720px) 62vw, 300px"
+            width={413}
           />
         </div>
 
