@@ -26,11 +26,11 @@ describe("hero scroll model", () => {
       navOpacity: 1,
       navY: 20,
       overlayOpacity: 1,
-      portraitBottom: -6,
-      portraitLeft: 26,
-      portraitScale: 0.92,
+      portraitBottom: 3,
+      portraitLeft: 31,
       portraitWidth: 375,
     });
+    expect(completedState.portraitScale).toBeCloseTo(0.98);
     expect(completedState.roomScale).toBeCloseTo(1);
   });
 

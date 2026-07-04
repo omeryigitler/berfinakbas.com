@@ -123,13 +123,13 @@ export default function HeroScroll() {
         <div className={styles.scrollHeroStage}>
           <div className={styles.scrollHeroPortrait}>
             <Image
-              src="/berfin-hero.png"
+              src="/berfin-hero-standing.png"
               alt="Berfin Akbaş portresi"
               draggable={false}
-              height={655}
+              height={292}
               priority
-              sizes="(max-width: 980px) 74vw, 460px"
-              width={381}
+              sizes="(max-width: 980px) 40vw, 260px"
+              width={92}
             />
           </div>
 

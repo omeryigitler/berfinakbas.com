@@ -10,10 +10,10 @@
   --hero-nav-opacity: 1;
   --hero-copy-y: 0px;
   --hero-copy-opacity: 1;
-  --hero-portrait-left: 26%;
-  --hero-portrait-bottom: -6vh;
+  --hero-portrait-left: 31%;
+  --hero-portrait-bottom: 3vh;
   --hero-portrait-width: 375px;
-  --hero-portrait-scale: 0.92;
+  --hero-portrait-scale: 0.98;
   --hero-card-y: 0px;
   --hero-card-opacity: 1;
   --hero-speech-opacity: 0.38;
@@ -163,7 +163,7 @@
     rgb(70 45 32 / 12%) 100%
   );
   content: "";
-  mask-image: url("/berfin-hero.png");
+  mask-image: url("/berfin-hero-standing.png");
   mask-position: center bottom;
   mask-repeat: no-repeat;
   mask-size: contain;
