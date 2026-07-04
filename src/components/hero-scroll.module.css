@@ -147,8 +147,8 @@
   object-fit: contain;
   object-position: center bottom;
   filter: brightness(0.96) contrast(1.04) saturate(1.14) sepia(0.22)
-    drop-shadow(-12px 4px 28px rgb(255 176 108 / 26%))
-    drop-shadow(22px 16px 30px rgb(70 42 26 / 20%));
+    drop-shadow(-10px 4px 24px rgb(255 176 108 / 22%))
+    drop-shadow(10px 10px 22px rgb(70 42 26 / 14%));
 }
 
 /* Warm window light from the left, clipped to the portrait silhouette */
@@ -167,38 +167,6 @@
   mask-position: center bottom;
   mask-repeat: no-repeat;
   mask-size: contain;
-  pointer-events: none;
-}
-
-/*
- * Floor-projected shadow that travels with the figure. Skewed onto the floor
- * plane and raked to the right so it reads as cast by the warm light from the
- * left, anchoring her feet to the ground at every point of the scroll.
- */
-.scrollHeroPortrait::after {
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  z-index: -1;
-  width: 46%;
-  height: 30px;
-  background:
-    radial-gradient(
-      20% 46% at 42% 52%,
-      rgb(38 22 11 / 66%) 0%,
-      rgb(38 22 11 / 32%) 50%,
-      transparent 76%
-    ),
-    radial-gradient(
-      58% 50% at 58% 50%,
-      rgb(52 32 18 / 30%) 0%,
-      rgb(52 32 18 / 12%) 55%,
-      transparent 80%
-    );
-  content: "";
-  filter: blur(5px);
-  transform: translateX(-42%) skewX(-34deg) scaleY(0.7);
-  transform-origin: bottom left;
   pointer-events: none;
 }
 
