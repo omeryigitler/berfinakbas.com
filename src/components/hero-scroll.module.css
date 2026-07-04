@@ -146,7 +146,7 @@
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
-  filter: brightness(1) contrast(1.01) saturate(1.03) drop-shadow(8px 10px 20px rgb(70 42 26 / 12%));
+  filter: brightness(1) contrast(1.01) saturate(1.03);
 }
 
 /* Warm window light from the left, clipped to the portrait silhouette */
