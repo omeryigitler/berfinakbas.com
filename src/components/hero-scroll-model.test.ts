@@ -11,6 +11,7 @@ describe("hero scroll model", () => {
       navOpacity: 0,
       navY: -96,
       overlayOpacity: 0,
+      portraitBottom: -8,
       portraitLeft: 49,
       portraitWidth: 530,
       roomScale: 1.13,
