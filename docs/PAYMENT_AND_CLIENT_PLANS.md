@@ -39,6 +39,15 @@ MVP dışında:
 - Resmi muhasebe fişi
 - Vergi hesaplama motoru
 
+### 2.1 Uygulama durumu — 4 Temmuz 2026
+
+- Özel plan, taksit/vade, seans hakkı grant ledger’ı, manuel ödeme, kısmi ödeme, bakiye, geciken/7 gün filtresi, belge durumu ve ters kayıt yönetim yüzeyinde uygulanmıştır.
+- Tutarlar para birimiyle birlikte integer minor unit olarak saklanır; bakiye append-only hareketlerden türetilir. Orijinal ödeme güncellenmez veya silinmez.
+- Ödeme yöntemi sabit varsayılmaz; `finance:manage` yetkili katalogdan aktif yöntem eklemeden ödeme kaydedilemez.
+- Her manuel ödeme mevcut uygulamada tek bir takside açıkça bağlanır; belirsiz “plana genel” ödeme veya otomatik taksit dağıtımı yapılmaz.
+- Fazla ödeme politikası açık olduğu için plan veya seçilen taksit bakiyesini aşan kayıt fail-closed reddedilir.
+- Hazır plan şablonları, tek tahsilatın birden çok takside atomik dağıtımı, kısmi iade, otomatik seans tüketimindeki plan seçimi, CSV export için ayrı izin/audit ve fatura dosyası henüz etkin değildir.
+
 ## 3. Plan modeli
 
 Plan iki şekilde oluşturulur:

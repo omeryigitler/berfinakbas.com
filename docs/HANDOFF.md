@@ -1,18 +1,18 @@
 # Aktif Çalışma Devir Teslimi
 
-Son güncelleme: 3 Temmuz 2026, Europe/Berlin
+Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: #21 açılacak; güncel `main` ile birleşim sonrası doğrulama sürüyor
-- Dal: `codex/public-booking-flow`
-- Durum: PR #18 görsel hero, PR #20 P2034 sağlamlaştırması olarak `main`e birleşti. Public booking milestone’u güncel `main` üzerine taşındı; yerel doğrulama tamamlandı ve tek push ile Draft PR #21 açılacak.
+- Draft PR: #22, yerel kalite ve build doğrulamasından sonra tek push ile açılacak
+- Dal: `codex/admin-payment-operations`
+- Durum: PR #21 public booking akışını `b35bbb4d4d1085a583da8020ec2f99d1d7f0650a` ile `main`e teslim etti. Aktif milestone; danışan planı, taksit/vade, seans hakkı ledger’ı, manuel ödeme, bakiye, belge durumu ve ters kaydı tek finans operasyon PR’ında teslim etmektir.
 
 ## Bağlayıcı çalışma biçimi
 
 - Windows ve macOS’ta aynı kural geçerlidir: Issue #19 güncel roadmap kaynağıdır.
-- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını teslim etti. Aktif milestone Issue #19’daki public randevu UI’dır.
-- Public booking; hizmet/uzman, slot, hold, minimum client/guardian verisi, consent, request ve uçtan uca doğrulamayı tek PR’da teslim eder; mikro PR’a bölünmez.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını teslim etti. Aktif milestone Issue #19’daki admin ödeme ve danışan planı operasyonudur.
+- Finans milestone’u veri modeli/migration, domain kuralları, transaction servisi, yetkili API, yönetim ekranı, belge durumu, ters kayıt ve PostgreSQL testini tek PR’da teslim eder; mikro PR’a bölünmez.
 - En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
 - CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
 - Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
@@ -60,16 +60,25 @@ Son güncelleme: 3 Temmuz 2026, Europe/Berlin
 - Consent document public başlık/içeriği için yedinci additive migration eklendi; eksik, boş veya çakışan yürürlükte içerik public akışı fail-closed durdurur.
 - Ana `PUBLIC_BOOKING_FLOW_ENABLED` bayrağı ve açıkça yapılandırılmış public practitioner sınırı eklendi; production varsayılanları kapalı kaldı.
 - PR #20’nin P2034 retry kuralı public intake transaction’ına da uygulandı; üç deneme tükenince ham Prisma hatası yerine güvenli booking conflict döner.
+- PR #21 squash merge ile `main` dalına alındı; public booking masaüstü/mobil tarayıcı kontrolü, kalite, build, PostgreSQL 17 ve Vercel kapıları geçti.
+- Finans çekirdeği için integer minor-unit tutarlar kullanan `client_plans`, `plan_installments`, `payment_methods`, append-only `finance_ledger_entries` ve `session_credit_entries` modelleri ile additive migration hazırlandı.
+- Plan/taksit toplamı, kısmi ödeme, plan ve taksit bakiyesi, fazla ödeme reddi, idempotent kayıt, serializable retry, ters kayıt ve audit kuralları transaction servisinde uygulandı.
+- `finance:read`/`finance:manage` yetkili, same-origin, strict ve 32 KiB sınırlı admin API ile `/yonetim/odemeler` ekranı eklendi. Ödeme yöntemi katalogdan yönetilir; serbest metin değildir.
+- Belge durumu ve harici referansı audit kaydıyla güncellenir. Bu yüzey resmi muhasebe/e-belge üretmez ve dosya saklamaz.
 
 ## Sıradaki
 
-1. Tek push ile Draft PR #21’i aç.
-2. GitHub CI, PostgreSQL integration ve Vercel sonucunu yalnızca bir kez oku.
-3. Production hold süresi ile dağıtık abuse kontrolü onaylanmadan public yazma bayraklarını etkinleştirme.
-4. Nihai hukuk onayı ve onaylı belge içerikleri olmadan production randevu formunu etkinleştirme.
+1. Finans paketi için tam `quality`, production `build` ve migration doğrulamasını çalıştır.
+2. En fazla iki yerel commit ve tek push ile Draft PR #22’yi aç.
+3. GitHub CI, PostgreSQL integration ve Vercel sonucunu yalnızca bir kez oku; sonucu PR açıklamasına yansıt.
+4. PR hazır olduğunda kullanıcıdan tek merge onayı iste.
 
 ## Engeller ve açık kararlar
 
+- MVP ödeme yöntemleri ürün tarafından henüz seçilmedi; kod sabit yöntem uydurmaz ve yetkili katalog kaydı olmadan ödeme kabul etmez.
+- Fazla ödeme politikası açık karardır; mevcut uygulama fail-closed davranarak plan veya seçilen taksit bakiyesini aşan ödemeyi reddeder.
+- Tek tahsilatın birden çok takside atomik dağıtımı, kısmi iade, plan uzatma, fatura dosyası ve otomatik seans hakkı tüketiminde birden fazla aktif plandan hangisinin seçileceği açık karardır; bu işlemler etkinleştirilmedi.
+- CSV export doküman kapsamındadır ancak ayrı export izni ve audit kuralı tanımlanmadığı için bu milestone’a sessizce eklenmedi.
 - `BOOKING_HOLD_DURATION_MINUTES` production değeri ürün onayı bekleyen açık karardır; ayar tanımsızken servis fail-closed kalır.
 - Aynı gün için farklı aktif rule kayıtlarında farklı slot artışlarının öncelik/çözüm kuralı açık karardır; servis bu durumda fail-closed davranır.
 - Nihai aydınlatma/açık rıza metinleri ve operasyonel veli yetkisi doğrulama prosedürü hukukçu onayı bekler.
@@ -80,6 +89,9 @@ Son güncelleme: 3 Temmuz 2026, Europe/Berlin
 
 ## Son doğrulama
 
+- Finans doğrulaması: Prisma format/generate/validate geçti; `pnpm quality` lint, typecheck, format ve 34 dosyada 216 testi başarıyla tamamladı.
+- `pnpm build`: `/api/admin/finance` ve `/yonetim/odemeler` dahil production derlemesi, 20 statik sayfa üretimi ve route type kontrolü başarılı.
+- Yerel PostgreSQL servisi/`TEST_DATABASE_URL` bulunmadığı için sekizinci additive migration ile eşzamanlı idempotency/ledger integration senaryoları GitHub `postgres-integration` kapısında doğrulanacak.
 - PR #18 merge sonrası main `quality`, PostgreSQL integration ve Vercel deployment başarılı.
 - Production Vercel URL’i Deployment Protection nedeniyle giriş ekranına yönlendi; özel `berfinakbas.com` alan adı DNS’te çözülmediğinden dış smoke testi açık yayın kapısıdır.
 - `P2034` düzeltmesi hedefli unit doğrulama: 2 dosyada 11 test başarılı.

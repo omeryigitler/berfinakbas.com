@@ -109,6 +109,47 @@ enum AvailabilityExceptionStatus {
   INACTIVE
 }
 
+enum PaymentMethodStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ClientPlanStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum ClientPlanSource {
+  CUSTOM
+  TEMPLATE
+}
+
+enum FinanceEntryType {
+  ACCRUAL
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+  REVERSAL
+}
+
+enum InvoiceStatus {
+  NOT_REQUIRED
+  PENDING
+  ISSUED
+  SENT_TO_ACCOUNTING
+  CANCELLED
+}
+
+enum SessionCreditEntryType {
+  GRANT
+  CONSUME
+  RESTORE
+  EXPIRE
+  CORRECTION
+}
+
 model User {
   id                      String                     @id @default(uuid()) @db.Uuid
   name                    String?                    @db.VarChar(160)
@@ -132,6 +173,10 @@ model User {
   appointmentsApproved    Appointment[]              @relation("AppointmentApprover")
   appointmentStatusEvents AppointmentStatusLog[]     @relation("AppointmentStatusActor")
   holdStatusEvents        AppointmentHoldStatusLog[] @relation("AppointmentHoldStatusActor")
+  paymentMethodsCreated   PaymentMethod[]            @relation("PaymentMethodCreator")
+  clientPlansCreated      ClientPlan[]               @relation("ClientPlanCreator")
+  financeEntriesCreated   FinanceLedgerEntry[]       @relation("FinanceEntryActor")
+  sessionCreditsCreated   SessionCreditEntry[]       @relation("SessionCreditActor")
 
   @@index([status], map: "users_status_idx")
   @@map("users")
@@ -203,20 +248,22 @@ model UserRole {
 }
 
 model Client {
-  id            String           @id @default(uuid()) @db.Uuid
-  type          ClientType
-  firstName     String           @map("first_name") @db.VarChar(120)
-  lastName      String           @map("last_name") @db.VarChar(120)
-  preferredName String?          @map("preferred_name") @db.VarChar(120)
-  phone         String?          @db.VarChar(40)
-  email         String?          @db.VarChar(320)
-  birthYear     Int?             @map("birth_year")
-  status        ClientStatus     @default(PROSPECTIVE)
-  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
-  guardians     ClientGuardian[]
-  consents      Consent[]
-  appointments  Appointment[]
+  id             String               @id @default(uuid()) @db.Uuid
+  type           ClientType
+  firstName      String               @map("first_name") @db.VarChar(120)
+  lastName       String               @map("last_name") @db.VarChar(120)
+  preferredName  String?              @map("preferred_name") @db.VarChar(120)
+  phone          String?              @db.VarChar(40)
+  email          String?              @db.VarChar(320)
+  birthYear      Int?                 @map("birth_year")
+  status         ClientStatus         @default(PROSPECTIVE)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  guardians      ClientGuardian[]
+  consents       Consent[]
+  appointments   Appointment[]
+  plans          ClientPlan[]
+  financeEntries FinanceLedgerEntry[]
 
   @@index([status, createdAt], map: "clients_status_created_at_idx")
   @@map("clients")
@@ -449,6 +496,8 @@ model Appointment {
   allocation                  BookingAllocation?
   statusLogs                  AppointmentStatusLog[]
   consents                    AppointmentConsent[]
+  financeEntries              FinanceLedgerEntry[]
+  sessionCreditEntries        SessionCreditEntry[]
 
   @@index([practitionerId, startsAt], map: "appointments_practitioner_starts_idx")
   @@index([clientId, startsAt(sort: Desc)], map: "appointments_client_starts_idx")
@@ -466,6 +515,119 @@ model AppointmentConsent {
   @@id([appointmentId, consentId])
   @@index([consentId], map: "appointment_consents_consent_id_idx")
   @@map("appointment_consents")
+}
+
+model PaymentMethod {
+  id              String               @id @default(uuid()) @db.Uuid
+  key             String               @unique @db.VarChar(80)
+  name            String               @db.VarChar(120)
+  status          PaymentMethodStatus  @default(ACTIVE)
+  sortOrder       Int                  @default(0) @map("sort_order")
+  createdByUserId String               @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdBy       User                 @relation("PaymentMethodCreator", fields: [createdByUserId], references: [id], onDelete: Restrict, map: "payment_methods_created_by_user_id_fkey")
+  ledgerEntries   FinanceLedgerEntry[]
+
+  @@index([status, sortOrder], map: "payment_methods_status_sort_order_idx")
+  @@map("payment_methods")
+}
+
+model ClientPlan {
+  id                     String               @id @default(uuid()) @db.Uuid
+  clientId               String               @map("client_id") @db.Uuid
+  name                   String               @db.VarChar(160)
+  source                 ClientPlanSource     @default(CUSTOM)
+  status                 ClientPlanStatus     @default(ACTIVE)
+  sessionCount           Int                  @map("session_count")
+  sessionDurationMinutes Int                  @map("session_duration_minutes")
+  totalAmountMinor       BigInt               @map("total_amount_minor")
+  currency               String               @db.Char(3)
+  validFrom              DateTime             @map("valid_from") @db.Date
+  validUntil             DateTime?            @map("valid_until") @db.Date
+  invoiceStatus          InvoiceStatus        @default(NOT_REQUIRED) @map("invoice_status")
+  invoiceReference       String?              @map("invoice_reference") @db.VarChar(160)
+  createdByUserId        String               @map("created_by_user_id") @db.Uuid
+  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  client                 Client               @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "client_plans_client_id_fkey")
+  createdBy              User                 @relation("ClientPlanCreator", fields: [createdByUserId], references: [id], onDelete: Restrict, map: "client_plans_created_by_user_id_fkey")
+  installments           PlanInstallment[]
+  ledgerEntries          FinanceLedgerEntry[]
+  sessionCreditEntries   SessionCreditEntry[]
+
+  @@index([clientId, status, createdAt], map: "client_plans_client_status_created_idx")
+  @@index([status, validUntil], map: "client_plans_status_valid_until_idx")
+  @@map("client_plans")
+}
+
+model PlanInstallment {
+  id             String               @id @default(uuid()) @db.Uuid
+  planId         String               @map("plan_id") @db.Uuid
+  sequence       Int
+  amountDueMinor BigInt               @map("amount_due_minor")
+  dueDate        DateTime             @map("due_date") @db.Date
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  plan           ClientPlan           @relation(fields: [planId], references: [id], onDelete: Restrict, map: "plan_installments_plan_id_fkey")
+  ledgerEntries  FinanceLedgerEntry[]
+
+  @@unique([planId, sequence], map: "plan_installments_plan_sequence_key")
+  @@index([dueDate], map: "plan_installments_due_date_idx")
+  @@map("plan_installments")
+}
+
+model FinanceLedgerEntry {
+  id                String              @id @default(uuid()) @db.Uuid
+  idempotencyKey    String              @unique @map("idempotency_key") @db.VarChar(120)
+  clientId          String              @map("client_id") @db.Uuid
+  planId            String?             @map("plan_id") @db.Uuid
+  installmentId     String?             @map("installment_id") @db.Uuid
+  appointmentId     String?             @map("appointment_id") @db.Uuid
+  paymentMethodId   String?             @map("payment_method_id") @db.Uuid
+  type              FinanceEntryType
+  amountMinor       BigInt              @map("amount_minor")
+  currency          String              @db.Char(3)
+  occurredAt        DateTime            @map("occurred_at") @db.Timestamptz(3)
+  externalReference String?             @map("external_reference") @db.VarChar(160)
+  note              String?             @db.VarChar(500)
+  reversesEntryId   String?             @unique @map("reverses_entry_id") @db.Uuid
+  actorUserId       String              @map("actor_user_id") @db.Uuid
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  client            Client              @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "finance_ledger_entries_client_id_fkey")
+  plan              ClientPlan?         @relation(fields: [planId], references: [id], onDelete: Restrict, map: "finance_ledger_entries_plan_id_fkey")
+  installment       PlanInstallment?    @relation(fields: [installmentId], references: [id], onDelete: Restrict, map: "finance_ledger_entries_installment_id_fkey")
+  appointment       Appointment?        @relation(fields: [appointmentId], references: [id], onDelete: Restrict, map: "finance_ledger_entries_appointment_id_fkey")
+  paymentMethod     PaymentMethod?      @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict, map: "finance_ledger_entries_payment_method_id_fkey")
+  actor             User                @relation("FinanceEntryActor", fields: [actorUserId], references: [id], onDelete: Restrict, map: "finance_ledger_entries_actor_user_id_fkey")
+  reversesEntry     FinanceLedgerEntry? @relation("FinanceEntryReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict, map: "finance_ledger_entries_reverses_entry_id_fkey")
+  reversedBy        FinanceLedgerEntry? @relation("FinanceEntryReversal")
+
+  @@index([clientId, occurredAt(sort: Desc)], map: "finance_ledger_entries_client_occurred_idx")
+  @@index([planId, occurredAt], map: "finance_ledger_entries_plan_occurred_idx")
+  @@index([installmentId, occurredAt], map: "finance_ledger_entries_installment_occurred_idx")
+  @@map("finance_ledger_entries")
+}
+
+model SessionCreditEntry {
+  id              String                 @id @default(uuid()) @db.Uuid
+  idempotencyKey  String                 @unique @map("idempotency_key") @db.VarChar(120)
+  planId          String                 @map("plan_id") @db.Uuid
+  appointmentId   String?                @map("appointment_id") @db.Uuid
+  type            SessionCreditEntryType
+  quantityDelta   Int                    @map("quantity_delta")
+  reasonCode      String                 @map("reason_code") @db.VarChar(80)
+  reversesEntryId String?                @unique @map("reverses_entry_id") @db.Uuid
+  actorUserId     String                 @map("actor_user_id") @db.Uuid
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  plan            ClientPlan             @relation(fields: [planId], references: [id], onDelete: Restrict, map: "session_credit_entries_plan_id_fkey")
+  appointment     Appointment?           @relation(fields: [appointmentId], references: [id], onDelete: Restrict, map: "session_credit_entries_appointment_id_fkey")
+  actor           User                   @relation("SessionCreditActor", fields: [actorUserId], references: [id], onDelete: Restrict, map: "session_credit_entries_actor_user_id_fkey")
+  reversesEntry   SessionCreditEntry?    @relation("SessionCreditReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict, map: "session_credit_entries_reverses_entry_id_fkey")
+  reversedBy      SessionCreditEntry?    @relation("SessionCreditReversal")
+
+  @@index([planId, createdAt], map: "session_credit_entries_plan_created_idx")
+  @@index([appointmentId], map: "session_credit_entries_appointment_idx")
+  @@map("session_credit_entries")
 }
 
 model BookingAllocation {
