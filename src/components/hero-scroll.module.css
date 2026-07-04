@@ -11,7 +11,7 @@
   --hero-copy-y: 0px;
   --hero-copy-opacity: 1;
   --hero-portrait-left: 26%;
-  --hero-portrait-bottom: 5vh;
+  --hero-portrait-bottom: 2vh;
   --hero-portrait-width: 375px;
   --hero-portrait-scale: 0.92;
   --hero-card-y: 0px;
@@ -173,22 +173,22 @@
 /* Contact shadow that anchors the feet to the floor, offset away from the window light */
 .scrollHeroPortrait::after {
   position: absolute;
-  bottom: -4px;
+  bottom: -2px;
   left: 50%;
   z-index: -1;
   width: 74%;
-  height: 26px;
+  height: 30px;
   background:
     radial-gradient(
-      22% 34% at 50% 56%,
-      rgb(44 26 14 / 52%) 0%,
-      rgb(44 26 14 / 26%) 55%,
+      26% 38% at 50% 52%,
+      rgb(44 26 14 / 58%) 0%,
+      rgb(44 26 14 / 30%) 55%,
       transparent 80%
     ),
     radial-gradient(
       50% 50% at 50% 50%,
-      rgb(56 34 20 / 30%) 0%,
-      rgb(56 34 20 / 14%) 52%,
+      rgb(56 34 20 / 32%) 0%,
+      rgb(56 34 20 / 15%) 52%,
       transparent 78%
     );
   content: "";
