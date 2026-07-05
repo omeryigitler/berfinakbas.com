@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
@@ -170,18 +171,51 @@ export default function Home() {
       </section>
 
       <section className="booking-banner" id="randevu" aria-labelledby="booking-title">
-        <div className="booking-icon" aria-hidden="true">
-          <span />
-          <i />
-        </div>
-        <div>
+        <div className="booking-copy">
           <p className="section-kicker">Randevu</p>
           <h2 id="booking-title">Sizin için uygun zamanı birlikte planlayalım.</h2>
-          <p>
-            Kontrollü randevu talep sistemi hazırlanıyor. Açıldığında buradan başlayabilirsiniz.
+          <p className="booking-lead">
+            Kontrollü randevu talep sistemi hazırlanıyor. Açıldığında ilk adımı buradan, yalnızca
+            birkaç dakikada oluşturabileceksiniz.
           </p>
+          <div className="booking-actions">
+            <span className="booking-status">Yakında açılacak</span>
+            <Link className="booking-contact" href="/iletisim">
+              Bu sırada iletişime geçin
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
-        <span className="booking-status">Yakında açılacak</span>
+
+        <aside className="booking-flowcard" aria-hidden="true">
+          <div className="booking-flowcard-head">
+            <span className="booking-flowcard-dot" />
+            Randevu akışı
+          </div>
+          <ol className="booking-steplist">
+            <li>
+              <i>1</i>
+              <div>
+                <strong>Talep</strong>
+                <small>Tercih ettiğiniz zamanı iletin.</small>
+              </div>
+            </li>
+            <li>
+              <i>2</i>
+              <div>
+                <strong>Kontrol</strong>
+                <small>Uygunluk güvenle değerlendirilir.</small>
+              </div>
+            </li>
+            <li>
+              <i>3</i>
+              <div>
+                <strong>Onay</strong>
+                <small>Saatiniz onayla kesinleşir.</small>
+              </div>
+            </li>
+          </ol>
+        </aside>
       </section>
 
       <SiteFooter />
