@@ -41,11 +41,29 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <Link href="/" aria-label="Berfin Akbaş ana sayfa">
-        <BrandMark compact />
-      </Link>
-      <p>Bu site tanı koymaz, sonuç vaat etmez ve kişiye özel sağlık önerisi sunmaz.</p>
-      <span>© 2026 Berfin Akbaş</span>
+      <div className="site-footer-brand">
+        <Link href="/" aria-label="Berfin Akbaş ana sayfa">
+          <BrandMark compact />
+        </Link>
+        <p>
+          Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel dil ve konuşma
+          terapisi.
+        </p>
+      </div>
+
+      <nav className="site-footer-nav" aria-label="Alt menü">
+        <span>Keşfet</span>
+        <Link href="/hizmetler">Hizmetler</Link>
+        <Link href="/hakkimda">Hakkımda</Link>
+        <Link href="/surec">Süreç</Link>
+        <Link href="/randevu">Randevu</Link>
+        <Link href="/iletisim">İletişim</Link>
+      </nav>
+
+      <div className="site-footer-meta">
+        <p>Bu site tanı koymaz, sonuç vaat etmez ve kişiye özel sağlık önerisi sunmaz.</p>
+        <span>© 2026 Berfin Akbaş · Tüm hakları saklıdır.</span>
+      </div>
     </footer>
   );
 }

@@ -105,16 +105,16 @@
   box-shadow: 0 22px 50px rgb(79 49 31 / 12%);
   backdrop-filter: blur(16px);
   transition:
-    scale 0.28s ease,
+    translate 0.28s ease,
     box-shadow 0.28s ease,
     border-color 0.28s ease;
 }
 
 .nameCard:hover,
 .noteCard:hover {
-  scale: 1.035;
-  box-shadow: 0 30px 64px rgb(79 49 31 / 22%);
-  border-color: rgb(255 255 255 / 95%);
+  translate: 0 -6px;
+  box-shadow: 0 32px 62px rgb(79 49 31 / 20%);
+  border-color: rgb(217 111 77 / 32%);
 }
 
 .nameCard {
