@@ -74,6 +74,7 @@ Son güncelleme: 5 Temmuz 2026, Europe/Berlin
 - Admin paneline `/yonetim/saglik` sayfası ve OutboxHealthDashboard bileşeni eklendi; `technical-health:read` yetkili rollerle görünür.
 - Health API ve bileşen testleri (5 API test, 4 service test) eklendi ve tüm quality kontrolleri başarılı.
 - PR #24 Draft olarak açıldı; GitHub CI ve Vercel sonucu bekleniyor.
+
 ## Sıradaki
 
 1. GitHub CI ve Vercel sonucunu yalnızca bir kez oku; sonucu PR #24 açıklamasına yansıt.
