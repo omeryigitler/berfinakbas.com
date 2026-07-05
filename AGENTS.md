@@ -34,8 +34,9 @@ Ek kurallar:
 GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda bağlayıcıdır:
 
 - Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren, review edilebilir milestone PR’larında toplanır; ilişkisiz kapsamlar aynı PR’a doldurulmaz.
-- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını, PR #22 admin finans operasyonunu ve PR #23 transactional outbox çekirdeğini teslim etti. PR #24 read-only entegrasyon/outbox sağlık panelini teslim edecek.
-- Health panel milestone'u; read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü kapsar. Kimlik bazlı veri (isim, iletişim, not, token vb) payload'da taşınmaz; dış provider bağlantısı eklenmez.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını, PR #22 admin finans operasyonunu, PR #23 transactional outbox çekirdeğini ve PR #24 read-only entegrasyon/outbox sağlık panelini teslim etti.
+- PR #24 sonrası aktif durum: Health panel canlıdır. Sıradaki işler Issue #19 roadmap, `docs/HANDOFF.md` ve açık ürün kararlarına göre seçilecek review edilebilir milestone’lara bölünür. Sağlayıcı, mesaj şablonu, alıcı matrisi, worker hosting veya production politikası netleşmeden gerçek dış gönderim açılmaz.
+- Öncelikli pending başlıklar: bildirim/Calendar sağlayıcı kararı, mesaj şablonu ve alıcı matrisi, retry/backoff operasyon politikası, worker scheduler/hosting, Calendar external-event eşlemesi, ödeme ürünü kararları, production hold süresi, Google OAuth/MFA doğrulaması, yönetilen PostgreSQL bölgesi ve canlı yayın hukuki kapılarıdır.
 - Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
 - İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tamamlandıktan sonra sonuç tek kez okunur.
 - Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı merge onayı istenmez.

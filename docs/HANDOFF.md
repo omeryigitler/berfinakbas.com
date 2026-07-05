@@ -4,15 +4,15 @@ Son güncelleme: 5 Temmuz 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: `codex/integration-health-panel` dalının push'uyla PR #24 açıldı
-- Dal: `codex/integration-health-panel`
-- Durum: PR #23 transactional outbox çekirdeğini `main`e teslim etti. Aktif milestone; read-only entegrasyon/outbox sağlık panelini PR #24'te teslim etmektir.
+- Draft PR: PR #25 için `codex/post-pr24-handoff` dalı açıldı
+- Dal: `codex/post-pr24-handoff`
+- Durum: PR #24 read-only entegrasyon/outbox sağlık panelini `main`e teslim etti. Aktif milestone; PR #24 sonrası AGENTS/HANDOFF durumunu düzeltmek ve sıradaki açık kararları net görünür bırakmaktır.
 
 ## Bağlayıcı çalışma biçimi
 
 - Windows ve macOS’ta aynı kural geçerlidir: Issue #19 güncel roadmap kaynağıdır.
 - PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını, PR #22 admin ödeme operasyonunu ve PR #23 transactional outbox çekirdeğini teslim etti.
-- Aktif health panel milestone'u read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü PR #24'te teslim eder. Gerçek e-posta/Calendar gönderimi ve provider adapter'ları sonraki review edilebilir milestone'lardır.
+- PR #24 read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü teslim etti. Gerçek e-posta/Calendar gönderimi ve provider adapter'ları sonraki review edilebilir milestone'lardır.
 - En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
 - CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
 - Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
@@ -73,12 +73,14 @@ Son güncelleme: 5 Temmuz 2026, Europe/Berlin
 - Read-only outbox health API `GET /api/admin/health/outbox` endpoint'i eklendi; safe aggregate metrikleri döndürüyor (status counts, success rate, avg attempts, oldest timestamps).
 - Admin paneline `/yonetim/saglik` sayfası ve OutboxHealthDashboard bileşeni eklendi; `technical-health:read` yetkili rollerle görünür.
 - Health API ve bileşen testleri (5 API test, 4 service test) eklendi ve tüm quality kontrolleri başarılı.
-- PR #24 Draft olarak açıldı; GitHub CI ve Vercel sonucu bekleniyor.
+- PR #24 squash merge ile `main` dalına alındı; `/api/admin/health/outbox` ve `/yonetim/saglik` canlıdır. Health panel read-only metrik sağlar ve dış provider çağrısı yapmaz.
 
 ## Sıradaki
 
-1. GitHub CI ve Vercel sonucunu yalnızca bir kez oku; sonucu PR #24 açıklamasına yansıt.
-2. PR #24 hazır olduğunda kullanıcıdan tek merge onayı iste.
+1. PR #25 olarak yalnızca bu post-PR24 handoff/AGENTS dokümantasyon düzeltmesini aç.
+2. GitHub CI sonucunu kontrol et; dokümantasyon-only olduğu için migration veya production davranış değişikliği beklenmez.
+3. PR #25 merge sonrası sıradaki teknik milestone’u Issue #19 ve açık ürün kararlarına göre seç.
+4. Gerçek e-posta/Calendar/WhatsApp gönderimi; sağlayıcı, şablon, alıcı matrisi, retry/backoff ve worker hosting kararları netleşmeden açılmayacak.
 
 ## Engeller ve açık kararlar
 
