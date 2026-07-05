@@ -4,15 +4,15 @@ Son güncelleme: 5 Temmuz 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: `codex/integration-health-panel` dalının ilk push'uyla açılacak (PR #23 olacak)
+- Draft PR: `codex/integration-health-panel` dalının push'uyla PR #24 açıldı
 - Dal: `codex/integration-health-panel`
-- Durum: PR #22 admin ödeme operasyonunu `main`e teslim etti. Aktif milestone; transactional outbox çekirdeğinin ardından read-only entegrasyon/outbox sağlık panelini teslim etmektir.
+- Durum: PR #23 transactional outbox çekirdeğini `main`e teslim etti. Aktif milestone; read-only entegrasyon/outbox sağlık panelini PR #24'te teslim etmektir.
 
 ## Bağlayıcı çalışma biçimi
 
 - Windows ve macOS’ta aynı kural geçerlidir: Issue #19 güncel roadmap kaynağıdır.
-- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını ve PR #22 admin ödeme operasyonunu teslim etti.
-- Aktif outbox milestone’u veri modeli/migration, provider-neutral olay sözleşmesi, atomik producer, claim/retry/dead-letter servisi ve PostgreSQL yarış testini tek PR’da teslim eder. Gerçek e-posta/Calendar gönderimi ve entegrasyon sağlık ekranı sonraki review edilebilir milestone’lardır.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını, PR #22 admin ödeme operasyonunu ve PR #23 transactional outbox çekirdeğini teslim etti.
+- Aktif health panel milestone'u read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü PR #24'te teslim eder. Gerçek e-posta/Calendar gönderimi ve provider adapter'ları sonraki review edilebilir milestone'lardır.
 - En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
 - CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
 - Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
@@ -69,16 +69,15 @@ Son güncelleme: 5 Temmuz 2026, Europe/Berlin
 - Dokuzuncu additive migration ile `outbox_events` ve `OutboxEventStatus` eklendi; idempotency key, worker lease, attempt, retry zamanı, güvenli hata kodu ve terminal zamanını saklar.
 - Public request’in ilk `REQUESTED` kaydı ile admin randevu durum geçişleri, status log kimliğinden türetilen tekil `APPOINTMENT_STATUS_CHANGED` olayını aynı transaction’da üretir.
 - Outbox payload’ı yalnızca appointment/status-log kimlikleri, önceki/yeni durum ve olay zamanını taşır; ad, iletişim, not, consent metni veya holder token kopyalanmaz.
-- Worker servisi yarışta tek claim, süresi dolan lease’i geri alma, çağıranın belirlediği retry zamanı/deneme sınırı, başarılı tamamlama ve dead-letter geçişlerini iyimser koşullu güncellemeyle uygular.
-
+- Worker servisi yarışta tek claim, süresi dolan lease’i geri alma, çağıranın belirlediği retry zamanı/deneme sınırı, başarılı tamamlama ve dead-letter geçişlerini iyimser koşullu güncellemeyle uygular.- PR #23 squash merge ile `main` dalına alındı; quality, build, PostgreSQL integration ve Vercel kapıları geçti.
+- Read-only outbox health API `GET /api/admin/health/outbox` endpoint'i eklendi; safe aggregate metrikleri döndürüyor (status counts, success rate, avg attempts, oldest timestamps).
+- Admin paneline `/yonetim/saglik` sayfası ve OutboxHealthDashboard bileşeni eklendi; `technical-health:read` yetkili rollerle görünür.
+- Health API ve bileşen testleri (5 API test, 4 service test) eklendi ve tüm quality kontrolleri başarılı.
+- PR #24 Draft olarak açıldı; GitHub CI ve Vercel sonucu bekleniyor.
 ## Sıradaki
 
-1. Read-only health API'si `/api/admin/health/outbox` GET endpoint'i eklendi; outbox event'lerinden güvenli aggregate metrikleri döndürüyor (status counts, success rate, avg attempts, oldest pending/failed zamanları).
-2. Admin paneline `/yonetim/saglik` sayfası ve OutboxHealthDashboard bileşeni eklendi; `technical-health:read` yetkili rollerle görünür.
-3. API ve bileşen testleri (5 API test, 4 health service test) eklendi ve tüm quality kontrolleri (lint, typecheck, unit test, format) başarılı.
-4. En fazla iki yerel commit ve tek push ile Draft PR'ı aç (PR #23).
-5. GitHub CI ve Vercel sonucunu yalnızca bir kez oku; sonucu PR açıklamasına yansıt.
-6. PR hazır olduğunda kullanıcıdan tek merge onayı iste.
+1. GitHub CI ve Vercel sonucunu yalnızca bir kez oku; sonucu PR #24 açıklamasına yansıt.
+2. PR #24 hazır olduğunda kullanıcıdan tek merge onayı iste.
 
 ## Engeller ve açık kararlar
 

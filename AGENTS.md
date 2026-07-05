@@ -34,8 +34,8 @@ Ek kurallar:
 GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda bağlayıcıdır:
 
 - Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren, review edilebilir milestone PR’larında toplanır; ilişkisiz kapsamlar aynı PR’a doldurulmaz.
-- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını ve PR #22 admin finans operasyonunu teslim etti. PR #23 read-only entegrasyon/outbox sağlık paneli teslim edecek. Aktif milestone Faz 6'daki sağlayıcıdan bağımsız transactional outbox çekirdeğinin ardından read-only healthcheck dashboard'udur.
-- Outbox health milestone'u; read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü kapsar. Kimlik bazlı veri (isim, iletişim, not, token vb) payload'da taşınmaz; dış provider bağlantısı eklenmez.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını, PR #22 admin finans operasyonunu ve PR #23 transactional outbox çekirdeğini teslim etti. PR #24 read-only entegrasyon/outbox sağlık panelini teslim edecek.
+- Health panel milestone'u; read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü kapsar. Kimlik bazlı veri (isim, iletişim, not, token vb) payload'da taşınmaz; dış provider bağlantısı eklenmez.
 - Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
 - İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tamamlandıktan sonra sonuç tek kez okunur.
 - Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı merge onayı istenmez.
