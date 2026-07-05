@@ -604,10 +604,12 @@ summary:focus-visible {
 }
 
 .principles-strip article {
+  position: relative;
   display: flex;
   gap: 16px;
-  padding: 26px 32px;
+  padding: 26px 44px 26px 32px;
   border-right: 1px solid var(--line);
+  transition: background 0.28s ease;
 }
 
 .principles-strip article:first-child {
@@ -618,10 +620,30 @@ summary:focus-visible {
   border-right: 0;
 }
 
+.principles-strip article:hover {
+  background: rgb(217 111 77 / 5%);
+}
+
+/* Index sits in the top-right corner: faint by default, pops on hover */
 .principles-strip article > span {
-  color: var(--coral);
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  color: rgb(217 111 77 / 42%);
   font-family: var(--serif);
-  font-size: 1.6rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    color 0.3s ease,
+    font-size 0.3s ease,
+    text-shadow 0.3s ease;
+}
+
+.principles-strip article:hover > span {
+  color: var(--coral);
+  font-size: 1.9rem;
+  text-shadow: 0 8px 18px rgb(217 111 77 / 30%);
 }
 
 .principles-strip strong,
@@ -2644,7 +2666,7 @@ summary:focus-visible {
 
   .principles-strip article,
   .principles-strip article:first-child {
-    padding: 22px 0;
+    padding: 22px 44px 22px 0;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
