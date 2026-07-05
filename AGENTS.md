@@ -5,7 +5,7 @@ Bu dosya, projede çalışan geliştirici ve kod ajanları için bağlayıcı ç
 ## Cihazlar arası çalışma ve devir teslim
 
 GitHub deposu tek gerçek kaynaktır. Aynı anda yalnızca bir aktif Draft PR bulunur; bu PR’ın dalı Windows ve macOS cihazları arasında devam eden çalışmayı temsil eder.
-
+**Continue davranışı:** Eğer GitHub'daki açık Draft PR bulunur ise, cihaz değiştirince o PR'ın dalına geç ve `git pull --ff-only` uygula. Bu "continue" davranışıdır. Eğer Draft PR yok ise (yeni görev) veya mevcut dal `main` ile aynı ise (önceki çalışma kaybolmuş), güncel `main`'den yeni `codex/<görev>` dalı oluştur.
 Her çalışma oturumunun başında:
 
 1. Yerel değişiklikleri ve mevcut dalı kontrol et; kullanıcıya ait veya açıklanamayan değişiklikleri ezme.
@@ -34,8 +34,8 @@ Ek kurallar:
 GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda bağlayıcıdır:
 
 - Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren, review edilebilir milestone PR’larında toplanır; ilişkisiz kapsamlar aynı PR’a doldurulmaz.
-- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını ve PR #22 admin finans operasyonunu teslim etti. Aktif milestone Faz 6’daki sağlayıcıdan bağımsız transactional outbox çekirdeğidir.
-- Outbox milestone’u; additive veri modeli, randevu durum olayının iş transaction’ında idempotent üretilmesi, yarışa dayanıklı claim, lease recovery, retry ve dead-letter yaşam döngüsünü kapsar. E-posta/Calendar sağlayıcısı, mesaj metni veya gönderim politikası ürün kararı olmadan bu kapsama eklenmez.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını ve PR #22 admin finans operasyonunu teslim etti. PR #23 read-only entegrasyon/outbox sağlık paneli teslim edecek. Aktif milestone Faz 6'daki sağlayıcıdan bağımsız transactional outbox çekirdeğinin ardından read-only healthcheck dashboard'udur.
+- Outbox health milestone'u; read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü kapsar. Kimlik bazlı veri (isim, iletişim, not, token vb) payload'da taşınmaz; dış provider bağlantısı eklenmez.
 - Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
 - İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tamamlandıktan sonra sonuç tek kez okunur.
 - Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı merge onayı istenmez.

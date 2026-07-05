@@ -1,12 +1,12 @@
 # Aktif Çalışma Devir Teslimi
 
-Son güncelleme: 4 Temmuz 2026, Europe/Berlin
+Son güncelleme: 5 Temmuz 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: `codex/notification-outbox-core` dalının ilk push’uyla açılacak
-- Dal: `codex/notification-outbox-core`
-- Durum: PR #22 admin ödeme operasyonunu `8be303988cae0edccf706d8040a2d2dcad052cc0` ile `main`e teslim etti. Aktif milestone; dış sağlayıcı seçmeden transactional outbox veri modeli, atomik randevu durum olayı ve güvenli worker yaşam döngüsünü teslim etmektir.
+- Draft PR: `codex/integration-health-panel` dalının ilk push'uyla açılacak (PR #23 olacak)
+- Dal: `codex/integration-health-panel`
+- Durum: PR #22 admin ödeme operasyonunu `main`e teslim etti. Aktif milestone; transactional outbox çekirdeğinin ardından read-only entegrasyon/outbox sağlık panelini teslim etmektir.
 
 ## Bağlayıcı çalışma biçimi
 
@@ -73,10 +73,12 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 
 ## Sıradaki
 
-1. Outbox paketi için tam `quality` ve production `build` doğrulamasını çalıştır.
-2. En fazla iki yerel commit ve tek push ile Draft PR’ı aç.
-3. GitHub CI, PostgreSQL integration ve Vercel sonucunu yalnızca bir kez oku; sonucu PR açıklamasına yansıt.
-4. PR hazır olduğunda kullanıcıdan tek merge onayı iste.
+1. Read-only health API'si `/api/admin/health/outbox` GET endpoint'i eklendi; outbox event'lerinden güvenli aggregate metrikleri döndürüyor (status counts, success rate, avg attempts, oldest pending/failed zamanları).
+2. Admin paneline `/yonetim/saglik` sayfası ve OutboxHealthDashboard bileşeni eklendi; `technical-health:read` yetkili rollerle görünür.
+3. API ve bileşen testleri (5 API test, 4 health service test) eklendi ve tüm quality kontrolleri (lint, typecheck, unit test, format) başarılı.
+4. En fazla iki yerel commit ve tek push ile Draft PR'ı aç (PR #23).
+5. GitHub CI ve Vercel sonucunu yalnızca bir kez oku; sonucu PR açıklamasına yansıt.
+6. PR hazır olduğunda kullanıcıdan tek merge onayı iste.
 
 ## Engeller ve açık kararlar
 
@@ -84,9 +86,9 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 - Fazla ödeme politikası açık karardır; mevcut uygulama fail-closed davranarak plan veya seçilen taksit bakiyesini aşan ödemeyi reddeder.
 - Tek tahsilatın birden çok takside atomik dağıtımı, kısmi iade, plan uzatma, fatura dosyası ve otomatik seans hakkı tüketiminde birden fazla aktif plandan hangisinin seçileceği açık karardır; bu işlemler etkinleştirilmedi.
 - CSV export doküman kapsamındadır ancak ayrı export izni ve audit kuralı tanımlanmadığı için bu milestone’a sessizce eklenmedi.
-- E-posta/Calendar sağlayıcısı, onaylı mesaj şablonları, hangi durumun hangi alıcıya bildirim üreteceği ve worker çalışma ortamı henüz seçilmedi; outbox çekirdeği bu kararları uydurmaz.
+- E-posta/Calendar sağlayıcısı, onaylı mesaj şablonları, hangi durumun hangi alıcıya bildirim üreteceği ve worker çalışma ortamı henüz seçilmedi; outbox çekirdeği ve health monitoring bu kararları uydurmaz.
 - Retry deneme sayısı ve backoff operasyon politikası açık karardır; servis doğrulanmış `maxAttempts` ve `nextAttemptAt` değerlerini çağırandan ister.
-- Calendar external-event eşlemesi, gerçek gönderim adapter’ları ve entegrasyon sağlık ekranı bu temel PR’ın dışında kalır.
+- Calendar external-event eşlemesi ve gerçek gönderim adapter'ları bu milestone'ın dışında kalır; health panel read-only metrikleri sağlar.
 - `BOOKING_HOLD_DURATION_MINUTES` production değeri ürün onayı bekleyen açık karardır; ayar tanımsızken servis fail-closed kalır.
 - Aynı gün için farklı aktif rule kayıtlarında farklı slot artışlarının öncelik/çözüm kuralı açık karardır; servis bu durumda fail-closed davranır.
 - Nihai aydınlatma/açık rıza metinleri ve operasyonel veli yetkisi doğrulama prosedürü hukukçu onayı bekler.
@@ -97,7 +99,9 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 
 ## Son doğrulama
 
-- Outbox hedefli doğrulama: 3 dosyada 19 unit test ve TypeScript route/type kontrolü başarılı.
+- Health API hedefli doğrulama: 2 dosyada 9 unit test (4 health service test, 5 API route test) başarılı; TypeScript type check temiz.
+- Admin panel bileşeni: OutboxHealthDashboard client component, safe aggregate metrics (status counts, success rate, avg attempts, oldest timestamps) render ediyor, dış provider çağrısı yok.
+- Lint/format/typecheck/test suite tamamlandi: `pnpm quality` başarılı.
 - Güncel tam doğrulama: Prisma validate; `pnpm quality` ile lint, typecheck, format ve 35 dosyada 223 test; sentetik production ortamıyla `pnpm build` ve 20 sayfa başarılı.
 - Yerel gerçek PostgreSQL doğrulaması: dokuz migration uygulandı; 5 dosyada 31 integration testi claim yarışı, retry zamanı, lease recovery, eski worker sonucu reddi, dead-letter, idempotency ve atomik randevu event’leri dahil başarılı.
 - Finans doğrulaması: Prisma format/generate/validate geçti; `pnpm quality` lint, typecheck, format ve 34 dosyada 216 testi başarıyla tamamladı.
