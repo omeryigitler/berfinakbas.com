@@ -1159,7 +1159,7 @@ summary:focus-visible {
 .booking-flownum {
   flex-shrink: 0;
   min-width: 44px;
-  color: rgb(217 111 77 / 62%);
+  color: rgb(217 111 77 / 45%);
   font-family: var(--serif);
   font-size: 1.95rem;
   font-weight: 600;
@@ -1215,21 +1215,53 @@ summary:focus-visible {
 .site-footer {
   position: relative;
   margin-top: 20px;
-  padding: clamp(46px, 6vw, 68px) clamp(28px, 5vw, 56px) 26px;
+  margin-bottom: 30px;
+  padding: clamp(38px, 5vw, 54px) clamp(26px, 4.5vw, 50px) 22px;
   overflow: hidden;
-  border-radius: 34px;
+  border-radius: 30px;
   background:
     radial-gradient(circle at 86% -12%, rgb(217 111 77 / 34%), transparent 44%),
     linear-gradient(155deg, #4d3b34 0%, #362823 100%);
   color: rgb(255 255 255 / 62%);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  box-shadow: 0 18px 44px rgb(54 40 35 / 12%);
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+/* Whole-panel hover: the footer lifts a touch and its warm glow blooms. */
+.site-footer::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 84% -14%, rgb(217 111 77 / 26%), transparent 48%);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  content: "";
+  pointer-events: none;
+}
+
+.site-footer:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 34px 72px rgb(54 40 35 / 30%);
+}
+
+.site-footer:hover::before {
+  opacity: 1;
+}
+
+.site-footer > * {
+  position: relative;
+  z-index: 1;
 }
 
 .site-footer-main {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1.2fr;
-  gap: clamp(30px, 6vw, 78px);
-  padding-bottom: clamp(30px, 4vw, 44px);
+  gap: clamp(26px, 5vw, 66px);
+  padding-bottom: clamp(26px, 3.5vw, 38px);
   border-bottom: 1px solid rgb(255 255 255 / 12%);
 }
 

@@ -134,13 +134,26 @@
   display: block;
 }
 
+/* Eyebrow labels behave like the value-card numbers: faint at rest, then they
+   fill in and gain depth when their card is hovered. */
 .nameCard span,
 .noteCard span {
-  color: var(--coral-dark);
+  color: rgb(217 111 77 / 48%);
   font-size: 0.62rem;
   font-weight: 850;
   letter-spacing: 0.17em;
   text-transform: uppercase;
+  transition:
+    color 0.3s ease,
+    letter-spacing 0.3s ease,
+    text-shadow 0.3s ease;
+}
+
+.nameCard:hover span,
+.noteCard:hover span {
+  color: var(--coral);
+  letter-spacing: 0.22em;
+  text-shadow: 0 8px 18px rgb(217 111 77 / 28%);
 }
 
 .nameCard strong {
