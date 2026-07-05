@@ -1117,31 +1117,65 @@ summary:focus-visible {
 }
 
 .booking-steplist {
-  margin: 0;
-  padding: 6px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px -12px 0;
+  padding: 0;
   list-style: none;
 }
 
+/* Each step is its own hover target so the rows react individually. */
 .booking-steplist li {
+  position: relative;
   display: flex;
   gap: 16px;
   align-items: center;
-  padding: 15px 0;
+  padding: 13px 12px;
+  border-radius: 16px;
+  transition:
+    background 0.28s ease,
+    box-shadow 0.28s ease,
+    transform 0.28s ease;
 }
 
-.booking-steplist li + li {
-  border-top: 1px solid rgb(224 200 182 / 45%);
+/* Hairline separators that stay put between the pills at rest. */
+.booking-steplist li + li::before {
+  position: absolute;
+  top: -2px;
+  right: 12px;
+  left: 12px;
+  height: 1px;
+  background: rgb(224 200 182 / 45%);
+  content: "";
+}
+
+.booking-steplist li:hover {
+  background: rgb(217 111 77 / 9%);
+  box-shadow: 0 14px 28px rgb(120 78 52 / 10%);
+  transform: translateX(4px);
 }
 
 .booking-flownum {
   flex-shrink: 0;
-  min-width: 42px;
-  color: var(--coral);
+  min-width: 44px;
+  color: rgb(217 111 77 / 62%);
   font-family: var(--serif);
   font-size: 1.95rem;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
+  transition:
+    color 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    text-shadow 0.3s ease;
+}
+
+/* The number pops on its own row's hover: fills in, scales up, gains depth. */
+.booking-steplist li:hover .booking-flownum {
+  color: var(--coral);
+  transform: scale(1.18);
+  text-shadow: 0 12px 24px rgb(217 111 77 / 34%);
 }
 
 .booking-steplist strong {
@@ -1149,6 +1183,11 @@ summary:focus-visible {
   color: var(--ink);
   font-size: 0.9rem;
   font-weight: 700;
+  transition: color 0.28s ease;
+}
+
+.booking-steplist li:hover strong {
+  color: var(--coral-dark);
 }
 
 .booking-steplist small {
