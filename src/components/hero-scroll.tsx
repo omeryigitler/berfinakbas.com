@@ -36,13 +36,14 @@ export default function HeroScroll() {
       "--hero-portrait-scale",
       "--hero-card-y",
       "--hero-card-opacity",
-      "--hero-speech-opacity",
     ];
 
     const updateHeroProgress = () => {
       const rect = hero.getBoundingClientRect();
-      const scrollableDistance = Math.max(hero.offsetHeight - window.innerHeight, 1);
-      const state = getHeroMotionState(-rect.top / scrollableDistance);
+      // Play the animation over ~1.15 screens of scroll, then hold the finished
+      // state for the remaining scroll so the hero dwells before releasing.
+      const animationDistance = Math.max(window.innerHeight * 1.15, 1);
+      const state = getHeroMotionState(-rect.top / animationDistance);
 
       hero.style.setProperty("--hero-overlay-opacity", state.overlayOpacity.toFixed(4));
       hero.style.setProperty("--hero-room-scale", state.roomScale.toFixed(4));
@@ -57,7 +58,6 @@ export default function HeroScroll() {
       hero.style.setProperty("--hero-portrait-scale", state.portraitScale.toFixed(4));
       hero.style.setProperty("--hero-card-y", `${state.cardY}px`);
       hero.style.setProperty("--hero-card-opacity", state.cardOpacity.toFixed(4));
-      hero.style.setProperty("--hero-speech-opacity", state.speechOpacity.toFixed(4));
       if (navRef.current) navRef.current.inert = state.navOpacity < 0.2;
       if (actionsRef.current) actionsRef.current.inert = state.copyOpacity < 0.2;
       animationFrame = null;
@@ -123,13 +123,13 @@ export default function HeroScroll() {
         <div className={styles.scrollHeroStage}>
           <div className={styles.scrollHeroPortrait}>
             <Image
-              src="/berfin-hero.png"
+              src="/berfin-hero-standing.png"
               alt="Berfin Akbaş portresi"
               draggable={false}
-              height={655}
+              height={1353}
               priority
-              sizes="(max-width: 980px) 74vw, 460px"
-              width={381}
+              sizes="(max-width: 980px) 40vw, 320px"
+              width={413}
             />
           </div>
 
@@ -161,26 +161,28 @@ export default function HeroScroll() {
             </ul>
           </div>
 
-          <div className={styles.scrollSpeechLayer} aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <i />
-            <i />
-          </div>
-
           <div className={styles.scrollProgressCard} aria-hidden="true">
             <div className={styles.cardHeading}>
-              <span>Randevu süreci</span>
-              <small>Kontrollü akış</small>
+              <span className={styles.cardKicker}>
+                <i className={styles.statusDot} />
+                Randevu süreci
+              </span>
+              <small className={styles.cardTag}>Kontrollü akış</small>
             </div>
-            <strong>Talep</strong>
+            <div className={styles.cardStage}>
+              <strong>Talep</strong>
+              <span className={styles.cardStep}>1 / 3</span>
+            </div>
             <div className={styles.requestTrack}>
               <i />
               <i />
               <i />
             </div>
-            <small>{heroContent.processCardLabel}</small>
+            <div className={styles.cardSteps}>
+              <span className={styles.stepActive}>Talep</span>
+              <span>Kontrol</span>
+              <span>Onay</span>
+            </div>
           </div>
         </div>
       </div>

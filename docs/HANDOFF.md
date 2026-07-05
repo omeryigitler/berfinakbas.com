@@ -1,18 +1,18 @@
 # Aktif Çalışma Devir Teslimi
 
-Son güncelleme: 4 Temmuz 2026, Europe/Berlin
+Son güncelleme: 5 Temmuz 2026, Europe/Berlin
 
 ## Aktif çalışma
 
-- Draft PR: `codex/notification-outbox-core` dalının ilk push’uyla açılacak
-- Dal: `codex/notification-outbox-core`
-- Durum: PR #22 admin ödeme operasyonunu `8be303988cae0edccf706d8040a2d2dcad052cc0` ile `main`e teslim etti. Aktif milestone; dış sağlayıcı seçmeden transactional outbox veri modeli, atomik randevu durum olayı ve güvenli worker yaşam döngüsünü teslim etmektir.
+- Draft PR: `codex/integration-health-panel` dalının push'uyla PR #24 açıldı
+- Dal: `codex/integration-health-panel`
+- Durum: PR #23 transactional outbox çekirdeğini `main`e teslim etti. Aktif milestone; read-only entegrasyon/outbox sağlık panelini PR #24'te teslim etmektir.
 
 ## Bağlayıcı çalışma biçimi
 
 - Windows ve macOS’ta aynı kural geçerlidir: Issue #19 güncel roadmap kaynağıdır.
-- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını ve PR #22 admin ödeme operasyonunu teslim etti.
-- Aktif outbox milestone’u veri modeli/migration, provider-neutral olay sözleşmesi, atomik producer, claim/retry/dead-letter servisi ve PostgreSQL yarış testini tek PR’da teslim eder. Gerçek e-posta/Calendar gönderimi ve entegrasyon sağlık ekranı sonraki review edilebilir milestone’lardır.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public randevu akışını, PR #22 admin ödeme operasyonunu ve PR #23 transactional outbox çekirdeğini teslim etti.
+- Aktif health panel milestone'u read-only API, yönetim paneli görünümü, güvenli aggregate metrikleri ve `technical-health:read` yetki kontrolünü PR #24'te teslim eder. Gerçek e-posta/Calendar gönderimi ve provider adapter'ları sonraki review edilebilir milestone'lardır.
 - En fazla iki yerel commit, testlerden sonra tek push, tek CI sonuç okuması ve milestone sonunda tek merge onayı hedeflenir.
 - CI sonucunu kaydetmek için ayrı commit/push yapılmaz. Dokümanlar ana uygulama değişikliğiyle aynı push’ta güncellenir.
 - Bölme yalnızca bağımsız güvenlik hotfix’i, riskli migration veya dış engel varsa ve gerekçe kullanıcıya önceden açıklanırsa yapılır.
@@ -69,14 +69,16 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 - Dokuzuncu additive migration ile `outbox_events` ve `OutboxEventStatus` eklendi; idempotency key, worker lease, attempt, retry zamanı, güvenli hata kodu ve terminal zamanını saklar.
 - Public request’in ilk `REQUESTED` kaydı ile admin randevu durum geçişleri, status log kimliğinden türetilen tekil `APPOINTMENT_STATUS_CHANGED` olayını aynı transaction’da üretir.
 - Outbox payload’ı yalnızca appointment/status-log kimlikleri, önceki/yeni durum ve olay zamanını taşır; ad, iletişim, not, consent metni veya holder token kopyalanmaz.
-- Worker servisi yarışta tek claim, süresi dolan lease’i geri alma, çağıranın belirlediği retry zamanı/deneme sınırı, başarılı tamamlama ve dead-letter geçişlerini iyimser koşullu güncellemeyle uygular.
+- Worker servisi yarışta tek claim, süresi dolan lease’i geri alma, çağıranın belirlediği retry zamanı/deneme sınırı, başarılı tamamlama ve dead-letter geçişlerini iyimser koşullu güncellemeyle uygular.- PR #23 squash merge ile `main` dalına alındı; quality, build, PostgreSQL integration ve Vercel kapıları geçti.
+- Read-only outbox health API `GET /api/admin/health/outbox` endpoint'i eklendi; safe aggregate metrikleri döndürüyor (status counts, success rate, avg attempts, oldest timestamps).
+- Admin paneline `/yonetim/saglik` sayfası ve OutboxHealthDashboard bileşeni eklendi; `technical-health:read` yetkili rollerle görünür.
+- Health API ve bileşen testleri (5 API test, 4 service test) eklendi ve tüm quality kontrolleri başarılı.
+- PR #24 Draft olarak açıldı; GitHub CI ve Vercel sonucu bekleniyor.
 
 ## Sıradaki
 
-1. Outbox paketi için tam `quality` ve production `build` doğrulamasını çalıştır.
-2. En fazla iki yerel commit ve tek push ile Draft PR’ı aç.
-3. GitHub CI, PostgreSQL integration ve Vercel sonucunu yalnızca bir kez oku; sonucu PR açıklamasına yansıt.
-4. PR hazır olduğunda kullanıcıdan tek merge onayı iste.
+1. GitHub CI ve Vercel sonucunu yalnızca bir kez oku; sonucu PR #24 açıklamasına yansıt.
+2. PR #24 hazır olduğunda kullanıcıdan tek merge onayı iste.
 
 ## Engeller ve açık kararlar
 
@@ -84,9 +86,9 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 - Fazla ödeme politikası açık karardır; mevcut uygulama fail-closed davranarak plan veya seçilen taksit bakiyesini aşan ödemeyi reddeder.
 - Tek tahsilatın birden çok takside atomik dağıtımı, kısmi iade, plan uzatma, fatura dosyası ve otomatik seans hakkı tüketiminde birden fazla aktif plandan hangisinin seçileceği açık karardır; bu işlemler etkinleştirilmedi.
 - CSV export doküman kapsamındadır ancak ayrı export izni ve audit kuralı tanımlanmadığı için bu milestone’a sessizce eklenmedi.
-- E-posta/Calendar sağlayıcısı, onaylı mesaj şablonları, hangi durumun hangi alıcıya bildirim üreteceği ve worker çalışma ortamı henüz seçilmedi; outbox çekirdeği bu kararları uydurmaz.
+- E-posta/Calendar sağlayıcısı, onaylı mesaj şablonları, hangi durumun hangi alıcıya bildirim üreteceği ve worker çalışma ortamı henüz seçilmedi; outbox çekirdeği ve health monitoring bu kararları uydurmaz.
 - Retry deneme sayısı ve backoff operasyon politikası açık karardır; servis doğrulanmış `maxAttempts` ve `nextAttemptAt` değerlerini çağırandan ister.
-- Calendar external-event eşlemesi, gerçek gönderim adapter’ları ve entegrasyon sağlık ekranı bu temel PR’ın dışında kalır.
+- Calendar external-event eşlemesi ve gerçek gönderim adapter'ları bu milestone'ın dışında kalır; health panel read-only metrikleri sağlar.
 - `BOOKING_HOLD_DURATION_MINUTES` production değeri ürün onayı bekleyen açık karardır; ayar tanımsızken servis fail-closed kalır.
 - Aynı gün için farklı aktif rule kayıtlarında farklı slot artışlarının öncelik/çözüm kuralı açık karardır; servis bu durumda fail-closed davranır.
 - Nihai aydınlatma/açık rıza metinleri ve operasyonel veli yetkisi doğrulama prosedürü hukukçu onayı bekler.
@@ -97,7 +99,9 @@ Son güncelleme: 4 Temmuz 2026, Europe/Berlin
 
 ## Son doğrulama
 
-- Outbox hedefli doğrulama: 3 dosyada 19 unit test ve TypeScript route/type kontrolü başarılı.
+- Health API hedefli doğrulama: 2 dosyada 9 unit test (4 health service test, 5 API route test) başarılı; TypeScript type check temiz.
+- Admin panel bileşeni: OutboxHealthDashboard client component, safe aggregate metrics (status counts, success rate, avg attempts, oldest timestamps) render ediyor, dış provider çağrısı yok.
+- Lint/format/typecheck/test suite tamamlandi: `pnpm quality` başarılı.
 - Güncel tam doğrulama: Prisma validate; `pnpm quality` ile lint, typecheck, format ve 35 dosyada 223 test; sentetik production ortamıyla `pnpm build` ve 20 sayfa başarılı.
 - Yerel gerçek PostgreSQL doğrulaması: dokuz migration uygulandı; 5 dosyada 31 integration testi claim yarışı, retry zamanı, lease recovery, eski worker sonucu reddi, dead-letter, idempotency ve atomik randevu event’leri dahil başarılı.
 - Finans doğrulaması: Prisma format/generate/validate geçti; `pnpm quality` lint, typecheck, format ve 34 dosyada 216 testi başarıyla tamamladı.

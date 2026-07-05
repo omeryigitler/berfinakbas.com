@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
 import { SiteFooter } from "@/components/public-shell";
@@ -7,18 +9,21 @@ const audiences = [
     accent: "peach",
     description: "Konuşma, dil ve iletişim gelişimini destekleyen sakin ve anlaşılır görüşmeler.",
     eyebrow: "Çocuklar için",
+    image: "/audience-cocuk.png",
     title: "Gelişimi anlamaya yönelik başlangıç",
   },
   {
     accent: "sage",
     description: "Gündelik iletişim ihtiyaçlarına saygılı, açık ve iş birliğine dayalı bir süreç.",
     eyebrow: "Ergenler için",
+    image: "/audience-ergen.png",
     title: "Kendini ifade etmeye alan açan destek",
   },
   {
     accent: "sand",
     description: "İletişim hedefleri ve yaşam düzeni dikkate alınarak planlanan görüşmeler.",
     eyebrow: "Yetişkinler için",
+    image: "/audience-yetiskin.png",
     title: "Kişiye göre şekillenen görüşme alanı",
   },
   {
@@ -26,6 +31,7 @@ const audiences = [
     description:
       "Ailelerin süreci anlamasına ve sonraki adımı net görmesine yardımcı olan buluşmalar.",
     eyebrow: "Aileler için",
+    image: "/audience-aile.png",
     title: "Bilgi ve iş birliği odaklı danışmanlık",
   },
 ];
@@ -47,44 +53,6 @@ const steps = [
     title: "Randevunuz netleşsin",
   },
 ];
-
-function AudienceIllustration({ accent, index }: { accent: string; index: number }) {
-  return (
-    <div className={`audience-illustration audience-${accent}`} aria-hidden="true">
-      <svg viewBox="0 0 240 150">
-        <path
-          className="illustration-backdrop"
-          d="M26 124c8-52 31-91 86-98 47-6 92 25 103 71 2 8 2 17 1 27H26Z"
-        />
-        <circle className="illustration-sun" cx="194" cy="34" r="14" />
-        <path
-          className="illustration-plant"
-          d="M188 122V84m0 17c-14-4-18-13-15-24 12 2 18 10 15 24Zm1-8c13-4 18-12 17-23-12 1-18 9-17 23Z"
-        />
-        <circle className="illustration-person-a" cx={index % 2 ? 85 : 94} cy="68" r="19" />
-        <path
-          className="illustration-person-a"
-          d={
-            index % 2
-              ? "M55 124c4-30 16-47 31-47 17 0 29 17 33 47H55Z"
-              : "M63 124c4-30 16-47 31-47 17 0 29 17 33 47H63Z"
-          }
-        />
-        <circle className="illustration-person-b" cx={index % 2 ? 137 : 146} cy="76" r="15" />
-        <path
-          className="illustration-person-b"
-          d={
-            index % 2
-              ? "M115 124c2-25 10-39 23-39s22 14 25 39h-48Z"
-              : "M124 124c2-25 10-39 23-39s22 14 25 39h-48Z"
-          }
-        />
-        <path className="illustration-line" d="M101 52c10-15 27-18 43-8" />
-        <path className="illustration-line" d="M117 38c-3-8-1-15 6-20" />
-      </svg>
-    </div>
-  );
-}
 
 export default function Home() {
   return (
@@ -115,7 +83,11 @@ export default function Home() {
         </article>
       </section>
 
-      <AboutHighlight />
+      <div className="about-pin">
+        <div className="about-pin-sticky">
+          <AboutHighlight />
+        </div>
+      </div>
 
       <section className="audience-section" id="destek-alanlari" aria-labelledby="audience-title">
         <div className="section-heading">
@@ -129,9 +101,18 @@ export default function Home() {
         </div>
 
         <div className="audience-grid">
-          {audiences.map((item, index) => (
+          {audiences.map((item) => (
             <article className="audience-card" key={item.eyebrow}>
-              <AudienceIllustration accent={item.accent} index={index} />
+              <div className={`audience-illustration audience-${item.accent}`} aria-hidden="true">
+                <Image
+                  className="audience-photo"
+                  src={item.image}
+                  alt=""
+                  width={520}
+                  height={430}
+                  sizes="(max-width: 900px) 90vw, 280px"
+                />
+              </div>
               <div className="audience-card-copy">
                 <p>{item.eyebrow}</p>
                 <h3>{item.title}</h3>
