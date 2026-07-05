@@ -36,7 +36,6 @@ export default function HeroScroll() {
       "--hero-portrait-scale",
       "--hero-card-y",
       "--hero-card-opacity",
-      "--hero-speech-opacity",
     ];
 
     const updateHeroProgress = () => {
@@ -59,7 +58,6 @@ export default function HeroScroll() {
       hero.style.setProperty("--hero-portrait-scale", state.portraitScale.toFixed(4));
       hero.style.setProperty("--hero-card-y", `${state.cardY}px`);
       hero.style.setProperty("--hero-card-opacity", state.cardOpacity.toFixed(4));
-      hero.style.setProperty("--hero-speech-opacity", state.speechOpacity.toFixed(4));
       if (navRef.current) navRef.current.inert = state.navOpacity < 0.2;
       if (actionsRef.current) actionsRef.current.inert = state.copyOpacity < 0.2;
       animationFrame = null;
@@ -161,14 +159,6 @@ export default function HeroScroll() {
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div className={styles.scrollSpeechLayer} aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <i />
-            <i />
           </div>
 
           <div className={styles.scrollProgressCard} aria-hidden="true">

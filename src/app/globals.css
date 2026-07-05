@@ -2705,7 +2705,7 @@ summary:focus-visible {
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) and (min-width: 921px) {
     .about-pin {
-      height: 260vh;
+      height: 210vh;
       view-timeline-name: --aboutPin;
       view-timeline-axis: block;
     }

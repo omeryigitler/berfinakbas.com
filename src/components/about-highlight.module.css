@@ -10,6 +10,13 @@
   border-top: 1px solid var(--line);
 }
 
+/* Inside the pinned scene the block is already centred in a 100vh sticky, so
+   drop its own heavy vertical padding and separator to remove the empty gap. */
+:global(.about-pin) .aboutSection {
+  padding-block: clamp(28px, 4vh, 56px);
+  border-top: 0;
+}
+
 .pageSection {
   padding-block: clamp(86px, 9vw, 118px) clamp(86px, 9vw, 128px);
   border-top: 0;
@@ -97,12 +104,24 @@
   background: rgb(255 250 244 / 88%);
   box-shadow: 0 22px 50px rgb(79 49 31 / 12%);
   backdrop-filter: blur(16px);
+  transition:
+    scale 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.nameCard:hover,
+.noteCard:hover {
+  scale: 1.035;
+  box-shadow: 0 30px 64px rgb(79 49 31 / 22%);
+  border-color: rgb(255 255 255 / 95%);
 }
 
 .nameCard {
-  right: 0;
-  bottom: 38px;
-  left: 48px;
+  right: auto;
+  bottom: 30px;
+  left: -10px;
+  width: min(78%, 288px);
   border-radius: 24px;
   padding: 24px 27px;
 }
@@ -138,9 +157,10 @@
 }
 
 .noteCard {
-  top: 58px;
-  right: 6px;
-  width: 218px;
+  top: 44px;
+  left: -12px;
+  right: auto;
+  width: 214px;
   border-radius: 20px;
   padding: 18px 20px;
 }
@@ -185,18 +205,48 @@
 }
 
 .valueGrid article {
+  position: relative;
   min-height: 154px;
   border: 1px solid var(--line);
   border-radius: 22px;
   background: rgb(255 255 255 / 56%);
-  padding: 21px;
+  padding: 30px 21px 21px;
   box-shadow: 0 18px 42px rgb(102 68 47 / 6%);
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.valueGrid article:hover {
+  transform: translateY(-6px);
+  border-color: rgb(217 111 77 / 32%);
+  box-shadow: 0 28px 56px rgb(102 68 47 / 15%);
 }
 
 .valueGrid article > span {
+  position: absolute;
+  top: -13px;
+  left: -9px;
+  display: grid;
+  place-items: center;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 11px;
+  border-radius: 15px;
+  background: #fff;
   color: var(--coral);
   font-family: var(--serif);
-  font-size: 1.25rem;
+  font-size: 1.3rem;
+  box-shadow: 0 12px 26px rgb(102 68 47 / 18%);
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.valueGrid article:hover > span {
+  transform: translateY(-2px) rotate(-4deg);
+  box-shadow: 0 16px 30px rgb(217 111 77 / 26%);
 }
 
 .valueGrid strong,

@@ -18,7 +18,6 @@ export type HeroMotionState = Readonly<{
   portraitWidth: number;
   roomScale: number;
   roomY: number;
-  speechOpacity: number;
 }>;
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -46,6 +45,5 @@ export function getHeroMotionState(rawProgress: number): HeroMotionState {
     portraitWidth: 530 - progress * 155,
     roomScale: 1.13 - progress * 0.13,
     roomY: 0,
-    speechOpacity: 0.08 + progress * 0.3,
   });
 }
