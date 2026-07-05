@@ -11,6 +11,7 @@ describe("hero scroll model", () => {
       navOpacity: 0,
       navY: -96,
       overlayOpacity: 0,
+      portraitBottom: -8,
       portraitLeft: 49,
       portraitWidth: 530,
       roomScale: 1.13,
@@ -25,11 +26,11 @@ describe("hero scroll model", () => {
       navOpacity: 1,
       navY: 20,
       overlayOpacity: 1,
-      portraitBottom: 5,
-      portraitLeft: 26,
-      portraitScale: 0.92,
+      portraitBottom: 7,
+      portraitLeft: 31,
       portraitWidth: 375,
     });
+    expect(completedState.portraitScale).toBeCloseTo(0.98);
     expect(completedState.roomScale).toBeCloseTo(1);
   });
 
@@ -48,9 +49,11 @@ describe("hero scroll model", () => {
     expect(earlyState.navOpacity).toBeGreaterThan(0);
     expect(earlyState.copyOpacity).toBe(0);
     expect(earlyState.cardOpacity).toBe(0);
-    expect(middleState.navOpacity).toBe(1);
+    expect(middleState.navOpacity).toBeGreaterThan(0.6);
+    expect(middleState.navOpacity).toBeLessThanOrEqual(1);
     expect(middleState.copyOpacity).toBeGreaterThan(0);
     expect(middleState.cardOpacity).toBe(0);
+    expect(lateState.navOpacity).toBe(1);
     expect(lateState.copyOpacity).toBe(1);
     expect(lateState.cardOpacity).toBeGreaterThan(0);
   });

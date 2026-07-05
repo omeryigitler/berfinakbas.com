@@ -10,6 +10,13 @@
   border-top: 1px solid var(--line);
 }
 
+/* Inside the pinned scene the block is already centred in a 100vh sticky, so
+   drop its own heavy vertical padding and separator to remove the empty gap. */
+:global(.about-pin) .aboutSection {
+  padding-block: clamp(28px, 4vh, 56px);
+  border-top: 0;
+}
+
 .pageSection {
   padding-block: clamp(86px, 9vw, 118px) clamp(86px, 9vw, 128px);
   border-top: 0;
@@ -59,10 +66,12 @@
 .portraitPanel img {
   position: relative;
   z-index: 2;
-  width: min(74%, 360px);
-  height: 92%;
+  width: auto;
+  height: 86%;
+  max-width: 82%;
   object-fit: contain;
   object-position: center bottom;
+  transform-origin: center bottom;
   user-select: none;
   filter: drop-shadow(0 24px 42px rgb(83 56 39 / 13%));
 }
@@ -95,12 +104,24 @@
   background: rgb(255 250 244 / 88%);
   box-shadow: 0 22px 50px rgb(79 49 31 / 12%);
   backdrop-filter: blur(16px);
+  transition:
+    scale 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.nameCard:hover,
+.noteCard:hover {
+  scale: 1.035;
+  box-shadow: 0 30px 64px rgb(79 49 31 / 22%);
+  border-color: rgb(255 255 255 / 95%);
 }
 
 .nameCard {
-  right: 0;
-  bottom: 38px;
-  left: 48px;
+  right: auto;
+  bottom: -22px;
+  left: -70px;
+  width: min(72%, 268px);
   border-radius: 24px;
   padding: 24px 27px;
 }
@@ -136,9 +157,10 @@
 }
 
 .noteCard {
-  top: 58px;
-  right: 6px;
-  width: 218px;
+  top: 40px;
+  right: -16px;
+  left: auto;
+  width: 210px;
   border-radius: 20px;
   padding: 18px 20px;
 }
@@ -183,18 +205,46 @@
 }
 
 .valueGrid article {
+  position: relative;
   min-height: 154px;
   border: 1px solid var(--line);
   border-radius: 22px;
   background: rgb(255 255 255 / 56%);
-  padding: 21px;
+  padding: 21px 46px 21px 21px;
   box-shadow: 0 18px 42px rgb(102 68 47 / 6%);
+  overflow: hidden;
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
 }
 
+.valueGrid article:hover {
+  transform: translateY(-6px);
+  border-color: rgb(217 111 77 / 32%);
+  box-shadow: 0 28px 56px rgb(102 68 47 / 15%);
+}
+
+/* Index sits inside the top-right corner: faint by default, pops on hover */
 .valueGrid article > span {
-  color: var(--coral);
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  color: rgb(217 111 77 / 42%);
   font-family: var(--serif);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    color 0.3s ease,
+    font-size 0.3s ease,
+    text-shadow 0.3s ease;
+}
+
+.valueGrid article:hover > span {
+  color: var(--coral);
+  font-size: 1.75rem;
+  text-shadow: 0 8px 18px rgb(217 111 77 / 30%);
 }
 
 .valueGrid strong,
@@ -236,7 +286,7 @@
   }
 
   .portraitPanel img {
-    width: min(78%, 330px);
+    max-width: 82%;
   }
 
   .valueGrid {
@@ -265,7 +315,7 @@
   }
 
   .portraitPanel img {
-    width: min(76%, 310px);
+    max-width: 78%;
   }
 
   .nameCard {
@@ -285,5 +335,154 @@
 
   .actions a {
     width: 100%;
+  }
+}
+
+/*
+ * Pinned scroll reveal. The About block is wrapped in a tall `.about-pin`
+ * container (globals.css) that names a `--aboutPin` view-timeline; while its
+ * sticky child is pinned full-screen, these animations scrub across the pin so
+ * each piece reveals deliberately and in sequence: the portrait eases forward,
+ * the heading slides in from the woman's side toward the right, the body copy
+ * comes forward, then the floating cards rise. Progressive enhancement — with
+ * no scroll-timeline support (or under reduced-motion) the layout is static.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .portraitPanel img {
+      animation: aboutPortraitFwd linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 0% contain 78%;
+    }
+
+    .copyColumn h1,
+    .copyColumn h2 {
+      animation: aboutHeadingSlide linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 6% contain 44%;
+    }
+
+    .copyColumn .leadText,
+    .copyColumn p:not(.section-kicker):not(.leadText) {
+      animation: aboutCopyForward linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 24% contain 60%;
+    }
+
+    .valueGrid {
+      animation: aboutRiseIn linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 34% contain 64%;
+    }
+
+    .actions {
+      animation: aboutRiseIn linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 46% contain 74%;
+    }
+
+    .noteCard {
+      animation: aboutCardRise linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 30% contain 58%;
+    }
+
+    .nameCard {
+      animation: aboutCardRise linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 40% contain 68%;
+    }
+
+    .softCircle {
+      animation: aboutSoftDrift linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 0% contain 100%;
+    }
+
+    .orbitLine {
+      animation: aboutOrbitDrift linear both;
+      animation-timeline: --aboutPin;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+}
+
+@keyframes aboutPortraitFwd {
+  from {
+    transform: translateY(28px) scale(0.9);
+  }
+
+  to {
+    transform: translateY(0) scale(1.02);
+  }
+}
+
+@keyframes aboutHeadingSlide {
+  from {
+    transform: translateX(-120px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutCopyForward {
+  from {
+    transform: translateY(28px) scale(0.92);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutCardRise {
+  from {
+    transform: translateY(48px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutRiseIn {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutSoftDrift {
+  from {
+    transform: translateY(24px) scale(0.85);
+    opacity: 0.4;
+  }
+
+  to {
+    transform: translateY(-16px) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes aboutOrbitDrift {
+  from {
+    transform: rotate(-22deg) scale(0.85);
+  }
+
+  to {
+    transform: rotate(18deg) scale(1.08);
   }
 }
