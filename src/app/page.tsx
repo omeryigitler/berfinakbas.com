@@ -194,21 +194,21 @@ export default function Home() {
           </div>
           <ol className="booking-steplist">
             <li>
-              <i>1</i>
+              <span className="booking-flownum">01</span>
               <div>
                 <strong>Talep</strong>
                 <small>Tercih ettiğiniz zamanı iletin.</small>
               </div>
             </li>
             <li>
-              <i>2</i>
+              <span className="booking-flownum">02</span>
               <div>
                 <strong>Kontrol</strong>
                 <small>Uygunluk güvenle değerlendirilir.</small>
               </div>
             </li>
             <li>
-              <i>3</i>
+              <span className="booking-flownum">03</span>
               <div>
                 <strong>Onay</strong>
                 <small>Saatiniz onayla kesinleşir.</small>

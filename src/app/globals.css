@@ -1193,28 +1193,24 @@ summary:focus-visible {
 
 .booking-steplist li {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  padding: 14px 0;
+  gap: 16px;
+  align-items: center;
+  padding: 15px 0;
 }
 
 .booking-steplist li + li {
   border-top: 1px solid rgb(224 200 182 / 45%);
 }
 
-.booking-steplist i {
-  display: grid;
+.booking-flownum {
   flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  border-radius: 50%;
-  background: rgb(217 111 77 / 12%);
-  color: var(--coral-dark);
+  min-width: 42px;
+  color: var(--coral);
   font-family: var(--serif);
-  font-size: 0.9rem;
-  font-style: normal;
-  font-weight: 700;
+  font-size: 1.95rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .booking-steplist strong {
@@ -1247,39 +1243,80 @@ summary:focus-visible {
 }
 
 .site-footer {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr 1.2fr;
-  gap: clamp(32px, 6vw, 88px);
+  position: relative;
   margin-top: 20px;
-  padding: 46px clamp(24px, 4vw, 44px) 40px;
-  border: 1px solid var(--line);
-  border-radius: 28px;
-  background: linear-gradient(160deg, rgb(255 251 246 / 90%), rgb(250 240 232 / 70%));
-  color: var(--muted);
-  font-size: 0.74rem;
+  padding: clamp(46px, 6vw, 68px) clamp(28px, 5vw, 56px) 26px;
+  overflow: hidden;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 86% -12%, rgb(217 111 77 / 34%), transparent 44%),
+    linear-gradient(155deg, #4d3b34 0%, #362823 100%);
+  color: rgb(255 255 255 / 62%);
+  font-size: 0.78rem;
+}
+
+.site-footer-main {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.2fr;
+  gap: clamp(30px, 6vw, 78px);
+  padding-bottom: clamp(30px, 4vw, 44px);
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
 }
 
 .site-footer-brand {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.site-footer .brand-mark strong {
+  color: #fff;
+}
+
+.site-footer .brand-mark small {
+  color: rgb(255 255 255 / 55%);
 }
 
 .site-footer-brand p {
   max-width: 300px;
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.75;
+  color: rgb(255 255 255 / 60%);
+}
+
+.site-footer-cta {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 999px;
+  padding: 10px 18px;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    gap 0.2s ease;
+}
+
+.site-footer-cta:hover {
+  gap: 12px;
+  border-color: var(--coral);
+  background: var(--coral);
 }
 
 .site-footer-nav {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 12px;
 }
 
-.site-footer-nav > span {
+.site-footer-nav > span,
+.site-footer-note > span {
   margin-bottom: 4px;
-  color: var(--coral-dark);
+  color: #f2c0a8;
   font-size: 0.62rem;
   font-weight: 850;
   letter-spacing: 0.16em;
@@ -1288,7 +1325,7 @@ summary:focus-visible {
 
 .site-footer-nav a {
   width: fit-content;
-  color: var(--ink);
+  color: rgb(255 255 255 / 82%);
   font-weight: 600;
   transition:
     color 0.2s ease,
@@ -1296,25 +1333,51 @@ summary:focus-visible {
 }
 
 .site-footer-nav a:hover {
-  color: var(--coral);
+  color: #fff;
   transform: translateX(3px);
 }
 
-.site-footer-meta {
+.site-footer-note {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  justify-content: flex-end;
+  gap: 10px;
 }
 
-.site-footer-meta p {
+.site-footer-note p {
+  max-width: 320px;
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.75;
+  color: rgb(255 255 255 / 55%);
 }
 
-.site-footer-meta span {
-  color: var(--ink);
+.site-footer-base {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 22px;
+  font-size: 0.74rem;
+}
+
+.site-footer-base > span {
+  color: rgb(255 255 255 / 70%);
+  font-weight: 600;
+}
+
+.site-footer-credit {
+  margin: 0;
+  color: rgb(255 255 255 / 45%);
+}
+
+.site-footer-credit a {
+  color: #fff;
   font-weight: 650;
+  transition: color 0.2s ease;
+}
+
+.site-footer-credit a:hover {
+  color: var(--coral);
 }
 
 .brand-mark-compact .brand-symbol {
@@ -2655,7 +2718,7 @@ summary:focus-visible {
     padding: 36px 26px;
   }
 
-  .site-footer {
+  .site-footer-main {
     grid-template-columns: 1fr;
     gap: 34px;
     text-align: center;
@@ -2673,8 +2736,13 @@ summary:focus-visible {
     transform: none;
   }
 
-  .site-footer-meta {
+  .site-footer-note {
     align-items: center;
+  }
+
+  .site-footer-base {
+    flex-direction: column;
+    text-align: center;
   }
 
   .admin-auth-shell,
