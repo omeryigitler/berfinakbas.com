@@ -1,7 +1,8 @@
+import { AdminShell } from "@/components/admin/admin-shell";
+import styles from "@/components/admin/admin-shell.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
-import { AdminShell } from "@/components/admin/admin-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -34,23 +35,23 @@ export default async function AdminHomePage() {
       subtitle="İş akışı, özet metrikler ve hizmet yapılandırmaları tek bakışta görünür."
       title="Yönetim paneli"
     >
-      <div className="admin-dashboard-grid">
-        <article className="admin-dashboard-card">
+      <div className={styles.dashboardGrid}>
+        <article className={styles.dashboardCard}>
           <span>Hizmet sayısı</span>
           <strong>{services.length}</strong>
           <small>Aktif ve taslak hizmet yapılandırmaları</small>
         </article>
-        <article className="admin-dashboard-card">
+        <article className={styles.dashboardCard}>
           <span>Bekleyen talepler</span>
           <strong>{pendingAppointments}</strong>
           <small>İncelemeye hazır randevu istekleri</small>
         </article>
-        <article className="admin-dashboard-card">
+        <article className={styles.dashboardCard}>
           <span>Aktif plan</span>
           <strong>{activePlans}</strong>
           <small>Devam eden danışan planı ve taksit akışı</small>
         </article>
-        <article className="admin-dashboard-card">
+        <article className={styles.dashboardCard}>
           <span>Sağlık özeti</span>
           <strong>Read-only</strong>
           <small>Outbox ve entegrasyon metrikleri yönetim menüsünden erişilir</small>
