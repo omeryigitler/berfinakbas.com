@@ -64,11 +64,19 @@ export default async function AdminClientProfilePage({
   if (!clientId) notFound();
 
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
-  const canReadAppointments = hasPermission(session.user.roles, "appointments:read");
+  const canReadAppointments = hasPermission(
+    session.user.roles,
+    "appointments:read",
+  );
   const client = await getDatabase().client.findUnique({
     include: {
       _count: {
-        select: { appointments: true, consents: true, financeEntries: true, plans: true },
+        select: {
+          appointments: true,
+          consents: true,
+          financeEntries: true,
+          plans: true,
+        },
       },
       appointments: {
         orderBy: [{ startsAt: "desc" }],
@@ -83,7 +91,13 @@ export default async function AdminClientProfilePage({
       guardians: {
         include: {
           guardian: {
-            select: { email: true, firstName: true, id: true, lastName: true, phone: true },
+            select: {
+              email: true,
+              firstName: true,
+              id: true,
+              lastName: true,
+              phone: true,
+            },
           },
         },
         orderBy: [{ isPrimary: "desc" }],
@@ -111,7 +125,8 @@ export default async function AdminClientProfilePage({
   const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
   const latestAppointment = client.appointments[0];
   const primaryGuardian = client.guardians[0];
-  const noteModalHref = `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
+  const noteModalHref =
+    `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
   const appointmentModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=randevu-olustur` as Route;
   const planModalHref =
@@ -125,7 +140,10 @@ export default async function AdminClientProfilePage({
         clientsRead: true,
         financeRead: canReadFinance,
         servicesRead: hasPermission(session.user.roles, "services:read"),
-        technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
+        technicalHealthRead: hasPermission(
+          session.user.roles,
+          "technical-health:read",
+        ),
       }}
       subtitle="Danışan için hızlı işlem ve operasyon özeti. İşlemler URL tabanlı modal olarak açılır."
       title={clientName}
@@ -163,7 +181,9 @@ export default async function AdminClientProfilePage({
       <div className={styles.dashboardGrid}>
         <article className={styles.dashboardCard}>
           <span>Durum</span>
-          <strong>{clientStatusLabels[client.status as ClientStatusValue]}</strong>
+          <strong>
+            {clientStatusLabels[client.status as ClientStatusValue]}
+          </strong>
           <small>{clientTypeLabels[client.type as ClientTypeValue]}</small>
         </article>
         <article className={styles.dashboardCard}>
@@ -173,8 +193,12 @@ export default async function AdminClientProfilePage({
         </article>
         <article className={styles.dashboardCard}>
           <span>Son randevu</span>
-          <strong>{latestAppointment ? formatDate(latestAppointment.startsAt) : "Yok"}</strong>
-          <small>{latestAppointment?.service.name ?? "Randevu kaydı yok"}</small>
+          <strong>
+            {latestAppointment ? formatDate(latestAppointment.startsAt) : "Yok"}
+          </strong>
+          <small>
+            {latestAppointment?.service.name ?? "Randevu kaydı yok"}
+          </small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Aktif plan</span>
@@ -237,7 +261,11 @@ export default async function AdminClientProfilePage({
             <p>Son randevular ve randevu ekranına hızlı geçiş.</p>
           </div>
           {canReadAppointments ? (
-            <Link className="secondary-button" href={appointmentModalHref} scroll={false}>
+            <Link
+              className="secondary-button"
+              href={appointmentModalHref}
+              scroll={false}
+            >
               Randevu oluştur
             </Link>
           ) : null}
@@ -269,7 +297,11 @@ export default async function AdminClientProfilePage({
             <p>Bu danışanın ödeme ekranı filtreli açılır.</p>
           </div>
           {canReadFinance ? (
-            <Link className="secondary-button" href={planModalHref} scroll={false}>
+            <Link
+              className="secondary-button"
+              href={planModalHref}
+              scroll={false}
+            >
               Ödeme planı oluştur
             </Link>
           ) : null}
