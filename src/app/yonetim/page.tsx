@@ -58,66 +58,64 @@ export default async function AdminHomePage() {
   todayEnd.setDate(todayEnd.getDate() + 1);
   const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
 
-  const [services, totalClients, activeClients, childClients, latestClients] = await Promise.all([
-    db.service.findMany({
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      select: {
-        defaultDurationMinutes: true,
-        locationType: true,
-        name: true,
-        publicVisible: true,
-        status: true,
-      },
-    }),
-    canReadClients ? db.client.count() : Promise.resolve(0),
-    canReadClients ? db.client.count({ where: { status: "ACTIVE" } }) : Promise.resolve(0),
-    canReadClients ? db.client.count({ where: { type: "CHILD" } }) : Promise.resolve(0),
-    canReadClients
-      ? db.client.findMany({
-          orderBy: [{ createdAt: "desc" }],
-          select: {
-            firstName: true,
-            id: true,
-            lastName: true,
-            phone: true,
-            status: true,
-            type: true,
-          },
-          take: 5,
-        })
-      : Promise.resolve([]),
-  ]);
+  const services = await db.service.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      defaultDurationMinutes: true,
+      locationType: true,
+      name: true,
+      publicVisible: true,
+      status: true,
+    },
+  });
 
-  const [pendingAppointments, todaysAppointments, upcomingAppointments] = canReadAppointments
-    ? await Promise.all([
-        db.appointment.count({ where: { status: "PENDING_REVIEW" } }),
-        db.appointment.findMany({
-          orderBy: [{ startsAt: "asc" }],
-          select: {
-            client: { select: { firstName: true, lastName: true } },
-            id: true,
-            service: { select: { name: true } },
-            startsAt: true,
-            status: true,
-          },
-          take: 5,
-          where: { startsAt: { gte: todayStart, lt: todayEnd } },
-        }),
-        db.appointment.count({ where: { startsAt: { gte: todayStart } } }),
-      ])
-    : [0, [], 0];
+  const totalClients = canReadClients ? await db.client.count() : 0;
+  const activeClients = canReadClients ? await db.client.count({ where: { status: "ACTIVE" } }) : 0;
+  const childClients = canReadClients ? await db.client.count({ where: { type: "CHILD" } }) : 0;
+  const latestClients = canReadClients
+    ? await db.client.findMany({
+        orderBy: [{ createdAt: "desc" }],
+        select: {
+          firstName: true,
+          id: true,
+          lastName: true,
+          phone: true,
+          status: true,
+          type: true,
+        },
+        take: 5,
+      })
+    : [];
 
-  const [activePlans, paymentsThisMonth] = canReadFinance
-    ? await Promise.all([
-        db.clientPlan.count({ where: { status: "ACTIVE" } }),
-        db.financeLedgerEntry.aggregate({
-          _sum: { amountMinor: true },
-          where: { occurredAt: { gte: monthStart }, type: "PAYMENT" },
-        }),
-      ])
-    : [0, { _sum: { amountMinor: BigInt(0) } }];
+  const pendingAppointments = canReadAppointments
+    ? await db.appointment.count({ where: { status: "PENDING_REVIEW" } })
+    : 0;
+  const todaysAppointments = canReadAppointments
+    ? await db.appointment.findMany({
+        orderBy: [{ startsAt: "asc" }],
+        select: {
+          client: { select: { firstName: true, lastName: true } },
+          id: true,
+          service: { select: { name: true } },
+          startsAt: true,
+          status: true,
+        },
+        take: 5,
+        where: { startsAt: { gte: todayStart, lt: todayEnd } },
+      })
+    : [];
+  const upcomingAppointments = canReadAppointments
+    ? await db.appointment.count({ where: { startsAt: { gte: todayStart } } })
+    : 0;
 
-  const paymentTotal = paymentsThisMonth._sum.amountMinor ?? BigInt(0);
+  const activePlans = canReadFinance ? await db.clientPlan.count({ where: { status: "ACTIVE" } }) : 0;
+  const paymentsThisMonth = canReadFinance
+    ? await db.financeLedgerEntry.aggregate({
+        _sum: { amountMinor: true },
+        where: { occurredAt: { gte: monthStart }, type: "PAYMENT" },
+      })
+    : null;
+  const paymentTotal = paymentsThisMonth?._sum.amountMinor ?? BigInt(0);
   const maxAnalyticsValue = Math.max(
     totalClients,
     activeClients,
@@ -139,9 +137,15 @@ export default async function AdminHomePage() {
     canManageClients
       ? { href: "/yonetim/danisanlar/yeni" as Route, kicker: "+", title: "Danışan oluştur" }
       : null,
-    canReadClients ? { href: "/yonetim/danisanlar" as Route, kicker: "⌕", title: "Danışanları filtrele" } : null,
-    canReadAppointments ? { href: "/yonetim/randevular" as Route, kicker: "◷", title: "Randevuları yönet" } : null,
-    canReadFinance ? { href: "/yonetim/odemeler" as Route, kicker: "₺", title: "Ödeme ve planlar" } : null,
+    canReadClients
+      ? { href: "/yonetim/danisanlar" as Route, kicker: "⌕", title: "Danışanları filtrele" }
+      : null,
+    canReadAppointments
+      ? { href: "/yonetim/randevular" as Route, kicker: "◷", title: "Randevuları yönet" }
+      : null,
+    canReadFinance
+      ? { href: "/yonetim/odemeler" as Route, kicker: "₺", title: "Ödeme ve planlar" }
+      : null,
   ].filter((item): item is { href: Route; kicker: string; title: string } => item !== null);
 
   return (
@@ -200,7 +204,10 @@ export default async function AdminHomePage() {
               {analytics.map((item) => (
                 <div className={styles.analyticsBar} key={item.label}>
                   <div className={styles.barTrack}>
-                    <span className={styles.barFill} style={{ height: barHeight(item.value, maxAnalyticsValue) }} />
+                    <span
+                      className={styles.barFill}
+                      style={{ height: barHeight(item.value, maxAnalyticsValue) }}
+                    />
                   </div>
                   <strong>{item.label}</strong>
                   <span>{item.value}</span>
@@ -235,7 +242,8 @@ export default async function AdminHomePage() {
                         {client.firstName} {client.lastName}
                       </strong>
                       <span>
-                        {client.phone ?? "Telefon yok"} · {clientTypeLabels[client.type]} · {clientStatusLabels[client.status]}
+                        {client.phone ?? "Telefon yok"} · {clientTypeLabels[client.type]} ·{" "}
+                        {clientStatusLabels[client.status]}
                       </span>
                     </div>
                     <Link href={`/yonetim/danisanlar/${client.id}` as Route}>Aç</Link>
@@ -283,7 +291,8 @@ export default async function AdminHomePage() {
                   <li key={appointment.id}>
                     <div>
                       <strong>
-                        {formatTime(appointment.startsAt)} · {appointment.client.firstName} {appointment.client.lastName}
+                        {formatTime(appointment.startsAt)} · {appointment.client.firstName}{" "}
+                        {appointment.client.lastName}
                       </strong>
                       <span>{appointment.service.name}</span>
                     </div>
