@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { AdminShell } from "@/components/admin/admin-shell";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { OutboxHealthDashboard } from "@/components/admin/outbox-health-dashboard";
@@ -10,23 +9,18 @@ export default async function AdminHealthPage() {
   const session = await requirePermission("technical-health:read");
 
   return (
-    <main className="admin-shell">
-      <header className="admin-header">
-        <div>
-          <p className="section-kicker">Berfin Akbaş · Yönetim</p>
-          <h1>Entegrasyon Sağlığı</h1>
-        </div>
-        <div className="admin-header-actions">
-          <Link href="/yonetim">Hizmetler</Link>
-          <Link href="/yonetim/randevular">Bekleyen talepler</Link>
-          {hasPermission(session.user.roles, "finance:read") ? (
-            <Link href="/yonetim/odemeler">Ödeme ve planlar</Link>
-          ) : null}
-          <span>{session.user.email}</span>
-        </div>
-      </header>
-
+    <AdminShell
+      email={session.user.email}
+      permissions={{
+        appointmentsRead: hasPermission(session.user.roles, "appointments:read"),
+        financeRead: hasPermission(session.user.roles, "finance:read"),
+        servicesRead: hasPermission(session.user.roles, "services:read"),
+        technicalHealthRead: true,
+      }}
+      subtitle="Çekirdek işleyişin dış tetikleyicileri ve outbox durumu read-only görünür."
+      title="Entegrasyon sağlığı"
+    >
       <OutboxHealthDashboard />
-    </main>
+    </AdminShell>
   );
 }

@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { AdminShell } from "@/components/admin/admin-shell";
 import { FinanceDashboard } from "@/components/admin/finance-dashboard";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
@@ -9,17 +8,17 @@ export const dynamic = "force-dynamic";
 export default async function AdminFinancePage() {
   const session = await requirePermission("finance:read");
   return (
-    <main className="admin-shell">
-      <header className="admin-header">
-        <div>
-          <p className="section-kicker">Berfin Akbaş · Yönetim</p>
-          <h1>Ödeme ve planlar</h1>
-        </div>
-        <div className="admin-header-actions">
-          <Link href="/yonetim">Yönetime dön</Link>
-          <span>{session.user.email}</span>
-        </div>
-      </header>
+    <AdminShell
+      email={session.user.email}
+      permissions={{
+        appointmentsRead: hasPermission(session.user.roles, "appointments:read"),
+        financeRead: true,
+        servicesRead: hasPermission(session.user.roles, "services:read"),
+        technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
+      }}
+      subtitle="Plan, taksit ve ödeme akışı tek panel üzerinden yönetilir."
+      title="Ödeme ve planlar"
+    >
       <section className="admin-panel" aria-labelledby="finance-title">
         <div className="admin-panel-heading">
           <div>
@@ -33,6 +32,6 @@ export default async function AdminFinancePage() {
         </div>
         <FinanceDashboard canManage={hasPermission(session.user.roles, "finance:manage")} />
       </section>
-    </main>
+    </AdminShell>
   );
 }

@@ -2,8 +2,7 @@
   min-height: 100vh;
   padding: 42px max(24px, calc((100vw - 1180px) / 2));
   background:
-    radial-gradient(circle at 10% 0%, rgb(243 195 166 / 43%), transparent 30rem),
-    var(--paper);
+    radial-gradient(circle at 10% 0%, rgb(243 195 166 / 43%), transparent 30rem), var(--paper);
 }
 
 .header {

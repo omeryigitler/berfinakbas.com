@@ -1,39 +1,61 @@
-import Link from "next/link";
-
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
+import { AdminShell } from "@/components/admin/admin-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
   const session = await requirePermission("services:read");
-  const services = await getDatabase().service.findMany({
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: {
-      defaultDurationMinutes: true,
-      locationType: true,
-      name: true,
-      publicVisible: true,
-      status: true,
-    },
-  });
+  const [services, pendingAppointments, activePlans] = await Promise.all([
+    getDatabase().service.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        defaultDurationMinutes: true,
+        locationType: true,
+        name: true,
+        publicVisible: true,
+        status: true,
+      },
+    }),
+    getDatabase().appointment.count({ where: { status: "PENDING_REVIEW" } }),
+    getDatabase().clientPlan.count({ where: { status: "ACTIVE" } }),
+  ]);
 
   return (
-    <main className="admin-shell">
-      <header className="admin-header">
-        <div>
-          <p className="section-kicker">Berfin Akbaş · Yönetim</p>
-          <h1>Hizmetler</h1>
-        </div>
-        <div className="admin-header-actions">
-          <Link href="/yonetim/randevular">Bekleyen talepler</Link>
-          {hasPermission(session.user.roles, "finance:read") ? (
-            <Link href="/yonetim/odemeler">Ödeme ve planlar</Link>
-          ) : null}
-          <span>{session.user.email}</span>
-        </div>
-      </header>
+    <AdminShell
+      email={session.user.email}
+      permissions={{
+        appointmentsRead: hasPermission(session.user.roles, "appointments:read"),
+        financeRead: hasPermission(session.user.roles, "finance:read"),
+        servicesRead: true,
+        technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
+      }}
+      subtitle="İş akışı, özet metrikler ve hizmet yapılandırmaları tek bakışta görünür."
+      title="Yönetim paneli"
+    >
+      <div className="admin-dashboard-grid">
+        <article className="admin-dashboard-card">
+          <span>Hizmet sayısı</span>
+          <strong>{services.length}</strong>
+          <small>Aktif ve taslak hizmet yapılandırmaları</small>
+        </article>
+        <article className="admin-dashboard-card">
+          <span>Bekleyen talepler</span>
+          <strong>{pendingAppointments}</strong>
+          <small>İncelemeye hazır randevu istekleri</small>
+        </article>
+        <article className="admin-dashboard-card">
+          <span>Aktif plan</span>
+          <strong>{activePlans}</strong>
+          <small>Devam eden danışan planı ve taksit akışı</small>
+        </article>
+        <article className="admin-dashboard-card">
+          <span>Sağlık özeti</span>
+          <strong>Read-only</strong>
+          <small>Outbox ve entegrasyon metrikleri yönetim menüsünden erişilir</small>
+        </article>
+      </div>
 
       <section className="admin-panel" aria-labelledby="hizmet-listesi">
         <div className="admin-panel-heading">
@@ -65,6 +87,6 @@ export default async function AdminHomePage() {
           </ul>
         )}
       </section>
-    </main>
+    </AdminShell>
   );
 }

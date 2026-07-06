@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import { AppointmentQueue } from "@/components/admin/appointment-queue";
+import { AdminShell } from "@/components/admin/admin-shell";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getServerEnvironment } from "@/lib/env";
@@ -12,21 +11,17 @@ export default async function AdminAppointmentsPage() {
   const environment = getServerEnvironment();
 
   return (
-    <main className="admin-shell">
-      <header className="admin-header">
-        <div>
-          <p className="section-kicker">Berfin Akbaş · Yönetim</p>
-          <h1>Bekleyen talepler</h1>
-        </div>
-        <div className="admin-header-actions">
-          <Link href="/yonetim">Hizmetlere dön</Link>
-          {hasPermission(session.user.roles, "finance:read") ? (
-            <Link href="/yonetim/odemeler">Ödeme ve planlar</Link>
-          ) : null}
-          <span>{session.user.email}</span>
-        </div>
-      </header>
-
+    <AdminShell
+      email={session.user.email}
+      permissions={{
+        appointmentsRead: true,
+        financeRead: hasPermission(session.user.roles, "finance:read"),
+        servicesRead: hasPermission(session.user.roles, "services:read"),
+        technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
+      }}
+      subtitle="Bekleyen randevu talepleri ve operasyon adımları tek liste halinde görünür."
+      title="Randevular"
+    >
       <section className="admin-panel" aria-labelledby="bekleyen-randevular">
         <div className="admin-panel-heading">
           <div>
@@ -44,6 +39,6 @@ export default async function AdminAppointmentsPage() {
           canManage={hasPermission(session.user.roles, "appointments:manage")}
         />
       </section>
-    </main>
+    </AdminShell>
   );
 }

@@ -136,6 +136,11 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
     { amount: "", dueDate: today() },
   ]);
   const [paymentPlanId, setPaymentPlanId] = useState("");
+  const [reverseDialog, setReverseDialog] = useState<{
+    entryId: string;
+    error: string;
+    reason: string;
+  } | null>(null);
 
   const load = useCallback(async (status: typeof filter) => {
     try {
@@ -298,15 +303,27 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
     });
   }
 
-  async function reversePayment(entryId: string) {
-    const reason = window.prompt(
-      "Ters kayıt için gerekçeyi yazın. Orijinal ödeme silinmeyecek; dengeleyici hareket eklenecek.",
-    );
-    if (reason === null) return;
-    if (reason.trim().length < 8) {
-      setMessage("Ters kayıt gerekçesi en az 8 karakter olmalıdır.");
+  function openReversePayment(entryId: string) {
+    setMessage("");
+    setReverseDialog({ entryId, error: "", reason: "" });
+  }
+
+  async function submitReversePayment() {
+    if (!reverseDialog) return;
+
+    const reason = reverseDialog.reason.trim();
+    if (reason.length < 8) {
+      setReverseDialog((current) =>
+        current
+          ? { ...current, error: "Ters kayıt gerekçesi en az 8 karakter olmalıdır." }
+          : current,
+      );
       return;
     }
+
+    const entryId = reverseDialog.entryId;
+    setReverseDialog(null);
+
     await operation({
       action: "REVERSE_PAYMENT",
       entryId,
@@ -558,6 +575,54 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
       <p className="finance-message" aria-live="polite">
         {message}
       </p>
+
+      {reverseDialog ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <div
+            aria-labelledby="reverse-payment-title"
+            aria-modal="true"
+            className="admin-modal"
+            role="dialog"
+          >
+            <div className="admin-modal-heading">
+              <p className="section-kicker">Ters kayıt</p>
+              <h2 id="reverse-payment-title">Ödemeyi dengeleyici kayıtla tersine al</h2>
+              <p>
+                Orijinal ödeme silinmez. Sistem aynı tutarda dengeleyici hareket oluşturarak kayıt
+                bütünlüğünü korur.
+              </p>
+            </div>
+
+            <label className="admin-modal-field">
+              Gerekçe
+              <textarea
+                autoFocus
+                minLength={8}
+                onChange={(event) =>
+                  setReverseDialog((current) =>
+                    current ? { ...current, error: "", reason: event.target.value } : current,
+                  )
+                }
+                placeholder="Örn. Yanlış taksit seçildiği için ters kayıt oluşturuldu."
+                value={reverseDialog.reason}
+              />
+            </label>
+
+            {reverseDialog.error ? (
+              <p className="admin-modal-error">{reverseDialog.error}</p>
+            ) : null}
+
+            <div className="admin-modal-actions">
+              <button disabled={busy} onClick={() => setReverseDialog(null)} type="button">
+                Vazgeç
+              </button>
+              <button disabled={busy} onClick={() => void submitReversePayment()} type="button">
+                Ters kaydı oluştur
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {overview.plans.length === 0 ? (
         <div className="admin-empty-state">
           <strong>Bu filtrede plan yok</strong>
@@ -655,7 +720,7 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                       {canManage && entry.type === "PAYMENT" && !reversedEntryIds.has(entry.id) && (
                         <button
                           disabled={busy}
-                          onClick={() => void reversePayment(entry.id)}
+                          onClick={() => openReversePayment(entry.id)}
                           type="button"
                         >
                           Ters kayıt
