@@ -11,3 +11,7 @@ src/components/admin/finance-action-panel.tsx
 src/app/yonetim/danisan-profili/**/page.tsx
 src/app/yonetim/danisan-profili/page.tsx
 next.config.ts
+src/components/admin/admin-url-modal.module.css
+src/components/admin/admin-url-modal.tsx
+src/components/admin/client-profile-url-modals.tsx
+src/components/admin/dashboard-url-modals.tsx
