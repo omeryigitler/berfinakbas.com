@@ -3,12 +3,15 @@ import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
+import { DashboardUrlModals } from "@/components/admin/dashboard-url-modals";
 import { hasPermission } from "@/domain/auth/permissions";
 import { clientStatusLabels, clientTypeLabels } from "@/domain/clients/client-management";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const appointmentStatusLabels: Record<string, string> = {
   CANCELLED_BY_CLIENT: "Danışan iptal etti",
@@ -21,6 +24,12 @@ const appointmentStatusLabels: Record<string, string> = {
   REQUESTED: "Talep alındı",
   RESCHEDULE_PROPOSED: "Saat önerildi",
 };
+
+function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
+  const value = params[key];
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
 
 function formatMoney(amountMinor: bigint | number, currency = "TRY"): string {
   return new Intl.NumberFormat("tr-TR", {
@@ -43,8 +52,10 @@ function barHeight(value: number, maxValue: number): string {
   return `${Math.max(24, Math.round((value / maxValue) * 100))}%`;
 }
 
-export default async function AdminHomePage() {
+export default async function AdminHomePage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requirePermission("services:read");
+  const params = await searchParams;
+  const activeModal = singleParam(params, "modal");
   const canReadAppointments = hasPermission(session.user.roles, "appointments:read");
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
@@ -135,16 +146,14 @@ export default async function AdminHomePage() {
   ];
   const actionItems = [
     canManageClients
-      ? { href: "/yonetim/danisanlar/yeni" as Route, kicker: "+", title: "Danışan oluştur" }
+      ? { href: "/yonetim?modal=danisan-ekle" as Route, kicker: "+", title: "Danışan ekle" }
       : null,
-    canReadClients
-      ? { href: "/yonetim/danisanlar" as Route, kicker: "⌕", title: "Danışanları filtrele" }
-      : null,
+    canReadClients ? { href: "/yonetim?modal=not-ekle" as Route, kicker: "✎", title: "Not ekle" } : null,
     canReadAppointments
-      ? { href: "/yonetim/randevular" as Route, kicker: "◷", title: "Randevuları yönet" }
+      ? { href: "/yonetim?modal=randevu-olustur" as Route, kicker: "◷", title: "Randevu oluştur" }
       : null,
     canReadFinance
-      ? { href: "/yonetim/odemeler" as Route, kicker: "₺", title: "Ödeme ve planlar" }
+      ? { href: "/yonetim?modal=odeme-plani" as Route, kicker: "₺", title: "Ödeme planı" }
       : null,
   ].filter((item): item is { href: Route; kicker: string; title: string } => item !== null);
 
@@ -158,7 +167,7 @@ export default async function AdminHomePage() {
         servicesRead: true,
         technicalHealthRead: canReadTechnicalHealth,
       }}
-      subtitle="Danışan, randevu, ödeme ve hizmet akışını tek bakışta gösteren operasyon paneli."
+      subtitle="Danışan, randevu, ödeme ve hizmet akışını tek bakışta gösteren operasyon paneli. Hızlı işlemler URL tabanlı modal olarak açılır."
       title="Dashboard"
     >
       <div className={styles.dashboardGrid}>
@@ -246,7 +255,7 @@ export default async function AdminHomePage() {
                         {clientStatusLabels[client.status]}
                       </span>
                     </div>
-                    <Link href={`/yonetim/danisanlar/${client.id}` as Route}>Aç</Link>
+                    <Link href={`/yonetim/danisan-profili?clientId=${client.id}` as Route}>Aç</Link>
                   </li>
                 ))}
               </ul>
@@ -259,12 +268,12 @@ export default async function AdminHomePage() {
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="hizli-islemler">Hızlı işlemler</h2>
-                <p>En çok kullanılan BO geçişleri.</p>
+                <p>En çok kullanılan BO işlemleri; sayfa değişmeden URL modalı açılır.</p>
               </div>
             </div>
             <div className={styles.actionGrid}>
               {actionItems.map((item) => (
-                <Link className={styles.actionCard} href={item.href} key={item.href}>
+                <Link className={styles.actionCard} href={item.href} key={item.href} scroll={false}>
                   <span>{item.kicker}</span>
                   <strong>{item.title}</strong>
                 </Link>
@@ -341,6 +350,13 @@ export default async function AdminHomePage() {
           </ul>
         )}
       </section>
+
+      <DashboardUrlModals
+        activeModal={activeModal}
+        canManageClients={canManageClients}
+        canReadAppointments={canReadAppointments}
+        canReadFinance={canReadFinance}
+      />
     </AdminShell>
   );
 }
