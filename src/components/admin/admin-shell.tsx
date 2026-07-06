@@ -17,6 +17,7 @@ export type AdminNavPermissions = {
 
 export type AdminNavItem = {
   href: Route;
+  icon: string;
   label: string;
 };
 
@@ -24,23 +25,23 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
   const items: AdminNavItem[] = [];
 
   if (permissions.servicesRead) {
-    items.push({ href: "/yonetim", label: "Hizmetler" });
+    items.push({ href: "/yonetim", icon: "⌘", label: "Dashboard" });
   }
 
   if (permissions.clientsRead === true) {
-    items.push({ href: "/yonetim/danisanlar", label: "Danışanlar" });
+    items.push({ href: "/yonetim/danisanlar", icon: "◌", label: "Danışanlar" });
   }
 
   if (permissions.appointmentsRead) {
-    items.push({ href: "/yonetim/randevular", label: "Randevular" });
+    items.push({ href: "/yonetim/randevular", icon: "◷", label: "Randevular" });
   }
 
   if (permissions.financeRead) {
-    items.push({ href: "/yonetim/odemeler", label: "Ödeme ve planlar" });
+    items.push({ href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" });
   }
 
   if (permissions.technicalHealthRead) {
-    items.push({ href: "/yonetim/saglik", label: "Entegrasyon sağlığı" });
+    items.push({ href: "/yonetim/saglik", icon: "◇", label: "Entegrasyon sağlığı" });
   }
 
   return items;
@@ -48,7 +49,19 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
 
 function isActivePath(pathname: string, href: Route): boolean {
   if (href === "/yonetim") return pathname === href;
+  if (href === "/yonetim/danisanlar" && pathname.startsWith("/yonetim/danisan-profili")) return true;
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function getInitials(email?: string | null): string {
+  if (!email) return "BA";
+  const [name] = email.split("@");
+  return name
+    .split(/[._-]/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toLocaleUpperCase("tr-TR"))
+    .join("") || "BA";
 }
 
 export function AdminShell({
@@ -69,32 +82,68 @@ export function AdminShell({
 
   return (
     <main className={styles.shell}>
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <p className="section-kicker">Berfin Akbaş · Yönetim</p>
-          <h1>{title}</h1>
-          {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
-        </div>
-        <div className={styles.headerMeta}>
-          <span className={styles.email}>{email}</span>
-        </div>
-      </header>
+      <aside className={styles.sidebar} aria-label="Yönetim alanı">
+        <Link className={styles.brand} href="/yonetim">
+          <span className={styles.brandMark}>BA</span>
+          <span>
+            <strong>Berfin Akbaş</strong>
+            <small>Yönetim paneli</small>
+          </span>
+        </Link>
 
-      {navigationItems.length > 0 ? (
-        <nav className={styles.nav} aria-label="Yönetim menüsü">
-          {navigationItems.map((item) => {
-            const isActive = isActivePath(pathname, item.href);
-            const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
-            return (
-              <Link className={className} href={item.href} key={item.href}>
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      ) : null}
+        {navigationItems.length > 0 ? (
+          <nav className={styles.nav} aria-label="Yönetim menüsü">
+            <span className={styles.navSection}>MENÜ</span>
+            {navigationItems.map((item) => {
+              const isActive = isActivePath(pathname, item.href);
+              const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
+              return (
+                <Link className={className} href={item.href} key={item.href}>
+                  <span className={styles.navIcon}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        ) : null}
 
-      <section className={styles.content}>{children}</section>
+        <div className={styles.sidebarNote}>
+          <strong>BO düzeni</strong>
+          <span>Danışan, randevu ve ödeme işlemleri tek panelde takip edilir.</span>
+        </div>
+      </aside>
+
+      <section className={styles.workspace}>
+        <header className={styles.topbar}>
+          <form className={styles.searchForm} action="/yonetim/danisanlar">
+            <span aria-hidden="true">⌕</span>
+            <input name="q" placeholder="Danışan, telefon veya e-posta ara" type="search" />
+            <kbd>Enter</kbd>
+          </form>
+
+          <div className={styles.headerMeta}>
+            <span className={styles.iconButton} aria-hidden="true">✉</span>
+            <span className={styles.iconButton} aria-hidden="true">●</span>
+            <div className={styles.profilePill}>
+              <span>{getInitials(email)}</span>
+              <div>
+                <strong>Yönetici</strong>
+                <small>{email}</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className={styles.titleRow}>
+          <div className={styles.titleGroup}>
+            <p className="section-kicker">Berfin Akbaş · Yönetim</p>
+            <h1>{title}</h1>
+            {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
+          </div>
+        </div>
+
+        <section className={styles.content}>{children}</section>
+      </section>
     </main>
   );
 }
