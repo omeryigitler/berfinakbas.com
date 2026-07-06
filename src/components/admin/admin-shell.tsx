@@ -9,7 +9,7 @@ import styles from "./admin-shell.module.css";
 
 export type AdminNavPermissions = {
   appointmentsRead: boolean;
-  clientsRead: boolean;
+  clientsRead?: boolean;
   financeRead: boolean;
   servicesRead: boolean;
   technicalHealthRead: boolean;
@@ -27,7 +27,7 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
     items.push({ href: "/yonetim", label: "Hizmetler" });
   }
 
-  if (permissions.clientsRead) {
+  if (permissions.clientsRead === true) {
     items.push({ href: "/yonetim/danisanlar", label: "Danışanlar" });
   }
 
