@@ -3,7 +3,11 @@ import Link from "next/link";
 
 import { getDatabase } from "@/lib/db";
 
-import { AdminUrlModal, ModalFieldPreview, ModalOptionGrid } from "./admin-url-modal";
+import {
+  AdminUrlModal,
+  ModalFieldPreview,
+  ModalOptionGrid,
+} from "./admin-url-modal";
 import modalStyles from "./admin-url-modal.module.css";
 import { ClientCreateForm } from "./client-create-form";
 
@@ -23,7 +27,13 @@ export async function DashboardUrlModals({
   if (activeModal === "danisan-ekle" && canManageClients) {
     const guardians = await getDatabase().guardian.findMany({
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-      select: { email: true, firstName: true, id: true, lastName: true, phone: true },
+      select: {
+        email: true,
+        firstName: true,
+        id: true,
+        lastName: true,
+        phone: true,
+      },
       take: 250,
     });
 
@@ -170,7 +180,11 @@ export async function DashboardUrlModals({
 function CloseOnly({ closeHref }: { closeHref: Route }) {
   return (
     <div className={modalStyles.footerActions}>
-      <Link className={modalStyles.modalButtonSecondary} href={closeHref} scroll={false}>
+      <Link
+        className={modalStyles.modalButtonSecondary}
+        href={closeHref}
+        scroll={false}
+      >
         Kapat
       </Link>
     </div>
@@ -192,10 +206,18 @@ function ModalFooter({
     <>
       <span className={modalStyles.footerText}>URL: {url}</span>
       <div className={modalStyles.footerActions}>
-        <Link className={modalStyles.modalButtonSecondary} href={closeHref} scroll={false}>
+        <Link
+          className={modalStyles.modalButtonSecondary}
+          href={closeHref}
+          scroll={false}
+        >
           Kapat
         </Link>
-        <Link className={modalStyles.modalButton} href={primaryHref} scroll={false}>
+        <Link
+          className={modalStyles.modalButton}
+          href={primaryHref}
+          scroll={false}
+        >
           {primaryLabel}
         </Link>
       </div>
