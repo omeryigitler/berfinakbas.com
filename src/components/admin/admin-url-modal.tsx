@@ -23,7 +23,12 @@ export function AdminUrlModal({
 }: AdminUrlModalProps) {
   return (
     <div className={styles.root} role="presentation">
-      <Link aria-label="Close" className={styles.backdrop} href={closeHref} scroll={false} />
+      <Link
+        aria-label="Close"
+        className={styles.backdrop}
+        href={closeHref}
+        scroll={false}
+      />
       <div className={styles.stage}>
         <section aria-modal="true" className={styles.dialog} role="dialog">
           <span className={styles.cornerGlow} aria-hidden="true" />
