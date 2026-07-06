@@ -148,6 +148,7 @@ export const financeOperationPayloadSchema = z.discriminatedUnion("action", [
 
 export const financeOverviewQuerySchema = z
   .object({
+    clientId: z.uuid().optional(),
     status: z.enum(["ALL", "DUE_7_DAYS", "OVERDUE"]).default("ALL"),
   })
   .strict();

@@ -6,12 +6,12 @@ import {
   financeOperationPayloadSchema,
   financeOverviewQuerySchema,
 } from "@/domain/finance/finance-operations";
+import { getFilteredFinanceOverview } from "@/lib/finance/finance-overview-filter";
 import {
   executeFinanceOperation,
   FinanceConflictError,
   FinancePolicyViolationError,
   FinanceResourceNotFoundError,
-  getFinanceOverview,
 } from "@/lib/finance/finance-service";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
@@ -47,58 +47,38 @@ async function readBoundedJsonBody(request: Request): Promise<unknown> {
 }
 
 function forbidden() {
-  return NextResponse.json(
-    { code: "FORBIDDEN", error: "Bu işlem için yetkiniz yok." },
-    { status: 403 },
-  );
+  return NextResponse.json({ code: "FORBIDDEN", error: "Bu işlem için yetkiniz yok." }, { status: 403 });
 }
 
 export async function GET(request: Request) {
   const session = await auth();
-  if (
-    !session?.user ||
-    session.user.status !== "ACTIVE" ||
-    !hasPermission(session.user.roles, "finance:read")
-  ) {
+  if (!session?.user || session.user.status !== "ACTIVE" || !hasPermission(session.user.roles, "finance:read")) {
     return forbidden();
   }
+
   const searchParams = new URL(request.url).searchParams;
   const keys = [...searchParams.keys()];
   const parsed = financeOverviewQuerySchema.safeParse(Object.fromEntries(searchParams.entries()));
   if (new Set(keys).size !== keys.length || !parsed.success) {
-    return NextResponse.json(
-      { code: "INVALID_REQUEST", error: "Finans filtresi geçersiz." },
-      { status: 400 },
-    );
+    return NextResponse.json({ code: "INVALID_REQUEST", error: "Finans filtresi geçersiz." }, { status: 400 });
   }
-  const overview = await getFinanceOverview(parsed.data);
+
+  const overview = await getFilteredFinanceOverview(parsed.data);
   return NextResponse.json({ data: overview }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (
-    !session?.user ||
-    session.user.status !== "ACTIVE" ||
-    !hasPermission(session.user.roles, "finance:manage")
-  ) {
+  if (!session?.user || session.user.status !== "ACTIVE" || !hasPermission(session.user.roles, "finance:manage")) {
     return forbidden();
   }
+
   const environment = getServerEnvironment();
   if (!hasTrustedOrigin(request.headers.get("origin"), environment.APP_URL)) {
-    return NextResponse.json(
-      { code: "UNTRUSTED_ORIGIN", error: "Güvenilmeyen istek kaynağı." },
-      { status: 403 },
-    );
+    return NextResponse.json({ code: "UNTRUSTED_ORIGIN", error: "Güvenilmeyen istek kaynağı." }, { status: 403 });
   }
-  if (
-    request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() !==
-    "application/json"
-  ) {
-    return NextResponse.json(
-      { code: "UNSUPPORTED_MEDIA_TYPE", error: "İstek gövdesi JSON olmalıdır." },
-      { status: 415 },
-    );
+  if (request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() !== "application/json") {
+    return NextResponse.json({ code: "UNSUPPORTED_MEDIA_TYPE", error: "İstek gövdesi JSON olmalıdır." }, { status: 415 });
   }
 
   let body: unknown;
@@ -106,29 +86,14 @@ export async function POST(request: Request) {
     body = await readBoundedJsonBody(request);
   } catch (error) {
     if (error instanceof RequestBodyTooLargeError) {
-      return NextResponse.json(
-        { code: "BODY_TOO_LARGE", error: "İstek gövdesi izin verilen sınırı aşıyor." },
-        { status: 413 },
-      );
+      return NextResponse.json({ code: "BODY_TOO_LARGE", error: "İstek gövdesi izin verilen sınırı aşıyor." }, { status: 413 });
     }
-    return NextResponse.json(
-      { code: "INVALID_JSON", error: "İstek gövdesi geçerli JSON olmalıdır." },
-      { status: 400 },
-    );
+    return NextResponse.json({ code: "INVALID_JSON", error: "İstek gövdesi geçerli JSON olmalıdır." }, { status: 400 });
   }
+
   const parsed = financeOperationPayloadSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      {
-        code: "INVALID_REQUEST",
-        error: "Finans işlemi alanları geçersiz.",
-        issues: parsed.error.issues.map((issue) => ({
-          code: issue.code,
-          path: issue.path.join("."),
-        })),
-      },
-      { status: 400 },
-    );
+    return NextResponse.json({ code: "INVALID_REQUEST", error: "Finans işlemi alanları geçersiz." }, { status: 400 });
   }
 
   try {
