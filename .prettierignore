@@ -5,4 +5,4 @@ outputs/
 src/generated/prisma/
 work/
 pnpm-lock.yaml
-
+src/app/yonetim/danisanlar/**/page.tsx
