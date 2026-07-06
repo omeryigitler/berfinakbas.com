@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { createClientPayloadSchema } from "@/domain/clients/client-management";
 import { hasPermission } from "@/domain/auth/permissions";
+import { createClientPayloadSchema } from "@/domain/clients/client-management";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { hasTrustedOrigin } from "@/lib/request-security";
@@ -149,7 +149,11 @@ export async function POST(request: Request) {
           }
 
           if (payload.guardianMode === "NEW") {
-            if (!payload.guardianFirstName || !payload.guardianLastName || !payload.guardianPhone) {
+            if (
+              !payload.guardianFirstName ||
+              !payload.guardianLastName ||
+              !payload.guardianPhone
+            ) {
               throw new GuardianNotFoundError();
             }
             const guardian = await transaction.guardian.create({
@@ -182,7 +186,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof GuardianNotFoundError) {
       return NextResponse.json(
-        { code: "GUARDIAN_REQUIRED", error: "Çocuk danışan için geçerli bir veli kaydı zorunludur." },
+        {
+          code: "GUARDIAN_REQUIRED",
+          error: "Çocuk danışan için geçerli bir veli kaydı zorunludur.",
+        },
         { status: 422 },
       );
     }
