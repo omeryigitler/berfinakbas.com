@@ -50,14 +50,11 @@ function nullableUuid() {
 }
 
 const birthYearSchema = z
-  .preprocess(
-    (value) => {
-      if (value === null || value === undefined || value === "") return null;
-      if (typeof value === "string") return Number(value);
-      return value;
-    },
-    z.number().int().min(1900).max(currentYear).nullable().optional(),
-  )
+  .preprocess((value) => {
+    if (value === null || value === undefined || value === "") return null;
+    if (typeof value === "string") return Number(value);
+    return value;
+  }, z.number().int().min(1900).max(currentYear).nullable().optional())
   .transform((value) => value ?? null);
 
 export const createClientPayloadSchema = z
