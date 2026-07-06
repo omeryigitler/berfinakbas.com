@@ -28,6 +28,7 @@ export default async function AdminHomePage() {
       email={session.user.email}
       permissions={{
         appointmentsRead: hasPermission(session.user.roles, "appointments:read"),
+        clientsRead: hasPermission(session.user.roles, "clients:read"),
         financeRead: hasPermission(session.user.roles, "finance:read"),
         servicesRead: true,
         technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),

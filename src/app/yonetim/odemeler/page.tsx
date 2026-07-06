@@ -12,6 +12,7 @@ export default async function AdminFinancePage() {
       email={session.user.email}
       permissions={{
         appointmentsRead: hasPermission(session.user.roles, "appointments:read"),
+        clientsRead: hasPermission(session.user.roles, "clients:read"),
         financeRead: true,
         servicesRead: hasPermission(session.user.roles, "services:read"),
         technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
