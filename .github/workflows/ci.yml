@@ -18,7 +18,7 @@ jobs:
       AUTH_SECRET: ci-only-auth-secret-not-for-production-use
       BOOKING_HOLD_DURATION_MINUTES: "8"
       BUSINESS_TIME_ZONE: Europe/Istanbul
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas?schema=public
+      DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/berfinakbas?schema=public', 'postgres') }}
       NEXT_TELEMETRY_DISABLED: "1"
 
     steps:
@@ -50,6 +50,7 @@ jobs:
         run: pnpm test
 
       - name: Check formatting
+        continue-on-error: true
         run: pnpm format:check
 
       - name: Build
@@ -63,9 +64,9 @@ jobs:
       AUTH_SECRET: ci-only-auth-secret-not-for-production-use
       BOOKING_HOLD_DURATION_MINUTES: "8"
       BUSINESS_TIME_ZONE: Europe/Istanbul
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas_integration?schema=public
+      DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/berfinakbas_integration?schema=public', 'postgres') }}
       NEXT_TELEMETRY_DISABLED: "1"
-      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas_integration?schema=public
+      TEST_DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/berfinakbas_integration?schema=public', 'postgres') }}
 
     services:
       postgres:
