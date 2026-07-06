@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -11,6 +12,8 @@ import { getDatabase } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+type ClientStatus = (typeof clientStatuses)[number];
+type ClientType = (typeof clientTypes)[number];
 
 const clientStatuses = ["PROSPECTIVE", "ACTIVE", "INACTIVE"] as const;
 const clientTypes = ["ADULT", "CHILD"] as const;
@@ -27,6 +30,14 @@ function singleParam(params: Record<string, string | string[] | undefined>, key:
   const value = params[key];
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";
+}
+
+function isClientStatus(value: string): value is ClientStatus {
+  return clientStatuses.some((status) => status === value);
+}
+
+function isClientType(value: string): value is ClientType {
+  return clientTypes.some((type) => type === value);
 }
 
 export default async function AdminClientsPage({ searchParams }: { searchParams: SearchParams }) {
@@ -46,10 +57,27 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
     ];
   }
 
-  if (clientStatuses.includes(status as never)) where.status = status as never;
-  if (clientTypes.includes(type as never)) where.type = type as never;
+  if (isClientStatus(status)) where.status = status;
+  if (isClientType(type)) where.type = type;
 
-  const totalCount = await getDatabase().client.count({ where });
+  const [clients, totalCount] = await Promise.all([
+    getDatabase().client.findMany({
+      orderBy: [{ createdAt: "desc" }],
+      select: {
+        email: true,
+        firstName: true,
+        id: true,
+        lastName: true,
+        phone: true,
+        preferredName: true,
+        status: true,
+        type: true,
+      },
+      take: 100,
+      where,
+    }),
+    getDatabase().client.count({ where }),
+  ]);
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
 
   return (
@@ -88,8 +116,37 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
           typeOptions={typeOptions}
         />
 
+        {clients.length === 0 ? (
+          <div className="admin-empty-state">
+            <strong>Danışan bulunamadı</strong>
+            <span>Filtreleri temizleyebilir veya yeni danışan oluşturabilirsiniz.</span>
+          </div>
+        ) : (
+          <ul className="admin-service-list">
+            {clients.map((client) => (
+              <li key={client.id}>
+                <div>
+                  <strong>
+                    {client.firstName} {client.lastName}
+                  </strong>
+                  <span>
+                    {client.preferredName ? `${client.preferredName} · ` : ""}
+                    {client.phone ?? "Telefon yok"} · {client.email ?? "E-posta yok"}
+                  </span>
+                  <span>
+                    {clientTypeLabels[client.type]} · {clientStatusLabels[client.status]}
+                  </span>
+                </div>
+                <Link href={`/yonetim/danisanlar/${client.id}` as Route}>Profili aç</Link>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="admin-list-footer">
-          <span>Toplam {totalCount} kayıt</span>
+          <span>
+            {clients.length} kayıt gösteriliyor · Toplam {totalCount}
+          </span>
         </div>
       </section>
     </AdminShell>
