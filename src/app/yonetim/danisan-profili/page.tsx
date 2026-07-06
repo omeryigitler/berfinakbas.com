@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
+import { ClientProfileUrlModals } from "@/components/admin/client-profile-url-modals";
 import { hasPermission } from "@/domain/auth/permissions";
 import {
   clientStatusLabels,
@@ -52,6 +53,7 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
   const session = await requirePermission("clients:read");
   const params = await searchParams;
   const clientId = singleParam(params, "clientId").trim();
+  const activeModal = singleParam(params, "modal").trim();
   if (!clientId) notFound();
 
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
@@ -89,10 +91,14 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
 
   if (!client) notFound();
 
+  const clientName = `${client.firstName} ${client.lastName}`;
   const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
   const latestAppointment = client.appointments[0];
   const primaryGuardian = client.guardians[0];
   const financeHref = `/yonetim/odemeler?clientId=${client.id}` as Route;
+  const noteModalHref = `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
+  const appointmentModalHref = `/yonetim/danisan-profili?clientId=${client.id}&modal=randevu-olustur` as Route;
+  const planModalHref = `/yonetim/danisan-profili?clientId=${client.id}&modal=odeme-plani` as Route;
 
   return (
     <AdminShell
@@ -104,8 +110,8 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
         servicesRead: hasPermission(session.user.roles, "services:read"),
         technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
       }}
-      subtitle="Danışan için hızlı işlem ve operasyon özeti."
-      title={`${client.firstName} ${client.lastName}`}
+      subtitle="Danışan için hızlı işlem ve operasyon özeti. İşlemler URL tabanlı modal olarak açılır."
+      title={clientName}
     >
       <Link className="admin-back-link" href="/yonetim/danisanlar">
         ← Danışan listesine dön
@@ -115,14 +121,25 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
         <div className="admin-panel-heading">
           <div>
             <h2 id="hizli-islemler">Hızlı işlemler</h2>
-            <p>Danışanı açınca yapılacak temel işler burada başlar.</p>
+            <p>Danışanı açınca yapılacak temel işler modal üzerinden başlar.</p>
           </div>
-          <span className="admin-count">BO</span>
+          <span className="admin-count">URL modal</span>
         </div>
         <div className="finance-operation-grid finance-operation-grid--buttons">
           <Link href="/yonetim/danisanlar">Danışan listesi</Link>
-          {canReadAppointments ? <Link href="/yonetim/randevular">Randevular</Link> : null}
-          {canReadFinance ? <Link href={financeHref}>Ödeme ve planlar</Link> : null}
+          <Link href={noteModalHref} scroll={false}>
+            Not ekle
+          </Link>
+          {canReadAppointments ? (
+            <Link href={appointmentModalHref} scroll={false}>
+              Randevu oluştur
+            </Link>
+          ) : null}
+          {canReadFinance ? (
+            <Link href={planModalHref} scroll={false}>
+              Ödeme planı oluştur
+            </Link>
+          ) : null}
         </div>
       </section>
 
@@ -160,7 +177,7 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
         <ul className="admin-service-list">
           <li>
             <div>
-              <strong>{`${client.firstName} ${client.lastName}`}</strong>
+              <strong>{clientName}</strong>
               <span>{client.preferredName ? `Tercih edilen ad: ${client.preferredName}` : "Tercih edilen ad yok"}</span>
             </div>
             <span>{client.birthYear ?? "Doğum yılı yok"}</span>
@@ -194,12 +211,12 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
             <h2 id="randevular">Randevular</h2>
             <p>Son randevular ve randevu ekranına hızlı geçiş.</p>
           </div>
-          {canReadAppointments ? <Link className="secondary-button" href="/yonetim/randevular">Randevuları yönet</Link> : null}
+          {canReadAppointments ? <Link className="secondary-button" href={appointmentModalHref} scroll={false}>Randevu oluştur</Link> : null}
         </div>
         {client.appointments.length === 0 ? (
           <div className="admin-empty-state">
             <strong>Randevu kaydı yok</strong>
-            <span>Randevu planlamak için randevular ekranını açın.</span>
+            <span>Randevu planlamak için randevu oluştur modalını açın.</span>
           </div>
         ) : (
           <ul className="admin-service-list">
@@ -222,12 +239,12 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
             <h2 id="finans">Ödeme ve planlar</h2>
             <p>Bu danışanın ödeme ekranı filtreli açılır.</p>
           </div>
-          {canReadFinance ? <Link className="secondary-button" href={financeHref}>Finansı aç</Link> : null}
+          {canReadFinance ? <Link className="secondary-button" href={planModalHref} scroll={false}>Ödeme planı oluştur</Link> : null}
         </div>
         {client.plans.length === 0 ? (
           <div className="admin-empty-state">
             <strong>Plan kaydı yok</strong>
-            <span>Ödeme planı oluşturmak için finans ekranını açın.</span>
+            <span>Ödeme planı oluşturmak için modalı açın.</span>
           </div>
         ) : (
           <ul className="admin-service-list">
@@ -243,6 +260,14 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
           </ul>
         )}
       </section>
+
+      <ClientProfileUrlModals
+        activeModal={activeModal}
+        canReadAppointments={canReadAppointments}
+        canReadFinance={canReadFinance}
+        clientId={client.id}
+        clientName={clientName}
+      />
     </AdminShell>
   );
 }
