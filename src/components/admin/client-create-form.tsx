@@ -110,7 +110,9 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
       if (!response.ok || !payload.data) throw new Error(issueMessage(payload));
       window.location.assign(`/yonetim/danisanlar/${payload.data.id}`);
     } catch (error) {
-      setMessage(error instanceof Error && error.message ? error.message : "Danışan kaydedilemedi.");
+      setMessage(
+        error instanceof Error && error.message ? error.message : "Danışan kaydedilemedi.",
+      );
     } finally {
       setBusy(false);
     }
@@ -147,11 +149,23 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
         </label>
         <label className="booking-field">
           Ad
-          <input autoComplete="given-name" disabled={busy} maxLength={120} name="firstName" required />
+          <input
+            autoComplete="given-name"
+            disabled={busy}
+            maxLength={120}
+            name="firstName"
+            required
+          />
         </label>
         <label className="booking-field">
           Soyad
-          <input autoComplete="family-name" disabled={busy} maxLength={120} name="lastName" required />
+          <input
+            autoComplete="family-name"
+            disabled={busy}
+            maxLength={120}
+            name="lastName"
+            required
+          />
         </label>
         <label className="booking-field">
           Tercih edilen ad
