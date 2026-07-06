@@ -59,6 +59,18 @@ function formatMoney(amountMinor: bigint, currency: string): string {
   }).format(Number(amountMinor) / 100);
 }
 
+function appointmentStatusLabel(status: string): string {
+  return appointmentStatusLabels[status as keyof typeof appointmentStatusLabels] ?? status;
+}
+
+function planStatusLabel(status: string): string {
+  return planStatusLabels[status as keyof typeof planStatusLabels] ?? status;
+}
+
+function consentStatusLabel(status: string): string {
+  return consentStatusLabels[status as keyof typeof consentStatusLabels] ?? status;
+}
+
 export default async function AdminClientDetailPage({ params }: { params: PageParams }) {
   const session = await requirePermission("clients:read");
   const { id } = await params;
@@ -251,7 +263,7 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
                     {formatDateTime(appointment.startsAt)} – {formatDateTime(appointment.endsAt)}
                   </span>
                 </div>
-                <span>{appointmentStatusLabels[appointment.status]}</span>
+                <span>{appointmentStatusLabel(appointment.status)}</span>
               </li>
             ))}
           </ul>
@@ -282,7 +294,7 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
                   </span>
                 </div>
                 <span>
-                  {planStatusLabels[plan.status]} · {formatDate(plan.validFrom)}
+                  {planStatusLabel(plan.status)} · {formatDate(plan.validFrom)}
                   {plan.validUntil ? ` - ${formatDate(plan.validUntil)}` : ""}
                 </span>
               </li>
@@ -313,7 +325,7 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
                   <span>Versiyon {consent.document.version}</span>
                 </div>
                 <span>
-                  {consentStatusLabels[consent.status]} · {formatDateTime(consent.capturedAt)}
+                  {consentStatusLabel(consent.status)} · {formatDateTime(consent.capturedAt)}
                 </span>
               </li>
             ))}
