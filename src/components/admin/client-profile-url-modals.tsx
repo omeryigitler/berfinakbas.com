@@ -105,7 +105,12 @@ export async function ClientProfileUrlModals({
           />
           <div className="booking-subject-type">
             <label>
-              <input defaultChecked name="category" type="radio" value="ADMIN" />
+              <input
+                defaultChecked
+                name="category"
+                type="radio"
+                value="ADMIN"
+              />
               <span>Admin notu</span>
             </label>
             <label>
