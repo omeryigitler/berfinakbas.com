@@ -31,7 +31,9 @@ export function ClientFilterForm({
     if (nextType !== "ALL") params.set("type", nextType);
 
     const queryString = params.toString();
-    window.location.assign(queryString ? `/yonetim/danisanlar?${queryString}` : "/yonetim/danisanlar");
+    window.location.assign(
+      queryString ? `/yonetim/danisanlar?${queryString}` : "/yonetim/danisanlar",
+    );
   }
 
   return (
@@ -48,7 +50,12 @@ export function ClientFilterForm({
     >
       <label className="booking-field">
         Arama
-        <input defaultValue={query} name="q" placeholder="Ad, soyad, telefon veya e-posta" type="search" />
+        <input
+          defaultValue={query}
+          name="q"
+          placeholder="Ad, soyad, telefon veya e-posta"
+          type="search"
+        />
       </label>
       <label className="booking-field">
         Statü
