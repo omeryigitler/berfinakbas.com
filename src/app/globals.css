@@ -2159,9 +2159,13 @@ summary:focus-visible {
 
 .finance-operation-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(520px, 1.35fr);
+  gap: 16px;
   margin-top: 22px;
+}
+
+.finance-operation-card:nth-child(3) {
+  grid-column: 1 / -1;
 }
 
 .finance-operation-card {
@@ -2386,6 +2390,10 @@ summary:focus-visible {
 @media (max-width: 1180px) {
   .finance-operation-grid {
     grid-template-columns: 1fr;
+  }
+
+  .finance-operation-card:nth-child(3) {
+    grid-column: auto;
   }
 
   .finance-inline-fields {
