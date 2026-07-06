@@ -59,6 +59,18 @@ function formatMoney(amountMinor: bigint, currency: string): string {
   }).format(Number(amountMinor) / 100);
 }
 
+function appointmentStatusLabel(status: string): string {
+  return appointmentStatusLabels[status as keyof typeof appointmentStatusLabels] ?? status;
+}
+
+function planStatusLabel(status: string): string {
+  return planStatusLabels[status as keyof typeof planStatusLabels] ?? status;
+}
+
+function consentStatusLabel(status: string): string {
+  return consentStatusLabels[status as keyof typeof consentStatusLabels] ?? status;
+}
+
 export default async function AdminClientDetailPage({ params }: { params: PageParams }) {
   const session = await requirePermission("clients:read");
   const { id } = await params;
@@ -205,7 +217,11 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
         {client.guardians.length === 0 ? (
           <div className="admin-empty-state">
             <strong>Veli kaydı yok</strong>
-            <span>{client.type === "CHILD" ? "Bu çocuk danışan için veli kaydı bekleniyor." : "Yetişkin danışan için veli bilgisi zorunlu değildir."}</span>
+            <span>
+              {client.type === "CHILD"
+                ? "Bu çocuk danışan için veli kaydı bekleniyor."
+                : "Yetişkin danışan için veli bilgisi zorunlu değildir."}
+            </span>
           </div>
         ) : (
           <ul className="admin-service-list">
@@ -232,7 +248,9 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
         <div className="admin-panel-heading">
           <div>
             <h2 id="randevu-ozeti">Randevu özeti</h2>
-            <p>Bu alan şimdilik placeholder’dır; detaylı randevu yönetimi ayrı modüle bağlı kalır.</p>
+            <p>
+              Bu alan şimdilik placeholder’dır; detaylı randevu yönetimi ayrı modüle bağlı kalır.
+            </p>
           </div>
           <span className="admin-count">PLACEHOLDER</span>
         </div>
@@ -251,7 +269,7 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
                     {formatDateTime(appointment.startsAt)} – {formatDateTime(appointment.endsAt)}
                   </span>
                 </div>
-                <span>{appointmentStatusLabels[appointment.status]}</span>
+                <span>{appointmentStatusLabel(appointment.status)}</span>
               </li>
             ))}
           </ul>
@@ -262,7 +280,9 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
         <div className="admin-panel-heading">
           <div>
             <h2 id="finans-ozeti">Finans özeti</h2>
-            <p>Gerçek ödeme/plan yönetimi bu PR kapsamında değildir; burada yalnızca özet gösterilir.</p>
+            <p>
+              Gerçek ödeme/plan yönetimi bu PR kapsamında değildir; burada yalnızca özet gösterilir.
+            </p>
           </div>
           <span className="admin-count">{client._count.financeEntries} hareket</span>
         </div>
@@ -282,7 +302,7 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
                   </span>
                 </div>
                 <span>
-                  {planStatusLabels[plan.status]} · {formatDate(plan.validFrom)}
+                  {planStatusLabel(plan.status)} · {formatDate(plan.validFrom)}
                   {plan.validUntil ? ` - ${formatDate(plan.validUntil)}` : ""}
                 </span>
               </li>
@@ -313,7 +333,7 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
                   <span>Versiyon {consent.document.version}</span>
                 </div>
                 <span>
-                  {consentStatusLabels[consent.status]} · {formatDateTime(consent.capturedAt)}
+                  {consentStatusLabel(consent.status)} · {formatDateTime(consent.capturedAt)}
                 </span>
               </li>
             ))}

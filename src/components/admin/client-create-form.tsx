@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import { useMemo, useState } from "react";
 
 import { SelectControl } from "./select-control";
 
@@ -12,7 +13,11 @@ type GuardianOption = {
   phone: string;
 };
 
-type ApiResponse<T> = { data?: T; error?: string; issues?: { message?: string; path: string }[] };
+type ApiResponse<T> = {
+  data?: T;
+  error?: string;
+  issues?: { message?: string; path: string }[];
+};
 
 type ClientType = "ADULT" | "CHILD";
 type GuardianMode = "EXISTING" | "NEW";
@@ -55,7 +60,11 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    if (clientType === "CHILD" && guardianMode === "EXISTING" && !optionalValue(formData, "guardianId")) {
+    if (
+      clientType === "CHILD" &&
+      guardianMode === "EXISTING" &&
+      !optionalValue(formData, "guardianId")
+    ) {
       setMessage("Çocuk danışan için mevcut veli seçmelisiniz veya yeni veli oluşturmalısınız.");
       return;
     }
@@ -101,7 +110,9 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
       if (!response.ok || !payload.data) throw new Error(issueMessage(payload));
       window.location.assign(`/yonetim/danisanlar/${payload.data.id}`);
     } catch (error) {
-      setMessage(error instanceof Error && error.message ? error.message : "Danışan kaydedilemedi.");
+      setMessage(
+        error instanceof Error && error.message ? error.message : "Danışan kaydedilemedi.",
+      );
     } finally {
       setBusy(false);
     }
@@ -138,11 +149,23 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
         </label>
         <label className="booking-field">
           Ad
-          <input autoComplete="given-name" disabled={busy} maxLength={120} name="firstName" required />
+          <input
+            autoComplete="given-name"
+            disabled={busy}
+            maxLength={120}
+            name="firstName"
+            required
+          />
         </label>
         <label className="booking-field">
           Soyad
-          <input autoComplete="family-name" disabled={busy} maxLength={120} name="lastName" required />
+          <input
+            autoComplete="family-name"
+            disabled={busy}
+            maxLength={120}
+            name="lastName"
+            required
+          />
         </label>
         <label className="booking-field">
           Tercih edilen ad
@@ -226,7 +249,13 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
             )}
             <label className="booking-field">
               Yakınlık
-              <input disabled={busy} maxLength={80} name="relationship" placeholder="Anne, baba, bakım veren..." required />
+              <input
+                disabled={busy}
+                maxLength={80}
+                name="relationship"
+                placeholder="Anne, baba, bakım veren..."
+                required
+              />
             </label>
           </div>
         </fieldset>
