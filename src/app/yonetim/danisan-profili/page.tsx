@@ -26,7 +26,10 @@ const planStatusLabels = {
   EXPIRED: "Süresi doldu",
 } as const;
 
-function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
+function singleParam(
+  params: Record<string, string | string[] | undefined>,
+  key: string,
+): string {
   const value = params[key];
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";
@@ -49,7 +52,11 @@ function planStatusLabel(status: string): string {
   return planStatusLabels[status as keyof typeof planStatusLabels] ?? status;
 }
 
-export default async function AdminClientProfilePage({ searchParams }: { searchParams: SearchParams }) {
+export default async function AdminClientProfilePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await requirePermission("clients:read");
   const params = await searchParams;
   const clientId = singleParam(params, "clientId").trim();
@@ -60,15 +67,24 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
   const canReadAppointments = hasPermission(session.user.roles, "appointments:read");
   const client = await getDatabase().client.findUnique({
     include: {
-      _count: { select: { appointments: true, consents: true, financeEntries: true, plans: true } },
+      _count: {
+        select: { appointments: true, consents: true, financeEntries: true, plans: true },
+      },
       appointments: {
         orderBy: [{ startsAt: "desc" }],
-        select: { id: true, service: { select: { name: true } }, startsAt: true, status: true },
+        select: {
+          id: true,
+          service: { select: { name: true } },
+          startsAt: true,
+          status: true,
+        },
         take: 3,
       },
       guardians: {
         include: {
-          guardian: { select: { email: true, firstName: true, id: true, lastName: true, phone: true } },
+          guardian: {
+            select: { email: true, firstName: true, id: true, lastName: true, phone: true },
+          },
         },
         orderBy: [{ isPrimary: "desc" }],
       },
@@ -95,10 +111,11 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
   const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
   const latestAppointment = client.appointments[0];
   const primaryGuardian = client.guardians[0];
-  const financeHref = `/yonetim/odemeler?clientId=${client.id}` as Route;
   const noteModalHref = `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
-  const appointmentModalHref = `/yonetim/danisan-profili?clientId=${client.id}&modal=randevu-olustur` as Route;
-  const planModalHref = `/yonetim/danisan-profili?clientId=${client.id}&modal=odeme-plani` as Route;
+  const appointmentModalHref =
+    `/yonetim/danisan-profili?clientId=${client.id}&modal=randevu-olustur` as Route;
+  const planModalHref =
+    `/yonetim/danisan-profili?clientId=${client.id}&modal=odeme-plani` as Route;
 
   return (
     <AdminShell
@@ -162,7 +179,11 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
         <article className={styles.dashboardCard}>
           <span>Aktif plan</span>
           <strong>{activePlan ? activePlan.name : "Yok"}</strong>
-          <small>{activePlan ? formatMoney(activePlan.totalAmountMinor, activePlan.currency) : "Plan açılabilir"}</small>
+          <small>
+            {activePlan
+              ? formatMoney(activePlan.totalAmountMinor, activePlan.currency)
+              : "Plan açılabilir"}
+          </small>
         </article>
       </div>
 
@@ -178,7 +199,11 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
           <li>
             <div>
               <strong>{clientName}</strong>
-              <span>{client.preferredName ? `Tercih edilen ad: ${client.preferredName}` : "Tercih edilen ad yok"}</span>
+              <span>
+                {client.preferredName
+                  ? `Tercih edilen ad: ${client.preferredName}`
+                  : "Tercih edilen ad yok"}
+              </span>
             </div>
             <span>{client.birthYear ?? "Doğum yılı yok"}</span>
           </li>
@@ -211,7 +236,11 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
             <h2 id="randevular">Randevular</h2>
             <p>Son randevular ve randevu ekranına hızlı geçiş.</p>
           </div>
-          {canReadAppointments ? <Link className="secondary-button" href={appointmentModalHref} scroll={false}>Randevu oluştur</Link> : null}
+          {canReadAppointments ? (
+            <Link className="secondary-button" href={appointmentModalHref} scroll={false}>
+              Randevu oluştur
+            </Link>
+          ) : null}
         </div>
         {client.appointments.length === 0 ? (
           <div className="admin-empty-state">
@@ -239,7 +268,11 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
             <h2 id="finans">Ödeme ve planlar</h2>
             <p>Bu danışanın ödeme ekranı filtreli açılır.</p>
           </div>
-          {canReadFinance ? <Link className="secondary-button" href={planModalHref} scroll={false}>Ödeme planı oluştur</Link> : null}
+          {canReadFinance ? (
+            <Link className="secondary-button" href={planModalHref} scroll={false}>
+              Ödeme planı oluştur
+            </Link>
+          ) : null}
         </div>
         {client.plans.length === 0 ? (
           <div className="admin-empty-state">
@@ -252,7 +285,10 @@ export default async function AdminClientProfilePage({ searchParams }: { searchP
               <li key={plan.id}>
                 <div>
                   <strong>{plan.name}</strong>
-                  <span>{`${plan.sessionCount} seans · ${formatMoney(plan.totalAmountMinor, plan.currency)}`}</span>
+                  <span>{`${plan.sessionCount} seans · ${formatMoney(
+                    plan.totalAmountMinor,
+                    plan.currency,
+                  )}`}</span>
                 </div>
                 <span>{`${planStatusLabel(plan.status)} · ${formatDate(plan.validFrom)}`}</span>
               </li>
