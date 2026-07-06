@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef } from "react";
+import { FormEvent } from "react";
 
 import { SelectControl } from "./select-control";
 
@@ -17,8 +17,6 @@ export function ClientFilterForm({
   type: string;
   typeOptions: { label: string; value: string }[];
 }) {
-  const formRef = useRef<HTMLFormElement>(null);
-
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -37,7 +35,17 @@ export function ClientFilterForm({
   }
 
   return (
-    <form className="admin-filter-form" method="get" onSubmit={submit} ref={formRef}>
+    <form
+      method="get"
+      onSubmit={submit}
+      style={{
+        alignItems: "end",
+        display: "grid",
+        gap: 17,
+        gridTemplateColumns: "minmax(260px, 1.2fr) minmax(180px, 0.8fr) minmax(180px, 0.8fr) auto",
+        marginTop: 24,
+      }}
+    >
       <label className="booking-field">
         Arama
         <input defaultValue={query} name="q" placeholder="Ad, soyad, telefon veya e-posta" type="search" />
@@ -50,11 +58,9 @@ export function ClientFilterForm({
         Danışan tipi
         <SelectControl defaultValue={type} name="type" options={typeOptions} />
       </label>
-      <div className="admin-filter-actions">
-        <button className="secondary-button" type="submit">
-          Filtrele
-        </button>
-      </div>
+      <button className="secondary-button" style={{ minWidth: 118 }} type="submit">
+        Filtrele
+      </button>
     </form>
   );
 }
