@@ -17,17 +17,18 @@ import { getDatabase } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+type FilterOption = { label: string; value: string };
 
 const clientStatuses = ["PROSPECTIVE", "ACTIVE", "INACTIVE"] as const;
 const clientTypes = ["ADULT", "CHILD"] as const;
-const statusOptions = [
+const statusOptions: FilterOption[] = [
   { label: "Tüm statüler", value: "ALL" },
   ...clientStatuses.map((statusOption) => ({
     label: clientStatusLabels[statusOption],
     value: statusOption,
   })),
 ];
-const typeOptions = [
+const typeOptions: FilterOption[] = [
   { label: "Yetişkin ve çocuk", value: "ALL" },
   ...clientTypes.map((typeOption) => ({
     label: clientTypeLabels[typeOption],
@@ -160,8 +161,8 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
                         <span>{client.email ?? "E-posta yok"}</span>
                       </td>
                       <td>
-                        <strong>{clientTypeLabels[client.type]}</strong>
-                        <span>{clientStatusLabels[client.status]}</span>
+                        <strong>{clientTypeLabels[client.type as ClientTypeValue]}</strong>
+                        <span>{clientStatusLabels[client.status as ClientStatusValue]}</span>
                       </td>
                       <td>
                         {primaryGuardian ? (
