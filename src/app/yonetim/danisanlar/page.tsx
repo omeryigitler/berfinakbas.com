@@ -154,7 +154,9 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
                         <strong>
                           {client.firstName} {client.lastName}
                         </strong>
-                        <span>{client.preferredName ? `Tercih edilen ad: ${client.preferredName}` : "—"}</span>
+                        <span>
+                          {client.preferredName ? `Tercih edilen ad: ${client.preferredName}` : "—"}
+                        </span>
                       </td>
                       <td>
                         <strong>{client.phone ?? "Telefon yok"}</strong>
@@ -173,7 +175,9 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
                             <span>{primaryGuardian.guardian.phone}</span>
                           </>
                         ) : (
-                          <span>{client.type === "CHILD" ? "Veli bekleniyor" : "Gerekli değil"}</span>
+                          <span>
+                            {client.type === "CHILD" ? "Veli bekleniyor" : "Gerekli değil"}
+                          </span>
                         )}
                       </td>
                       <td>
