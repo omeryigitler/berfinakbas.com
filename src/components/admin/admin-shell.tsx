@@ -9,6 +9,7 @@ import styles from "./admin-shell.module.css";
 
 export type AdminNavPermissions = {
   appointmentsRead: boolean;
+  clientsRead: boolean;
   financeRead: boolean;
   servicesRead: boolean;
   technicalHealthRead: boolean;
@@ -26,6 +27,10 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
     items.push({ href: "/yonetim", label: "Hizmetler" });
   }
 
+  if (permissions.clientsRead) {
+    items.push({ href: "/yonetim/danisanlar", label: "Danışanlar" });
+  }
+
   if (permissions.appointmentsRead) {
     items.push({ href: "/yonetim/randevular", label: "Randevular" });
   }
@@ -39,6 +44,11 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
   }
 
   return items;
+}
+
+function isActivePath(pathname: string, href: Route): boolean {
+  if (href === "/yonetim") return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function AdminShell({
@@ -73,8 +83,7 @@ export function AdminShell({
       {navigationItems.length > 0 ? (
         <nav className={styles.nav} aria-label="Yönetim menüsü">
           {navigationItems.map((item) => {
-            const isActive =
-              pathname === item.href || (item.href === "/yonetim" && pathname === "/yonetim");
+            const isActive = isActivePath(pathname, item.href);
             return (
               <Link
                 className={`${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`}
