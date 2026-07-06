@@ -149,11 +149,7 @@ export async function POST(request: Request) {
           }
 
           if (payload.guardianMode === "NEW") {
-            if (
-              !payload.guardianFirstName ||
-              !payload.guardianLastName ||
-              !payload.guardianPhone
-            ) {
+            if (!payload.guardianFirstName || !payload.guardianLastName || !payload.guardianPhone) {
               throw new GuardianNotFoundError();
             }
             const guardian = await transaction.guardian.create({
