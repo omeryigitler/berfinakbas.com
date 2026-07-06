@@ -1,12 +1,24 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { ClientFinanceOverview } from "@/components/admin/client-finance-overview";
 import { FinanceDashboard } from "@/components/admin/finance-dashboard";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminFinancePage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
+  const value = params[key];
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+export default async function AdminFinancePage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requirePermission("finance:read");
+  const params = await searchParams;
+  const clientId = singleParam(params, "clientId").trim();
+
   return (
     <AdminShell
       email={session.user.email}
@@ -20,6 +32,8 @@ export default async function AdminFinancePage() {
       subtitle="Plan, taksit ve ödeme akışı tek panel üzerinden yönetilir."
       title="Ödeme ve planlar"
     >
+      {clientId ? <ClientFinanceOverview clientId={clientId} /> : null}
+
       <section className="admin-panel" aria-labelledby="finance-title">
         <div className="admin-panel-heading">
           <div>
