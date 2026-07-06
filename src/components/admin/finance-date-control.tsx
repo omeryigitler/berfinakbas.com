@@ -24,7 +24,12 @@ function readableDate(value: string): string {
   return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(dateFromIsoDay(value));
 }
 
-export function FinanceDateControl({ disabled = false, name, onValueChange, value }: FinanceDateControlProps) {
+export function FinanceDateControl({
+  disabled = false,
+  name,
+  onValueChange,
+  value,
+}: FinanceDateControlProps) {
   const [open, setOpen] = useState(false);
   const [monthDate, setMonthDate] = useState(() => dateFromIsoDay(value));
 
@@ -61,7 +66,10 @@ export function FinanceDateControl({ disabled = false, name, onValueChange, valu
               Geri
             </button>
             <strong>
-              {new Intl.DateTimeFormat("tr-TR", { month: "long", year: "numeric" }).format(monthDate)}
+              {new Intl.DateTimeFormat("tr-TR", {
+                month: "long",
+                year: "numeric",
+              }).format(monthDate)}
             </strong>
             <button onClick={() => changeMonth(1)} type="button">
               İleri
