@@ -28,12 +28,24 @@ export async function DashboardUrlModals({
     });
 
     return (
-      <AdminUrlModal closeHref="/yonetim" footer={<CloseOnly closeHref="/yonetim" />} title="Danisan ekle">
+      <AdminUrlModal
+        closeHref="/yonetim"
+        footer={<CloseOnly closeHref="/yonetim" />}
+        title="Danisan ekle"
+      >
         <div className={modalStyles.modalStack}>
           <ModalOptionGrid
             items={[
-              { description: "Guardian linked child client record.", icon: "C", label: "Cocuk danisan" },
-              { description: "Adult client record with own contact.", icon: "Y", label: "Yetiskin danisan" },
+              {
+                description: "Guardian linked child client record.",
+                icon: "C",
+                label: "Cocuk danisan",
+              },
+              {
+                description: "Adult client record with own contact.",
+                icon: "Y",
+                label: "Yetiskin danisan",
+              },
             ]}
           />
           <ClientCreateForm guardians={guardians} />
@@ -46,12 +58,27 @@ export async function DashboardUrlModals({
     return (
       <AdminUrlModal
         closeHref="/yonetim"
-        footer={<ModalFooter closeHref="/yonetim" primaryHref="/yonetim/danisanlar" primaryLabel="Danisan sec" url="/yonetim?modal=not-ekle" />}
+        footer={
+          <ModalFooter
+            closeHref="/yonetim"
+            primaryHref="/yonetim/danisanlar"
+            primaryLabel="Danisan sec"
+            url="/yonetim?modal=not-ekle"
+          />
+        }
         title="Not ekle"
       >
         <div className={modalStyles.modalStack}>
-          <ModalFieldPreview label="Baglam" value="Once danisan secilir" helper="Not dogrudan danisan profilinden acilir." />
-          <ModalFieldPreview label="Kalici kayit" value="Not tablosu gerekir" helper="Mevcut semada danisan notu tablosu yok." />
+          <ModalFieldPreview
+            helper="Not dogrudan danisan profilinden acilir."
+            label="Baglam"
+            value="Once danisan secilir"
+          />
+          <ModalFieldPreview
+            helper="Mevcut semada danisan notu tablosu yok."
+            label="Kalici kayit"
+            value="Not tablosu gerekir"
+          />
         </div>
       </AdminUrlModal>
     );
@@ -61,14 +88,37 @@ export async function DashboardUrlModals({
     return (
       <AdminUrlModal
         closeHref="/yonetim"
-        footer={<ModalFooter closeHref="/yonetim" primaryHref="/yonetim/randevular?modal=randevu-olustur" primaryLabel="Takvimde ac" url="/yonetim?modal=randevu-olustur" />}
+        footer={
+          <ModalFooter
+            closeHref="/yonetim"
+            primaryHref="/yonetim/randevular?modal=randevu-olustur"
+            primaryLabel="Takvimde ac"
+            url="/yonetim?modal=randevu-olustur"
+          />
+        }
         title="Randevu olustur"
       >
         <div className={modalStyles.modalGrid}>
-          <ModalFieldPreview label="Takvim" value="Haftalik ekip gorunumu" helper="Terapist kolonlari ve uygun saatler." />
-          <ModalFieldPreview label="Sure" value="15 / 30 / 45 / ozel" helper="Varsayilan ve custom sure." />
-          <ModalFieldPreview label="Cakisma" value="Transaction kontrolu" helper="Ayni saate ikinci kayit dusmez." />
-          <ModalFieldPreview label="Baglanti" value="Danisan ve plan" helper="Randevu profile geri akar." />
+          <ModalFieldPreview
+            helper="Terapist kolonlari ve uygun saatler."
+            label="Takvim"
+            value="Haftalik ekip gorunumu"
+          />
+          <ModalFieldPreview
+            helper="Varsayilan ve custom sure."
+            label="Sure"
+            value="15 / 30 / 45 / ozel"
+          />
+          <ModalFieldPreview
+            helper="Ayni saate ikinci kayit dusmez."
+            label="Cakisma"
+            value="Transaction kontrolu"
+          />
+          <ModalFieldPreview
+            helper="Randevu profile geri akar."
+            label="Baglanti"
+            value="Danisan ve plan"
+          />
         </div>
       </AdminUrlModal>
     );
@@ -78,14 +128,37 @@ export async function DashboardUrlModals({
     return (
       <AdminUrlModal
         closeHref="/yonetim"
-        footer={<ModalFooter closeHref="/yonetim" primaryHref="/yonetim/odemeler" primaryLabel="Odeme ekranina gec" url="/yonetim?modal=odeme-plani" />}
+        footer={
+          <ModalFooter
+            closeHref="/yonetim"
+            primaryHref="/yonetim/odemeler"
+            primaryLabel="Odeme ekranina gec"
+            url="/yonetim?modal=odeme-plani"
+          />
+        }
         title="Odeme plani"
       >
         <div className={modalStyles.modalGrid}>
-          <ModalFieldPreview label="Paket" value="Seans plani" helper="8 / 12 / ozel seans sayisi." />
-          <ModalFieldPreview label="Tutar" value="Toplam ve alinan" helper="Bekleyen ve kismi odeme ayrilir." />
-          <ModalFieldPreview label="Tarih" value="Beklenen odeme gunu" helper="Custom tarih secici finans akisina baglanir." />
-          <ModalFieldPreview label="Takip" value="Danisana bagli" helper="Plan client context olmadan acilmaz." />
+          <ModalFieldPreview
+            helper="8 / 12 / ozel seans sayisi."
+            label="Paket"
+            value="Seans plani"
+          />
+          <ModalFieldPreview
+            helper="Bekleyen ve kismi odeme ayrilir."
+            label="Tutar"
+            value="Toplam ve alinan"
+          />
+          <ModalFieldPreview
+            helper="Custom tarih secici finans akisina baglanir."
+            label="Tarih"
+            value="Beklenen odeme gunu"
+          />
+          <ModalFieldPreview
+            helper="Plan client context olmadan acilmaz."
+            label="Takip"
+            value="Danisana bagli"
+          />
         </div>
       </AdminUrlModal>
     );
@@ -104,7 +177,17 @@ function CloseOnly({ closeHref }: { closeHref: Route }) {
   );
 }
 
-function ModalFooter({ closeHref, primaryHref, primaryLabel, url }: { closeHref: Route; primaryHref: Route; primaryLabel: string; url: string }) {
+function ModalFooter({
+  closeHref,
+  primaryHref,
+  primaryLabel,
+  url,
+}: {
+  closeHref: Route;
+  primaryHref: Route;
+  primaryLabel: string;
+  url: string;
+}) {
   return (
     <>
       <span className={modalStyles.footerText}>URL: {url}</span>
