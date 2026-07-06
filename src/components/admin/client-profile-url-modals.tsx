@@ -71,7 +71,7 @@ export async function ClientProfileUrlModals({
   canReadAppointments,
   canReadFinance,
 }: Props) {
-  const closeHref = (`/yonetim/danisan-profili?clientId=${clientId}`) as Route;
+  const closeHref = `/yonetim/danisan-profili?clientId=${clientId}` as Route;
   if (activeModal === "randevu-olustur" && !canReadAppointments) return null;
   if (activeModal === "odeme-plani" && !canReadFinance) return null;
   if (!["not-ekle", "randevu-olustur", "odeme-plani"].includes(activeModal)) {
@@ -105,13 +105,16 @@ export async function ClientProfileUrlModals({
           />
           <div className="booking-subject-type">
             <label>
-              <input defaultChecked name="category" type="radio" value="ADMIN" /> Admin notu
+              <input defaultChecked name="category" type="radio" value="ADMIN" />
+              <span>Admin notu</span>
             </label>
             <label>
-              <input name="category" type="radio" value="SESSION" /> Seans notu
+              <input name="category" type="radio" value="SESSION" />
+              <span>Seans notu</span>
             </label>
             <label>
-              <input name="category" type="radio" value="PAYMENT" /> Odeme notu
+              <input name="category" type="radio" value="PAYMENT" />
+              <span>Odeme notu</span>
             </label>
           </div>
           <label className="booking-field">
@@ -144,7 +147,7 @@ export async function ClientProfileUrlModals({
 
   if (activeModal === "randevu-olustur") {
     const appointmentHref =
-      (`/yonetim/randevular?clientId=${clientId}&modal=randevu-olustur`) as Route;
+      `/yonetim/randevular?clientId=${clientId}&modal=randevu-olustur` as Route;
 
     return (
       <AdminUrlModal
@@ -174,7 +177,7 @@ export async function ClientProfileUrlModals({
     );
   }
 
-  const financeHref = (`/yonetim/odemeler?clientId=${clientId}`) as Route;
+  const financeHref = `/yonetim/odemeler?clientId=${clientId}` as Route;
 
   return (
     <AdminUrlModal
@@ -207,7 +210,11 @@ export async function ClientProfileUrlModals({
 function ModalFooter({ closeHref }: { closeHref: Route }) {
   return (
     <div className={modalStyles.footerActions}>
-      <Link className={modalStyles.modalButtonSecondary} href={closeHref} scroll={false}>
+      <Link
+        className={modalStyles.modalButtonSecondary}
+        href={closeHref}
+        scroll={false}
+      >
         Kapat
       </Link>
     </div>
@@ -225,10 +232,18 @@ function ModalLinkFooter({
 }) {
   return (
     <div className={modalStyles.footerActions}>
-      <Link className={modalStyles.modalButtonSecondary} href={closeHref} scroll={false}>
+      <Link
+        className={modalStyles.modalButtonSecondary}
+        href={closeHref}
+        scroll={false}
+      >
         Kapat
       </Link>
-      <Link className={modalStyles.modalButton} href={primaryHref} scroll={false}>
+      <Link
+        className={modalStyles.modalButton}
+        href={primaryHref}
+        scroll={false}
+      >
         {primaryLabel}
       </Link>
     </div>
