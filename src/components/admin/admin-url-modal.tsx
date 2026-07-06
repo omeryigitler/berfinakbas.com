@@ -34,7 +34,12 @@ export function AdminUrlModal({
               <h2>{title}</h2>
               {description ? <p>{description}</p> : null}
             </div>
-            <Link aria-label="Close" className={styles.closeButton} href={closeHref} scroll={false}>
+            <Link
+              aria-label="Close"
+              className={styles.closeButton}
+              href={closeHref}
+              scroll={false}
+            >
               ×
             </Link>
           </header>
