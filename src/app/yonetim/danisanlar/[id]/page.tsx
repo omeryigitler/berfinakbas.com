@@ -217,7 +217,11 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
         {client.guardians.length === 0 ? (
           <div className="admin-empty-state">
             <strong>Veli kaydı yok</strong>
-            <span>{client.type === "CHILD" ? "Bu çocuk danışan için veli kaydı bekleniyor." : "Yetişkin danışan için veli bilgisi zorunlu değildir."}</span>
+            <span>
+              {client.type === "CHILD"
+                ? "Bu çocuk danışan için veli kaydı bekleniyor."
+                : "Yetişkin danışan için veli bilgisi zorunlu değildir."}
+            </span>
           </div>
         ) : (
           <ul className="admin-service-list">
@@ -244,7 +248,9 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
         <div className="admin-panel-heading">
           <div>
             <h2 id="randevu-ozeti">Randevu özeti</h2>
-            <p>Bu alan şimdilik placeholder’dır; detaylı randevu yönetimi ayrı modüle bağlı kalır.</p>
+            <p>
+              Bu alan şimdilik placeholder’dır; detaylı randevu yönetimi ayrı modüle bağlı kalır.
+            </p>
           </div>
           <span className="admin-count">PLACEHOLDER</span>
         </div>
@@ -274,7 +280,9 @@ export default async function AdminClientDetailPage({ params }: { params: PagePa
         <div className="admin-panel-heading">
           <div>
             <h2 id="finans-ozeti">Finans özeti</h2>
-            <p>Gerçek ödeme/plan yönetimi bu PR kapsamında değildir; burada yalnızca özet gösterilir.</p>
+            <p>
+              Gerçek ödeme/plan yönetimi bu PR kapsamında değildir; burada yalnızca özet gösterilir.
+            </p>
           </div>
           <span className="admin-count">{client._count.financeEntries} hareket</span>
         </div>
