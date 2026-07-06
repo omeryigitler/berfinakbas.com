@@ -15,7 +15,7 @@ type AdminUrlModalProps = {
 
 export function AdminUrlModal({
   closeHref,
-  eyebrow = "URL tabanlı işlem",
+  eyebrow = "URL tabanli islem",
   title,
   description,
   children,
@@ -23,7 +23,7 @@ export function AdminUrlModal({
 }: AdminUrlModalProps) {
   return (
     <div className={styles.root} role="presentation">
-      <Link aria-label="Modalı kapat" className={styles.backdrop} href={closeHref} scroll={false} />
+      <Link aria-label="Close" className={styles.backdrop} href={closeHref} scroll={false} />
       <div className={styles.stage}>
         <section aria-modal="true" className={styles.dialog} role="dialog">
           <span className={styles.cornerGlow} aria-hidden="true" />
@@ -34,7 +34,7 @@ export function AdminUrlModal({
               <h2>{title}</h2>
               {description ? <p>{description}</p> : null}
             </div>
-            <Link aria-label="Modalı kapat" className={styles.closeButton} href={closeHref} scroll={false}>
+            <Link aria-label="Close" className={styles.closeButton} href={closeHref} scroll={false}>
               ×
             </Link>
           </header>
