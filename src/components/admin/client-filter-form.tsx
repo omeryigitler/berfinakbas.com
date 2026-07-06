@@ -42,7 +42,7 @@ export function ClientFilterForm({
         alignItems: "end",
         display: "grid",
         gap: 17,
-        gridTemplateColumns: "minmax(260px, 1.2fr) minmax(180px, 0.8fr) minmax(180px, 0.8fr) auto",
+        gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
         marginTop: 24,
       }}
     >
