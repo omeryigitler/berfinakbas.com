@@ -2159,28 +2159,50 @@ summary:focus-visible {
 
 .finance-operation-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(520px, 1.35fr);
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
   margin-top: 22px;
 }
 
-.finance-operation-card:nth-child(3) {
-  grid-column: 1 / -1;
+.finance-operation-card {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
-.finance-operation-card {
+.finance-operation-card:not([open]) {
+  order: 1;
+}
+
+.finance-operation-card[open] {
+  grid-column: 1 / -1;
+  order: 2;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fffcf8;
+  padding: 22px;
+}
+
+.finance-operation-card summary {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: #fffcf8;
-  padding: 16px;
+  padding: 0 18px;
+  box-shadow: 0 14px 30px rgb(83 53 35 / 5%);
 }
 
-.finance-operation-card summary,
-.finance-history summary {
-  cursor: pointer;
-  color: var(--coral-dark);
-  font-family: var(--serif);
-  font-weight: 650;
+.finance-operation-card[open] summary {
+  min-height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
 }
 
 .finance-operation-card form {
@@ -2390,10 +2412,6 @@ summary:focus-visible {
 @media (max-width: 1180px) {
   .finance-operation-grid {
     grid-template-columns: 1fr;
-  }
-
-  .finance-operation-card:nth-child(3) {
-    grid-column: auto;
   }
 
   .finance-inline-fields {
