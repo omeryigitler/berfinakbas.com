@@ -2,6 +2,8 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import { SelectControl } from "./select-control";
+
 type Client = { firstName: string; id: string; lastName: string; status: string };
 type PaymentMethod = { id: string; key: string; name: string; status: string };
 type LedgerEntry = {
@@ -67,6 +69,25 @@ const planStatusLabels = {
   COMPLETED: "Tamamlandı",
   EXPIRED: "Süresi doldu",
 } as const;
+
+const dueFilterOptions = [
+  { label: "Tümü", value: "ALL" },
+  { label: "Gecikmiş", value: "OVERDUE" },
+  { label: "7 gün içinde", value: "DUE_7_DAYS" },
+];
+
+const initialInvoiceStatusOptions = [
+  { label: "Gerekli değil", value: "NOT_REQUIRED" },
+  { label: "Bekliyor", value: "PENDING" },
+];
+
+const invoiceStatusOptions = [
+  { label: "Gerekli değil", value: "NOT_REQUIRED" },
+  { label: "Bekliyor", value: "PENDING" },
+  { label: "Düzenlendi", value: "ISSUED" },
+  { label: "Muhasebeye iletildi", value: "SENT_TO_ACCOUNTING" },
+  { label: "İptal edildi", value: "CANCELLED" },
+];
 
 export function amountToMinor(value: string): string | null {
   if (!/^\d+(?:[.,]\d{1,2})?$/.test(value.trim())) return null;
@@ -344,18 +365,16 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
       <div className="finance-toolbar">
         <label>
           <span>Vade filtresi</span>
-          <select
-            value={filter}
-            onChange={(event) => {
+          <SelectControl
+            name="statusFilter"
+            onValueChange={(nextValue) => {
               setLoading(true);
               setMessage("");
-              setFilter(event.target.value as typeof filter);
+              setFilter(nextValue as typeof filter);
             }}
-          >
-            <option value="ALL">Tümü</option>
-            <option value="OVERDUE">Gecikmiş</option>
-            <option value="DUE_7_DAYS">7 gün içinde</option>
-          </select>
+            options={dueFilterOptions}
+            value={filter}
+          />
         </label>
         <span>{overview.plans.length} plan</span>
       </div>
@@ -387,14 +406,17 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
             <form onSubmit={createPlan}>
               <label>
                 Danışan
-                <select name="clientId" required>
-                  <option value="">Seçin</option>
-                  {overview.clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.firstName} {client.lastName}
-                    </option>
-                  ))}
-                </select>
+                <SelectControl
+                  name="clientId"
+                  options={[
+                    { label: "Seçin", value: "" },
+                    ...overview.clients.map((client) => ({
+                      label: `${client.firstName} ${client.lastName}`,
+                      value: client.id,
+                    })),
+                  ]}
+                  required
+                />
               </label>
               <label>
                 Plan adı
@@ -425,10 +447,11 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                 </label>
                 <label>
                   Belge durumu
-                  <select name="invoiceStatus">
-                    <option value="NOT_REQUIRED">Gerekli değil</option>
-                    <option value="PENDING">Bekliyor</option>
-                  </select>
+                  <SelectControl
+                    defaultValue="NOT_REQUIRED"
+                    name="invoiceStatus"
+                    options={initialInvoiceStatusOptions}
+                  />
                 </label>
               </div>
               <fieldset className="finance-installment-editor">
@@ -502,49 +525,53 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
             <form onSubmit={recordPayment}>
               <label>
                 Plan
-                <select
+                <SelectControl
                   name="planId"
-                  onChange={(event) => setPaymentPlanId(event.target.value)}
+                  onValueChange={setPaymentPlanId}
+                  options={[
+                    { label: "Seçin", value: "" },
+                    ...overview.plans
+                      .filter((plan) => plan.status === "ACTIVE")
+                      .map((plan) => ({
+                        label: `${plan.client.firstName} ${plan.client.lastName} · ${plan.name}`,
+                        value: plan.id,
+                      })),
+                  ]}
                   required
                   value={paymentPlanId}
-                >
-                  <option value="">Seçin</option>
-                  {overview.plans
-                    .filter((plan) => plan.status === "ACTIVE")
-                    .map((plan) => (
-                      <option key={plan.id} value={plan.id}>
-                        {plan.client.firstName} {plan.client.lastName} · {plan.name}
-                      </option>
-                    ))}
-                </select>
+                />
               </label>
               <label>
                 Taksit
-                <select disabled={!paymentPlan} name="installmentId" required>
-                  <option value="">Seçin</option>
-                  {paymentPlan?.installments
-                    .filter((item) => item.state !== "PAID")
-                    .map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.sequence}. taksit · kalan{" "}
-                        {formatMoney(
+                <SelectControl
+                  disabled={!paymentPlan}
+                  key={paymentPlanId || "no-payment-plan"}
+                  name="installmentId"
+                  options={[
+                    { label: "Seçin", value: "" },
+                    ...(paymentPlan?.installments
+                      .filter((item) => item.state !== "PAID")
+                      .map((item) => ({
+                        label: `${item.sequence}. taksit · kalan ${formatMoney(
                           (BigInt(item.amountDueMinor) - BigInt(item.paidAmountMinor)).toString(),
                           paymentPlan.currency,
-                        )}
-                      </option>
-                    ))}
-                </select>
+                        )}`,
+                        value: item.id,
+                      })) ?? []),
+                  ]}
+                  required
+                />
               </label>
               <label>
                 Ödeme yöntemi
-                <select name="paymentMethodId" required>
-                  <option value="">Seçin</option>
-                  {overview.paymentMethods.map((method) => (
-                    <option key={method.id} value={method.id}>
-                      {method.name}
-                    </option>
-                  ))}
-                </select>
+                <SelectControl
+                  name="paymentMethodId"
+                  options={[
+                    { label: "Seçin", value: "" },
+                    ...overview.paymentMethods.map((method) => ({ label: method.name, value: method.id })),
+                  ]}
+                  required
+                />
               </label>
               <div className="finance-inline-fields">
                 <label>
@@ -682,13 +709,11 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                   >
                     <label>
                       Durum
-                      <select defaultValue={plan.invoiceStatus} name="invoiceStatus">
-                        <option value="NOT_REQUIRED">Gerekli değil</option>
-                        <option value="PENDING">Bekliyor</option>
-                        <option value="ISSUED">Düzenlendi</option>
-                        <option value="SENT_TO_ACCOUNTING">Muhasebeye iletildi</option>
-                        <option value="CANCELLED">İptal edildi</option>
-                      </select>
+                      <SelectControl
+                        defaultValue={plan.invoiceStatus}
+                        name="invoiceStatus"
+                        options={invoiceStatusOptions}
+                      />
                     </label>
                     <label>
                       Belge referansı
