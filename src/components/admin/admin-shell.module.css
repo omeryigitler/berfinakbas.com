@@ -12,6 +12,11 @@
   gap: 28px;
 }
 
+.titleGroup {
+  display: grid;
+  gap: 12px;
+}
+
 .titleGroup h1 {
   margin: 0;
   font-family: var(--serif);
@@ -19,6 +24,14 @@
   font-weight: 500;
   letter-spacing: -0.055em;
   line-height: 0.95;
+}
+
+.subtitle {
+  max-width: 720px;
+  margin: 0;
+  color: #5f4d44;
+  font-size: 0.92rem;
+  line-height: 1.7;
 }
 
 .headerMeta {
