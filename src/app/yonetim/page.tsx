@@ -5,7 +5,10 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
 import { DashboardUrlModals } from "@/components/admin/dashboard-url-modals";
 import { hasPermission } from "@/domain/auth/permissions";
-import { clientStatusLabels, clientTypeLabels } from "@/domain/clients/client-management";
+import {
+  clientStatusLabels,
+  clientTypeLabels,
+} from "@/domain/clients/client-management";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
@@ -25,7 +28,10 @@ const appointmentStatusLabels: Record<string, string> = {
   RESCHEDULE_PROPOSED: "Saat önerildi",
 };
 
-function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
+function singleParam(
+  params: Record<string, string | string[] | undefined>,
+  key: string,
+): string {
   const value = params[key];
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";
@@ -52,7 +58,11 @@ function barHeight(value: number, maxValue: number): string {
   return `${Math.max(24, Math.round((value / maxValue) * 100))}%`;
 }
 
-export default async function AdminHomePage({ searchParams }: { searchParams: SearchParams }) {
+export default async function AdminHomePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await requirePermission("services:read");
   const params = await searchParams;
   const activeModal = singleParam(params, "modal");
@@ -60,7 +70,10 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
-  const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
+  const canReadTechnicalHealth = hasPermission(
+    session.user.roles,
+    "technical-health:read",
+  );
   const db = getDatabase();
 
   const todayStart = new Date();
@@ -81,8 +94,12 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
   });
 
   const totalClients = canReadClients ? await db.client.count() : 0;
-  const activeClients = canReadClients ? await db.client.count({ where: { status: "ACTIVE" } }) : 0;
-  const childClients = canReadClients ? await db.client.count({ where: { type: "CHILD" } }) : 0;
+  const activeClients = canReadClients
+    ? await db.client.count({ where: { status: "ACTIVE" } })
+    : 0;
+  const childClients = canReadClients
+    ? await db.client.count({ where: { type: "CHILD" } })
+    : 0;
   const latestClients = canReadClients
     ? await db.client.findMany({
         orderBy: [{ createdAt: "desc" }],
@@ -119,7 +136,9 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
     ? await db.appointment.count({ where: { startsAt: { gte: todayStart } } })
     : 0;
 
-  const activePlans = canReadFinance ? await db.clientPlan.count({ where: { status: "ACTIVE" } }) : 0;
+  const activePlans = canReadFinance
+    ? await db.clientPlan.count({ where: { status: "ACTIVE" } })
+    : 0;
   const paymentsThisMonth = canReadFinance
     ? await db.financeLedgerEntry.aggregate({
         _sum: { amountMinor: true },
@@ -146,14 +165,28 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
   ];
   const actionItems = [
     canManageClients
-      ? { href: "/yonetim?modal=danisan-ekle" as Route, kicker: "+", title: "Danışan ekle" }
+      ? {
+          href: "/yonetim?modal=danisan-ekle" as Route,
+          kicker: "+",
+          title: "Danışan ekle",
+        }
       : null,
-    canReadClients ? { href: "/yonetim?modal=not-ekle" as Route, kicker: "✎", title: "Not ekle" } : null,
+    canReadClients
+      ? { href: "/yonetim?modal=not-ekle" as Route, kicker: "✎", title: "Not ekle" }
+      : null,
     canReadAppointments
-      ? { href: "/yonetim?modal=randevu-olustur" as Route, kicker: "◷", title: "Randevu oluştur" }
+      ? {
+          href: "/yonetim?modal=randevu-olustur" as Route,
+          kicker: "◷",
+          title: "Randevu oluştur",
+        }
       : null,
     canReadFinance
-      ? { href: "/yonetim?modal=odeme-plani" as Route, kicker: "₺", title: "Ödeme planı" }
+      ? {
+          href: "/yonetim?modal=odeme-plani" as Route,
+          kicker: "₺",
+          title: "Ödeme planı",
+        }
       : null,
   ].filter((item): item is { href: Route; kicker: string; title: string } => item !== null);
 
@@ -255,7 +288,9 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
                         {clientStatusLabels[client.status]}
                       </span>
                     </div>
-                    <Link href={`/yonetim/danisan-profili?clientId=${client.id}` as Route}>Aç</Link>
+                    <Link href={`/yonetim/danisan-profili?clientId=${client.id}` as Route}>
+                      Aç
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -273,7 +308,12 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
             </div>
             <div className={styles.actionGrid}>
               {actionItems.map((item) => (
-                <Link className={styles.actionCard} href={item.href} key={item.href} scroll={false}>
+                <Link
+                  className={styles.actionCard}
+                  href={item.href}
+                  key={item.href}
+                  scroll={false}
+                >
                   <span>{item.kicker}</span>
                   <strong>{item.title}</strong>
                 </Link>
