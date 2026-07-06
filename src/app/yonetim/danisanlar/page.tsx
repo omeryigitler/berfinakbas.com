@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/admin-shell";
+import { ClientFilterForm } from "@/components/admin/client-filter-form";
 import {
   clientStatusLabels,
   clientTypeLabels,
@@ -19,6 +20,20 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const clientStatuses = ["PROSPECTIVE", "ACTIVE", "INACTIVE"] as const;
 const clientTypes = ["ADULT", "CHILD"] as const;
+const statusOptions = [
+  { label: "Tüm statüler", value: "ALL" },
+  ...clientStatuses.map((statusOption) => ({
+    label: clientStatusLabels[statusOption],
+    value: statusOption,
+  })),
+];
+const typeOptions = [
+  { label: "Yetişkin ve çocuk", value: "ALL" },
+  ...clientTypes.map((typeOption) => ({
+    label: clientTypeLabels[typeOption],
+    value: typeOption,
+  })),
+];
 
 function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
   const value = params[key];
@@ -103,42 +118,13 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
           )}
         </div>
 
-        <form className="booking-field-grid" method="get" style={{ marginTop: 24 }}>
-          <label className="booking-field">
-            Arama
-            <input
-              defaultValue={query}
-              name="q"
-              placeholder="Ad, soyad, telefon veya e-posta"
-              type="search"
-            />
-          </label>
-          <label className="booking-field">
-            Statü
-            <select defaultValue={status} name="status">
-              <option value="ALL">Tüm statüler</option>
-              {clientStatuses.map((statusOption) => (
-                <option key={statusOption} value={statusOption}>
-                  {clientStatusLabels[statusOption]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="booking-field">
-            Danışan tipi
-            <select defaultValue={type} name="type">
-              <option value="ALL">Yetişkin ve çocuk</option>
-              {clientTypes.map((typeOption) => (
-                <option key={typeOption} value={typeOption}>
-                  {clientTypeLabels[typeOption]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="secondary-button" type="submit">
-            Filtrele
-          </button>
-        </form>
+        <ClientFilterForm
+          query={query}
+          status={status}
+          statusOptions={statusOptions}
+          type={type}
+          typeOptions={typeOptions}
+        />
 
         {clients.length === 0 ? (
           <div className="admin-empty-state">
