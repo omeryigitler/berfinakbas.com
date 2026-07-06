@@ -1,15 +1,65 @@
+import type { Route } from "next";
+import Link from "next/link";
+
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
+import { clientStatusLabels, clientTypeLabels } from "@/domain/clients/client-management";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+const appointmentStatusLabels: Record<string, string> = {
+  CANCELLED_BY_CLIENT: "Danışan iptal etti",
+  CANCELLED_BY_PRACTITIONER: "Uzman iptal etti",
+  COMPLETED: "Tamamlandı",
+  CONFIRMED: "Onaylı",
+  NO_SHOW: "Gelmedi",
+  PENDING_REVIEW: "Onay bekliyor",
+  REJECTED: "Reddedildi",
+  REQUESTED: "Talep alındı",
+  RESCHEDULE_PROPOSED: "Saat önerildi",
+};
+
+function formatMoney(amountMinor: bigint | number, currency = "TRY"): string {
+  return new Intl.NumberFormat("tr-TR", {
+    currency,
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    style: "currency",
+  }).format(Number(amountMinor) / 100);
+}
+
+function formatTime(date: Date): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function barHeight(value: number, maxValue: number): string {
+  if (value <= 0) return "18%";
+  return `${Math.max(24, Math.round((value / maxValue) * 100))}%`;
+}
+
 export default async function AdminHomePage() {
   const session = await requirePermission("services:read");
-  const [services, pendingAppointments, activePlans] = await Promise.all([
-    getDatabase().service.findMany({
+  const canReadAppointments = hasPermission(session.user.roles, "appointments:read");
+  const canReadClients = hasPermission(session.user.roles, "clients:read");
+  const canManageClients = hasPermission(session.user.roles, "clients:manage");
+  const canReadFinance = hasPermission(session.user.roles, "finance:read");
+  const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
+  const db = getDatabase();
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+
+  const [services, totalClients, activeClients, childClients, latestClients] = await Promise.all([
+    db.service.findMany({
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: {
         defaultDurationMinutes: true,
@@ -19,44 +69,219 @@ export default async function AdminHomePage() {
         status: true,
       },
     }),
-    getDatabase().appointment.count({ where: { status: "PENDING_REVIEW" } }),
-    getDatabase().clientPlan.count({ where: { status: "ACTIVE" } }),
+    canReadClients ? db.client.count() : Promise.resolve(0),
+    canReadClients ? db.client.count({ where: { status: "ACTIVE" } }) : Promise.resolve(0),
+    canReadClients ? db.client.count({ where: { type: "CHILD" } }) : Promise.resolve(0),
+    canReadClients
+      ? db.client.findMany({
+          orderBy: [{ createdAt: "desc" }],
+          select: {
+            firstName: true,
+            id: true,
+            lastName: true,
+            phone: true,
+            status: true,
+            type: true,
+          },
+          take: 5,
+        })
+      : Promise.resolve([]),
   ]);
+
+  const [pendingAppointments, todaysAppointments, upcomingAppointments] = canReadAppointments
+    ? await Promise.all([
+        db.appointment.count({ where: { status: "PENDING_REVIEW" } }),
+        db.appointment.findMany({
+          orderBy: [{ startsAt: "asc" }],
+          select: {
+            client: { select: { firstName: true, lastName: true } },
+            id: true,
+            service: { select: { name: true } },
+            startsAt: true,
+            status: true,
+          },
+          take: 5,
+          where: { startsAt: { gte: todayStart, lt: todayEnd } },
+        }),
+        db.appointment.count({ where: { startsAt: { gte: todayStart } } }),
+      ])
+    : [0, [], 0];
+
+  const [activePlans, paymentsThisMonth] = canReadFinance
+    ? await Promise.all([
+        db.clientPlan.count({ where: { status: "ACTIVE" } }),
+        db.financeLedgerEntry.aggregate({
+          _sum: { amountMinor: true },
+          where: { occurredAt: { gte: monthStart }, type: "PAYMENT" },
+        }),
+      ])
+    : [0, { _sum: { amountMinor: BigInt(0) } }];
+
+  const paymentTotal = paymentsThisMonth._sum.amountMinor ?? BigInt(0);
+  const maxAnalyticsValue = Math.max(totalClients, activeClients, childClients, pendingAppointments, activePlans, services.length, 1);
+  const analytics = [
+    { label: "Danışan", value: totalClients },
+    { label: "Aktif", value: activeClients },
+    { label: "Çocuk", value: childClients },
+    { label: "Randevu", value: upcomingAppointments },
+    { label: "Plan", value: activePlans },
+    { label: "Hizmet", value: services.length },
+  ];
+  const actionItems = [
+    canManageClients
+      ? { href: "/yonetim/danisanlar/yeni" as Route, kicker: "+", title: "Danışan oluştur" }
+      : null,
+    canReadClients ? { href: "/yonetim/danisanlar" as Route, kicker: "⌕", title: "Danışanları filtrele" } : null,
+    canReadAppointments ? { href: "/yonetim/randevular" as Route, kicker: "◷", title: "Randevuları yönet" } : null,
+    canReadFinance ? { href: "/yonetim/odemeler" as Route, kicker: "₺", title: "Ödeme ve planlar" } : null,
+  ].filter((item): item is { href: Route; kicker: string; title: string } => item !== null);
 
   return (
     <AdminShell
       email={session.user.email}
       permissions={{
-        appointmentsRead: hasPermission(session.user.roles, "appointments:read"),
-        clientsRead: hasPermission(session.user.roles, "clients:read"),
-        financeRead: hasPermission(session.user.roles, "finance:read"),
+        appointmentsRead: canReadAppointments,
+        clientsRead: canReadClients,
+        financeRead: canReadFinance,
         servicesRead: true,
-        technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
+        technicalHealthRead: canReadTechnicalHealth,
       }}
-      subtitle="İş akışı, özet metrikler ve hizmet yapılandırmaları tek bakışta görünür."
-      title="Yönetim paneli"
+      subtitle="Danışan, randevu, ödeme ve hizmet akışını tek bakışta gösteren operasyon paneli."
+      title="Dashboard"
     >
       <div className={styles.dashboardGrid}>
-        <article className={styles.dashboardCard}>
-          <span>Hizmet sayısı</span>
-          <strong>{services.length}</strong>
-          <small>Aktif ve taslak hizmet yapılandırmaları</small>
+        <article className={`${styles.dashboardCard} ${styles.dashboardCardPrimary}`}>
+          <span>Toplam danışan</span>
+          <strong>{canReadClients ? totalClients : "—"}</strong>
+          <small>{activeClients} aktif kayıt · {childClients} çocuk danışan</small>
+          <i className={styles.dashboardCardIcon}>↗</i>
         </article>
         <article className={styles.dashboardCard}>
-          <span>Bekleyen talepler</span>
-          <strong>{pendingAppointments}</strong>
-          <small>İncelemeye hazır randevu istekleri</small>
+          <span>Bugünkü randevu</span>
+          <strong>{canReadAppointments ? todaysAppointments.length : "—"}</strong>
+          <small>{pendingAppointments} onay bekleyen talep var</small>
+          <i className={styles.dashboardCardIcon}>◷</i>
         </article>
         <article className={styles.dashboardCard}>
           <span>Aktif plan</span>
-          <strong>{activePlans}</strong>
-          <small>Devam eden danışan planı ve taksit akışı</small>
+          <strong>{canReadFinance ? activePlans : "—"}</strong>
+          <small>Danışanlara bağlı devam eden ödeme planları</small>
+          <i className={styles.dashboardCardIcon}>₺</i>
         </article>
         <article className={styles.dashboardCard}>
-          <span>Sağlık özeti</span>
-          <strong>Read-only</strong>
-          <small>Outbox ve entegrasyon metrikleri yönetim menüsünden erişilir</small>
+          <span>Hizmet</span>
+          <strong>{services.length}</strong>
+          <small>Süre, konum ve görünürlük ayarı bulunan hizmetler</small>
+          <i className={styles.dashboardCardIcon}>⌘</i>
         </article>
+      </div>
+
+      <div className={styles.dashboardLayout}>
+        <div className={styles.mainStack}>
+          <section className={styles.overviewPanel} aria-labelledby="operasyon-analitigi">
+            <div className={styles.panelHeader}>
+              <div>
+                <h2 id="operasyon-analitigi">Operasyon analitiği</h2>
+                <p>Danışan, randevu ve plan yoğunluğunu sade bir grafikle gösterir.</p>
+              </div>
+              <span className={styles.panelBadge}>Canlı veri</span>
+            </div>
+            <div className={styles.analyticsBars}>
+              {analytics.map((item) => (
+                <div className={styles.analyticsBar} key={item.label}>
+                  <div className={styles.barTrack}>
+                    <span className={styles.barFill} style={{ height: barHeight(item.value, maxAnalyticsValue) }} />
+                  </div>
+                  <strong>{item.label}</strong>
+                  <span>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.compactPanel} aria-labelledby="son-danisanlar">
+            <div className={styles.panelHeader}>
+              <div>
+                <h2 id="son-danisanlar">Son danışan kayıtları</h2>
+                <p>Yeni açılan kayıtlar ve hızlı profil geçişleri.</p>
+              </div>
+              {canReadClients ? <Link className="secondary-button" href="/yonetim/danisanlar">Tümünü aç</Link> : null}
+            </div>
+            {latestClients.length === 0 ? (
+              <div className={styles.emptyNote}>
+                <strong>Henüz danışan görünmüyor</strong>
+                <span>Danışan oluşturulduğunda bu alanda son kayıtlar listelenecek.</span>
+              </div>
+            ) : (
+              <ul className={styles.dataList}>
+                {latestClients.map((client) => (
+                  <li key={client.id}>
+                    <div>
+                      <strong>{client.firstName} {client.lastName}</strong>
+                      <span>
+                        {client.phone ?? "Telefon yok"} · {clientTypeLabels[client.type]} · {clientStatusLabels[client.status]}
+                      </span>
+                    </div>
+                    <Link href={`/yonetim/danisanlar/${client.id}` as Route}>Aç</Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <aside className={styles.asideStack}>
+          <section className={styles.actionPanel} aria-labelledby="hizli-islemler">
+            <div className={styles.panelHeader}>
+              <div>
+                <h2 id="hizli-islemler">Hızlı işlemler</h2>
+                <p>En çok kullanılan BO geçişleri.</p>
+              </div>
+            </div>
+            <div className={styles.actionGrid}>
+              {actionItems.map((item) => (
+                <Link className={styles.actionCard} href={item.href} key={item.href}>
+                  <span>{item.kicker}</span>
+                  <strong>{item.title}</strong>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.compactPanel} aria-labelledby="bugun-takip">
+            <div className={styles.panelHeader}>
+              <div>
+                <h2 id="bugun-takip">Bugünkü takip</h2>
+                <p>Günün randevu akışı.</p>
+              </div>
+              <span className={styles.panelBadge}>{todaysAppointments.length} kayıt</span>
+            </div>
+            {todaysAppointments.length === 0 ? (
+              <div className={styles.emptyNote}>
+                <strong>Bugün randevu yok</strong>
+                <span>Yeni randevu talebi gelirse burada görünecek.</span>
+              </div>
+            ) : (
+              <ul className={styles.dataList}>
+                {todaysAppointments.map((appointment) => (
+                  <li key={appointment.id}>
+                    <div>
+                      <strong>{formatTime(appointment.startsAt)} · {appointment.client.firstName} {appointment.client.lastName}</strong>
+                      <span>{appointment.service.name}</span>
+                    </div>
+                    <small>{appointmentStatusLabels[appointment.status] ?? appointment.status}</small>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className={styles.financeHighlight} aria-labelledby="odeme-ozeti">
+            <span id="odeme-ozeti">Bu ay alınan ödeme</span>
+            <strong>{canReadFinance ? formatMoney(paymentTotal) : "—"}</strong>
+            <small>{activePlans} aktif plan üzerinden ön muhasebe takibi.</small>
+          </section>
+        </aside>
       </div>
 
       <section className="admin-panel" aria-labelledby="hizmet-listesi">
