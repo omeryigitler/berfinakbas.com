@@ -84,12 +84,9 @@ export function AdminShell({
         <nav className={styles.nav} aria-label="Yönetim menüsü">
           {navigationItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
+            const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
             return (
-              <Link
-                className={`${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`}
-                href={item.href}
-                key={item.href}
-              >
+              <Link className={className} href={item.href} key={item.href}>
                 {item.label}
               </Link>
             );
