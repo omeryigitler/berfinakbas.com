@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent } from "react";
+import type { FormEvent } from "react";
 
 import { SelectControl } from "./select-control";
 
