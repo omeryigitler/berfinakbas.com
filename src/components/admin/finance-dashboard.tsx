@@ -568,7 +568,10 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                   name="paymentMethodId"
                   options={[
                     { label: "Seçin", value: "" },
-                    ...overview.paymentMethods.map((method) => ({ label: method.name, value: method.id })),
+                    ...overview.paymentMethods.map((method) => ({
+                      label: method.name,
+                      value: method.id,
+                    })),
                   ]}
                   required
                 />
