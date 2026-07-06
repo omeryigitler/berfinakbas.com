@@ -3,12 +3,18 @@ import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
+import { DashboardUrlModals } from "@/components/admin/dashboard-url-modals";
 import { hasPermission } from "@/domain/auth/permissions";
-import { clientStatusLabels, clientTypeLabels } from "@/domain/clients/client-management";
+import {
+  clientStatusLabels,
+  clientTypeLabels,
+} from "@/domain/clients/client-management";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const appointmentStatusLabels: Record<string, string> = {
   CANCELLED_BY_CLIENT: "Danışan iptal etti",
@@ -21,6 +27,15 @@ const appointmentStatusLabels: Record<string, string> = {
   REQUESTED: "Talep alındı",
   RESCHEDULE_PROPOSED: "Saat önerildi",
 };
+
+function singleParam(
+  params: Record<string, string | string[] | undefined>,
+  key: string,
+): string {
+  const value = params[key];
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
 
 function formatMoney(amountMinor: bigint | number, currency = "TRY"): string {
   return new Intl.NumberFormat("tr-TR", {
@@ -43,20 +58,36 @@ function barHeight(value: number, maxValue: number): string {
   return `${Math.max(24, Math.round((value / maxValue) * 100))}%`;
 }
 
-export default async function AdminHomePage() {
+export default async function AdminHomePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await requirePermission("services:read");
-  const canReadAppointments = hasPermission(session.user.roles, "appointments:read");
+  const params = await searchParams;
+  const activeModal = singleParam(params, "modal");
+  const canReadAppointments = hasPermission(
+    session.user.roles,
+    "appointments:read",
+  );
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
-  const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
+  const canReadTechnicalHealth = hasPermission(
+    session.user.roles,
+    "technical-health:read",
+  );
   const db = getDatabase();
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date(todayStart);
   todayEnd.setDate(todayEnd.getDate() + 1);
-  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+  const monthStart = new Date(
+    todayStart.getFullYear(),
+    todayStart.getMonth(),
+    1,
+  );
 
   const services = await db.service.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -70,8 +101,12 @@ export default async function AdminHomePage() {
   });
 
   const totalClients = canReadClients ? await db.client.count() : 0;
-  const activeClients = canReadClients ? await db.client.count({ where: { status: "ACTIVE" } }) : 0;
-  const childClients = canReadClients ? await db.client.count({ where: { type: "CHILD" } }) : 0;
+  const activeClients = canReadClients
+    ? await db.client.count({ where: { status: "ACTIVE" } })
+    : 0;
+  const childClients = canReadClients
+    ? await db.client.count({ where: { type: "CHILD" } })
+    : 0;
   const latestClients = canReadClients
     ? await db.client.findMany({
         orderBy: [{ createdAt: "desc" }],
@@ -108,7 +143,9 @@ export default async function AdminHomePage() {
     ? await db.appointment.count({ where: { startsAt: { gte: todayStart } } })
     : 0;
 
-  const activePlans = canReadFinance ? await db.clientPlan.count({ where: { status: "ACTIVE" } }) : 0;
+  const activePlans = canReadFinance
+    ? await db.clientPlan.count({ where: { status: "ACTIVE" } })
+    : 0;
   const paymentsThisMonth = canReadFinance
     ? await db.financeLedgerEntry.aggregate({
         _sum: { amountMinor: true },
@@ -135,18 +172,37 @@ export default async function AdminHomePage() {
   ];
   const actionItems = [
     canManageClients
-      ? { href: "/yonetim/danisanlar/yeni" as Route, kicker: "+", title: "Danışan oluştur" }
+      ? {
+          href: "/yonetim?modal=danisan-ekle" as Route,
+          kicker: "+",
+          title: "Danışan ekle",
+        }
       : null,
     canReadClients
-      ? { href: "/yonetim/danisanlar" as Route, kicker: "⌕", title: "Danışanları filtrele" }
+      ? {
+          href: "/yonetim?modal=not-ekle" as Route,
+          kicker: "✎",
+          title: "Not ekle",
+        }
       : null,
     canReadAppointments
-      ? { href: "/yonetim/randevular" as Route, kicker: "◷", title: "Randevuları yönet" }
+      ? {
+          href: "/yonetim?modal=randevu-olustur" as Route,
+          kicker: "◷",
+          title: "Randevu oluştur",
+        }
       : null,
     canReadFinance
-      ? { href: "/yonetim/odemeler" as Route, kicker: "₺", title: "Ödeme ve planlar" }
+      ? {
+          href: "/yonetim?modal=odeme-plani" as Route,
+          kicker: "₺",
+          title: "Ödeme planı",
+        }
       : null,
-  ].filter((item): item is { href: Route; kicker: string; title: string } => item !== null);
+  ].filter(
+    (item): item is { href: Route; kicker: string; title: string } =>
+      item !== null,
+  );
 
   return (
     <AdminShell
@@ -158,11 +214,13 @@ export default async function AdminHomePage() {
         servicesRead: true,
         technicalHealthRead: canReadTechnicalHealth,
       }}
-      subtitle="Danışan, randevu, ödeme ve hizmet akışını tek bakışta gösteren operasyon paneli."
+      subtitle="Danışan, randevu, ödeme ve hizmet akışını tek bakışta gösteren operasyon paneli. Hızlı işlemler URL tabanlı modal olarak açılır."
       title="Dashboard"
     >
       <div className={styles.dashboardGrid}>
-        <article className={`${styles.dashboardCard} ${styles.dashboardCardPrimary}`}>
+        <article
+          className={`${styles.dashboardCard} ${styles.dashboardCardPrimary}`}
+        >
           <span>Toplam danışan</span>
           <strong>{canReadClients ? totalClients : "—"}</strong>
           <small>
@@ -172,7 +230,9 @@ export default async function AdminHomePage() {
         </article>
         <article className={styles.dashboardCard}>
           <span>Bugünkü randevu</span>
-          <strong>{canReadAppointments ? todaysAppointments.length : "—"}</strong>
+          <strong>
+            {canReadAppointments ? todaysAppointments.length : "—"}
+          </strong>
           <small>{pendingAppointments} onay bekleyen talep var</small>
           <i className={styles.dashboardCardIcon}>◷</i>
         </article>
@@ -192,11 +252,17 @@ export default async function AdminHomePage() {
 
       <div className={styles.dashboardLayout}>
         <div className={styles.mainStack}>
-          <section className={styles.overviewPanel} aria-labelledby="operasyon-analitigi">
+          <section
+            className={styles.overviewPanel}
+            aria-labelledby="operasyon-analitigi"
+          >
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="operasyon-analitigi">Operasyon analitiği</h2>
-                <p>Danışan, randevu ve plan yoğunluğunu sade bir grafikle gösterir.</p>
+                <p>
+                  Danışan, randevu ve plan yoğunluğunu sade bir grafikle
+                  gösterir.
+                </p>
               </div>
               <span className={styles.panelBadge}>Canlı veri</span>
             </div>
@@ -206,7 +272,9 @@ export default async function AdminHomePage() {
                   <div className={styles.barTrack}>
                     <span
                       className={styles.barFill}
-                      style={{ height: barHeight(item.value, maxAnalyticsValue) }}
+                      style={{
+                        height: barHeight(item.value, maxAnalyticsValue),
+                      }}
                     />
                   </div>
                   <strong>{item.label}</strong>
@@ -216,7 +284,10 @@ export default async function AdminHomePage() {
             </div>
           </section>
 
-          <section className={styles.compactPanel} aria-labelledby="son-danisanlar">
+          <section
+            className={styles.compactPanel}
+            aria-labelledby="son-danisanlar"
+          >
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="son-danisanlar">Son danışan kayıtları</h2>
@@ -231,7 +302,9 @@ export default async function AdminHomePage() {
             {latestClients.length === 0 ? (
               <div className={styles.emptyNote}>
                 <strong>Henüz danışan görünmüyor</strong>
-                <span>Danışan oluşturulduğunda bu alanda son kayıtlar listelenecek.</span>
+                <span>
+                  Danışan oluşturulduğunda bu alanda son kayıtlar listelenecek.
+                </span>
               </div>
             ) : (
               <ul className={styles.dataList}>
@@ -242,11 +315,18 @@ export default async function AdminHomePage() {
                         {client.firstName} {client.lastName}
                       </strong>
                       <span>
-                        {client.phone ?? "Telefon yok"} · {clientTypeLabels[client.type]} ·{" "}
+                        {client.phone ?? "Telefon yok"} ·{" "}
+                        {clientTypeLabels[client.type]} ·{" "}
                         {clientStatusLabels[client.status]}
                       </span>
                     </div>
-                    <Link href={`/yonetim/danisanlar/${client.id}` as Route}>Aç</Link>
+                    <Link
+                      href={
+                        `/yonetim/danisan-profili?clientId=${client.id}` as Route
+                      }
+                    >
+                      Aç
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -255,16 +335,27 @@ export default async function AdminHomePage() {
         </div>
 
         <aside className={styles.asideStack}>
-          <section className={styles.actionPanel} aria-labelledby="hizli-islemler">
+          <section
+            className={styles.actionPanel}
+            aria-labelledby="hizli-islemler"
+          >
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="hizli-islemler">Hızlı işlemler</h2>
-                <p>En çok kullanılan BO geçişleri.</p>
+                <p>
+                  En çok kullanılan BO işlemleri; sayfa değişmeden URL modalı
+                  açılır.
+                </p>
               </div>
             </div>
             <div className={styles.actionGrid}>
               {actionItems.map((item) => (
-                <Link className={styles.actionCard} href={item.href} key={item.href}>
+                <Link
+                  className={styles.actionCard}
+                  href={item.href}
+                  key={item.href}
+                  scroll={false}
+                >
                   <span>{item.kicker}</span>
                   <strong>{item.title}</strong>
                 </Link>
@@ -272,13 +363,18 @@ export default async function AdminHomePage() {
             </div>
           </section>
 
-          <section className={styles.compactPanel} aria-labelledby="bugun-takip">
+          <section
+            className={styles.compactPanel}
+            aria-labelledby="bugun-takip"
+          >
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="bugun-takip">Bugünkü takip</h2>
                 <p>Günün randevu akışı.</p>
               </div>
-              <span className={styles.panelBadge}>{todaysAppointments.length} kayıt</span>
+              <span className={styles.panelBadge}>
+                {todaysAppointments.length} kayıt
+              </span>
             </div>
             {todaysAppointments.length === 0 ? (
               <div className={styles.emptyNote}>
@@ -291,22 +387,31 @@ export default async function AdminHomePage() {
                   <li key={appointment.id}>
                     <div>
                       <strong>
-                        {formatTime(appointment.startsAt)} · {appointment.client.firstName}{" "}
+                        {formatTime(appointment.startsAt)} ·{" "}
+                        {appointment.client.firstName}{" "}
                         {appointment.client.lastName}
                       </strong>
                       <span>{appointment.service.name}</span>
                     </div>
-                    <small>{appointmentStatusLabels[appointment.status] ?? appointment.status}</small>
+                    <small>
+                      {appointmentStatusLabels[appointment.status] ??
+                        appointment.status}
+                    </small>
                   </li>
                 ))}
               </ul>
             )}
           </section>
 
-          <section className={styles.financeHighlight} aria-labelledby="odeme-ozeti">
+          <section
+            className={styles.financeHighlight}
+            aria-labelledby="odeme-ozeti"
+          >
             <span id="odeme-ozeti">Bu ay alınan ödeme</span>
             <strong>{canReadFinance ? formatMoney(paymentTotal) : "—"}</strong>
-            <small>{activePlans} aktif plan üzerinden ön muhasebe takibi.</small>
+            <small>
+              {activePlans} aktif plan üzerinden ön muhasebe takibi.
+            </small>
           </section>
         </aside>
       </div>
@@ -315,7 +420,10 @@ export default async function AdminHomePage() {
         <div className="admin-panel-heading">
           <div>
             <h2 id="hizmet-listesi">Hizmet yapılandırmaları</h2>
-            <p>Süre, konum ve görünürlük değişiklikleri geçmiş kayıtları değiştirmez.</p>
+            <p>
+              Süre, konum ve görünürlük değişiklikleri geçmiş kayıtları
+              değiştirmez.
+            </p>
           </div>
           <span className="admin-count">{services.length} kayıt</span>
         </div>
@@ -323,7 +431,10 @@ export default async function AdminHomePage() {
         {services.length === 0 ? (
           <div className="admin-empty-state">
             <strong>Henüz hizmet yok</strong>
-            <span>Sentetik başlangıç verisi çalıştırıldığında taslak hizmet burada görünür.</span>
+            <span>
+              Sentetik başlangıç verisi çalıştırıldığında taslak hizmet burada
+              görünür.
+            </span>
           </div>
         ) : (
           <ul className="admin-service-list">
@@ -341,6 +452,13 @@ export default async function AdminHomePage() {
           </ul>
         )}
       </section>
+
+      <DashboardUrlModals
+        activeModal={activeModal}
+        canManageClients={canManageClients}
+        canReadAppointments={canReadAppointments}
+        canReadFinance={canReadFinance}
+      />
     </AdminShell>
   );
 }

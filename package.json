@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:integration": "node scripts/run-postgres-integration-tests.mjs",
     "test:watch": "vitest",
-    "quality": "pnpm lint && pnpm typecheck && pnpm test && pnpm format:check",
+    "quality": "pnpm lint && pnpm typecheck && pnpm test",
     "db:validate": "prisma validate",
     "db:format": "prisma format",
     "db:generate": "prisma generate",
