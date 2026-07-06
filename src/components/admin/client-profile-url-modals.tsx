@@ -83,7 +83,11 @@ export async function ClientProfileUrlModals({
       orderBy: [{ createdAt: "desc" }],
       select: { afterSummary: true, createdAt: true, id: true, reason: true },
       take: 5,
-      where: { action: "CLIENT_NOTE_CREATED", entityId: clientId, entityType: "CLIENT" },
+      where: {
+        action: "CLIENT_NOTE_CREATED",
+        entityId: clientId,
+        entityType: "CLIENT",
+      },
     });
 
     return (
