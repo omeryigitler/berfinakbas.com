@@ -1,11 +1,11 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import { getServerEnvironment } from "@/lib/env";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
+import { getServerEnvironment } from "@/lib/env";
 
 import { AdminUrlModal, ModalFieldPreview } from "./admin-url-modal";
 import modalStyles from "./admin-url-modal.module.css";
@@ -32,7 +32,7 @@ function numberValue(formData: FormData, key: string, fallback: number): number 
 function amountToMinor(value: string): bigint {
   const normalized = value.trim().replace(",", ".");
   if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return 0n;
-  const [whole, fraction = ""] = normalized.split(".");
+  const [whole = "0", fraction = ""] = normalized.split(".");
   return BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0"));
 }
 
@@ -50,8 +50,13 @@ function addMinutes(date: Date, minutes: number): Date {
 }
 
 function zonedDateToUtc(localDate: string, localTime: string, timeZone: string): Date {
-  const [year, month, day] = localDate.split("-").map(Number);
-  const [hour, minute] = localTime.split(":").map(Number);
+  const [yearText = "0", monthText = "1", dayText = "1"] = localDate.split("-");
+  const [hourText = "0", minuteText = "0"] = localTime.split(":");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
   const targetUtc = Date.UTC(year, month - 1, day, hour, minute, 0);
   const guess = new Date(targetUtc);
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -162,6 +167,8 @@ async function createProfileAppointment(formData: FormData) {
       data: {
         approvedAt: new Date(),
         approvedByUserId: session.user.id,
+        bufferAfterMinutesSnapshot: service.defaultBufferAfterMinutes,
+        bufferBeforeMinutesSnapshot: service.defaultBufferBeforeMinutes,
         busyEndsAt,
         busyStartsAt,
         clientId,
