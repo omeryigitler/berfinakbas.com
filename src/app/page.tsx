@@ -5,6 +5,8 @@ import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
 import { SiteFooter } from "@/components/public-shell";
 
+import "./home-performance.module.css";
+
 const audiences = [
   {
     accent: "peach",
