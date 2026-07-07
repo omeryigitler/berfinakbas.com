@@ -1,20 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import footer from "./public-footer.module.css";
-
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <span className={`brand-mark${compact ? "brand-mark-compact" : ""}`}>
+    <span className={compact ? "brand-mark brand-mark-compact" : "brand-mark"}>
       <span className="brand-symbol" aria-hidden="true">
-        <Image
-          alt=""
-          className="brand-logo-image"
-          height={44}
-          priority={!compact}
-          src="/logo.png"
-          width={44}
-        />
+        <Image src="/logo-mark.png" alt="" width={44} height={44} />
       </span>
       <span>
         <strong>Berfin Akbaş</strong>
@@ -46,9 +37,9 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className={footer.footer}>
-      <div className={footer.main}>
-        <div className={footer.brand}>
+    <footer className="site-footer">
+      <div className="site-footer-main">
+        <div className="site-footer-brand">
           <Link href="/" aria-label="Berfin Akbaş ana sayfa">
             <BrandMark compact />
           </Link>
@@ -56,13 +47,13 @@ export function SiteFooter() {
             Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel dil ve konuşma
             terapisi.
           </p>
-          <Link className={footer.cta} href="/randevu">
+          <Link className="site-footer-cta" href="/randevu">
             Randevu süreci
             <span aria-hidden="true">→</span>
           </Link>
         </div>
 
-        <nav className={footer.nav} aria-label="Alt menü">
+        <nav className="site-footer-nav" aria-label="Alt menü">
           <span>Keşfet</span>
           <Link href="/hizmetler">Hizmetler</Link>
           <Link href="/hakkimda">Hakkımda</Link>
@@ -71,15 +62,15 @@ export function SiteFooter() {
           <Link href="/iletisim">İletişim</Link>
         </nav>
 
-        <div className={footer.note}>
+        <div className="site-footer-note">
           <span>Bilgi</span>
           <p>Bu site tanı koymaz, sonuç vaat etmez ve kişiye özel sağlık önerisi sunmaz.</p>
         </div>
       </div>
 
-      <div className={footer.base}>
+      <div className="site-footer-base">
         <span>© 2026 Berfin Akbaş · Tüm hakları saklıdır.</span>
-        <p className={footer.credit}>
+        <p className="site-footer-credit">
           Designed &amp; Developed by{" "}
           <a href="https://omeryigitler.com" target="_blank" rel="noreferrer">
             Ömer YİĞİTLER
