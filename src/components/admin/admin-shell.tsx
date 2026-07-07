@@ -110,7 +110,7 @@ export function AdminShell({
 
         <div className={styles.sidebarNote}>
           <strong>BO düzeni</strong>
-          <span>Danışan, randevu ve ödeme işlemleri tek panelde takip edilir.</span>
+          <span>Danışan, randevu ve ödeme işlemleri tek yönetim panelinde takip edilir.</span>
         </div>
       </aside>
 
