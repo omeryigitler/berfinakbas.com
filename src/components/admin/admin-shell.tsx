@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import "./admin-dashboard-refresh.module.css";
 import styles from "./admin-shell.module.css";
 
 export type AdminNavPermissions = {
@@ -109,7 +110,7 @@ export function AdminShell({
 
         <div className={styles.sidebarNote}>
           <strong>BO düzeni</strong>
-          <span>Danışan, randevu ve ödeme işlemleri tek panelde takip edilir.</span>
+          <span>Danışan, randevu ve ödeme işlemleri tek yönetim panelinde takip edilir.</span>
         </div>
       </aside>
 

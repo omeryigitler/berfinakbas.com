@@ -58,6 +58,18 @@ function barHeight(value: number, maxValue: number): string {
   return `${Math.max(24, Math.round((value / maxValue) * 100))}%`;
 }
 
+function getWeekRange(todayStart: Date): { weekEnd: Date; weekStart: Date } {
+  const weekStart = new Date(todayStart);
+  const day = weekStart.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  weekStart.setDate(weekStart.getDate() + diffToMonday);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  return { weekEnd, weekStart };
+}
+
 export default async function AdminHomePage({
   searchParams,
 }: {
@@ -88,6 +100,7 @@ export default async function AdminHomePage({
     todayStart.getMonth(),
     1,
   );
+  const { weekEnd, weekStart } = getWeekRange(todayStart);
 
   const services = await db.service.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -106,6 +119,9 @@ export default async function AdminHomePage({
     : 0;
   const childClients = canReadClients
     ? await db.client.count({ where: { type: "CHILD" } })
+    : 0;
+  const newClientsThisMonth = canReadClients
+    ? await db.client.count({ where: { createdAt: { gte: monthStart } } })
     : 0;
   const latestClients = canReadClients
     ? await db.client.findMany({
@@ -142,6 +158,11 @@ export default async function AdminHomePage({
   const upcomingAppointments = canReadAppointments
     ? await db.appointment.count({ where: { startsAt: { gte: todayStart } } })
     : 0;
+  const weeklyAppointments = canReadAppointments
+    ? await db.appointment.count({
+        where: { startsAt: { gte: weekStart, lt: weekEnd } },
+      })
+    : 0;
 
   const activePlans = canReadFinance
     ? await db.clientPlan.count({ where: { status: "ACTIVE" } })
@@ -153,11 +174,14 @@ export default async function AdminHomePage({
       })
     : null;
   const paymentTotal = paymentsThisMonth?._sum.amountMinor ?? BigInt(0);
+  const formattedPaymentTotal = formatMoney(paymentTotal);
   const maxAnalyticsValue = Math.max(
     totalClients,
     activeClients,
     childClients,
+    newClientsThisMonth,
     pendingAppointments,
+    weeklyAppointments,
     activePlans,
     services.length,
     1,
@@ -165,8 +189,8 @@ export default async function AdminHomePage({
   const analytics = [
     { label: "Danışan", value: totalClients },
     { label: "Aktif", value: activeClients },
-    { label: "Çocuk", value: childClients },
-    { label: "Randevu", value: upcomingAppointments },
+    { label: "Yeni", value: newClientsThisMonth },
+    { label: "Haftalık", value: weeklyAppointments },
     { label: "Plan", value: activePlans },
     { label: "Hizmet", value: services.length },
   ];
@@ -221,12 +245,18 @@ export default async function AdminHomePage({
         <article
           className={`${styles.dashboardCard} ${styles.dashboardCardPrimary}`}
         >
-          <span>Toplam danışan</span>
-          <strong>{canReadClients ? totalClients : "—"}</strong>
+          <span>Toplam aktif danışan</span>
+          <strong>{canReadClients ? activeClients : "—"}</strong>
           <small>
-            {activeClients} aktif kayıt · {childClients} çocuk danışan
+            {totalClients} toplam kayıt · {childClients} çocuk danışan
           </small>
           <i className={styles.dashboardCardIcon}>↗</i>
+        </article>
+        <article className={styles.dashboardCard}>
+          <span>Yeni kayıt / bu ay</span>
+          <strong>{canReadClients ? newClientsThisMonth : "—"}</strong>
+          <small>Bu ay açılan danışan dosyası</small>
+          <i className={styles.dashboardCardIcon}>◌</i>
         </article>
         <article className={styles.dashboardCard}>
           <span>Bugünkü randevu</span>
@@ -237,16 +267,10 @@ export default async function AdminHomePage({
           <i className={styles.dashboardCardIcon}>◷</i>
         </article>
         <article className={styles.dashboardCard}>
-          <span>Aktif plan</span>
+          <span>Aktif ödeme planı</span>
           <strong>{canReadFinance ? activePlans : "—"}</strong>
-          <small>Danışanlara bağlı devam eden ödeme planları</small>
+          <small>Bu ay alınan ödeme: {formattedPaymentTotal}</small>
           <i className={styles.dashboardCardIcon}>₺</i>
-        </article>
-        <article className={styles.dashboardCard}>
-          <span>Hizmet</span>
-          <strong>{services.length}</strong>
-          <small>Süre, konum ve görünürlük ayarı bulunan hizmetler</small>
-          <i className={styles.dashboardCardIcon}>⌘</i>
         </article>
       </div>
 
@@ -260,8 +284,8 @@ export default async function AdminHomePage({
               <div>
                 <h2 id="operasyon-analitigi">Operasyon analitiği</h2>
                 <p>
-                  Danışan, randevu ve plan yoğunluğunu sade bir grafikle
-                  gösterir.
+                  Danışan, randevu, ödeme planı ve hizmet yoğunluğunu sade bir
+                  grafikle gösterir.
                 </p>
               </div>
               <span className={styles.panelBadge}>Canlı veri</span>
@@ -365,6 +389,42 @@ export default async function AdminHomePage({
 
           <section
             className={styles.compactPanel}
+            aria-labelledby="haftalik-ozet"
+          >
+            <div className={styles.panelHeader}>
+              <div>
+                <h2 id="haftalik-ozet">Haftalık özet</h2>
+                <p>Bu haftaki operasyon yoğunluğu.</p>
+              </div>
+              <span className={styles.panelBadge}>{weeklyAppointments} randevu</span>
+            </div>
+            <ul className={styles.dataList}>
+              <li>
+                <div>
+                  <strong>Randevu akışı</strong>
+                  <span>{upcomingAppointments} yaklaşan randevu takibi</span>
+                </div>
+                <small>{weeklyAppointments}</small>
+              </li>
+              <li>
+                <div>
+                  <strong>Yeni danışan</strong>
+                  <span>Bu ay açılan danışan dosyası</span>
+                </div>
+                <small>{newClientsThisMonth}</small>
+              </li>
+              <li>
+                <div>
+                  <strong>Bekleyen karar</strong>
+                  <span>Onay bekleyen randevu talebi</span>
+                </div>
+                <small>{pendingAppointments}</small>
+              </li>
+            </ul>
+          </section>
+
+          <section
+            className={styles.compactPanel}
             aria-labelledby="bugun-takip"
           >
             <div className={styles.panelHeader}>
@@ -408,7 +468,7 @@ export default async function AdminHomePage({
             aria-labelledby="odeme-ozeti"
           >
             <span id="odeme-ozeti">Bu ay alınan ödeme</span>
-            <strong>{canReadFinance ? formatMoney(paymentTotal) : "—"}</strong>
+            <strong>{canReadFinance ? formattedPaymentTotal : "—"}</strong>
             <small>
               {activePlans} aktif plan üzerinden ön muhasebe takibi.
             </small>
