@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import "./admin-dashboard-refresh.module.css";
 import styles from "./admin-shell.module.css";
 
 export type AdminNavPermissions = {
