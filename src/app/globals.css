@@ -116,20 +116,17 @@ summary:focus-visible {
   width: 44px;
   height: 44px;
   place-items: center;
+  overflow: hidden;
   border: 1px solid rgb(217 111 77 / 25%);
   border-radius: 50%;
   background: #fff6ee;
   color: var(--coral);
 }
 
-.brand-symbol svg {
-  width: 34px;
-  height: 34px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.5;
+.brand-symbol img {
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
 }
 
 .site-header nav {
@@ -607,10 +604,12 @@ summary:focus-visible {
 }
 
 .principles-strip article {
+  position: relative;
   display: flex;
   gap: 16px;
-  padding: 26px 32px;
+  padding: 26px 44px 26px 32px;
   border-right: 1px solid var(--line);
+  transition: background 0.28s ease;
 }
 
 .principles-strip article:first-child {
@@ -621,10 +620,30 @@ summary:focus-visible {
   border-right: 0;
 }
 
+.principles-strip article:hover {
+  background: rgb(217 111 77 / 5%);
+}
+
+/* Index sits in the top-right corner: faint by default, pops on hover */
 .principles-strip article > span {
-  color: var(--coral);
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  color: rgb(217 111 77 / 42%);
   font-family: var(--serif);
-  font-size: 1.6rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    color 0.3s ease,
+    font-size 0.3s ease,
+    text-shadow 0.3s ease;
+}
+
+.principles-strip article:hover > span {
+  color: var(--coral);
+  font-size: 1.9rem;
+  text-shadow: 0 8px 18px rgb(217 111 77 / 30%);
 }
 
 .principles-strip strong,
@@ -806,44 +825,55 @@ summary:focus-visible {
 }
 
 .audience-card {
-  overflow: hidden;
+  position: relative;
   border: 1px solid var(--line);
   border-radius: 22px;
   background: rgb(255 255 255 / 60%);
   box-shadow: 0 18px 42px rgb(102 68 47 / 7%);
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
+    transform 220ms ease,
+    box-shadow 220ms ease;
 }
 
 .audience-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 24px 50px rgb(102 68 47 / 12%);
+  transform: translateY(-6px);
+  box-shadow: 0 26px 54px rgb(102 68 47 / 13%);
 }
 
 .audience-illustration {
   position: relative;
-  height: 182px;
-  overflow: hidden;
+  z-index: 2;
+  height: 176px;
+  border-radius: 22px 22px 0 0;
 }
 
+/* The transparent product photo is anchored to the panel floor but its box
+   dips below the coloured panel, so the object spills out of the image box
+   and down into the text box beneath it. */
 .audience-photo {
-  width: 100%;
-  height: 100%;
-  padding: 20px 16px 0;
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  width: 90%;
+  height: 178px;
   object-fit: contain;
-  object-position: center 82%;
-  filter: drop-shadow(0 12px 18px rgb(80 55 35 / 15%));
+  object-position: center bottom;
+  translate: -50% 0;
+  filter: drop-shadow(0 18px 24px rgb(80 55 35 / 22%));
   transition:
-    transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 340ms ease;
+    translate 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    rotate 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 380ms ease;
 }
 
-/* Image and card hover behave differently: the card lifts, the objects
-   scale up and tilt slightly with a deeper shadow. */
+/* On hover the card lifts and the object grows and tilts a touch further out
+   of the panel with a deeper shadow. */
 .audience-card:hover .audience-photo {
-  transform: scale(1.1) rotate(-2deg);
-  filter: drop-shadow(0 20px 26px rgb(80 55 35 / 22%));
+  translate: -50% -10px;
+  scale: 1.06;
+  rotate: -2deg;
+  filter: drop-shadow(0 26px 34px rgb(80 55 35 / 30%));
 }
 
 .audience-peach {
@@ -863,7 +893,9 @@ summary:focus-visible {
 }
 
 .audience-card-copy {
-  padding: 22px 21px 25px;
+  position: relative;
+  z-index: 1;
+  padding: 48px 21px 26px;
 }
 
 .audience-card-copy > p {
@@ -889,75 +921,6 @@ summary:focus-visible {
   margin-top: 12px;
   color: var(--muted);
   font-size: 0.71rem;
-  line-height: 1.65;
-}
-
-.process-section {
-  display: grid;
-  grid-template-columns: 0.84fr 1.16fr;
-  gap: 95px;
-  padding: 105px 75px;
-  border-radius: 34px;
-  background: radial-gradient(circle at 85% 0%, rgb(242 189 157 / 28%), transparent 23rem), #4b3a33;
-  box-shadow: 0 38px 80px rgb(68 44 31 / 14%);
-  color: #fffaf4;
-}
-
-.process-intro .section-kicker {
-  color: #efad8e;
-}
-
-.process-intro h2 {
-  font-size: clamp(2.5rem, 4.2vw, 4rem);
-}
-
-.process-intro > p:last-child {
-  margin: 26px 0 0;
-  color: #d8c8be;
-  font-size: 0.86rem;
-  line-height: 1.75;
-}
-
-.process-steps {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.process-steps li {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 22px;
-  padding: 27px 0;
-  border-bottom: 1px solid rgb(255 255 255 / 13%);
-}
-
-.process-steps li:first-child {
-  padding-top: 0;
-}
-
-.process-steps li > span {
-  display: grid;
-  width: 45px;
-  height: 45px;
-  place-items: center;
-  border: 1px solid rgb(239 173 142 / 45%);
-  border-radius: 50%;
-  color: #efad8e;
-  font-family: var(--serif);
-}
-
-.process-steps h3 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 1.28rem;
-  font-weight: 600;
-}
-
-.process-steps p {
-  margin: 8px 0 0;
-  color: #d8c8be;
-  font-size: 0.76rem;
   line-height: 1.65;
 }
 
@@ -1023,109 +986,427 @@ summary:focus-visible {
 }
 
 .booking-banner {
+  position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1.2fr 0.8fr;
   align-items: center;
-  gap: 30px;
-  margin-bottom: 42px;
-  padding: 34px 38px;
+  gap: clamp(34px, 5vw, 64px);
+  margin-bottom: 46px;
+  padding: clamp(38px, 5vw, 62px);
   overflow: hidden;
-  border-radius: 26px;
-  background: linear-gradient(110deg, transparent, rgb(255 255 255 / 12%)), var(--coral);
-  color: white;
-  box-shadow: 0 24px 55px rgb(174 78 48 / 22%);
+  border: 1px solid rgb(217 111 77 / 18%);
+  border-radius: 34px;
+  background:
+    radial-gradient(120% 150% at 100% 0%, rgb(249 223 206 / 72%), transparent 55%),
+    radial-gradient(100% 130% at 0% 100%, rgb(224 229 217 / 42%), transparent 60%),
+    linear-gradient(158deg, #fffaf5 0%, #fbf1e8 100%);
+  box-shadow: 0 30px 70px rgb(120 78 52 / 12%);
+}
+
+/* Soft decorative ring + glow echoing the brand motif. */
+.booking-banner::before {
+  position: absolute;
+  top: -74px;
+  right: 22%;
+  width: 220px;
+  height: 220px;
+  border: 1px solid rgb(217 111 77 / 16%);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.booking-banner::after {
+  position: absolute;
+  right: -80px;
+  bottom: -120px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(217 111 77 / 12%), transparent 68%);
+  content: "";
+  pointer-events: none;
+}
+
+.booking-copy,
+.booking-flowcard {
+  position: relative;
+  z-index: 1;
 }
 
 .booking-banner .section-kicker {
-  margin-bottom: 7px;
-  color: rgb(255 255 255 / 72%);
+  margin-bottom: 12px;
 }
 
 .booking-banner h2 {
-  font-size: clamp(1.75rem, 3.4vw, 2.7rem);
+  color: var(--ink);
+  font-size: clamp(1.9rem, 3.4vw, 2.75rem);
+  line-height: 1.02;
 }
 
-.booking-banner p:last-child {
-  margin: 8px 0 0;
-  color: rgb(255 255 255 / 75%);
-  font-size: 0.72rem;
+.booking-lead {
+  max-width: 460px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
 }
 
-.booking-icon {
-  position: relative;
-  width: 70px;
-  height: 70px;
-  border: 1px solid rgb(255 255 255 / 42%);
-  border-radius: 22px;
-  background: rgb(255 255 255 / 13%);
-}
-
-.booking-icon span {
-  position: absolute;
-  inset: 18px 16px 15px;
-  border: 2px solid white;
-  border-radius: 7px;
-}
-
-.booking-icon span::before {
-  position: absolute;
-  top: 8px;
-  right: 0;
-  left: 0;
-  height: 2px;
-  background: white;
-  content: "";
-}
-
-.booking-icon i {
-  position: absolute;
-  right: 7px;
-  bottom: 7px;
-  width: 23px;
-  height: 23px;
-  border: 3px solid var(--coral);
-  border-radius: 50%;
-  background: white;
+.booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  margin-top: 28px;
 }
 
 .booking-status {
-  border: 1px solid rgb(255 255 255 / 42%);
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  border: 1px solid rgb(217 111 77 / 30%);
   border-radius: 999px;
-  background: rgb(255 255 255 / 14%);
-  padding: 13px 18px;
+  background: rgb(217 111 77 / 10%);
+  padding: 11px 18px;
+  color: var(--coral-dark);
   font-size: 0.72rem;
   font-weight: 800;
   white-space: nowrap;
 }
 
-.site-footer {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr 1fr;
+.booking-status::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  box-shadow: 0 0 0 0 rgb(217 111 77 / 55%);
+  content: "";
+  animation: bookingPulse 2s ease-out infinite;
+}
+
+.booking-contact {
+  display: inline-flex;
+  gap: 8px;
   align-items: center;
-  gap: 24px;
-  padding-block: 28px 38px;
-  border-top: 1px solid var(--line);
+  color: var(--coral-dark);
+  font-size: 0.82rem;
+  font-weight: 750;
+  transition: color 200ms ease;
+}
+
+.booking-contact span {
+  transition: transform 220ms ease;
+}
+
+.booking-contact:hover {
+  color: var(--coral);
+}
+
+.booking-contact:hover span {
+  transform: translateX(4px);
+}
+
+/* Appointment-flow preview card — mirrors the site's Talep → Kontrol → Onay
+   language so the section reads as part of the product, not a bare box. */
+.booking-flowcard {
+  border: 1px solid rgb(255 255 255 / 82%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 74%);
+  padding: 24px 24px 14px;
+  box-shadow: 0 24px 54px rgb(120 78 52 / 14%);
+  backdrop-filter: blur(10px);
+}
+
+.booking-flowcard-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--coral-dark);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.booking-flowcard-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--coral);
+  box-shadow: 0 0 0 4px rgb(217 111 77 / 16%);
+}
+
+.booking-steplist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px -12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each step is its own hover target so the rows react individually. */
+.booking-steplist li {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 13px 12px;
+  border-radius: 16px;
+  transition:
+    background 0.28s ease,
+    box-shadow 0.28s ease,
+    transform 0.28s ease;
+}
+
+/* Hairline separators that stay put between the pills at rest. */
+.booking-steplist li + li::before {
+  position: absolute;
+  top: -2px;
+  right: 12px;
+  left: 12px;
+  height: 1px;
+  background: rgb(224 200 182 / 45%);
+  content: "";
+}
+
+.booking-steplist li:hover {
+  background: rgb(217 111 77 / 9%);
+  box-shadow: 0 14px 28px rgb(120 78 52 / 10%);
+  transform: translateX(4px);
+}
+
+.booking-flownum {
+  flex-shrink: 0;
+  min-width: 44px;
+  color: rgb(217 111 77 / 45%);
+  font-family: var(--serif);
+  font-size: 1.95rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transition:
+    color 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    text-shadow 0.3s ease;
+}
+
+/* The number pops on its own row's hover: fills in, scales up, gains depth. */
+.booking-steplist li:hover .booking-flownum {
+  color: var(--coral);
+  transform: scale(1.18);
+  text-shadow: 0 12px 24px rgb(217 111 77 / 34%);
+}
+
+.booking-steplist strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: color 0.28s ease;
+}
+
+.booking-steplist li:hover strong {
+  color: var(--coral-dark);
+}
+
+.booking-steplist small {
+  display: block;
+  margin-top: 3px;
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
 }
 
-.site-footer p {
+@keyframes bookingPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(217 111 77 / 50%);
+  }
+
+  70% {
+    box-shadow: 0 0 0 9px rgb(217 111 77 / 0%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgb(217 111 77 / 0%);
+  }
+}
+
+.site-footer {
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  padding: clamp(38px, 5vw, 54px) clamp(26px, 4.5vw, 50px) 22px;
+  overflow: hidden;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 86% -12%, rgb(217 111 77 / 34%), transparent 44%),
+    linear-gradient(155deg, #4d3b34 0%, #362823 100%);
+  color: rgb(255 255 255 / 62%);
+  font-size: 0.76rem;
+  box-shadow: 0 18px 44px rgb(54 40 35 / 12%);
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+/* Whole-panel hover: the footer lifts a touch and its warm glow blooms. */
+.site-footer::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 84% -14%, rgb(217 111 77 / 26%), transparent 48%);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  content: "";
+  pointer-events: none;
+}
+
+.site-footer:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 34px 72px rgb(54 40 35 / 30%);
+}
+
+.site-footer:hover::before {
+  opacity: 1;
+}
+
+.site-footer > * {
+  position: relative;
+  z-index: 1;
+}
+
+.site-footer-main {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.2fr;
+  gap: clamp(26px, 5vw, 66px);
+  padding-bottom: clamp(26px, 3.5vw, 38px);
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+}
+
+.site-footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.site-footer .brand-mark strong {
+  color: #fff;
+}
+
+.site-footer .brand-mark small {
+  color: rgb(255 255 255 / 55%);
+}
+
+.site-footer-brand p {
+  max-width: 300px;
   margin: 0;
-  text-align: center;
-  line-height: 1.6;
+  line-height: 1.75;
+  color: rgb(255 255 255 / 60%);
 }
 
-.site-footer > span {
-  justify-self: end;
+.site-footer-cta {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 999px;
+  padding: 10px 18px;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    gap 0.2s ease;
+}
+
+.site-footer-cta:hover {
+  gap: 12px;
+  border-color: var(--coral);
+  background: var(--coral);
+}
+
+.site-footer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.site-footer-nav > span,
+.site-footer-note > span {
+  margin-bottom: 4px;
+  color: #f2c0a8;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.site-footer-nav a {
+  width: fit-content;
+  color: rgb(255 255 255 / 82%);
+  font-weight: 600;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.site-footer-nav a:hover {
+  color: #fff;
+  transform: translateX(3px);
+}
+
+.site-footer-note {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.site-footer-note p {
+  max-width: 320px;
+  margin: 0;
+  line-height: 1.75;
+  color: rgb(255 255 255 / 55%);
+}
+
+.site-footer-base {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 22px;
+  font-size: 0.74rem;
+}
+
+.site-footer-base > span {
+  color: rgb(255 255 255 / 70%);
+  font-weight: 600;
+}
+
+.site-footer-credit {
+  margin: 0;
+  color: rgb(255 255 255 / 45%);
+}
+
+.site-footer-credit a {
+  color: #fff;
+  font-weight: 650;
+  transition: color 0.2s ease;
+}
+
+.site-footer-credit a:hover {
+  color: var(--coral);
 }
 
 .brand-mark-compact .brand-symbol {
   width: 35px;
   height: 35px;
-}
-
-.brand-mark-compact .brand-symbol svg {
-  width: 27px;
 }
 
 .inner-page {
@@ -2107,329 +2388,6 @@ summary:focus-visible {
   font-size: 0.68rem;
 }
 
-.finance-dashboard {
-  margin-top: 28px;
-}
-
-.finance-toolbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 18px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 20px;
-}
-
-.finance-toolbar label,
-.finance-operation-card label,
-.finance-history label {
-  display: grid;
-  gap: 7px;
-  color: #5f4d44;
-  font-size: 0.7rem;
-  font-weight: 750;
-}
-
-.finance-toolbar select,
-.finance-operation-card input,
-.finance-operation-card select,
-.finance-operation-card textarea,
-.finance-history input,
-.finance-history select,
-.finance-history textarea {
-  min-height: 42px;
-  border: 1px solid rgb(88 62 49 / 20%);
-  border-radius: 11px;
-  background: #fffdf9;
-  padding: 9px 11px;
-  color: var(--ink);
-  font: inherit;
-}
-
-.finance-operation-card textarea,
-.finance-history textarea {
-  min-height: 72px;
-  resize: vertical;
-}
-
-.finance-toolbar > span {
-  color: var(--muted);
-  font-size: 0.72rem;
-}
-
-.finance-operation-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 14px;
-  margin-top: 22px;
-}
-
-.finance-operation-card {
-  overflow: visible;
-  border: 0;
-  background: transparent;
-  padding: 0;
-}
-
-.finance-operation-card:not([open]) {
-  order: 1;
-}
-
-.finance-operation-card[open] {
-  grid-column: 1 / -1;
-  order: 2;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: #fffcf8;
-  padding: 22px;
-}
-
-.finance-operation-card summary {
-  display: flex;
-  min-height: 58px;
-  align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fffcf8;
-  padding: 0 18px;
-  box-shadow: 0 14px 30px rgb(83 53 35 / 5%);
-}
-
-.finance-operation-card[open] summary {
-  min-height: auto;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-}
-
-.finance-operation-card form {
-  display: grid;
-  gap: 13px;
-  margin-top: 17px;
-}
-
-.finance-history form {
-  display: grid;
-  gap: 11px;
-  margin-top: 14px;
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-}
-
-.finance-history p {
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 0.7rem;
-}
-
-.finance-inline-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.finance-operation-card label,
-.finance-history label,
-.finance-inline-fields > * {
-  min-width: 0;
-}
-
-.finance-operation-card input,
-.finance-operation-card textarea,
-.finance-history input,
-.finance-history textarea {
-  width: 100%;
-  min-width: 0;
-}
-
-.finance-operation-card .finance-inline-fields button {
-  align-self: end;
-}
-
-.finance-operation-card button,
-.finance-history button {
-  min-height: 38px;
-  cursor: pointer;
-  border: 1px solid rgb(217 111 77 / 28%);
-  border-radius: 999px;
-  background: #fff1e7;
-  padding: 8px 13px;
-  color: var(--coral-dark);
-  font-size: 0.68rem;
-  font-weight: 800;
-}
-
-.finance-operation-card button:disabled,
-.finance-history button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.finance-installment-editor {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  padding: 12px;
-}
-
-.finance-installment-editor legend {
-  padding-inline: 4px;
-  color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.finance-message {
-  min-height: 1.3em;
-  margin: 17px 0 0;
-  color: var(--coral-dark);
-  font-size: 0.74rem;
-  font-weight: 750;
-}
-
-.finance-plan-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 20px;
-}
-
-.finance-plan-card {
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: #fffcf8;
-  padding: 20px;
-}
-
-.finance-plan-card > header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 15px;
-}
-
-.finance-plan-card header small,
-.finance-plan-card header span {
-  color: var(--muted);
-  font-size: 0.64rem;
-  font-weight: 750;
-}
-
-.finance-plan-card h3 {
-  margin: 4px 0 0;
-  font-family: var(--serif);
-  font-size: 1.22rem;
-}
-
-.finance-plan-card dl {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin: 18px 0;
-}
-
-.finance-plan-card dl div {
-  border-radius: 11px;
-  background: #f8efe7;
-  padding: 11px;
-}
-
-.finance-plan-card dt {
-  color: var(--muted);
-  font-size: 0.58rem;
-  font-weight: 750;
-  text-transform: uppercase;
-}
-
-.finance-plan-card dd {
-  margin: 5px 0 0;
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.finance-installments {
-  display: grid;
-  gap: 6px;
-}
-
-.finance-installments > div {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  align-items: center;
-  gap: 10px;
-  border-top: 1px solid var(--line);
-  padding: 10px 0;
-  font-size: 0.68rem;
-}
-
-.finance-state {
-  border-radius: 999px;
-  padding: 5px 8px;
-  font-weight: 800;
-}
-
-.finance-state--overdue {
-  background: #f9e0d8;
-  color: #a9432b;
-}
-
-.finance-state--paid {
-  background: #e8f0e2;
-  color: #4f6948;
-}
-
-.finance-state--due,
-.finance-state--partially_paid {
-  background: #f7ebd7;
-  color: #846231;
-}
-
-.finance-history {
-  margin-top: 14px;
-}
-
-.finance-history ul {
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.finance-history li {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  gap: 10px;
-  border-top: 1px solid var(--line);
-  padding: 10px 0;
-  font-size: 0.65rem;
-}
-
-@media (max-width: 1180px) {
-  .finance-operation-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .finance-inline-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .finance-toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .finance-inline-fields {
-    grid-template-columns: 1fr;
-  }
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -2609,11 +2567,6 @@ summary:focus-visible {
   .audience-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .process-section {
-    grid-template-columns: 1fr;
-    gap: 55px;
-  }
 }
 
 @media (max-width: 720px) {
@@ -2640,10 +2593,6 @@ summary:focus-visible {
   .brand-symbol {
     width: 38px;
     height: 38px;
-  }
-
-  .brand-symbol svg {
-    width: 30px;
   }
 
   .header-cta {
@@ -2717,7 +2666,7 @@ summary:focus-visible {
 
   .principles-strip article,
   .principles-strip article:first-child {
-    padding: 22px 0;
+    padding: 22px 44px 22px 0;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -2761,21 +2710,6 @@ summary:focus-visible {
     min-height: 0;
   }
 
-  .process-section {
-    padding: 65px 26px;
-    border-radius: 25px;
-  }
-
-  .process-steps li {
-    grid-template-columns: 44px 1fr;
-    gap: 15px;
-  }
-
-  .process-steps li > span {
-    width: 39px;
-    height: 39px;
-  }
-
   .faq-section {
     grid-template-columns: 1fr;
     gap: 45px;
@@ -2783,26 +2717,36 @@ summary:focus-visible {
   }
 
   .booking-banner {
-    grid-template-columns: auto 1fr;
-    padding: 28px 24px;
-  }
-
-  .booking-status {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
-
-  .site-footer {
     grid-template-columns: 1fr;
+    gap: 34px;
+    padding: 36px 26px;
+  }
+
+  .site-footer-main {
+    grid-template-columns: 1fr;
+    gap: 34px;
     text-align: center;
   }
 
-  .site-footer .brand-mark {
-    justify-self: center;
+  .site-footer-brand {
+    align-items: center;
   }
 
-  .site-footer > span {
-    justify-self: center;
+  .site-footer-nav {
+    align-items: center;
+  }
+
+  .site-footer-nav a:hover {
+    transform: none;
+  }
+
+  .site-footer-note {
+    align-items: center;
+  }
+
+  .site-footer-base {
+    flex-direction: column;
+    text-align: center;
   }
 
   .admin-auth-shell,
@@ -2832,26 +2776,6 @@ summary:focus-visible {
 
   .admin-header-actions,
   .admin-list-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .finance-operation-grid,
-  .finance-plan-list {
-    grid-template-columns: 1fr;
-  }
-
-  .finance-inline-fields,
-  .finance-plan-card dl {
-    grid-template-columns: 1fr;
-  }
-
-  .finance-installments > div,
-  .finance-history li {
-    grid-template-columns: 1fr auto;
-  }
-
-  .finance-toolbar {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -3046,130 +2970,4 @@ summary:focus-visible {
       min-height: 100vh;
     }
   }
-}
-
-.finance-toolbar select,
-.finance-operation-card select,
-.finance-history select,
-.booking-field select {
-  appearance: none;
-  background:
-    linear-gradient(45deg, transparent 50%, var(--coral-dark) 50%) calc(100% - 17px) 50% / 6px 6px
-      no-repeat,
-    linear-gradient(135deg, var(--coral-dark) 50%, transparent 50%) calc(100% - 12px) 50% / 6px 6px
-      no-repeat,
-    #fffdf9;
-  padding-right: 34px;
-}
-
-.finance-toolbar select:focus,
-.finance-operation-card select:focus,
-.finance-history select:focus,
-.booking-field select:focus,
-.finance-operation-card input:focus,
-.finance-operation-card textarea:focus,
-.finance-history input:focus,
-.finance-history textarea:focus {
-  border-color: var(--coral);
-  outline: 3px solid rgb(217 111 77 / 18%);
-  outline-offset: 1px;
-}
-
-.admin-modal-backdrop {
-  position: fixed;
-  z-index: 80;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgb(69 53 47 / 38%);
-  padding: 24px;
-  backdrop-filter: blur(8px);
-}
-
-.admin-modal {
-  width: min(520px, 100%);
-  border: 1px solid rgb(255 255 255 / 60%);
-  border-radius: 26px;
-  background: radial-gradient(circle at 92% 0%, rgb(243 195 166 / 28%), transparent 11rem), #fffaf4;
-  padding: 28px;
-  box-shadow: 0 34px 75px rgb(69 53 47 / 24%);
-}
-
-.admin-modal-heading h2 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 1.7rem;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.08;
-}
-
-.admin-modal-heading p:not(.section-kicker) {
-  margin: 12px 0 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.7;
-}
-
-.admin-modal-field {
-  display: grid;
-  gap: 8px;
-  margin-top: 20px;
-  color: #5f4d44;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.admin-modal-field textarea {
-  min-height: 112px;
-  border: 1px solid rgb(88 62 49 / 20%);
-  border-radius: 15px;
-  background: #fffdf9;
-  padding: 13px;
-  color: var(--ink);
-  font: inherit;
-  resize: vertical;
-}
-
-.admin-modal-field textarea:focus {
-  border-color: var(--coral);
-  outline: 3px solid rgb(217 111 77 / 18%);
-  outline-offset: 1px;
-}
-
-.admin-modal-error {
-  margin: 12px 0 0;
-  color: #a9432b;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.admin-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.admin-modal-actions button {
-  min-height: 40px;
-  cursor: pointer;
-  border: 1px solid rgb(217 111 77 / 28%);
-  border-radius: 999px;
-  background: #fff1e7;
-  padding: 9px 14px;
-  color: var(--coral-dark);
-  font-size: 0.7rem;
-  font-weight: 850;
-}
-
-.admin-modal-actions button:last-child {
-  border-color: var(--coral);
-  background: var(--coral);
-  color: white;
-}
-
-.admin-modal-actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
 }

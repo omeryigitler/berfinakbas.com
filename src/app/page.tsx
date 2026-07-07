@@ -5,9 +5,6 @@ import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
 import { SiteFooter } from "@/components/public-shell";
 
-import bookingStyles from "./booking-flow-polish.module.css";
-import principleStyles from "./principles-hover.module.css";
-
 const audiences = [
   {
     accent: "peach",
@@ -42,7 +39,7 @@ const audiences = [
 
 export default function Home() {
   return (
-    <main className={`${principleStyles.root} ${bookingStyles.root}`} id="ana-icerik">
+    <main id="ana-icerik">
       <HeroScroll />
 
       <section className="principles-strip" aria-label="Çalışma ilkeleri">
