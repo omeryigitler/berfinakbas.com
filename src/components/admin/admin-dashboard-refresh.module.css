@@ -3,87 +3,200 @@
 }
 
 :global([class*="shell"]) {
-  background:
-    radial-gradient(circle at 7% 7%, rgb(217 111 77 / 18%), transparent 25rem),
-    radial-gradient(circle at 92% 0%, rgb(185 197 174 / 26%), transparent 28rem),
-    linear-gradient(135deg, #efe8df 0%, #fbf7f2 46%, #eee2d8 100%);
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 0;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  background: #f3efe4;
+  padding: 0;
 }
 
 :global([class*="sidebar"]),
 :global([class*="workspace"]) {
-  border-color: rgb(88 62 49 / 11%);
-  background: rgb(255 252 248 / 84%);
-  box-shadow: 0 28px 80px rgb(83 53 35 / 10%);
-  backdrop-filter: blur(10px);
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:global([class*="sidebar"]) {
+  top: 0;
+  min-height: 100vh;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 18% 4%, rgb(255 255 255 / 12%), transparent 11rem),
+    linear-gradient(180deg, #53735c 0%, #44664d 45%, #395943 100%);
+  padding: 18px 14px;
+  color: #fff8e8;
 }
 
 :global([class*="workspace"]) {
+  min-height: 100vh;
+  border-radius: 0;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 88%), rgb(255 250 244 / 80%)),
-    rgb(255 252 248 / 90%);
+    radial-gradient(circle at 92% 0%, rgb(218 197 163 / 28%), transparent 26rem),
+    linear-gradient(180deg, #f7f2e7 0%, #efe7d9 100%);
+  padding: 16px 20px 28px;
+}
+
+:global([class*="brand"]) {
+  color: #fff8e8;
+}
+
+:global([class*="brandMark"]) {
+  width: 32px;
+  height: 32px;
+  border-color: rgb(255 248 232 / 24%);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 32% 30%, #d4c7a3 0 30%, transparent 31%),
+    #88a07d;
+  color: transparent;
+  box-shadow: none;
+}
+
+:global([class*="brand"] strong) {
+  color: #fff8e8;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+}
+
+:global([class*="brand"] small) {
+  color: rgb(255 248 232 / 72%);
+}
+
+:global([class*="navSection"]) {
+  color: rgb(255 248 232 / 55%);
+}
+
+:global([class*="navLink"]) {
+  color: rgb(255 248 232 / 86%);
+  min-height: 46px;
+  border-radius: 14px;
+}
+
+:global([class*="navLink"]::before) {
+  display: none;
+}
+
+:global([class*="navLink"]:hover),
+:global([class*="navLinkActive"]) {
+  background: rgb(255 248 232 / 13%);
+  color: #fff8e8;
+  transform: none;
+}
+
+:global([class*="navIcon"]) {
+  background: rgb(255 248 232 / 10%);
+  color: #f3e8c8;
+}
+
+:global([class*="navLinkActive"] [class*="navIcon"]) {
+  background: rgb(255 248 232 / 20%);
+  color: #fff8e8;
+}
+
+:global([class*="sidebarNote"]) {
+  border: 1px solid rgb(255 248 232 / 14%);
+  background: rgb(255 248 232 / 9%);
+  color: #fff8e8;
+}
+
+:global([class*="sidebarNote"] span) {
+  color: rgb(255 248 232 / 74%);
 }
 
 :global([class*="topbar"]) {
   position: sticky;
-  top: 16px;
+  top: 10px;
   z-index: 5;
-  border-radius: 24px;
-  background: rgb(255 252 248 / 78%);
+  border: 1px solid rgb(69 60 45 / 10%);
+  border-radius: 22px;
+  background: rgb(249 244 233 / 76%);
   padding: 8px;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px rgb(69 60 45 / 7%);
+  backdrop-filter: blur(10px);
+}
+
+:global([class*="searchForm"]) {
+  min-height: 44px;
+  border-color: rgb(69 60 45 / 12%);
+  border-radius: 999px;
+  background: rgb(239 232 218 / 78%);
+  box-shadow: inset 0 1px 4px rgb(69 60 45 / 8%);
+}
+
+:global([class*="searchForm"] span) {
+  color: #43624b;
+}
+
+:global([class*="iconButton"]),
+:global([class*="profilePill"]) {
+  border-color: rgb(69 60 45 / 9%);
+  background: rgb(255 251 242 / 72%);
+}
+
+:global([class*="profilePill"] > span) {
+  background: #43624b;
+  color: #fff8e8;
 }
 
 :global([class*="titleRow"]) {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 88% 8%, rgb(255 255 255 / 22%), transparent 15rem),
-    linear-gradient(135deg, #4b3a33 0%, #815140 55%, #d96f4d 100%);
-  color: #fffaf4;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 24px 55px rgb(83 53 35 / 13%);
+  margin-top: 16px;
+  border-radius: 0;
+  background: transparent;
+  padding: 0 0 12px;
+  box-shadow: none;
 }
 
 :global([class*="titleRow"]::after) {
-  position: absolute;
-  right: -54px;
-  bottom: -92px;
-  width: 260px;
-  height: 260px;
-  border: 1px solid rgb(255 255 255 / 16%);
-  border-radius: 50%;
-  content: "";
-  pointer-events: none;
+  display: none;
 }
 
 :global([class*="titleGroup"]) {
   position: relative;
   z-index: 1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
 }
 
-:global([class*="titleGroup"] .section-kicker),
-:global([class*="titleGroup"] h1),
-:global([class*="subtitle"]) {
-  color: inherit;
+:global([class*="titleGroup"] .section-kicker) {
+  color: #6d765d;
+}
+
+:global([class*="titleGroup"] h1) {
+  color: #1e241d;
+  font-family: var(--sans);
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
 }
 
 :global([class*="subtitle"]) {
-  max-width: 820px;
-  color: rgb(255 250 244 / 76%);
+  max-width: 760px;
+  color: #6f665b;
+}
+
+:global([class*="content"]) {
+  margin-top: 10px;
 }
 
 :global([class*="dashboardGrid"]) {
-  grid-template-columns: 1.2fr repeat(3, minmax(0, 0.95fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
 :global([class*="dashboardCard"]) {
   isolation: isolate;
-  min-height: 166px;
-  border-color: rgb(88 62 49 / 10%);
+  min-height: 132px;
+  border: 1px solid rgb(99 83 56 / 18%);
+  border-radius: 14px;
   background:
-    radial-gradient(circle at 88% 6%, rgb(217 111 77 / 18%), transparent 9rem),
-    linear-gradient(180deg, #fffefa 0%, #fff5ec 100%);
-  box-shadow: 0 20px 48px rgb(83 53 35 / 8%);
+    radial-gradient(circle at 92% 92%, rgb(67 98 75 / 10%), transparent 8rem),
+    linear-gradient(180deg, #fffdf8 0%, #f8f1e4 100%);
+  padding: 20px;
+  box-shadow: 0 12px 28px rgb(81 66 42 / 10%);
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
@@ -92,89 +205,117 @@
 
 :global([class*="dashboardCard"]::after) {
   position: absolute;
-  right: -48px;
-  bottom: -70px;
+  right: 18px;
+  bottom: 18px;
   z-index: -1;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: rgb(217 111 77 / 8%);
+  width: 112px;
+  height: 34px;
+  border-radius: 999px;
+  background:
+    linear-gradient(160deg, transparent 0 20%, #45634d 21% 24%, transparent 25% 43%, #45634d 44% 47%, transparent 48% 66%, #45634d 67% 70%, transparent 71% 100%);
+  opacity: 0.26;
   content: "";
 }
 
 :global([class*="dashboardCard"]:hover) {
-  transform: translateY(-3px);
-  border-color: rgb(217 111 77 / 18%);
-  box-shadow: 0 28px 60px rgb(83 53 35 / 12%);
-}
-
-:global([class*="dashboardCard"]:nth-child(2)) {
-  background:
-    radial-gradient(circle at 90% 0%, rgb(217 111 77 / 16%), transparent 9rem),
-    linear-gradient(180deg, #fffdf9 0%, #fff1e8 100%);
-}
-
-:global([class*="dashboardCard"]:nth-child(3)) {
-  background:
-    radial-gradient(circle at 90% 0%, rgb(185 197 174 / 34%), transparent 9rem),
-    linear-gradient(180deg, #fffefa 0%, #f2f5ed 100%);
-}
-
-:global([class*="dashboardCard"]:nth-child(4)) {
-  background:
-    radial-gradient(circle at 90% 0%, rgb(223 200 170 / 36%), transparent 9rem),
-    linear-gradient(180deg, #fffefa 0%, #f8efe4 100%);
+  transform: translateY(-2px);
+  border-color: rgb(67 98 75 / 28%);
+  box-shadow: 0 18px 36px rgb(81 66 42 / 14%);
 }
 
 :global([class*="dashboardCardPrimary"]) {
   background:
-    radial-gradient(circle at 82% 18%, rgb(255 255 255 / 20%), transparent 9rem),
-    linear-gradient(145deg, #3f302b 0%, #8b5645 58%, #d96f4d 100%);
-  box-shadow: 0 28px 70px rgb(83 53 35 / 18%);
+    radial-gradient(circle at 90% 90%, rgb(67 98 75 / 12%), transparent 8rem),
+    linear-gradient(180deg, #fffdf8 0%, #f8f1e4 100%);
+  color: #1e241d;
+}
+
+:global([class*="dashboardCard"] span),
+:global([class*="dashboardCardPrimary"] span) {
+  color: #2f4d39;
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 
 :global([class*="dashboardCard"] strong) {
-  font-size: clamp(2.25rem, 3vw, 3.05rem);
+  margin-top: 8px;
+  color: #121711;
+  font-family: var(--sans);
+  font-size: clamp(2rem, 3vw, 2.55rem);
+  font-weight: 760;
+  letter-spacing: -0.04em;
+}
+
+:global([class*="dashboardCard"] small),
+:global([class*="dashboardCardPrimary"] small) {
+  color: #766d5f;
 }
 
 :global([class*="dashboardCardIcon"]) {
-  width: 42px;
-  height: 42px;
-  border-radius: 16px;
-  background: rgb(255 255 255 / 74%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgb(67 98 75 / 15%);
+  border-radius: 12px;
+  background: rgb(67 98 75 / 10%);
+  color: #43624b;
+  box-shadow: none;
+}
+
+:global([class*="dashboardCardPrimary"] [class*="dashboardCardIcon"]) {
+  border-color: rgb(67 98 75 / 15%);
+  background: rgb(67 98 75 / 10%);
+  color: #43624b;
 }
 
 :global([class*="dashboardLayout"]) {
-  grid-template-columns: minmax(0, 1fr) minmax(310px, 0.4fr);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
+  gap: 16px;
+}
+
+:global([class*="mainStack"]),
+:global([class*="asideStack"]) {
   gap: 16px;
 }
 
 :global([class*="overviewPanel"]),
 :global([class*="compactPanel"]),
 :global([class*="actionPanel"]) {
-  border-color: rgb(88 62 49 / 10%);
-  background: rgb(255 253 249 / 88%);
-  box-shadow: 0 20px 48px rgb(83 53 35 / 7%);
+  border: 1px solid rgb(99 83 56 / 14%);
+  border-radius: 16px;
+  background: rgb(255 253 248 / 82%);
+  box-shadow: 0 10px 24px rgb(81 66 42 / 7%);
 }
 
 :global([class*="panelHeader"] h2) {
-  font-size: 1.42rem;
+  color: #1f241e;
+  font-family: var(--sans);
+  font-size: 1.08rem;
+  font-weight: 720;
+  letter-spacing: -0.02em;
+}
+
+:global([class*="panelHeader"] p) {
+  color: #756d62;
 }
 
 :global([class*="panelBadge"]) {
-  background: rgb(217 111 77 / 10%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+  border-color: rgb(67 98 75 / 16%);
+  background: rgb(67 98 75 / 10%);
+  color: #35553f;
 }
 
 :global([class*="barTrack"]) {
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 55%), transparent),
-    repeating-linear-gradient(135deg, #efe5dd 0 4px, transparent 4px 9px);
+    linear-gradient(180deg, rgb(255 255 255 / 58%), transparent),
+    repeating-linear-gradient(135deg, #ebe0cc 0 4px, transparent 4px 9px);
 }
 
 :global([class*="barFill"]) {
-  box-shadow: 0 12px 24px rgb(217 111 77 / 18%);
+  background: linear-gradient(180deg, #6f8a63, #365641);
+  box-shadow: 0 10px 18px rgb(67 98 75 / 18%);
 }
 
 :global([class*="actionGrid"]) {
@@ -182,12 +323,17 @@
 }
 
 :global([class*="actionCard"]) {
-  min-height: 116px;
-  border-color: rgb(217 111 77 / 13%);
+  min-height: 104px;
+  border-color: rgb(67 98 75 / 14%);
+  border-radius: 14px;
   background:
-    radial-gradient(circle at 90% 0%, rgb(217 111 77 / 12%), transparent 7rem),
-    #fffaf4;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 72%);
+    radial-gradient(circle at 92% 0%, rgb(67 98 75 / 10%), transparent 7rem),
+    #fffaf0;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+:global([class*="actionCard"]:hover) {
+  box-shadow: 0 12px 24px rgb(81 66 42 / 9%);
 }
 
 :global([class*="actionCard"] span) {
@@ -195,19 +341,21 @@
   width: 30px;
   height: 30px;
   place-items: center;
-  border-radius: 12px;
-  background: rgb(217 111 77 / 11%);
+  border-radius: 10px;
+  background: rgb(67 98 75 / 10%);
+  color: #43624b;
 }
 
 :global([class*="actionCard"] strong) {
-  font-size: 0.88rem;
+  color: #1f241e;
+  font-size: 0.86rem;
   line-height: 1.3;
 }
 
 :global([class*="dataList"] li),
 :global([class*="emptyNote"]) {
-  border-color: rgb(88 62 49 / 9%);
-  background: linear-gradient(180deg, #fffefa 0%, #fff8f0 100%);
+  border-color: rgb(99 83 56 / 12%);
+  background: linear-gradient(180deg, #fffdf8 0%, #f8f1e4 100%);
 }
 
 :global([class*="dataList"] li) {
@@ -218,16 +366,42 @@
 }
 
 :global([class*="dataList"] li:hover) {
-  transform: translateX(3px);
-  border-color: rgb(217 111 77 / 16%);
-  box-shadow: 0 14px 28px rgb(83 53 35 / 6%);
+  transform: translateX(2px);
+  border-color: rgb(67 98 75 / 22%);
+  box-shadow: 0 10px 20px rgb(81 66 42 / 8%);
+}
+
+:global([class*="dataList"] small) {
+  color: #43624b;
 }
 
 :global([class*="financeHighlight"]) {
-  box-shadow: 0 24px 55px rgb(83 53 35 / 15%);
+  border: 1px solid rgb(67 98 75 / 18%);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 80% 18%, rgb(255 248 232 / 18%), transparent 8rem),
+    linear-gradient(145deg, #35553f, #456b50 68%, #6f8a63);
+  box-shadow: 0 18px 36px rgb(67 98 75 / 20%);
+}
+
+:global(.admin-panel) {
+  border-color: rgb(99 83 56 / 14%);
+  border-radius: 16px;
+  background: rgb(255 253 248 / 82%);
+  box-shadow: 0 10px 24px rgb(81 66 42 / 7%);
 }
 
 @media (max-width: 1100px) {
+  :global([class*="shell"]) {
+    grid-template-columns: 1fr;
+  }
+
+  :global([class*="sidebar"]) {
+    position: relative;
+    min-height: auto;
+    border-radius: 0 0 22px 22px;
+  }
+
   :global([class*="topbar"]) {
     position: static;
   }
@@ -238,14 +412,18 @@
 }
 
 @media (max-width: 860px) {
+  :global([class*="workspace"]) {
+    padding: 14px;
+  }
+
   :global([class*="dashboardGrid"]) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 560px) {
-  :global([class*="shell"]) {
-    padding: 10px;
+  :global([class*="workspace"]) {
+    padding: 12px;
   }
 
   :global([class*="dashboardGrid"]),
@@ -254,7 +432,7 @@
   }
 
   :global([class*="dashboardCard"]) {
-    min-height: 150px;
+    min-height: 128px;
   }
 }
 
