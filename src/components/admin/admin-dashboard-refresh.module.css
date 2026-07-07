@@ -1,3 +1,5 @@
+/* Imported only by AdminShell, so these global CSS-module overrides are limited to the management UI bundle. */
+
 .root {
   display: contents;
 }
