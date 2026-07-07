@@ -4,6 +4,8 @@ import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
 import { SiteFooter } from "@/components/public-shell";
 
+import styles from "./principles-hover.module.css";
+
 const audiences = [
   {
     accent: "peach",
@@ -56,7 +58,7 @@ const steps = [
 
 export default function Home() {
   return (
-    <main id="ana-icerik">
+    <main className={styles.root} id="ana-icerik">
       <HeroScroll />
 
       <section className="principles-strip" aria-label="Çalışma ilkeleri">
