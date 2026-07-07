@@ -60,7 +60,7 @@
   z-index: 1;
 }
 
-:global([class*="titleGroup"] :global(.section-kicker)),
+:global([class*="titleGroup"] .section-kicker),
 :global([class*="titleGroup"] h1),
 :global([class*="subtitle"]) {
   color: inherit;
