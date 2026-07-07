@@ -1,10 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
 import { SiteFooter } from "@/components/public-shell";
 
-import styles from "./principles-hover.module.css";
+import bookingStyles from "./booking-flow-polish.module.css";
+import principleStyles from "./principles-hover.module.css";
 
 const audiences = [
   {
@@ -38,27 +40,9 @@ const audiences = [
   },
 ];
 
-const steps = [
-  {
-    index: "01",
-    text: "İhtiyacınızı ve tercih ettiğiniz görüşme biçimini kısaca belirtin.",
-    title: "Talebinizi iletin",
-  },
-  {
-    index: "02",
-    text: "Uygunluk ve gerekli minimum bilgiler güvenli biçimde kontrol edilsin.",
-    title: "Uygunluk değerlendirilsin",
-  },
-  {
-    index: "03",
-    text: "Saatiniz yalnızca onay sonrasında kesin randevu olarak kaydedilsin.",
-    title: "Randevunuz netleşsin",
-  },
-];
-
 export default function Home() {
   return (
-    <main className={styles.root} id="ana-icerik">
+    <main className={`${principleStyles.root} ${bookingStyles.root}`} id="ana-icerik">
       <HeroScroll />
 
       <section className="principles-strip" aria-label="Çalışma ilkeleri">
@@ -125,28 +109,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="process-section" id="surec" aria-labelledby="process-title">
-        <div className="process-intro">
-          <p className="section-kicker">Süreç</p>
-          <h2 id="process-title">İlk adımdan onaya kadar ne olacağını bilin.</h2>
-          <p>
-            Akış açıldığında seçiminiz önce talep olarak kaydedilecek ve uygunluk doğrulandıktan
-            sonra onaylanacak.
-          </p>
-        </div>
-        <ol className="process-steps">
-          {steps.map((step) => (
-            <li key={step.index}>
-              <span>{step.index}</span>
-              <div>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-
       <section className="faq-section" id="sss" aria-labelledby="faq-title">
         <div>
           <p className="section-kicker">Sık sorulan sorular</p>
@@ -172,18 +134,51 @@ export default function Home() {
       </section>
 
       <section className="booking-banner" id="randevu" aria-labelledby="booking-title">
-        <div className="booking-icon" aria-hidden="true">
-          <span />
-          <i />
-        </div>
-        <div>
+        <div className="booking-copy">
           <p className="section-kicker">Randevu</p>
           <h2 id="booking-title">Sizin için uygun zamanı birlikte planlayalım.</h2>
-          <p>
-            Kontrollü randevu talep sistemi hazırlanıyor. Açıldığında buradan başlayabilirsiniz.
+          <p className="booking-lead">
+            Kontrollü randevu talep sistemi hazırlanıyor. Açıldığında ilk adımı buradan, yalnızca
+            birkaç dakikada oluşturabileceksiniz.
           </p>
+          <div className="booking-actions">
+            <span className="booking-status">Yakında açılacak</span>
+            <Link className="booking-contact" href="/iletisim">
+              Bu sırada iletişime geçin
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
-        <span className="booking-status">Yakında açılacak</span>
+
+        <aside className="booking-flowcard" aria-hidden="true">
+          <div className="booking-flowcard-head">
+            <span className="booking-flowcard-dot" />
+            Randevu akışı
+          </div>
+          <ol className="booking-steplist">
+            <li>
+              <span className="booking-flownum">01</span>
+              <div>
+                <strong>Talep</strong>
+                <small>Tercih ettiğiniz zamanı iletin.</small>
+              </div>
+            </li>
+            <li>
+              <span className="booking-flownum">02</span>
+              <div>
+                <strong>Kontrol</strong>
+                <small>Uygunluk güvenle değerlendirilir.</small>
+              </div>
+            </li>
+            <li>
+              <span className="booking-flownum">03</span>
+              <div>
+                <strong>Onay</strong>
+                <small>Saatiniz onayla kesinleşir.</small>
+              </div>
+            </li>
+          </ol>
+        </aside>
       </section>
 
       <SiteFooter />
