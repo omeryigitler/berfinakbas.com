@@ -1,0 +1,30 @@
+:global([class*="nameCard"]),
+:global([class*="noteCard"]) {
+  transition:
+    translate 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+:global([class*="nameCard"]:hover),
+:global([class*="noteCard"]:hover) {
+  translate: 0 -6px;
+  border-color: rgb(217 111 77 / 32%);
+  box-shadow: 0 32px 62px rgb(79 49 31 / 20%);
+}
+
+:global([class*="nameCard"] span),
+:global([class*="noteCard"] span) {
+  color: rgb(217 111 77 / 48%);
+  transition:
+    color 0.3s ease,
+    letter-spacing 0.3s ease,
+    text-shadow 0.3s ease;
+}
+
+:global([class*="nameCard"]:hover span),
+:global([class*="noteCard"]:hover span) {
+  color: var(--coral);
+  letter-spacing: 0.22em;
+  text-shadow: 0 8px 18px rgb(217 111 77 / 28%);
+}
