@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Route } from "next";
 import Link from "next/link";
 
+import "./about-card-polish.module.css";
 import styles from "./about-highlight.module.css";
 
 type ValueCard = {
