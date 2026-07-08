@@ -82,10 +82,10 @@ export function AdminShell({
   const navigationItems = getAdminNavItems(permissions);
 
   return (
-    <main className={styles.shell}>
-      <aside className={styles.sidebar} aria-label="Yönetim alanı">
-        <Link className={styles.brand} href="/yonetim">
-          <span className={styles.brandMark}>BA</span>
+    <main className={styles.shell} data-admin-refresh="shell">
+      <aside className={styles.sidebar} data-admin-region="sidebar" aria-label="Yönetim alanı">
+        <Link className={styles.brand} data-admin-region="brand" href="/yonetim">
+          <span className={styles.brandMark} data-admin-region="brand-mark">BA</span>
           <span>
             <strong>Berfin Akbaş</strong>
             <small>Yönetim paneli</small>
@@ -93,14 +93,20 @@ export function AdminShell({
         </Link>
 
         {navigationItems.length > 0 ? (
-          <nav className={styles.nav} aria-label="Yönetim menüsü">
-            <span className={styles.navSection}>MENÜ</span>
+          <nav className={styles.nav} data-admin-region="nav" aria-label="Yönetim menüsü">
+            <span className={styles.navSection} data-admin-region="nav-section">MENÜ</span>
             {navigationItems.map((item) => {
               const isActive = isActivePath(pathname, item.href);
               const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
               return (
-                <Link className={className} href={item.href} key={item.href}>
-                  <span className={styles.navIcon}>{item.icon}</span>
+                <Link
+                  className={className}
+                  data-admin-active={isActive ? "true" : undefined}
+                  data-admin-region="nav-link"
+                  href={item.href}
+                  key={item.href}
+                >
+                  <span className={styles.navIcon} data-admin-region="nav-icon">{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               );
@@ -108,24 +114,24 @@ export function AdminShell({
           </nav>
         ) : null}
 
-        <div className={styles.sidebarNote}>
+        <div className={styles.sidebarNote} data-admin-region="sidebar-note">
           <strong>BO düzeni</strong>
           <span>Danışan, randevu ve ödeme işlemleri tek yönetim panelinde takip edilir.</span>
         </div>
       </aside>
 
-      <section className={styles.workspace}>
-        <header className={styles.topbar}>
-          <form className={styles.searchForm} action="/yonetim/danisanlar">
+      <section className={styles.workspace} data-admin-region="workspace">
+        <header className={styles.topbar} data-admin-region="topbar">
+          <form className={styles.searchForm} data-admin-region="search" action="/yonetim/danisanlar">
             <span aria-hidden="true">⌕</span>
             <input name="q" placeholder="Danışan, telefon veya e-posta ara" type="search" />
             <kbd>Enter</kbd>
           </form>
 
-          <div className={styles.headerMeta}>
-            <span className={styles.iconButton} aria-hidden="true">✉</span>
-            <span className={styles.iconButton} aria-hidden="true">●</span>
-            <div className={styles.profilePill}>
+          <div className={styles.headerMeta} data-admin-region="header-meta">
+            <span className={styles.iconButton} data-admin-region="icon-button" aria-hidden="true">✉</span>
+            <span className={styles.iconButton} data-admin-region="icon-button" aria-hidden="true">●</span>
+            <div className={styles.profilePill} data-admin-region="profile-pill">
               <span>{getInitials(email)}</span>
               <div>
                 <strong>Yönetici</strong>
@@ -135,15 +141,15 @@ export function AdminShell({
           </div>
         </header>
 
-        <div className={styles.titleRow}>
-          <div className={styles.titleGroup}>
+        <div className={styles.titleRow} data-admin-region="title-row">
+          <div className={styles.titleGroup} data-admin-region="title-group">
             <p className="section-kicker">Berfin Akbaş · Yönetim</p>
             <h1>{title}</h1>
-            {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
+            {subtitle ? <p className={styles.subtitle} data-admin-region="subtitle">{subtitle}</p> : null}
           </div>
         </div>
 
-        <section className={styles.content}>{children}</section>
+        <section className={styles.content} data-admin-region="content">{children}</section>
       </section>
     </main>
   );
