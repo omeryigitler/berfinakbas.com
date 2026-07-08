@@ -2,13 +2,17 @@ import Link from "next/link";
 
 import { getFilteredFinanceOverview } from "@/lib/finance/finance-overview-filter";
 
-function formatMoney(amountMinor: string, currency: string): string {
+function formatMoney(amountMinor: string | bigint, currency: string): string {
   return new Intl.NumberFormat("tr-TR", {
     currency,
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
     style: "currency",
   }).format(Number(BigInt(amountMinor)) / 100);
+}
+
+function positiveBalance(value: bigint): bigint {
+  return value > 0n ? value : 0n;
 }
 
 export async function ClientFinanceOverview({ clientId }: { clientId: string }) {
@@ -26,11 +30,26 @@ export async function ClientFinanceOverview({ clientId }: { clientId: string }) 
     );
   }
 
-  const totalBalanceMinor = overview.plans.reduce(
+  const currency = overview.plans[0]?.currency ?? "TRY";
+  const totalPlanMinor = overview.plans.reduce(
+    (total, plan) => total + BigInt(plan.totalAmountMinor),
+    0n,
+  );
+  const rawBalanceMinor = overview.plans.reduce(
     (total, plan) => total + BigInt(plan.balanceMinor),
     0n,
   );
-  const currency = overview.plans[0]?.currency ?? "TRY";
+  const openBalanceMinor = positiveBalance(rawBalanceMinor);
+  const paidMinor = totalPlanMinor > rawBalanceMinor ? totalPlanMinor - rawBalanceMinor : 0n;
+  const remainingSessions = overview.plans.reduce(
+    (total, plan) => total + Number(plan.remainingSessions),
+    0,
+  );
+  const overdueInstallments = overview.plans.reduce(
+    (total, plan) =>
+      total + plan.installments.filter((installment) => installment.state === "OVERDUE").length,
+    0,
+  );
 
   return (
     <section className="admin-panel" aria-labelledby="danisan-finans-ozeti">
@@ -38,7 +57,8 @@ export async function ClientFinanceOverview({ clientId }: { clientId: string }) 
         <div>
           <h2 id="danisan-finans-ozeti">Danışan finans özeti</h2>
           <p>
-            {client.firstName} {client.lastName} için plan, taksit ve ödeme hareketleri.
+            {client.firstName} {client.lastName} için plan, taksit ve ödeme hareketleri filtreli
+            gösteriliyor.
           </p>
         </div>
         <Link className="secondary-button" href="/yonetim/odemeler">
@@ -48,7 +68,30 @@ export async function ClientFinanceOverview({ clientId }: { clientId: string }) 
 
       <div className="finance-toolbar">
         <span>{overview.plans.length} plan</span>
-        <strong>{formatMoney(totalBalanceMinor.toString(), currency)} açık bakiye</strong>
+        <strong>{formatMoney(openBalanceMinor, currency)} açık bakiye</strong>
+      </div>
+
+      <div className="admin-dashboard-grid-lite">
+        <article>
+          <span>Plan toplamı</span>
+          <strong>{formatMoney(totalPlanMinor, currency)}</strong>
+          <small>{overview.plans.length} plan kaydı</small>
+        </article>
+        <article>
+          <span>Alınan ödeme</span>
+          <strong>{formatMoney(paidMinor, currency)}</strong>
+          <small>Net plan bakiyesine göre</small>
+        </article>
+        <article>
+          <span>Açık bakiye</span>
+          <strong>{formatMoney(openBalanceMinor, currency)}</strong>
+          <small>{overdueInstallments} gecikmiş taksit</small>
+        </article>
+        <article>
+          <span>Kalan seans</span>
+          <strong>{remainingSessions}</strong>
+          <small>Aktif/geçerli planlardan</small>
+        </article>
       </div>
 
       {overview.plans.length === 0 ? (
