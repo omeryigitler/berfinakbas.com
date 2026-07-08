@@ -447,6 +447,44 @@
   color: #776b60;
 }
 
+:global([data-admin-refresh="shell"] .admin-dashboard-client-list) {
+  margin-top: 18px;
+}
+
+:global([data-admin-refresh="shell"] .admin-dashboard-client-card) {
+  padding: 18px 20px;
+}
+
+:global([data-admin-refresh="shell"] .admin-dashboard-clients-cta) {
+  min-height: 42px;
+  border-color: rgb(217 111 77 / 24%);
+  background: #dc704d;
+  color: #fffaf0;
+  box-shadow: 0 10px 20px rgb(217 111 77 / 16%);
+}
+
+:global([data-admin-refresh="shell"] .admin-dashboard-clients-cta:hover) {
+  border-color: rgb(184 82 53 / 30%);
+  background: #c86142;
+  color: #fffaf0;
+  box-shadow: 0 12px 24px rgb(217 111 77 / 20%);
+}
+
+:global([data-admin-refresh="shell"] .admin-dashboard-client-action) {
+  border-color: rgb(67 98 75 / 24%);
+  background: #45694f;
+  color: #fff8e8;
+  box-shadow: 0 8px 18px rgb(67 98 75 / 12%);
+}
+
+:global([data-admin-refresh="shell"] .admin-dashboard-client-action:hover),
+:global([data-admin-refresh="shell"] .admin-dashboard-client-card:hover .admin-dashboard-client-action) {
+  border-color: rgb(42 75 52 / 26%);
+  background: #345641;
+  color: #fff8e8;
+  box-shadow: 0 10px 20px rgb(67 98 75 / 16%);
+}
+
 @media (max-width: 860px) {
   :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
     grid-template-columns: 1fr;

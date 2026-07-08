@@ -127,10 +127,12 @@ export default async function AdminHomePage({
     ? await db.client.findMany({
         orderBy: [{ createdAt: "desc" }],
         select: {
+          email: true,
           firstName: true,
           id: true,
           lastName: true,
           phone: true,
+          preferredName: true,
           status: true,
           type: true,
         },
@@ -318,7 +320,10 @@ export default async function AdminHomePage({
                 <p>Yeni açılan kayıtlar ve hızlı profil geçişleri.</p>
               </div>
               {canReadClients ? (
-                <Link className="secondary-button" href="/yonetim/danisanlar">
+                <Link
+                  className="primary-button admin-dashboard-clients-cta"
+                  href="/yonetim/danisanlar"
+                >
                   Tümünü aç
                 </Link>
               ) : null}
@@ -331,25 +336,32 @@ export default async function AdminHomePage({
                 </span>
               </div>
             ) : (
-              <ul className={styles.dataList}>
+              <ul className="admin-client-list admin-dashboard-client-list">
                 {latestClients.map((client) => (
-                  <li key={client.id}>
-                    <div>
+                  <li
+                    className="admin-client-list-item admin-dashboard-client-card"
+                    key={client.id}
+                  >
+                    <div className="admin-client-list-main">
                       <strong>
                         {client.firstName} {client.lastName}
                       </strong>
-                      <span>
-                        {client.phone ?? "Telefon yok"} ·{" "}
-                        {clientTypeLabels[client.type]} ·{" "}
-                        {clientStatusLabels[client.status]}
+                      <span className="admin-client-contact">
+                        {client.preferredName ? `${client.preferredName} · ` : ""}
+                        {client.phone ?? "Telefon yok"} · {client.email ?? "E-posta yok"}
+                      </span>
+                      <span className="admin-client-meta">
+                        <em>{clientTypeLabels[client.type]}</em>
+                        <em>{clientStatusLabels[client.status]}</em>
                       </span>
                     </div>
                     <Link
+                      className="admin-client-profile-link admin-dashboard-client-action"
                       href={
                         `/yonetim/danisan-profili?clientId=${client.id}` as Route
                       }
                     >
-                      Aç
+                      Profili aç
                     </Link>
                   </li>
                 ))}
