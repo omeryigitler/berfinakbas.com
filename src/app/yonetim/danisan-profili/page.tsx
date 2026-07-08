@@ -14,10 +14,41 @@ import {
 } from "@/domain/clients/client-management";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
+import { getServerEnvironment } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+type ProfileAppointment = {
+  endsAt: Date;
+  id: string;
+  locationTypeSnapshot: "HYBRID" | "IN_PERSON" | "ONLINE";
+  practitioner: { displayName: string };
+  publicReference: string;
+  service: { name: string } | null;
+  serviceNameSnapshot: string;
+  startsAt: Date;
+  status: string;
+};
+
+const appointmentStatusLabels: Record<string, string> = {
+  CANCELLED_BY_CLIENT: "Danışan iptal etti",
+  CANCELLED_BY_PRACTITIONER: "Uzman iptal etti",
+  COMPLETED: "Tamamlandı",
+  CONFIRMED: "Onaylı",
+  NO_SHOW: "Gelmedi",
+  PENDING_REVIEW: "Onay bekliyor",
+  REJECTED: "Reddedildi",
+  REQUESTED: "Talep alındı",
+  RESCHEDULE_PROPOSED: "Saat önerildi",
+};
+
+const locationLabels = {
+  HYBRID: "Yüz yüze / çevrim içi",
+  IN_PERSON: "Yüz yüze",
+  ONLINE: "Çevrim içi",
+} as const;
 
 const planStatusLabels = {
   ACTIVE: "Aktif",
@@ -39,6 +70,20 @@ function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(date);
 }
 
+function formatAppointmentRange(startsAt: Date, endsAt: Date, timeZone: string): string {
+  const start = new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone,
+  }).format(startsAt);
+  const end = new Intl.DateTimeFormat("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone,
+  }).format(endsAt);
+  return `${start} - ${end}`;
+}
+
 function formatMoney(amountMinor: bigint, currency: string): string {
   return new Intl.NumberFormat("tr-TR", {
     currency,
@@ -48,8 +93,58 @@ function formatMoney(amountMinor: bigint, currency: string): string {
   }).format(Number(amountMinor) / 100);
 }
 
+function appointmentStatusLabel(status: string): string {
+  return appointmentStatusLabels[status] ?? status;
+}
+
+function appointmentServiceName(appointment: ProfileAppointment): string {
+  return appointment.serviceNameSnapshot || appointment.service?.name || "Hizmet";
+}
+
 function planStatusLabel(status: string): string {
   return planStatusLabels[status as keyof typeof planStatusLabels] ?? status;
+}
+
+function AppointmentList({
+  appointments,
+  emptyDescription,
+  emptyTitle,
+  timeZone,
+}: {
+  appointments: ProfileAppointment[];
+  emptyDescription: string;
+  emptyTitle: string;
+  timeZone: string;
+}) {
+  if (appointments.length === 0) {
+    return (
+      <div className="admin-empty-state">
+        <strong>{emptyTitle}</strong>
+        <span>{emptyDescription}</span>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="admin-client-list admin-dashboard-client-list">
+      {appointments.map((appointment) => (
+        <li className="admin-client-list-item admin-dashboard-client-card" key={appointment.id}>
+          <div className="admin-client-list-main">
+            <strong>{appointmentServiceName(appointment)}</strong>
+            <span className="admin-client-contact">
+              {formatAppointmentRange(appointment.startsAt, appointment.endsAt, timeZone)}
+            </span>
+            <span className="admin-client-meta">
+              <em>{appointmentStatusLabel(appointment.status)}</em>
+              <em>{locationLabels[appointment.locationTypeSnapshot]}</em>
+              <em>{appointment.practitioner.displayName}</em>
+              <em>{appointment.publicReference}</em>
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 export default async function AdminClientProfilePage({
@@ -63,12 +158,14 @@ export default async function AdminClientProfilePage({
   const activeModal = singleParam(params, "modal").trim();
   if (!clientId) notFound();
 
+  const environment = getServerEnvironment();
+  const database = getDatabase();
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const canReadAppointments = hasPermission(
     session.user.roles,
     "appointments:read",
   );
-  const client = await getDatabase().client.findUnique({
+  const client = await database.client.findUnique({
     include: {
       _count: {
         select: {
@@ -77,16 +174,6 @@ export default async function AdminClientProfilePage({
           financeEntries: true,
           plans: true,
         },
-      },
-      appointments: {
-        orderBy: [{ startsAt: "desc" }],
-        select: {
-          id: true,
-          service: { select: { name: true } },
-          startsAt: true,
-          status: true,
-        },
-        take: 3,
       },
       guardians: {
         include: {
@@ -121,14 +208,57 @@ export default async function AdminClientProfilePage({
 
   if (!client) notFound();
 
+  const now = new Date();
+  const [upcomingAppointments, appointmentHistory] = canReadAppointments
+    ? await Promise.all([
+        database.appointment.findMany({
+          orderBy: [{ startsAt: "asc" }, { id: "asc" }],
+          select: {
+            endsAt: true,
+            id: true,
+            locationTypeSnapshot: true,
+            practitioner: { select: { displayName: true } },
+            publicReference: true,
+            service: { select: { name: true } },
+            serviceNameSnapshot: true,
+            startsAt: true,
+            status: true,
+          },
+          take: 5,
+          where: {
+            clientId: client.id,
+            startsAt: { gte: now },
+            status: { in: ["CONFIRMED", "PENDING_REVIEW", "RESCHEDULE_PROPOSED"] },
+          },
+        }),
+        database.appointment.findMany({
+          orderBy: [{ startsAt: "desc" }, { id: "desc" }],
+          select: {
+            endsAt: true,
+            id: true,
+            locationTypeSnapshot: true,
+            practitioner: { select: { displayName: true } },
+            publicReference: true,
+            service: { select: { name: true } },
+            serviceNameSnapshot: true,
+            startsAt: true,
+            status: true,
+          },
+          take: 6,
+          where: { clientId: client.id, startsAt: { lt: now } },
+        }),
+      ])
+    : [[], []];
+  const focusAppointment = upcomingAppointments[0] ?? appointmentHistory[0] ?? null;
   const clientName = `${client.firstName} ${client.lastName}`;
   const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
-  const latestAppointment = client.appointments[0];
   const primaryGuardian = client.guardians[0];
   const noteModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
   const appointmentModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=randevu-olustur` as Route;
+  const appointmentsPageHref =
+    `/yonetim/randevular?clientId=${client.id}&modal=randevu-olustur` as Route;
   const planModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=odeme-plani` as Route;
 
@@ -192,12 +322,14 @@ export default async function AdminClientProfilePage({
           <small>{client.email ?? "E-posta yok"}</small>
         </article>
         <article className={styles.dashboardCard}>
-          <span>Son randevu</span>
+          <span>Sıradaki randevu</span>
           <strong>
-            {latestAppointment ? formatDate(latestAppointment.startsAt) : "Yok"}
+            {focusAppointment ? formatDate(focusAppointment.startsAt) : "Yok"}
           </strong>
           <small>
-            {latestAppointment?.service.name ?? "Randevu kaydı yok"}
+            {focusAppointment
+              ? `${appointmentServiceName(focusAppointment)} · ${appointmentStatusLabel(focusAppointment.status)}`
+              : "Randevu kaydı yok"}
           </small>
         </article>
         <article className={styles.dashboardCard}>
@@ -258,35 +390,58 @@ export default async function AdminClientProfilePage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="randevular">Randevular</h2>
-            <p>Son randevular ve randevu ekranına hızlı geçiş.</p>
+            <p>Yaklaşan randevular ve geçmiş randevu kayıtları gerçek veriden gelir.</p>
           </div>
           {canReadAppointments ? (
             <Link
-              className="secondary-button"
-              href={appointmentModalHref}
+              className="primary-button admin-dashboard-clients-cta"
+              href={appointmentsPageHref}
               scroll={false}
             >
               Randevu oluştur
             </Link>
           ) : null}
         </div>
-        {client.appointments.length === 0 ? (
-          <div className="admin-empty-state">
-            <strong>Randevu kaydı yok</strong>
-            <span>Randevu planlamak için randevu oluştur modalını açın.</span>
+
+        {canReadAppointments ? (
+          <div className={styles.dashboardLayout}>
+            <section className={styles.compactPanel} aria-labelledby="yaklasan-randevular">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h2 id="yaklasan-randevular">Yaklaşan randevular</h2>
+                  <p>Bu danışan için bekleyen ve onaylı gelecek kayıtlar.</p>
+                </div>
+                <span className={styles.panelBadge}>{upcomingAppointments.length} kayıt</span>
+              </div>
+              <AppointmentList
+                appointments={upcomingAppointments}
+                emptyDescription="Randevu oluşturulduğunda bu alanda görünecek."
+                emptyTitle="Yaklaşan randevu yok"
+                timeZone={environment.BUSINESS_TIME_ZONE}
+              />
+            </section>
+
+            <section className={styles.compactPanel} aria-labelledby="randevu-gecmisi">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h2 id="randevu-gecmisi">Randevu geçmişi</h2>
+                  <p>Son tamamlanan, iptal edilen veya geçmiş tarihli kayıtlar.</p>
+                </div>
+                <span className={styles.panelBadge}>{appointmentHistory.length} kayıt</span>
+              </div>
+              <AppointmentList
+                appointments={appointmentHistory}
+                emptyDescription="Geçmiş randevu oluştuğunda burada listelenecek."
+                emptyTitle="Randevu geçmişi yok"
+                timeZone={environment.BUSINESS_TIME_ZONE}
+              />
+            </section>
           </div>
         ) : (
-          <ul className="admin-service-list">
-            {client.appointments.map((appointment) => (
-              <li key={appointment.id}>
-                <div>
-                  <strong>{appointment.service.name}</strong>
-                  <span>{formatDate(appointment.startsAt)}</span>
-                </div>
-                <span>{appointment.status}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="admin-empty-state">
+            <strong>Randevu yetkisi yok</strong>
+            <span>Bu danışanın randevu kayıtlarını görmek için randevu okuma yetkisi gerekir.</span>
+          </div>
         )}
       </section>
 
