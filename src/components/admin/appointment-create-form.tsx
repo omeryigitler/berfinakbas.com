@@ -100,6 +100,7 @@ export function AppointmentCreateForm({
   const [durationMode, setDurationMode] = useState("SERVICE_DEFAULT");
   const [message, setMessage] = useState("");
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
+  const [setupBusy, setSetupBusy] = useState(false);
   const [startsAt, setStartsAt] = useState(defaultDateTimeLocal);
 
   const selectedClient = clients.find((client) => client.id === clientId) ?? null;
@@ -139,6 +140,24 @@ export function AppointmentCreateForm({
     () => durationOptions(selectedService?.defaultDurationMinutes ?? 15),
     [selectedService?.defaultDurationMinutes],
   );
+
+  async function setupPrerequisites() {
+    setSetupBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/appointment-prerequisites", {
+        headers: { accept: "application/json" },
+        method: "POST",
+      });
+      const payload = await readResponse<{ practitionerCreated: boolean; serviceCreated: boolean }>(response);
+      if (!response.ok || !payload.data) throw new Error(issueMessage(payload));
+      window.location.reload();
+    } catch (error) {
+      setMessage(error instanceof Error && error.message ? error.message : "Randevu altyapısı tamamlanamadı.");
+    } finally {
+      setSetupBusy(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -202,10 +221,28 @@ export function AppointmentCreateForm({
   }
 
   if (clients.length === 0 || services.length === 0 || practitioners.length === 0) {
+    const missingItems = [
+      clients.length === 0 ? "danışan" : null,
+      services.length === 0 ? "aktif hizmet" : null,
+      practitioners.length === 0 ? "aktif terapist" : null,
+    ].filter(Boolean);
+    const canAutoSetup = services.length === 0 || practitioners.length === 0;
+
     return (
       <div className="admin-empty-state" role="status">
         <strong>Randevu oluşturma hazır değil</strong>
-        <span>Danışan, aktif hizmet ve aktif terapist kaydı olmadan randevu oluşturulamaz.</span>
+        <span>Eksik kayıt: {missingItems.join(", ")}.</span>
+        {clients.length === 0 ? (
+          <a className="primary-button" href="/yonetim?modal=danisan-ekle">
+            Önce danışan oluştur
+          </a>
+        ) : null}
+        {canAutoSetup ? (
+          <button className="primary-button" disabled={setupBusy} onClick={setupPrerequisites} type="button">
+            {setupBusy ? "Tamamlanıyor..." : "Hizmet ve terapisti tamamla"}
+          </button>
+        ) : null}
+        {message ? <span>{message}</span> : null}
       </div>
     );
   }
