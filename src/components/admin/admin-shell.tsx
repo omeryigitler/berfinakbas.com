@@ -1,6 +1,7 @@
 "use client";
 
 import type { Route } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -86,7 +87,9 @@ export function AdminShell({
     <main className={styles.shell} data-admin-refresh="shell">
       <aside className={styles.sidebar} data-admin-region="sidebar" aria-label="Yönetim alanı">
         <Link className={styles.brand} data-admin-region="brand" href="/yonetim">
-          <span className={styles.brandMark} data-admin-region="brand-mark">BA</span>
+          <span className={styles.brandMark} data-admin-region="brand-mark">
+            <Image src="/logo-mark.png" alt="" width={44} height={44} priority />
+          </span>
           <span>
             <strong>Berfin Akbaş</strong>
             <small>Yönetim paneli</small>
