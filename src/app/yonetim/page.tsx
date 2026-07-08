@@ -78,9 +78,14 @@ export default async function AdminHomePage({
   const session = await requirePermission("services:read");
   const params = await searchParams;
   const activeModal = singleParam(params, "modal");
+  const initialClientId = singleParam(params, "clientId");
   const canReadAppointments = hasPermission(
     session.user.roles,
     "appointments:read",
+  );
+  const canManageAppointments = hasPermission(
+    session.user.roles,
+    "appointments:manage",
   );
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
@@ -211,7 +216,7 @@ export default async function AdminHomePage({
           title: "Not ekle",
         }
       : null,
-    canReadAppointments
+    canManageAppointments
       ? {
           href: "/yonetim?modal=randevu-olustur" as Route,
           kicker: "◷",
@@ -527,9 +532,10 @@ export default async function AdminHomePage({
 
       <DashboardUrlModals
         activeModal={activeModal}
+        canManageAppointments={canManageAppointments}
         canManageClients={canManageClients}
-        canReadAppointments={canReadAppointments}
         canReadFinance={canReadFinance}
+        initialClientId={initialClientId}
       />
     </AdminShell>
   );

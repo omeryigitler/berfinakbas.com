@@ -1,3 +1,7 @@
+import type { Route } from "next";
+import Link from "next/link";
+
+import { AppointmentCreateModal } from "@/components/admin/appointment-create-modal";
 import { AppointmentQueue } from "@/components/admin/appointment-queue";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { hasPermission } from "@/domain/auth/permissions";
@@ -6,9 +10,25 @@ import { getServerEnvironment } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminAppointmentsPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
+  const value = params[key];
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+export default async function AdminAppointmentsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await requirePermission("appointments:read");
+  const params = await searchParams;
+  const activeModal = singleParam(params, "modal");
+  const initialClientId = singleParam(params, "clientId");
   const environment = getServerEnvironment();
+  const canManageAppointments = hasPermission(session.user.roles, "appointments:manage");
 
   return (
     <AdminShell
@@ -32,14 +52,31 @@ export default async function AdminAppointmentsPage() {
               iletişim ayrıntısı içermez.
             </p>
           </div>
-          <span className="admin-count">PENDING REVIEW</span>
+          {canManageAppointments ? (
+            <Link
+              className="primary-button"
+              href={"/yonetim/randevular?modal=randevu-olustur" as Route}
+              scroll={false}
+            >
+              Randevu oluştur
+            </Link>
+          ) : (
+            <span className="admin-count">PENDING REVIEW</span>
+          )}
         </div>
 
         <AppointmentQueue
           businessTimeZone={environment.BUSINESS_TIME_ZONE}
-          canManage={hasPermission(session.user.roles, "appointments:manage")}
+          canManage={canManageAppointments}
         />
       </section>
+
+      {activeModal === "randevu-olustur" && canManageAppointments ? (
+        <AppointmentCreateModal
+          closeHref="/yonetim/randevular"
+          initialClientId={initialClientId}
+        />
+      ) : null}
     </AdminShell>
   );
 }
