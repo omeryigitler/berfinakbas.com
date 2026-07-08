@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import styles from "@/components/admin/admin-shell.module.css";
 import { getFilteredFinanceOverview } from "@/lib/finance/finance-overview-filter";
 
 function formatMoney(amountMinor: string | bigint, currency: string): string {
@@ -71,23 +72,23 @@ export async function ClientFinanceOverview({ clientId }: { clientId: string }) 
         <strong>{formatMoney(openBalanceMinor, currency)} açık bakiye</strong>
       </div>
 
-      <div className="admin-dashboard-grid-lite">
-        <article>
+      <div className={styles.dashboardGrid}>
+        <article className={styles.dashboardCard}>
           <span>Plan toplamı</span>
           <strong>{formatMoney(totalPlanMinor, currency)}</strong>
           <small>{overview.plans.length} plan kaydı</small>
         </article>
-        <article>
+        <article className={styles.dashboardCard}>
           <span>Alınan ödeme</span>
           <strong>{formatMoney(paidMinor, currency)}</strong>
           <small>Net plan bakiyesine göre</small>
         </article>
-        <article>
+        <article className={styles.dashboardCard}>
           <span>Açık bakiye</span>
           <strong>{formatMoney(openBalanceMinor, currency)}</strong>
           <small>{overdueInstallments} gecikmiş taksit</small>
         </article>
-        <article>
+        <article className={styles.dashboardCard}>
           <span>Kalan seans</span>
           <strong>{remainingSessions}</strong>
           <small>Aktif/geçerli planlardan</small>
