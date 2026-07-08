@@ -190,7 +190,6 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
     void requestFinanceOverview(filter, clientId, controller.signal)
       .then(setOverview)
       .catch((error: unknown) => {
@@ -205,10 +204,6 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
       });
     return () => controller.abort();
   }, [filter, clientId]);
-
-  useEffect(() => {
-    setPaymentPlanId("");
-  }, [clientId, filter]);
 
   const reversedEntryIds = useMemo(
     () =>
@@ -394,6 +389,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
             onValueChange={(nextValue) => {
               setLoading(true);
               setMessage("");
+              setPaymentPlanId("");
               setFilter(nextValue as typeof filter);
             }}
             options={dueFilterOptions}
