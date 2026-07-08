@@ -248,115 +248,177 @@ export function AppointmentCreateForm({
   }
 
   return (
-    <form onSubmit={submit}>
-      <div className="booking-field-grid">
-        <label className="booking-field">
-          Danışan
-          <SelectControl
-            disabled={busy}
-            name="clientId"
-            onValueChange={setClientId}
-            options={clientOptions}
-            placeholder="Danışan seçin"
-            required
-            value={clientId}
-          />
-        </label>
-        {selectedClient?.type === "CHILD" ? (
+    <form className="appointment-create-form" onSubmit={submit}>
+      <section className="appointment-form-section" aria-labelledby="appointment-client-section">
+        <div className="appointment-form-section-header">
+          <span>1</span>
+          <div>
+            <h3 id="appointment-client-section">Danışan bilgisi</h3>
+            <p>Randevu hangi danışana açılacak? Çocuk danışanda veli seçimi zorunludur.</p>
+          </div>
+        </div>
+        <div className="booking-field-grid">
           <label className="booking-field">
-            Veli
+            Danışan
             <SelectControl
-              disabled={busy || selectedClient.guardians.length === 0}
-              name="guardianId"
-              options={selectedClient.guardians}
-              placeholder={selectedClient.guardians.length === 0 ? "Veli kaydı yok" : "Veli seçin"}
+              disabled={busy}
+              name="clientId"
+              onValueChange={setClientId}
+              options={clientOptions}
+              placeholder="Danışan seçin"
+              required
+              value={clientId}
+            />
+          </label>
+          {selectedClient?.type === "CHILD" ? (
+            <label className="booking-field appointment-guardian-field">
+              Veli
+              <SelectControl
+                disabled={busy || selectedClient.guardians.length === 0}
+                name="guardianId"
+                options={selectedClient.guardians}
+                placeholder={selectedClient.guardians.length === 0 ? "Veli kaydı yok" : "Veli seçin"}
+                required
+              />
+              {selectedClient.guardians.length === 0 ? (
+                <small className="appointment-warning-text">Önce danışan profiline veli bağlayın.</small>
+              ) : (
+                <small>Seçilen veli bu çocuk danışanın randevusuna bağlanır.</small>
+              )}
+            </label>
+          ) : (
+            <div className="appointment-inline-note" role="status">
+              <strong>Yetişkin danışan</strong>
+              <span>Veli seçimi gerekmiyor.</span>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="appointment-form-section" aria-labelledby="appointment-service-section">
+        <div className="appointment-form-section-header">
+          <span>2</span>
+          <div>
+            <h3 id="appointment-service-section">Hizmet ve terapist</h3>
+            <p>Hizmet seçimi süre varsayılanını belirler; terapist seçimi çakışma kontrolünde kullanılır.</p>
+          </div>
+        </div>
+        <div className="booking-field-grid">
+          <label className="booking-field">
+            Hizmet
+            <SelectControl
+              disabled={busy}
+              name="serviceId"
+              onValueChange={(value) => {
+                setServiceId(value);
+                setDurationMode("SERVICE_DEFAULT");
+              }}
+              options={serviceOptions}
+              required
+              value={serviceId}
+            />
+          </label>
+          <label className="booking-field">
+            Terapist
+            <SelectControl
+              defaultValue={practitioners[0]?.id ?? ""}
+              disabled={busy}
+              name="practitionerId"
+              options={practitionerOptions}
               required
             />
-            {selectedClient.guardians.length === 0 ? <small>Önce danışan profiline veli bağlayın.</small> : null}
           </label>
-        ) : null}
-        <label className="booking-field">
-          Hizmet
-          <SelectControl
-            disabled={busy}
-            name="serviceId"
-            onValueChange={(value) => {
-              setServiceId(value);
-              setDurationMode("SERVICE_DEFAULT");
-            }}
-            options={serviceOptions}
-            required
-            value={serviceId}
-          />
-        </label>
-        <label className="booking-field">
-          Terapist
-          <SelectControl
-            defaultValue={practitioners[0]?.id ?? ""}
-            disabled={busy}
-            name="practitionerId"
-            options={practitionerOptions}
-            required
-          />
-        </label>
-        <label className="booking-field">
-          Tarih ve saat
-          <input
-            disabled={busy}
-            name="startsAt"
-            onChange={(event) => setStartsAt(event.currentTarget.value)}
-            required
-            type="datetime-local"
-            value={startsAt}
-          />
-        </label>
-        <label className="booking-field">
-          Süre
-          <SelectControl
-            disabled={busy}
-            name="durationMode"
-            onValueChange={setDurationMode}
-            options={selectedServiceDurationOptions}
-            value={durationMode}
-          />
-        </label>
-        {durationMode === "CUSTOM" ? (
-          <label className="booking-field">
-            Özel süre / dakika
+        </div>
+      </section>
+
+      <section className="appointment-form-section" aria-labelledby="appointment-time-section">
+        <div className="appointment-form-section-header">
+          <span>3</span>
+          <div>
+            <h3 id="appointment-time-section">Tarih, saat ve süre</h3>
+            <p>Seçilen saat doğrudan onaylı randevu olarak açılır; aynı terapistte çakışma engellenir.</p>
+          </div>
+        </div>
+        <div className="booking-field-grid appointment-time-grid">
+          <label className="booking-field appointment-date-field">
+            Tarih ve saat
             <input
               disabled={busy}
-              inputMode="numeric"
-              max="240"
-              min="5"
-              name="customDuration"
-              onChange={(event) => setCustomDuration(event.currentTarget.value)}
+              name="startsAt"
+              onChange={(event) => setStartsAt(event.currentTarget.value)}
               required
-              type="number"
-              value={customDuration}
+              type="datetime-local"
+              value={startsAt}
+            />
+            <small>Takvim/saat seçimi yerel tarayıcı kontrolüyle yapılır.</small>
+          </label>
+          <label className="booking-field">
+            Süre
+            <SelectControl
+              disabled={busy}
+              name="durationMode"
+              onValueChange={setDurationMode}
+              options={selectedServiceDurationOptions}
+              value={durationMode}
             />
           </label>
-        ) : null}
-        <label className="booking-field">
-          Görüşme tipi
-          <SelectControl
-            defaultValue="SERVICE_DEFAULT"
-            disabled={busy}
-            name="locationType"
-            options={locationOptions}
-          />
-        </label>
+          {durationMode === "CUSTOM" ? (
+            <label className="booking-field">
+              Özel süre / dakika
+              <input
+                disabled={busy}
+                inputMode="numeric"
+                max="240"
+                min="5"
+                name="customDuration"
+                onChange={(event) => setCustomDuration(event.currentTarget.value)}
+                required
+                type="number"
+                value={customDuration}
+              />
+            </label>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="appointment-form-section" aria-labelledby="appointment-location-section">
+        <div className="appointment-form-section-header">
+          <span>4</span>
+          <div>
+            <h3 id="appointment-location-section">Görüşme tipi ve not</h3>
+            <p>Operasyon notu klinik not değildir; sadece randevu takibi için kullanılır.</p>
+          </div>
+        </div>
+        <div className="booking-field-grid appointment-final-grid">
+          <label className="booking-field">
+            Görüşme tipi
+            <SelectControl
+              defaultValue="SERVICE_DEFAULT"
+              disabled={busy}
+              name="locationType"
+              options={locationOptions}
+            />
+          </label>
+          <label className="booking-field appointment-note-field">
+            Kısa operasyon notu
+            <textarea
+              disabled={busy}
+              maxLength={500}
+              name="requestNote"
+              placeholder="Örn. İlk görüşme öncesi telefonla teyit edildi."
+              rows={5}
+            />
+            <small>Bu alan klinik not için değil, operasyon notu içindir.</small>
+          </label>
+        </div>
+      </section>
+
+      <div className="appointment-form-actions">
+        <button className="primary-button booking-button" disabled={busy} type="submit">
+          {busy ? "Oluşturuluyor..." : "Randevu oluştur"}
+        </button>
+        {message ? <p className="admin-inline-error">{message}</p> : null}
       </div>
-
-      <label className="booking-field" style={{ marginTop: 14 }}>
-        Kısa not
-        <textarea disabled={busy} maxLength={500} name="requestNote" rows={3} />
-        <small>Bu alan klinik not için değil, operasyon notu içindir.</small>
-      </label>
-
-      <button className="primary-button booking-button" disabled={busy} type="submit">
-        {busy ? "Oluşturuluyor..." : "Randevu oluştur"}
-      </button>
-      {message ? <p className="admin-inline-error">{message}</p> : null}
     </form>
   );
 }
