@@ -4,11 +4,17 @@
 
 :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
   display: grid;
+  position: sticky;
+  top: 10px;
+  z-index: 40;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  margin: 0;
   border-radius: 16px;
   padding: 10px 12px;
+  transform: translateZ(0);
 }
 
 :global([data-admin-refresh="shell"] [data-admin-region="search"]) {
@@ -322,6 +328,7 @@
 
 @media (max-width: 860px) {
   :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
+    top: 8px;
     grid-template-columns: 1fr;
   }
 
