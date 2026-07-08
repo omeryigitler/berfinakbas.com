@@ -17,18 +17,25 @@
   }
 
   :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     height: 100vh;
     min-height: 100vh;
+    overflow: hidden;
+  }
+
+  :global([data-admin-refresh="shell"] [data-admin-region="scroll-area"]) {
+    min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scroll-padding-top: 88px;
+    padding-bottom: 32px;
+    scroll-padding-top: 24px;
   }
 }
 
 :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
   display: grid;
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -351,7 +358,6 @@
 
 @media (max-width: 860px) {
   :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
-    top: 0;
     grid-template-columns: 1fr;
   }
 
