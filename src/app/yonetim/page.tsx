@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
 import { DashboardUrlModals } from "@/components/admin/dashboard-url-modals";
+import "@/components/admin/service-practitioner-overview.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
 import {
   clientStatusLabels,
@@ -27,6 +28,30 @@ const appointmentStatusLabels: Record<string, string> = {
   REQUESTED: "Talep alındı",
   RESCHEDULE_PROPOSED: "Saat önerildi",
 };
+
+const approvalModeLabels: Record<string, string> = {
+  AUTO_APPROVE: "Otomatik onay",
+  MANUAL: "Manuel onay",
+};
+
+const locationTypeLabels: Record<string, string> = {
+  HYBRID: "Yüz yüze / çevrim içi",
+  IN_PERSON: "Yüz yüze",
+  ONLINE: "Çevrim içi",
+};
+
+const practitionerStatusLabels: Record<string, string> = {
+  ACTIVE: "Aktif",
+  INACTIVE: "Pasif",
+};
+
+const serviceStatusLabels: Record<string, string> = {
+  ACTIVE: "Aktif",
+  DRAFT: "Taslak",
+  RETIRED: "Arşiv",
+};
+
+const weekdayLabels = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
 
 function singleParam(
   params: Record<string, string | string[] | undefined>,
@@ -70,6 +95,36 @@ function getWeekRange(todayStart: Date): { weekEnd: Date; weekStart: Date } {
   return { weekEnd, weekStart };
 }
 
+function statusLabel(value: string, labels: Record<string, string>): string {
+  return labels[value] ?? value;
+}
+
+function formatPolicySummary(
+  policy:
+    | {
+        bookingMaxAdvanceDays: number;
+        bookingMinNoticeMinutes: number;
+        cancellationWindowMinutes: number;
+        maxDailyAppointments: number | null;
+        rescheduleWindowMinutes: number;
+      }
+    | undefined,
+): string {
+  if (!policy) return "Politika yok";
+  const dailyLimit = policy.maxDailyAppointments
+    ? `${policy.maxDailyAppointments} günlük limit`
+    : "günlük limit yok";
+  return `${policy.bookingMinNoticeMinutes} dk min. bildirim · ${policy.bookingMaxAdvanceDays} gün ileri · ${dailyLimit}`;
+}
+
+function formatRuleSummary(
+  rules: { localEndTime: string; localStartTime: string; weekday: number }[],
+): string {
+  if (rules.length === 0) return "Aktif müsaitlik kuralı yok";
+  const firstRule = rules[0];
+  return `${weekdayLabels[firstRule.weekday] ?? "Gün"} ${firstRule.localStartTime}-${firstRule.localEndTime}`;
+}
+
 export default async function AdminHomePage({
   searchParams,
 }: {
@@ -110,13 +165,66 @@ export default async function AdminHomePage({
   const services = await db.service.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: {
+      _count: { select: { appointments: true } },
+      approvalMode: true,
+      defaultBufferAfterMinutes: true,
+      defaultBufferBeforeMinutes: true,
       defaultDurationMinutes: true,
+      id: true,
       locationType: true,
       name: true,
+      policies: {
+        orderBy: [{ effectiveFrom: "desc" }],
+        select: {
+          bookingMaxAdvanceDays: true,
+          bookingMinNoticeMinutes: true,
+          cancellationWindowMinutes: true,
+          maxDailyAppointments: true,
+          rescheduleWindowMinutes: true,
+        },
+        take: 1,
+      },
       publicVisible: true,
+      slug: true,
       status: true,
     },
   });
+  const practitioners = await db.practitioner.findMany({
+    orderBy: [{ displayName: "asc" }],
+    select: {
+      _count: {
+        select: {
+          appointments: true,
+          availabilityExceptions: true,
+          availabilityRules: true,
+        },
+      },
+      availabilityRules: {
+        orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
+        select: {
+          localEndTime: true,
+          localStartTime: true,
+          slotIncrementMinutes: true,
+          weekday: true,
+        },
+        take: 7,
+        where: { status: "ACTIVE" },
+      },
+      displayName: true,
+      id: true,
+      status: true,
+      timeZone: true,
+    },
+  });
+
+  const activeServiceCount = services.filter((service) => service.status === "ACTIVE").length;
+  const publicServiceCount = services.filter((service) => service.publicVisible).length;
+  const activePractitionerCount = practitioners.filter(
+    (practitioner) => practitioner.status === "ACTIVE",
+  ).length;
+  const configuredAvailabilityCount = practitioners.filter(
+    (practitioner) => practitioner.availabilityRules.length > 0,
+  ).length;
 
   const totalClients = canReadClients ? await db.client.count() : 0;
   const activeClients = canReadClients
@@ -191,6 +299,7 @@ export default async function AdminHomePage({
     weeklyAppointments,
     activePlans,
     services.length,
+    practitioners.length,
     1,
   );
   const analytics = [
@@ -200,6 +309,7 @@ export default async function AdminHomePage({
     { label: "Haftalık", value: weeklyAppointments },
     { label: "Plan", value: activePlans },
     { label: "Hizmet", value: services.length },
+    { label: "Terapist", value: practitioners.length },
   ];
   const actionItems = [
     canManageClients
@@ -493,41 +603,150 @@ export default async function AdminHomePage({
         </aside>
       </div>
 
-      <section className="admin-panel" aria-labelledby="hizmet-listesi">
+      <section className="admin-panel" aria-labelledby="hizmet-terapist-ayarlari">
         <div className="admin-panel-heading">
           <div>
-            <h2 id="hizmet-listesi">Hizmet yapılandırmaları</h2>
+            <h2 id="hizmet-terapist-ayarlari">Hizmet ve terapist ayarları</h2>
             <p>
-              Süre, konum ve görünürlük değişiklikleri geçmiş kayıtları
-              değiştirmez.
+              Randevu oluşturma formunu besleyen hizmet, süre, konum, terapist ve müsaitlik
+              ayarları.
             </p>
           </div>
-          <span className="admin-count">{services.length} kayıt</span>
+          <span className="admin-count">
+            {services.length} hizmet · {practitioners.length} terapist
+          </span>
         </div>
 
-        {services.length === 0 ? (
-          <div className="admin-empty-state">
-            <strong>Henüz hizmet yok</strong>
-            <span>
-              Sentetik başlangıç verisi çalıştırıldığında taslak hizmet burada
-              görünür.
-            </span>
-          </div>
-        ) : (
-          <ul className="admin-service-list">
-            {services.map((service) => (
-              <li key={service.name}>
-                <div>
-                  <strong>{service.name}</strong>
-                  <span>
-                    {service.defaultDurationMinutes} dk · {service.locationType}
-                  </span>
-                </div>
-                <span>{service.publicVisible ? "Public" : service.status}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="admin-config-summary-grid">
+          <article>
+            <span>Aktif hizmet</span>
+            <strong>{activeServiceCount}</strong>
+            <small>{publicServiceCount} public görünür</small>
+          </article>
+          <article>
+            <span>Aktif terapist</span>
+            <strong>{activePractitionerCount}</strong>
+            <small>{configuredAvailabilityCount} terapistte müsaitlik var</small>
+          </article>
+          <article>
+            <span>Randevu altyapısı</span>
+            <strong>
+              {activeServiceCount > 0 && activePractitionerCount > 0 ? "Hazır" : "Eksik"}
+            </strong>
+            <small>Randevu için aktif hizmet + aktif terapist gerekir</small>
+          </article>
+        </div>
+
+        <div className="admin-config-layout">
+          <section aria-labelledby="hizmet-listesi">
+            <div className="admin-config-subheading">
+              <div>
+                <h3 id="hizmet-listesi">Hizmet yapılandırmaları</h3>
+                <p>Süre ve politika değişiklikleri geçmiş randevu kayıtlarını değiştirmez.</p>
+              </div>
+              <span>{services.length} kayıt</span>
+            </div>
+
+            {services.length === 0 ? (
+              <div className="admin-empty-state">
+                <strong>Henüz hizmet yok</strong>
+                <span>
+                  Sentetik başlangıç verisi çalıştırıldığında taslak hizmet burada görünür.
+                </span>
+              </div>
+            ) : (
+              <ul className="admin-config-card-list">
+                {services.map((service) => {
+                  const latestPolicy = service.policies[0];
+                  return (
+                    <li className="admin-config-card" key={service.id}>
+                      <div className="admin-config-card-main">
+                        <strong>{service.name}</strong>
+                        <span>{service.slug}</span>
+                      </div>
+                      <div className="admin-config-chip-row">
+                        <em>{statusLabel(service.status, serviceStatusLabels)}</em>
+                        <em>{service.publicVisible ? "Public" : "Panel içi"}</em>
+                        <em>{statusLabel(service.approvalMode, approvalModeLabels)}</em>
+                      </div>
+                      <dl className="admin-config-metrics">
+                        <div>
+                          <dt>Süre</dt>
+                          <dd>{service.defaultDurationMinutes} dk</dd>
+                        </div>
+                        <div>
+                          <dt>Buffer</dt>
+                          <dd>
+                            {service.defaultBufferBeforeMinutes}+{service.defaultBufferAfterMinutes} dk
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Görüşme</dt>
+                          <dd>{statusLabel(service.locationType, locationTypeLabels)}</dd>
+                        </div>
+                        <div>
+                          <dt>Randevu</dt>
+                          <dd>{service._count.appointments}</dd>
+                        </div>
+                      </dl>
+                      <p className="admin-config-note">{formatPolicySummary(latestPolicy)}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
+          <section aria-labelledby="terapist-listesi">
+            <div className="admin-config-subheading">
+              <div>
+                <h3 id="terapist-listesi">Terapist yapılandırmaları</h3>
+                <p>Müsaitlik kuralları randevu saatlerinin temelini oluşturur.</p>
+              </div>
+              <span>{practitioners.length} kayıt</span>
+            </div>
+
+            {practitioners.length === 0 ? (
+              <div className="admin-empty-state">
+                <strong>Henüz terapist yok</strong>
+                <span>Aktif terapist olmadan randevu oluşturma hazır sayılmaz.</span>
+              </div>
+            ) : (
+              <ul className="admin-config-card-list">
+                {practitioners.map((practitioner) => (
+                  <li className="admin-config-card" key={practitioner.id}>
+                    <div className="admin-config-card-main">
+                      <strong>{practitioner.displayName}</strong>
+                      <span>{practitioner.timeZone}</span>
+                    </div>
+                    <div className="admin-config-chip-row">
+                      <em>{statusLabel(practitioner.status, practitionerStatusLabels)}</em>
+                      <em>{practitioner.availabilityRules.length} aktif kural</em>
+                      <em>{practitioner._count.availabilityExceptions} istisna</em>
+                    </div>
+                    <dl className="admin-config-metrics">
+                      <div>
+                        <dt>Randevu</dt>
+                        <dd>{practitioner._count.appointments}</dd>
+                      </div>
+                      <div>
+                        <dt>Müsaitlik</dt>
+                        <dd>{practitioner._count.availabilityRules}</dd>
+                      </div>
+                      <div>
+                        <dt>Slot</dt>
+                        <dd>{practitioner.availabilityRules[0]?.slotIncrementMinutes ?? "—"} dk</dd>
+                      </div>
+                    </dl>
+                    <p className="admin-config-note">
+                      {formatRuleSummary(practitioner.availabilityRules)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       </section>
 
       <DashboardUrlModals
