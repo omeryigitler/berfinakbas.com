@@ -18,6 +18,7 @@ export default async function AdminFinancePage({ searchParams }: { searchParams:
   const session = await requirePermission("finance:read");
   const params = await searchParams;
   const clientId = singleParam(params, "clientId").trim();
+  const hasClientFilter = clientId.length > 0;
 
   return (
     <AdminShell
@@ -29,23 +30,33 @@ export default async function AdminFinancePage({ searchParams }: { searchParams:
         servicesRead: hasPermission(session.user.roles, "services:read"),
         technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
       }}
-      subtitle="Plan, taksit ve ödeme akışı tek panel üzerinden yönetilir."
-      title="Ödeme ve planlar"
+      subtitle={
+        hasClientFilter
+          ? "Seçili danışanın plan, taksit ve ödeme hareketleri filtreli görünür."
+          : "Plan, taksit ve ödeme akışı tek panel üzerinden yönetilir."
+      }
+      title={hasClientFilter ? "Danışan ödeme ekranı" : "Ödeme ve planlar"}
     >
-      {clientId ? <ClientFinanceOverview clientId={clientId} /> : null}
+      {hasClientFilter ? <ClientFinanceOverview clientId={clientId} /> : null}
 
       <section className="admin-panel" aria-labelledby="finance-title">
         <div className="admin-panel-heading">
           <div>
-            <h2 id="finance-title">Ön muhasebe operasyonu</h2>
+            <h2 id="finance-title">
+              {hasClientFilter ? "Danışan ödeme operasyonu" : "Ön muhasebe operasyonu"}
+            </h2>
             <p>
-              Plan, taksit, ödeme ve ters kayıtlar append-only hareketlerden hesaplanır; bu alan
-              resmi muhasebe sistemi değildir.
+              {hasClientFilter
+                ? "Bu panel yalnızca seçili danışanın planlarını, taksitlerini ve ödeme hareketlerini gösterir."
+                : "Plan, taksit, ödeme ve ters kayıtlar append-only hareketlerden hesaplanır; bu alan resmi muhasebe sistemi değildir."}
             </p>
           </div>
-          <span className="admin-count">FINANCE</span>
+          <span className="admin-count">{hasClientFilter ? "FİLTRELİ" : "FINANCE"}</span>
         </div>
-        <FinanceDashboard canManage={hasPermission(session.user.roles, "finance:manage")} />
+        <FinanceDashboard
+          canManage={hasPermission(session.user.roles, "finance:manage")}
+          clientId={hasClientFilter ? clientId : undefined}
+        />
       </section>
     </AdminShell>
   );
