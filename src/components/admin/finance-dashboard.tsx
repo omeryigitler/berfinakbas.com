@@ -128,9 +128,12 @@ async function readResponse<T>(response: Response): Promise<ApiResponse<T>> {
 
 async function requestFinanceOverview(
   status: "ALL" | "DUE_7_DAYS" | "OVERDUE",
+  clientId: string,
   signal?: AbortSignal,
 ): Promise<Overview> {
-  const response = await fetch(`/api/admin/finance?status=${status}`, {
+  const params = new URLSearchParams({ status });
+  if (clientId) params.set("clientId", clientId);
+  const response = await fetch(`/api/admin/finance?${params.toString()}`, {
     cache: "no-store",
     signal,
   });
@@ -143,7 +146,12 @@ function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
 }
 
-export function FinanceDashboard({ canManage }: { canManage: boolean }) {
+function selectedClientLabel(clients: Client[], clientId: string): string {
+  const client = clients.find((item) => item.id === clientId);
+  return client ? `${client.firstName} ${client.lastName}` : "Seçili danışan";
+}
+
+export function FinanceDashboard({ canManage, clientId = "" }: { canManage: boolean; clientId?: string }) {
   const [overview, setOverview] = useState<Overview>({
     clients: [],
     paymentMethods: [],
@@ -163,21 +171,27 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
     reason: string;
   } | null>(null);
 
-  const load = useCallback(async (status: typeof filter) => {
-    try {
-      setOverview(await requestFinanceOverview(status));
-    } catch (error) {
-      setMessage(
-        error instanceof Error && error.message ? error.message : "Finans özeti yüklenemedi.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const isFilteredByClient = clientId.length > 0;
+
+  const load = useCallback(
+    async (status: typeof filter) => {
+      try {
+        setOverview(await requestFinanceOverview(status, clientId));
+      } catch (error) {
+        setMessage(
+          error instanceof Error && error.message ? error.message : "Finans özeti yüklenemedi.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [clientId],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
-    void requestFinanceOverview(filter, controller.signal)
+    setLoading(true);
+    void requestFinanceOverview(filter, clientId, controller.signal)
       .then(setOverview)
       .catch((error: unknown) => {
         if (!isAbortError(error)) {
@@ -190,7 +204,11 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [filter]);
+  }, [filter, clientId]);
+
+  useEffect(() => {
+    setPaymentPlanId("");
+  }, [clientId, filter]);
 
   const reversedEntryIds = useMemo(
     () =>
@@ -204,6 +222,13 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
     [overview.plans],
   );
   const paymentPlan = overview.plans.find((plan) => plan.id === paymentPlanId);
+  const clientOptions = [
+    { label: "Seçin", value: "" },
+    ...overview.clients.map((client) => ({
+      label: `${client.firstName} ${client.lastName}`,
+      value: client.id,
+    })),
+  ];
 
   async function operation(body: unknown) {
     setBusy(true);
@@ -256,13 +281,14 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
       setMessage("Taksit tutarı ve vade alanlarını kontrol edin.");
       return;
     }
+    const selectedClientId = String(data.get("clientId") ?? "");
     const totalAmountMinor = converted.reduce(
       (total, installment) => total + BigInt(installment.amountMinor ?? "0"),
       0n,
     );
     const success = await operation({
       action: "CREATE_PLAN",
-      clientId: String(data.get("clientId") ?? ""),
+      clientId: selectedClientId,
       currency: String(data.get("currency") ?? "TRY").toUpperCase(),
       idempotencyKey: crypto.randomUUID(),
       installments: converted,
@@ -335,9 +361,7 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
     const reason = reverseDialog.reason.trim();
     if (reason.length < 8) {
       setReverseDialog((current) =>
-        current
-          ? { ...current, error: "Ters kayıt gerekçesi en az 8 karakter olmalıdır." }
-          : current,
+        current ? { ...current, error: "Ters kayıt gerekçesi en az 8 karakter olmalıdır." } : current,
       );
       return;
     }
@@ -377,6 +401,9 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
           />
         </label>
         <span>{overview.plans.length} plan</span>
+        {isFilteredByClient ? (
+          <strong>{selectedClientLabel(overview.clients, clientId)} filtresi aktif</strong>
+        ) : null}
       </div>
 
       {canManage && (
@@ -402,19 +429,15 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
             </form>
           </details>
           <details className="finance-operation-card">
-            <summary>Danışan planı oluştur</summary>
+            <summary>{isFilteredByClient ? "Bu danışana plan oluştur" : "Danışan planı oluştur"}</summary>
             <form onSubmit={createPlan}>
               <label>
                 Danışan
                 <SelectControl
+                  defaultValue={clientId}
+                  disabled={isFilteredByClient && overview.clients.length === 1}
                   name="clientId"
-                  options={[
-                    { label: "Seçin", value: "" },
-                    ...overview.clients.map((client) => ({
-                      label: `${client.firstName} ${client.lastName}`,
-                      value: client.id,
-                    })),
-                  ]}
+                  options={clientOptions}
                   required
                 />
               </label>
@@ -515,13 +538,13 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                 Gerekçe
                 <textarea minLength={8} name="reason" required />
               </label>
-              <button disabled={busy} type="submit">
+              <button disabled={busy || (isFilteredByClient && overview.clients.length === 0)} type="submit">
                 Planı oluştur
               </button>
             </form>
           </details>
           <details className="finance-operation-card">
-            <summary>Ödeme kaydet</summary>
+            <summary>{isFilteredByClient ? "Bu danışana ödeme kaydet" : "Ödeme kaydet"}</summary>
             <form onSubmit={recordPayment}>
               <label>
                 Plan
@@ -638,9 +661,7 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
               />
             </label>
 
-            {reverseDialog.error ? (
-              <p className="admin-modal-error">{reverseDialog.error}</p>
-            ) : null}
+            {reverseDialog.error ? <p className="admin-modal-error">{reverseDialog.error}</p> : null}
 
             <div className="admin-modal-actions">
               <button disabled={busy} onClick={() => setReverseDialog(null)} type="button">
@@ -655,8 +676,12 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
       ) : null}
       {overview.plans.length === 0 ? (
         <div className="admin-empty-state">
-          <strong>Bu filtrede plan yok</strong>
-          <span>Yeni plan oluşturabilir veya vade filtresini değiştirebilirsiniz.</span>
+          <strong>{isFilteredByClient ? "Bu danışanda plan yok" : "Bu filtrede plan yok"}</strong>
+          <span>
+            {isFilteredByClient
+              ? "Bu danışana yeni plan oluşturabilir veya vade filtresini değiştirebilirsiniz."
+              : "Yeni plan oluşturabilir veya vade filtresini değiştirebilirsiniz."}
+          </span>
         </div>
       ) : (
         <div className="finance-plan-list">
@@ -669,9 +694,7 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                   </small>
                   <h3>{plan.name}</h3>
                 </div>
-                <span>
-                  {planStatusLabels[plan.status as keyof typeof planStatusLabels] ?? plan.status}
-                </span>
+                <span>{planStatusLabels[plan.status as keyof typeof planStatusLabels] ?? plan.status}</span>
               </header>
               <dl>
                 <div>
@@ -695,9 +718,7 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                     </span>
                     <strong>{formatMoney(installment.amountDueMinor, plan.currency)}</strong>
                     <small>Ödenen {formatMoney(installment.paidAmountMinor, plan.currency)}</small>
-                    <small
-                      className={`finance-state finance-state--${installment.state.toLowerCase()}`}
-                    >
+                    <small className={`finance-state finance-state--${installment.state.toLowerCase()}`}>
                       {installmentStateLabels[installment.state]}
                     </small>
                   </div>
@@ -740,17 +761,12 @@ export function FinanceDashboard({ canManage }: { canManage: boolean }) {
                   {plan.ledgerEntries.map((entry) => (
                     <li key={entry.id}>
                       <span>
-                        {financeEntryLabels[entry.type as keyof typeof financeEntryLabels] ??
-                          entry.type}{" "}
-                        · {new Date(entry.occurredAt).toLocaleDateString("tr-TR")}
+                        {financeEntryLabels[entry.type as keyof typeof financeEntryLabels] ?? entry.type} ·{" "}
+                        {new Date(entry.occurredAt).toLocaleDateString("tr-TR")}
                       </span>
                       <strong>{formatMoney(entry.amountMinor, plan.currency)}</strong>
                       {canManage && entry.type === "PAYMENT" && !reversedEntryIds.has(entry.id) && (
-                        <button
-                          disabled={busy}
-                          onClick={() => openReversePayment(entry.id)}
-                          type="button"
-                        >
+                        <button disabled={busy} onClick={() => openReversePayment(entry.id)} type="button">
                           Ters kayıt
                         </button>
                       )}
