@@ -140,15 +140,17 @@ export function AdminShell({
           </div>
         </header>
 
-        <div className={styles.titleRow} data-admin-region="title-row">
-          <div className={styles.titleGroup} data-admin-region="title-group">
-            <p className="section-kicker">Berfin Akbaş · Yönetim</p>
-            <h1>{title}</h1>
-            {subtitle ? <p className={styles.subtitle} data-admin-region="subtitle">{subtitle}</p> : null}
+        <div data-admin-region="scroll-area">
+          <div className={styles.titleRow} data-admin-region="title-row">
+            <div className={styles.titleGroup} data-admin-region="title-group">
+              <p className="section-kicker">Berfin Akbaş · Yönetim</p>
+              <h1>{title}</h1>
+              {subtitle ? <p className={styles.subtitle} data-admin-region="subtitle">{subtitle}</p> : null}
+            </div>
           </div>
-        </div>
 
-        <section className={styles.content} data-admin-region="content">{children}</section>
+          <section className={styles.content} data-admin-region="content">{children}</section>
+        </div>
       </section>
     </main>
   );
