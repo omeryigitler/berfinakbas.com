@@ -4,7 +4,7 @@
 
 :global([data-admin-refresh="shell"] .finance-dashboard) {
   display: grid;
-  gap: 24px;
+  gap: 28px;
 }
 
 :global([data-admin-refresh="shell"] .finance-toolbar) {
@@ -49,12 +49,12 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-grid) {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.85fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    "plan payment"
-    "method method";
-  align-items: start;
-  gap: 18px;
+    "plan"
+    "payment"
+    "method";
+  gap: 22px;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1)) {
@@ -73,7 +73,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgb(88 62 49 / 12%);
-  border-radius: 24px;
+  border-radius: 26px;
   background:
     radial-gradient(circle at 100% 0%, rgb(243 195 166 / 24%), transparent 10rem),
     rgb(255 253 249 / 88%);
@@ -97,14 +97,14 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-card summary) {
   display: flex;
-  min-height: 66px;
+  min-height: 70px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 22px;
+  padding: 22px 26px;
   color: #433329;
   font-family: var(--serif);
-  font-size: 1.12rem;
+  font-size: 1.22rem;
   font-weight: 650;
   cursor: pointer;
   list-style: none;
@@ -116,8 +116,8 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-card summary::after) {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 999px;
@@ -134,13 +134,13 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-card form) {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   border-top: 1px solid rgb(88 62 49 / 9%);
-  padding: 0 24px 24px;
+  padding: 0 28px 28px;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2) form) {
-  gap: 18px;
+  gap: 20px;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form) {
@@ -155,23 +155,23 @@
 :global([data-admin-refresh="shell"] .finance-operation-card label),
 :global([data-admin-refresh="shell"] .finance-installment-editor legend) {
   display: grid;
-  gap: 7px;
+  gap: 8px;
   color: #665148;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card input),
 :global([data-admin-refresh="shell"] .finance-operation-card textarea) {
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
   border: 1px solid rgb(88 62 49 / 18%);
-  border-radius: 14px;
+  border-radius: 15px;
   background: #fffdf9;
-  padding: 11px 13px;
+  padding: 12px 14px;
   color: var(--ink);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   outline: none;
   transition:
     border-color 150ms ease,
@@ -180,7 +180,7 @@
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card textarea) {
-  min-height: 86px;
+  min-height: 112px;
   resize: vertical;
 }
 
@@ -194,7 +194,7 @@
 :global([data-admin-refresh="shell"] .finance-inline-fields) {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 13px;
+  gap: 15px;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3) .finance-inline-fields) {
@@ -203,29 +203,29 @@
 
 :global([data-admin-refresh="shell"] .finance-installment-editor) {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   margin: 0;
   border: 1px solid rgb(88 62 49 / 10%);
-  border-radius: 20px;
+  border-radius: 22px;
   background: rgb(255 250 244 / 72%);
-  padding: 18px;
+  padding: 20px;
 }
 
 :global([data-admin-refresh="shell"] .finance-installment-editor .finance-inline-fields) {
-  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.6fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.6fr) auto;
   align-items: end;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card button) {
   width: fit-content;
-  min-height: 42px;
+  min-height: 44px;
   border: 1px solid rgb(217 111 77 / 20%);
   border-radius: 999px;
   background: var(--coral-dark);
-  padding: 10px 16px;
+  padding: 11px 17px;
   color: #fffaf4;
   font: inherit;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 850;
   cursor: pointer;
   transition:
@@ -391,16 +391,6 @@
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
-}
-
-@media (max-width: 1180px) {
-  :global([data-admin-refresh="shell"] .finance-operation-grid) {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "plan"
-      "payment"
-      "method";
-  }
 }
 
 @media (max-width: 980px) {

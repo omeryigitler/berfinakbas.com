@@ -96,11 +96,11 @@ export async function ClientProfileUrlModals({
         footer={<ModalFooter closeHref={closeHref} />}
         title="Not ekle"
       >
-        <form action={saveClientNote} className={modalStyles.modalStack}>
+        <form action={saveClientNote} className={`${modalStyles.modalStack} admin-note-form`}>
           <input name="clientId" type="hidden" value={clientId} />
           <ModalFieldPreview
-            helper="Not bu profile kalici olarak baglanir."
-            label="Danisan"
+            helper="Not bu profile kalıcı olarak bağlanır. Klinik değerlendirme detayı yerine operasyon takibi için kullanın."
+            label="Danışan"
             value={clientName}
           />
           <div className="booking-subject-type">
@@ -119,12 +119,20 @@ export async function ClientProfileUrlModals({
             </label>
             <label>
               <input name="category" type="radio" value="PAYMENT" />
-              <span>Odeme notu</span>
+              <span>Ödeme notu</span>
             </label>
           </div>
           <label className="booking-field">
             Not
-            <textarea maxLength={500} minLength={3} name="note" required />
+            <textarea
+              className="admin-url-modal-large-textarea"
+              maxLength={500}
+              minLength={3}
+              name="note"
+              placeholder="Bu danışanla ilgili operasyon notunu buraya yazın."
+              required
+            />
+            <small>En fazla 500 karakter. Kaydedildikten sonra profil geçmişinde görünür.</small>
           </label>
           <button className={modalStyles.modalButton} type="submit">
             Notu kaydet
@@ -161,21 +169,21 @@ export async function ClientProfileUrlModals({
           <ModalLinkFooter
             closeHref={closeHref}
             primaryHref={appointmentHref}
-            primaryLabel="Randevu ekranina gec"
+            primaryLabel="Randevu ekranına geç"
           />
         }
-        title="Randevu olustur"
+        title="Randevu oluştur"
       >
         <div className={modalStyles.modalGrid}>
           <ModalFieldPreview
-            helper="Randevu olusturma motoru ayri PR ile baglanacak."
-            label="Danisan"
+            helper="Randevu oluşturma ekranı seçili danışanla açılır."
+            label="Danışan"
             value={clientName}
           />
           <ModalFieldPreview
-            helper="Bu PR sadece URL modal ve client context tasir."
-            label="Baglanti"
-            value="Takvim ekranina yonlendirme"
+            helper="Takvim ve çakışma kontrolü randevu ekranında çalışır."
+            label="Bağlantı"
+            value="Takvim ekranına yönlendirme"
           />
         </div>
       </AdminUrlModal>
@@ -191,21 +199,21 @@ export async function ClientProfileUrlModals({
         <ModalLinkFooter
           closeHref={closeHref}
           primaryHref={financeHref}
-          primaryLabel="Odeme ekranina gec"
+          primaryLabel="Ödeme ekranına geç"
         />
       }
-      title="Odeme plani"
+      title="Ödeme planı"
     >
       <div className={modalStyles.modalGrid}>
         <ModalFieldPreview
-          helper="Finans motoru mevcut odeme ekraninda calisir."
-          label="Danisan"
+          helper="Finans motoru seçili danışan filtresiyle ödeme ekranında çalışır."
+          label="Danışan"
           value={clientName}
         />
         <ModalFieldPreview
-          helper="Plan olusturma islemi ayri PR ile modal icine alinacak."
-          label="Baglanti"
-          value="Odeme ekranina yonlendirme"
+          helper="Plan ve ödeme işlemleri tam sayfa akışta daha rahat yapılır."
+          label="Bağlantı"
+          value="Ödeme ekranına yönlendirme"
         />
       </div>
     </AdminUrlModal>
