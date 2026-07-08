@@ -1,0 +1,116 @@
+.root {
+  display: contents;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="search"]) {
+  min-height: 40px;
+  border-radius: 14px;
+  padding-inline: 13px 8px;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="search"] kbd) {
+  min-width: 38px;
+  border-radius: 9px;
+  padding: 4px 7px;
+  font-size: 0.58rem;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="header-meta"]) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="icon-button"]) {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: #bd6044;
+  font-size: 0.72rem;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="profile-pill"]) {
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 9px;
+  min-height: 42px;
+  border-radius: 16px;
+  padding: 4px 12px 4px 4px;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="profile-pill"] > span) {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="profile-pill"] strong) {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="profile-pill"] small) {
+  max-width: 154px;
+  font-size: 0.62rem;
+}
+
+:global([data-admin-refresh="shell"] article[class*="dashboardCard"]) {
+  padding-right: 64px;
+}
+
+:global([data-admin-refresh="shell"] i[class*="dashboardCardIcon"]) {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 0;
+  place-items: center;
+  border: 1px solid rgb(67 98 75 / 14%);
+  border-radius: 999px;
+  background: rgb(67 98 75 / 8%);
+  padding: 0;
+  color: #45694f;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-style: normal;
+  line-height: 1;
+  box-shadow: none;
+}
+
+:global([data-admin-refresh="shell"] i[class*="dashboardCardIcon"]::after) {
+  display: none !important;
+  content: none !important;
+}
+
+:global([data-admin-refresh="shell"] i[class*="dashboardCardIcon"]:hover) {
+  transform: none;
+  border-color: rgb(67 98 75 / 18%);
+  box-shadow: none;
+}
+
+@media (max-width: 860px) {
+  :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
+    grid-template-columns: 1fr;
+  }
+
+  :global([data-admin-refresh="shell"] [data-admin-region="header-meta"]) {
+    justify-content: space-between;
+  }
+}
