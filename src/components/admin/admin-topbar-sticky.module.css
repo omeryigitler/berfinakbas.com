@@ -1,0 +1,44 @@
+.root {
+  display: contents;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+  overflow: visible;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
+  position: sticky;
+  top: 18px;
+  z-index: 40;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  isolation: isolate;
+  transform: translateZ(0);
+  background: rgb(248 242 231 / 96%);
+  box-shadow:
+    0 12px 28px rgb(69 60 45 / 8%),
+    inset 0 1px 0 rgb(255 255 255 / 72%);
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="topbar"]::after) {
+  position: absolute;
+  inset: -18px -24px auto;
+  z-index: -1;
+  height: calc(100% + 22px);
+  background: linear-gradient(180deg, #f6f0e4 0%, rgb(246 240 228 / 84%) 72%, rgb(246 240 228 / 0%) 100%);
+  content: "";
+  pointer-events: none;
+}
+
+@media (max-width: 1100px) {
+  :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
+    top: 12px;
+  }
+}
+
+@media (max-width: 860px) {
+  :global([data-admin-refresh="shell"] [data-admin-region="topbar"]) {
+    top: 8px;
+  }
+}
