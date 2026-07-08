@@ -117,11 +117,6 @@ export function AdminShell({
             })}
           </nav>
         ) : null}
-
-        <div className={styles.sidebarNote} data-admin-region="sidebar-note">
-          <strong>BO düzeni</strong>
-          <span>Danışan, randevu ve ödeme işlemleri tek yönetim panelinde takip edilir.</span>
-        </div>
       </aside>
 
       <section className={styles.workspace} data-admin-region="workspace">
