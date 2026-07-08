@@ -158,7 +158,7 @@ export async function POST(request: Request) {
           where: { id: parsed.data.clientId },
         }),
         transaction.practitioner.findFirst({
-          select: { displayName: true, id: true, userId: true },
+          select: { id: true },
           where: {
             id: parsed.data.practitionerId,
             status: "ACTIVE",
@@ -196,6 +196,12 @@ export async function POST(request: Request) {
       const endsAt = addMinutes(startsAt, parsed.data.durationMinutes);
       const busyStartsAt = addMinutes(startsAt, -service.defaultBufferBeforeMinutes);
       const busyEndsAt = addMinutes(endsAt, service.defaultBufferAfterMinutes);
+      const locationTypeSnapshot =
+        parsed.data.locationType === "IN_PERSON" ||
+        parsed.data.locationType === "ONLINE" ||
+        parsed.data.locationType === "HYBRID"
+          ? parsed.data.locationType
+          : service.locationType;
       const conflict = await transaction.bookingAllocation.findFirst({
         select: { id: true },
         where: {
@@ -222,10 +228,7 @@ export async function POST(request: Request) {
           durationMinutesSnapshot: parsed.data.durationMinutes,
           endsAt,
           guardianId: client.type === "CHILD" ? guardianId : null,
-          locationTypeSnapshot:
-            parsed.data.locationType && parsed.data.locationType !== "SERVICE_DEFAULT"
-              ? parsed.data.locationType
-              : service.locationType,
+          locationTypeSnapshot,
           policySnapshot: {
             createdBy: "admin",
             serviceId: service.id,
@@ -276,7 +279,6 @@ export async function POST(request: Request) {
             publicReference: created.publicReference,
             status: "CONFIRMED",
           },
-          beforeSummary: null,
           correlationId,
           entityId: created.id,
           entityType: "APPOINTMENT",
