@@ -15,6 +15,7 @@ import {
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
+import { getFilteredFinanceOverview } from "@/lib/finance/finance-overview-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,29 @@ type ProfileAppointment = {
   status: string;
 };
 
+type FinancePlanSummary = {
+  balanceMinor: string;
+  currency: string;
+  id: string;
+  installments: { id: string; state: string }[];
+  invoiceStatus: string;
+  name: string;
+  remainingSessions: string;
+  status: string;
+  totalAmountMinor: string;
+};
+
+type ProfileFinanceEntry = {
+  amountMinor: bigint;
+  currency: string;
+  id: string;
+  note: string | null;
+  occurredAt: Date;
+  paymentMethod: { name: string } | null;
+  plan: { name: string } | null;
+  type: string;
+};
+
 const appointmentStatusLabels: Record<string, string> = {
   CANCELLED_BY_CLIENT: "Danışan iptal etti",
   CANCELLED_BY_PRACTITIONER: "Uzman iptal etti",
@@ -42,6 +66,22 @@ const appointmentStatusLabels: Record<string, string> = {
   REJECTED: "Reddedildi",
   REQUESTED: "Talep alındı",
   RESCHEDULE_PROPOSED: "Saat önerildi",
+};
+
+const financeEntryTypeLabels: Record<string, string> = {
+  ACCRUAL: "Plan borcu",
+  ADJUSTMENT: "Düzeltme",
+  PAYMENT: "Ödeme",
+  REFUND: "İade",
+  REVERSAL: "Ters kayıt",
+};
+
+const invoiceStatusLabels: Record<string, string> = {
+  CANCELLED: "Fatura iptal",
+  ISSUED: "Fatura kesildi",
+  NOT_REQUIRED: "Fatura gerekmiyor",
+  PENDING: "Fatura bekliyor",
+  SENT_TO_ACCOUNTING: "Muhasebeye gönderildi",
 };
 
 const locationLabels = {
@@ -101,8 +141,20 @@ function appointmentServiceName(appointment: ProfileAppointment): string {
   return appointment.serviceNameSnapshot || appointment.service?.name || "Hizmet";
 }
 
+function financeEntryTypeLabel(type: string): string {
+  return financeEntryTypeLabels[type] ?? type;
+}
+
+function invoiceStatusLabel(status: string): string {
+  return invoiceStatusLabels[status] ?? status;
+}
+
 function planStatusLabel(status: string): string {
   return planStatusLabels[status as keyof typeof planStatusLabels] ?? status;
+}
+
+function positiveMoney(amountMinor: bigint, currency: string): string {
+  return formatMoney(amountMinor < 0n ? -amountMinor : amountMinor, currency);
 }
 
 function AppointmentList({
@@ -139,6 +191,72 @@ function AppointmentList({
               <em>{locationLabels[appointment.locationTypeSnapshot]}</em>
               <em>{appointment.practitioner.displayName}</em>
               <em>{appointment.publicReference}</em>
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FinancePlanList({ plans }: { plans: readonly FinancePlanSummary[] }) {
+  if (plans.length === 0) {
+    return (
+      <div className="admin-empty-state">
+        <strong>Plan kaydı yok</strong>
+        <span>Ödeme planı oluşturulduğunda bakiye ve seans bilgisi burada görünür.</span>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="admin-client-list admin-dashboard-client-list">
+      {plans.map((plan) => (
+        <li className="admin-client-list-item admin-dashboard-client-card" key={plan.id}>
+          <div className="admin-client-list-main">
+            <strong>{plan.name}</strong>
+            <span className="admin-client-contact">
+              {formatMoney(BigInt(plan.totalAmountMinor), plan.currency)} toplam · {plan.remainingSessions} kalan seans
+            </span>
+            <span className="admin-client-meta">
+              <em>{planStatusLabel(plan.status)}</em>
+              <em>{formatMoney(BigInt(plan.balanceMinor), plan.currency)} açık bakiye</em>
+              <em>{plan.installments.length} taksit</em>
+              <em>{invoiceStatusLabel(plan.invoiceStatus)}</em>
+            </span>
+          </div>
+          <span className="admin-client-profile-link admin-dashboard-client-action">
+            {formatMoney(BigInt(plan.balanceMinor), plan.currency)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FinanceEntryList({ entries }: { entries: ProfileFinanceEntry[] }) {
+  if (entries.length === 0) {
+    return (
+      <div className="admin-empty-state">
+        <strong>Finans hareketi yok</strong>
+        <span>Ödeme veya plan hareketi kaydedildiğinde burada listelenir.</span>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="admin-client-list admin-dashboard-client-list">
+      {entries.map((entry) => (
+        <li className="admin-client-list-item admin-dashboard-client-card" key={entry.id}>
+          <div className="admin-client-list-main">
+            <strong>{financeEntryTypeLabel(entry.type)}</strong>
+            <span className="admin-client-contact">
+              {formatDate(entry.occurredAt)} · {entry.plan?.name ?? "Plansız hareket"}
+            </span>
+            <span className="admin-client-meta">
+              <em>{positiveMoney(entry.amountMinor, entry.currency)}</em>
+              <em>{entry.paymentMethod?.name ?? "Yöntem yok"}</em>
+              {entry.note ? <em>{entry.note}</em> : null}
             </span>
           </div>
         </li>
@@ -249,6 +367,43 @@ export default async function AdminClientProfilePage({
         }),
       ])
     : [[], []];
+  const [financeOverview, recentFinanceEntries] = canReadFinance
+    ? await Promise.all([
+        getFilteredFinanceOverview({ clientId: client.id, status: "ALL" }),
+        database.financeLedgerEntry.findMany({
+          orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+          select: {
+            amountMinor: true,
+            currency: true,
+            id: true,
+            note: true,
+            occurredAt: true,
+            paymentMethod: { select: { name: true } },
+            plan: { select: { name: true } },
+            type: true,
+          },
+          take: 6,
+          where: { clientId: client.id },
+        }),
+      ])
+    : [null, []];
+  const financePlans = financeOverview?.plans ?? [];
+  const activeFinancePlan = financePlans.find((plan) => plan.status === "ACTIVE") ?? null;
+  const financeCurrency = financePlans[0]?.currency ?? "TRY";
+  const totalPlanMinor = financePlans.reduce(
+    (total, plan) => total + BigInt(plan.totalAmountMinor),
+    0n,
+  );
+  const rawBalanceMinor = financePlans.reduce(
+    (total, plan) => total + BigInt(plan.balanceMinor),
+    0n,
+  );
+  const openBalanceMinor = rawBalanceMinor > 0n ? rawBalanceMinor : 0n;
+  const paidMinor = totalPlanMinor > rawBalanceMinor ? totalPlanMinor - rawBalanceMinor : 0n;
+  const remainingSessions = financePlans.reduce(
+    (total, plan) => total + Number(plan.remainingSessions),
+    0,
+  );
   const focusAppointment = upcomingAppointments[0] ?? appointmentHistory[0] ?? null;
   const clientName = `${client.firstName} ${client.lastName}`;
   const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
@@ -259,6 +414,7 @@ export default async function AdminClientProfilePage({
     `/yonetim/danisan-profili?clientId=${client.id}&modal=randevu-olustur` as Route;
   const appointmentsPageHref =
     `/yonetim/randevular?clientId=${client.id}&modal=randevu-olustur` as Route;
+  const financePageHref = `/yonetim/odemeler?clientId=${client.id}` as Route;
   const planModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=odeme-plani` as Route;
 
@@ -301,9 +457,7 @@ export default async function AdminClientProfilePage({
             </Link>
           ) : null}
           {canReadFinance ? (
-            <Link href={planModalHref} scroll={false}>
-              Ödeme planı oluştur
-            </Link>
+            <Link href={financePageHref}>Ödeme ekranı</Link>
           ) : null}
         </div>
       </section>
@@ -333,12 +487,16 @@ export default async function AdminClientProfilePage({
           </small>
         </article>
         <article className={styles.dashboardCard}>
-          <span>Aktif plan</span>
-          <strong>{activePlan ? activePlan.name : "Yok"}</strong>
+          <span>Açık bakiye</span>
+          <strong>
+            {canReadFinance ? formatMoney(openBalanceMinor, financeCurrency) : "—"}
+          </strong>
           <small>
-            {activePlan
-              ? formatMoney(activePlan.totalAmountMinor, activePlan.currency)
-              : "Plan açılabilir"}
+            {activeFinancePlan
+              ? `${activeFinancePlan.name} · ${remainingSessions} kalan seans`
+              : activePlan
+                ? activePlan.name
+                : "Plan açılabilir"}
           </small>
         </article>
       </div>
@@ -449,38 +607,72 @@ export default async function AdminClientProfilePage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="finans">Ödeme ve planlar</h2>
-            <p>Bu danışanın ödeme ekranı filtreli açılır.</p>
+            <p>Bu danışanın plan, açık bakiye, kalan seans ve son finans hareketleri.</p>
           </div>
           {canReadFinance ? (
             <Link
-              className="secondary-button"
-              href={planModalHref}
-              scroll={false}
+              className="primary-button admin-dashboard-clients-cta"
+              href={financePageHref}
             >
-              Ödeme planı oluştur
+              Ödeme ekranını aç
             </Link>
           ) : null}
         </div>
-        {client.plans.length === 0 ? (
-          <div className="admin-empty-state">
-            <strong>Plan kaydı yok</strong>
-            <span>Ödeme planı oluşturmak için modalı açın.</span>
-          </div>
-        ) : (
-          <ul className="admin-service-list">
-            {client.plans.map((plan) => (
-              <li key={plan.id}>
-                <div>
-                  <strong>{plan.name}</strong>
-                  <span>{`${plan.sessionCount} seans · ${formatMoney(
-                    plan.totalAmountMinor,
-                    plan.currency,
-                  )}`}</span>
+
+        {canReadFinance ? (
+          <>
+            <div className={styles.dashboardGrid}>
+              <article className={styles.dashboardCard}>
+                <span>Plan toplamı</span>
+                <strong>{formatMoney(totalPlanMinor, financeCurrency)}</strong>
+                <small>{financePlans.length} plan kaydı</small>
+              </article>
+              <article className={styles.dashboardCard}>
+                <span>Alınan ödeme</span>
+                <strong>{formatMoney(paidMinor, financeCurrency)}</strong>
+                <small>Plan bakiyesine göre hesaplanır</small>
+              </article>
+              <article className={styles.dashboardCard}>
+                <span>Açık bakiye</span>
+                <strong>{formatMoney(openBalanceMinor, financeCurrency)}</strong>
+                <small>Ödeme ekranındaki bakiye ile aynı hesap</small>
+              </article>
+              <article className={styles.dashboardCard}>
+                <span>Kalan seans</span>
+                <strong>{remainingSessions}</strong>
+                <small>Aktif ve geçmiş plan hareketleri dahil</small>
+              </article>
+            </div>
+
+            <div className={styles.dashboardLayout}>
+              <section className={styles.compactPanel} aria-labelledby="danisan-planlari">
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2 id="danisan-planlari">Danışan planları</h2>
+                    <p>Plan tutarı, açık bakiye, taksit ve fatura durumu.</p>
+                  </div>
+                  <span className={styles.panelBadge}>{financePlans.length} plan</span>
                 </div>
-                <span>{`${planStatusLabel(plan.status)} · ${formatDate(plan.validFrom)}`}</span>
-              </li>
-            ))}
-          </ul>
+                <FinancePlanList plans={financePlans} />
+              </section>
+
+              <section className={styles.compactPanel} aria-labelledby="son-finans-hareketleri">
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2 id="son-finans-hareketleri">Son finans hareketleri</h2>
+                    <p>Plan borcu, ödeme, iade ve ters kayıt hareketleri.</p>
+                  </div>
+                  <span className={styles.panelBadge}>{recentFinanceEntries.length} kayıt</span>
+                </div>
+                <FinanceEntryList entries={recentFinanceEntries} />
+              </section>
+            </div>
+          </>
+        ) : (
+          <div className="admin-empty-state">
+            <strong>Finans yetkisi yok</strong>
+            <span>Bu danışanın ödeme ve plan kayıtlarını görmek için finans okuma yetkisi gerekir.</span>
+          </div>
         )}
       </section>
 
