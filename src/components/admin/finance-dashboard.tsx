@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import "./finance-friendly-copy.module.css";
 import { SelectControl } from "./select-control";
 
 type Client = { firstName: string; id: string; lastName: string; status: string };
@@ -44,23 +45,23 @@ const installmentStateLabels = {
   DUE: "Bekliyor",
   OVERDUE: "Gecikmiş",
   PAID: "Ödendi",
-  PARTIALLY_PAID: "Kısmi",
+  PARTIALLY_PAID: "Kısmi ödendi",
 };
 
 const invoiceStatusLabels = {
-  CANCELLED: "İptal edildi",
-  ISSUED: "Düzenlendi",
-  NOT_REQUIRED: "Gerekli değil",
-  PENDING: "Bekliyor",
-  SENT_TO_ACCOUNTING: "Muhasebeye iletildi",
+  CANCELLED: "Belge iptal edildi",
+  ISSUED: "Belge oluşturuldu",
+  NOT_REQUIRED: "Belge gerekmiyor",
+  PENDING: "Belge bekliyor",
+  SENT_TO_ACCOUNTING: "Muhasebeye gönderildi",
 } as const;
 
 const financeEntryLabels = {
-  ACCRUAL: "Tahakkuk",
+  ACCRUAL: "Plan borcu",
   ADJUSTMENT: "Düzeltme",
   PAYMENT: "Ödeme",
   REFUND: "İade",
-  REVERSAL: "Ters kayıt",
+  REVERSAL: "Dengeleyici kayıt",
 } as const;
 
 const planStatusLabels = {
@@ -77,16 +78,16 @@ const dueFilterOptions = [
 ];
 
 const initialInvoiceStatusOptions = [
-  { label: "Gerekli değil", value: "NOT_REQUIRED" },
-  { label: "Bekliyor", value: "PENDING" },
+  { label: "Belge gerekmiyor", value: "NOT_REQUIRED" },
+  { label: "Belge bekliyor", value: "PENDING" },
 ];
 
 const invoiceStatusOptions = [
-  { label: "Gerekli değil", value: "NOT_REQUIRED" },
-  { label: "Bekliyor", value: "PENDING" },
-  { label: "Düzenlendi", value: "ISSUED" },
-  { label: "Muhasebeye iletildi", value: "SENT_TO_ACCOUNTING" },
-  { label: "İptal edildi", value: "CANCELLED" },
+  { label: "Belge gerekmiyor", value: "NOT_REQUIRED" },
+  { label: "Belge bekliyor", value: "PENDING" },
+  { label: "Belge oluşturuldu", value: "ISSUED" },
+  { label: "Muhasebeye gönderildi", value: "SENT_TO_ACCOUNTING" },
+  { label: "Belge iptal edildi", value: "CANCELLED" },
 ];
 
 export function amountToMinor(value: string): string | null {
@@ -273,7 +274,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
       sequence: index + 1,
     }));
     if (converted.some((installment) => !installment.amountMinor || !installment.dueDate)) {
-      setMessage("Taksit tutarı ve vade alanlarını kontrol edin.");
+      setMessage("Ödeme takvimindeki tutar ve tarih alanlarını kontrol edin.");
       return;
     }
     const selectedClientId = String(data.get("clientId") ?? "");
@@ -356,7 +357,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
     const reason = reverseDialog.reason.trim();
     if (reason.length < 8) {
       setReverseDialog((current) =>
-        current ? { ...current, error: "Ters kayıt gerekçesi en az 8 karakter olmalıdır." } : current,
+        current ? { ...current, error: "Düzeltme notu en az 8 karakter olmalıdır." } : current,
       );
       return;
     }
@@ -405,27 +406,33 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
       {canManage && (
         <div className="finance-operation-grid">
           <details className="finance-operation-card">
-            <summary>Ödeme yöntemi ekle</summary>
+            <summary>Ödeme kanalı ekle</summary>
+            <p className="finance-operation-help">
+              Nakit, banka havalesi veya POS gibi ödeme seçeneklerini bir kez tanımlayın.
+            </p>
             <form onSubmit={createMethod}>
               <label>
-                Yöntem adı
-                <input name="name" required />
+                Ödeme kanalı adı
+                <input name="name" placeholder="Örn. Banka havalesi" required />
               </label>
               <label>
-                Katalog anahtarı
-                <input name="key" pattern="[A-Za-z][A-Za-z0-9 _-]+" required />
+                Kısa kod
+                <input name="key" pattern="[A-Za-z][A-Za-z0-9 _-]+" placeholder="Örn. BANKA" required />
               </label>
               <label>
-                Gerekçe
-                <textarea minLength={8} name="reason" required />
+                İşlem notu
+                <textarea minLength={8} name="reason" placeholder="Bu kanal neden eklendi?" required />
               </label>
               <button disabled={busy} type="submit">
-                Yöntemi kaydet
+                Kanalı kaydet
               </button>
             </form>
           </details>
           <details className="finance-operation-card">
             <summary>{isFilteredByClient ? "Bu danışana plan oluştur" : "Danışan planı oluştur"}</summary>
+            <p className="finance-operation-help">
+              Seans sayısı, toplam ücret ve ödeme takvimini tek plan altında oluşturun.
+            </p>
             <form onSubmit={createPlan}>
               <label>
                 Danışan
@@ -439,16 +446,16 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
               </label>
               <label>
                 Plan adı
-                <input name="name" required />
+                <input name="name" placeholder="Örn. 8 seanslık konuşma terapisi planı" required />
               </label>
               <div className="finance-inline-fields">
                 <label>
                   Seans sayısı
-                  <input min="1" name="sessionCount" required type="number" />
+                  <input min="1" name="sessionCount" placeholder="8" required type="number" />
                 </label>
                 <label>
-                  Süre (dk)
-                  <input min="5" name="sessionDurationMinutes" required type="number" />
+                  Seans süresi / dk
+                  <input min="5" name="sessionDurationMinutes" placeholder="45" required type="number" />
                 </label>
                 <label>
                   Para birimi
@@ -457,15 +464,15 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
               </div>
               <div className="finance-inline-fields">
                 <label>
-                  Başlangıç
+                  Plan başlangıcı
                   <input defaultValue={today()} name="validFrom" required type="date" />
                 </label>
                 <label>
-                  Bitiş
+                  Plan bitişi / opsiyonel
                   <input name="validUntil" type="date" />
                 </label>
                 <label>
-                  Belge durumu
+                  Fatura / belge durumu
                   <SelectControl
                     defaultValue="NOT_REQUIRED"
                     name="invoiceStatus"
@@ -474,11 +481,11 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 </label>
               </div>
               <fieldset className="finance-installment-editor">
-                <legend>Taksitler</legend>
+                <legend>Ödeme takvimi</legend>
                 {installments.map((installment, index) => (
                   <div className="finance-inline-fields" key={index}>
                     <label>
-                      Tutar
+                      Ödenecek tutar
                       <input
                         inputMode="decimal"
                         onChange={(event) =>
@@ -488,12 +495,13 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                             ),
                           )
                         }
+                        placeholder="2500"
                         required
                         value={installment.amount}
                       />
                     </label>
                     <label>
-                      Vade
+                      Son ödeme tarihi
                       <input
                         onChange={(event) =>
                           setInstallments((current) =>
@@ -516,7 +524,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                         }
                         type="button"
                       >
-                        Kaldır
+                        Satırı kaldır
                       </button>
                     )}
                   </div>
@@ -527,12 +535,12 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                   }
                   type="button"
                 >
-                  Taksit ekle
+                  Ödeme satırı ekle
                 </button>
               </fieldset>
               <label>
-                Gerekçe
-                <textarea minLength={8} name="reason" required />
+                İşlem notu
+                <textarea minLength={8} name="reason" placeholder="Plan neden oluşturuldu?" required />
               </label>
               <button disabled={busy || (isFilteredByClient && overview.clients.length === 0)} type="submit">
                 Planı oluştur
@@ -541,6 +549,9 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
           </details>
           <details className="finance-operation-card">
             <summary>{isFilteredByClient ? "Bu danışana ödeme kaydet" : "Ödeme kaydet"}</summary>
+            <p className="finance-operation-help">
+              Alınan ödemeyi doğru plan ve taksite bağlayın; kayıt silinmeden geçmişte kalır.
+            </p>
             <form onSubmit={recordPayment}>
               <label>
                 Plan
@@ -561,7 +572,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 />
               </label>
               <label>
-                Taksit
+                Ödenen taksit
                 <SelectControl
                   disabled={!paymentPlan}
                   key={paymentPlanId || "no-payment-plan"}
@@ -582,7 +593,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 />
               </label>
               <label>
-                Ödeme yöntemi
+                Ödeme kanalı
                 <SelectControl
                   name="paymentMethodId"
                   options={[
@@ -597,8 +608,8 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
               </label>
               <div className="finance-inline-fields">
                 <label>
-                  Tutar
-                  <input inputMode="decimal" name="amount" required />
+                  Alınan tutar
+                  <input inputMode="decimal" name="amount" placeholder="2500" required />
                 </label>
                 <label>
                   Ödeme tarihi
@@ -606,12 +617,12 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 </label>
               </div>
               <label>
-                Harici referans
-                <input name="externalReference" />
+                Makbuz / banka referansı
+                <input name="externalReference" placeholder="Opsiyonel" />
               </label>
               <label>
-                Gerekçe
-                <textarea minLength={8} name="reason" required />
+                İşlem notu
+                <textarea minLength={8} name="reason" placeholder="Ödeme nasıl alındı?" required />
               </label>
               <button disabled={busy || overview.paymentMethods.length === 0} type="submit">
                 Ödemeyi kaydet
@@ -634,16 +645,16 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
             role="dialog"
           >
             <div className="admin-modal-heading">
-              <p className="section-kicker">Ters kayıt</p>
-              <h2 id="reverse-payment-title">Ödemeyi dengeleyici kayıtla tersine al</h2>
+              <p className="section-kicker">Ödeme düzeltme</p>
+              <h2 id="reverse-payment-title">Ödemeyi düzeltme kaydıyla geri al</h2>
               <p>
-                Orijinal ödeme silinmez. Sistem aynı tutarda dengeleyici hareket oluşturarak kayıt
-                bütünlüğünü korur.
+                Orijinal ödeme silinmez. Sistem aynı tutarda dengeleyici kayıt oluşturarak geçmişi
+                korur.
               </p>
             </div>
 
             <label className="admin-modal-field">
-              Gerekçe
+              Düzeltme notu
               <textarea
                 autoFocus
                 minLength={8}
@@ -652,7 +663,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                     current ? { ...current, error: "", reason: event.target.value } : current,
                   )
                 }
-                placeholder="Örn. Yanlış taksit seçildiği için ters kayıt oluşturuldu."
+                placeholder="Örn. Yanlış taksite işlendiği için ödeme geri alındı."
                 value={reverseDialog.reason}
               />
             </label>
@@ -664,7 +675,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 Vazgeç
               </button>
               <button disabled={busy} onClick={() => void submitReversePayment()} type="button">
-                Ters kaydı oluştur
+                Düzeltme kaydı oluştur
               </button>
             </div>
           </div>
@@ -721,7 +732,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 ))}
               </div>
               <details className="finance-history">
-                <summary>Belge durumu · {invoiceStatusLabels[plan.invoiceStatus]}</summary>
+                <summary>Fatura / belge durumu · {invoiceStatusLabels[plan.invoiceStatus]}</summary>
                 {canManage ? (
                   <form
                     key={`${plan.id}-${plan.invoiceStatus}-${plan.invoiceReference ?? ""}`}
@@ -740,7 +751,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                       <input defaultValue={plan.invoiceReference ?? ""} name="invoiceReference" />
                     </label>
                     <label>
-                      Gerekçe
+                      İşlem notu
                       <textarea minLength={8} name="reason" required />
                     </label>
                     <button disabled={busy} type="submit">
@@ -763,7 +774,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                       <strong>{formatMoney(entry.amountMinor, plan.currency)}</strong>
                       {canManage && entry.type === "PAYMENT" && !reversedEntryIds.has(entry.id) && (
                         <button disabled={busy} onClick={() => openReversePayment(entry.id)} type="button">
-                          Ters kayıt
+                          Ödemeyi geri al
                         </button>
                       )}
                     </li>
