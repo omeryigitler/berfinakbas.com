@@ -1,6 +1,7 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { ClientFinanceOverview } from "@/components/admin/client-finance-overview";
 import { FinanceDashboard } from "@/components/admin/finance-dashboard";
+import "@/components/admin/finance-form-polish.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 
