@@ -1,0 +1,74 @@
+.root {
+  display: contents;
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-actions) {
+  display: flex;
+  min-width: 160px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-button),
+:global([data-admin-refresh="shell"] .admin-appointment-card-status) {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(67 98 75 / 16%);
+  border-radius: 999px;
+  background: rgb(67 98 75 / 8%);
+  padding: 0 14px;
+  color: #365a40;
+  font-size: 0.76rem;
+  font-weight: 750;
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease;
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-button) {
+  cursor: pointer;
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-button:hover:not(:disabled)) {
+  transform: translateY(-1px);
+  border-color: rgb(67 98 75 / 26%);
+  background: #45694f;
+  color: #fff8e8;
+  box-shadow: 0 8px 18px rgb(67 98 75 / 12%);
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-button.danger) {
+  border-color: rgb(217 111 77 / 20%);
+  background: rgb(217 111 77 / 9%);
+  color: #b95336;
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-button.danger:hover:not(:disabled)) {
+  border-color: rgb(184 82 53 / 30%);
+  background: #c86142;
+  color: #fffaf0;
+  box-shadow: 0 10px 20px rgb(217 111 77 / 16%);
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-button:disabled) {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+:global([data-admin-refresh="shell"] .admin-appointment-card-status) {
+  background: rgb(99 83 56 / 7%);
+  color: #776b60;
+}
+
+@media (max-width: 860px) {
+  :global([data-admin-refresh="shell"] .admin-appointment-card-actions) {
+    justify-content: flex-start;
+  }
+}

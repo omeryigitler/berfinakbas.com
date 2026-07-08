@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { AppointmentCreateModal } from "@/components/admin/appointment-create-modal";
+import { AppointmentOperationList } from "@/components/admin/appointment-operation-list";
 import { AppointmentQueue } from "@/components/admin/appointment-queue";
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
@@ -14,44 +15,38 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-const appointmentStatusLabels: Record<string, string> = {
-  CANCELLED_BY_CLIENT: "Danışan iptal etti",
-  CANCELLED_BY_PRACTITIONER: "Uzman iptal etti",
-  COMPLETED: "Tamamlandı",
-  CONFIRMED: "Onaylı",
-  NO_SHOW: "Gelmedi",
-  PENDING_REVIEW: "Onay bekliyor",
-  REJECTED: "Reddedildi",
-  REQUESTED: "Talep alındı",
-  RESCHEDULE_PROPOSED: "Saat önerildi",
-};
-
-const locationLabels = {
-  HYBRID: "Yüz yüze / çevrim içi",
-  IN_PERSON: "Yüz yüze",
-  ONLINE: "Çevrim içi",
-} as const;
-
 const operationStatuses = ["CONFIRMED", "RESCHEDULE_PROPOSED", "PENDING_REVIEW"] as const;
+
+type OperationAppointment = {
+  client: {
+    firstName: string;
+    id: string;
+    lastName: string;
+    type: "ADULT" | "CHILD";
+  };
+  endsAt: Date;
+  id: string;
+  locationTypeSnapshot: "HYBRID" | "IN_PERSON" | "ONLINE";
+  practitioner: { displayName: string };
+  publicReference: string;
+  serviceNameSnapshot: string;
+  startsAt: Date;
+  status:
+    | "CANCELLED_BY_CLIENT"
+    | "CANCELLED_BY_PRACTITIONER"
+    | "COMPLETED"
+    | "CONFIRMED"
+    | "NO_SHOW"
+    | "PENDING_REVIEW"
+    | "REJECTED"
+    | "REQUESTED"
+    | "RESCHEDULE_PROPOSED";
+};
 
 function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
   const value = params[key];
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";
-}
-
-function formatAppointmentRange(startsAt: Date, endsAt: Date, timeZone: string): string {
-  const start = new Intl.DateTimeFormat("tr-TR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(startsAt);
-  const end = new Intl.DateTimeFormat("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone,
-  }).format(endsAt);
-  return `${start} - ${end}`;
 }
 
 function startOfToday(): Date {
@@ -64,6 +59,14 @@ function addDays(date: Date, days: number): Date {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
   return next;
+}
+
+function serializeAppointments(appointments: OperationAppointment[]) {
+  return appointments.map((appointment) => ({
+    ...appointment,
+    endsAt: appointment.endsAt.toISOString(),
+    startsAt: appointment.startsAt.toISOString(),
+  }));
 }
 
 export default async function AdminAppointmentsPage({
@@ -88,7 +91,7 @@ export default async function AdminAppointmentsPage({
       database.appointment.findMany({
         orderBy: [{ startsAt: "asc" }, { id: "asc" }],
         select: {
-          client: { select: { firstName: true, lastName: true, type: true } },
+          client: { select: { firstName: true, id: true, lastName: true, type: true } },
           endsAt: true,
           id: true,
           locationTypeSnapshot: true,
@@ -107,7 +110,7 @@ export default async function AdminAppointmentsPage({
       database.appointment.findMany({
         orderBy: [{ startsAt: "asc" }, { id: "asc" }],
         select: {
-          client: { select: { firstName: true, lastName: true, type: true } },
+          client: { select: { firstName: true, id: true, lastName: true, type: true } },
           endsAt: true,
           id: true,
           locationTypeSnapshot: true,
@@ -200,39 +203,13 @@ export default async function AdminAppointmentsPage({
               </div>
               <span className={styles.panelBadge}>{todayAppointments.length} kayıt</span>
             </div>
-            {todayAppointments.length === 0 ? (
-              <div className="admin-empty-state" role="status">
-                <strong>Bugün randevu yok</strong>
-                <span>Bugüne ait yeni kayıt oluşturulursa burada görünür.</span>
-              </div>
-            ) : (
-              <ul className="admin-client-list admin-dashboard-client-list">
-                {todayAppointments.map((appointment) => (
-                  <li className="admin-client-list-item admin-dashboard-client-card" key={appointment.id}>
-                    <div className="admin-client-list-main">
-                      <strong>
-                        {appointment.client.firstName} {appointment.client.lastName}
-                      </strong>
-                      <span className="admin-client-contact">
-                        {formatAppointmentRange(
-                          appointment.startsAt,
-                          appointment.endsAt,
-                          environment.BUSINESS_TIME_ZONE,
-                        )}
-                      </span>
-                      <span className="admin-client-meta">
-                        <em>{appointment.serviceNameSnapshot}</em>
-                        <em>{appointmentStatusLabels[appointment.status] ?? appointment.status}</em>
-                        <em>{locationLabels[appointment.locationTypeSnapshot]}</em>
-                      </span>
-                    </div>
-                    <span className="admin-client-profile-link admin-dashboard-client-action">
-                      {appointment.practitioner.displayName}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <AppointmentOperationList
+              appointments={serializeAppointments(todayAppointments)}
+              businessTimeZone={environment.BUSINESS_TIME_ZONE}
+              canManage={canManageAppointments}
+              emptyDescription="Bugüne ait yeni kayıt oluşturulursa burada görünür."
+              emptyTitle="Bugün randevu yok"
+            />
           </section>
 
           <section className={styles.compactPanel} aria-labelledby="yaklasan-randevular">
@@ -243,37 +220,13 @@ export default async function AdminAppointmentsPage({
               </div>
               <span className={styles.panelBadge}>{upcomingAppointments.length} kayıt</span>
             </div>
-            {upcomingAppointments.length === 0 ? (
-              <div className="admin-empty-state" role="status">
-                <strong>Yaklaşan randevu yok</strong>
-                <span>Onaylı veya bekleyen gelecek randevular burada listelenir.</span>
-              </div>
-            ) : (
-              <ul className="admin-client-list admin-dashboard-client-list">
-                {upcomingAppointments.map((appointment) => (
-                  <li className="admin-client-list-item admin-dashboard-client-card" key={appointment.id}>
-                    <div className="admin-client-list-main">
-                      <strong>
-                        {appointment.client.firstName} {appointment.client.lastName}
-                      </strong>
-                      <span className="admin-client-contact">
-                        {formatAppointmentRange(
-                          appointment.startsAt,
-                          appointment.endsAt,
-                          environment.BUSINESS_TIME_ZONE,
-                        )}
-                      </span>
-                      <span className="admin-client-meta">
-                        <em>{appointment.serviceNameSnapshot}</em>
-                        <em>{appointmentStatusLabels[appointment.status] ?? appointment.status}</em>
-                        <em>{locationLabels[appointment.locationTypeSnapshot]}</em>
-                      </span>
-                    </div>
-                    <code className="admin-client-profile-link">{appointment.publicReference}</code>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <AppointmentOperationList
+              appointments={serializeAppointments(upcomingAppointments)}
+              businessTimeZone={environment.BUSINESS_TIME_ZONE}
+              canManage={canManageAppointments}
+              emptyDescription="Onaylı veya bekleyen gelecek randevular burada listelenir."
+              emptyTitle="Yaklaşan randevu yok"
+            />
           </section>
         </div>
       </section>
