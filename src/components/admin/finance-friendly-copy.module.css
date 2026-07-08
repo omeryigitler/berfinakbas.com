@@ -1,0 +1,37 @@
+.root {
+  display: contents;
+}
+
+:global([data-admin-refresh="shell"] .finance-operation-help) {
+  margin: -8px 22px 18px;
+  color: #77665c;
+  font-size: 0.73rem;
+  line-height: 1.65;
+}
+
+:global([data-admin-refresh="shell"] .finance-operation-help + form) {
+  padding-top: 18px;
+}
+
+:global([data-admin-refresh="shell"] .finance-operation-card input::placeholder),
+:global([data-admin-refresh="shell"] .finance-operation-card textarea::placeholder) {
+  color: rgb(101 81 72 / 45%);
+}
+
+:global([data-admin-refresh="shell"] .finance-history button) {
+  width: fit-content;
+  border: 1px solid rgb(217 111 77 / 18%);
+  border-radius: 999px;
+  background: rgb(217 111 77 / 9%);
+  padding: 7px 11px;
+  color: var(--coral-dark);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+:global([data-admin-refresh="shell"] .finance-history button:hover:not(:disabled)) {
+  background: var(--coral-dark);
+  color: #fffaf4;
+}
