@@ -9,20 +9,23 @@ import {
   ModalOptionGrid,
 } from "./admin-url-modal";
 import modalStyles from "./admin-url-modal.module.css";
+import { AppointmentCreateModal } from "./appointment-create-modal";
 import { ClientCreateForm } from "./client-create-form";
 
 type DashboardUrlModalsProps = {
   activeModal: string;
+  canManageAppointments: boolean;
   canManageClients: boolean;
-  canReadAppointments: boolean;
   canReadFinance: boolean;
+  initialClientId?: string | null;
 };
 
 export async function DashboardUrlModals({
   activeModal,
+  canManageAppointments,
   canManageClients,
-  canReadAppointments,
   canReadFinance,
+  initialClientId,
 }: DashboardUrlModalsProps) {
   if (activeModal === "danisan-ekle" && canManageClients) {
     const guardians = await getDatabase().guardian.findMany({
@@ -94,44 +97,8 @@ export async function DashboardUrlModals({
     );
   }
 
-  if (activeModal === "randevu-olustur" && canReadAppointments) {
-    return (
-      <AdminUrlModal
-        closeHref="/yonetim"
-        footer={
-          <ModalFooter
-            closeHref="/yonetim"
-            primaryHref="/yonetim/randevular?modal=randevu-olustur"
-            primaryLabel="Takvimde ac"
-            url="/yonetim?modal=randevu-olustur"
-          />
-        }
-        title="Randevu olustur"
-      >
-        <div className={modalStyles.modalGrid}>
-          <ModalFieldPreview
-            helper="Terapist kolonlari ve uygun saatler."
-            label="Takvim"
-            value="Haftalik ekip gorunumu"
-          />
-          <ModalFieldPreview
-            helper="Varsayilan ve custom sure."
-            label="Sure"
-            value="15 / 30 / 45 / ozel"
-          />
-          <ModalFieldPreview
-            helper="Ayni saate ikinci kayit dusmez."
-            label="Cakisma"
-            value="Transaction kontrolu"
-          />
-          <ModalFieldPreview
-            helper="Randevu profile geri akar."
-            label="Baglanti"
-            value="Danisan ve plan"
-          />
-        </div>
-      </AdminUrlModal>
-    );
+  if (activeModal === "randevu-olustur" && canManageAppointments) {
+    return <AppointmentCreateModal closeHref="/yonetim" initialClientId={initialClientId} />;
   }
 
   if (activeModal === "odeme-plani" && canReadFinance) {
