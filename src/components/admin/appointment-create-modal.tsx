@@ -5,6 +5,7 @@ import { getDatabase } from "@/lib/db";
 import { AdminUrlModal } from "./admin-url-modal";
 import modalStyles from "./admin-url-modal.module.css";
 import { AppointmentCreateForm } from "./appointment-create-form";
+import "./appointment-create-form.module.css";
 
 export async function AppointmentCreateModal({
   closeHref,
