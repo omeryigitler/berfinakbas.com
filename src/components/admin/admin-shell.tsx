@@ -130,8 +130,6 @@ export function AdminShell({
           </form>
 
           <div className={styles.headerMeta} data-admin-region="header-meta">
-            <span className={styles.iconButton} data-admin-region="icon-button" aria-hidden="true">✉</span>
-            <span className={styles.iconButton} data-admin-region="icon-button" aria-hidden="true">●</span>
             <div className={styles.profilePill} data-admin-region="profile-pill">
               <span>{getInitials(email)}</span>
               <div>
