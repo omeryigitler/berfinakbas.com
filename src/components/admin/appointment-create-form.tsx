@@ -8,7 +8,7 @@ import { SelectControl } from "./select-control";
 type ClientOption = {
   email: string | null;
   firstName: string;
-  guardians: { id: string; label: string }[];
+  guardians: { label: string; value: string }[];
   id: string;
   lastName: string;
   phone: string | null;
@@ -74,6 +74,7 @@ function defaultDateTimeLocal(): string {
 function durationOptions(defaultDuration: number): { label: string; value: string }[] {
   const durations = Array.from(new Set([defaultDuration, 15, 30, 45])).sort((a, b) => a - b);
   return [
+    { label: `Hizmet varsayılanı (${defaultDuration} dk)`, value: "SERVICE_DEFAULT" },
     ...durations.map((duration) => ({ label: `${duration} dk`, value: String(duration) })),
     { label: "Özel süre", value: "CUSTOM" },
   ];
@@ -90,7 +91,9 @@ export function AppointmentCreateForm({
   practitioners: PractitionerOption[];
   services: ServiceOption[];
 }) {
-  const initialClient = clients.some((client) => client.id === initialClientId) ? initialClientId ?? "" : "";
+  const initialClient = clients.some((client) => client.id === initialClientId)
+    ? (initialClientId ?? "")
+    : "";
   const [busy, setBusy] = useState(false);
   const [clientId, setClientId] = useState(initialClient);
   const [customDuration, setCustomDuration] = useState("52");
@@ -125,7 +128,11 @@ export function AppointmentCreateForm({
     [services],
   );
   const practitionerOptions = useMemo(
-    () => practitioners.map((practitioner) => ({ label: practitioner.displayName, value: practitioner.id })),
+    () =>
+      practitioners.map((practitioner) => ({
+        label: practitioner.displayName,
+        value: practitioner.id,
+      })),
     [practitioners],
   );
   const selectedServiceDurationOptions = useMemo(
