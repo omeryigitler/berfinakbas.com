@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import "./appointment-operation-list.module.css";
+
 type AppointmentStatus =
   | "CANCELLED_BY_CLIENT"
   | "CANCELLED_BY_PRACTITIONER"
