@@ -8,7 +8,6 @@ import type { ReactNode } from "react";
 import "./admin-dashboard-refresh.module.css";
 import styles from "./admin-shell.module.css";
 import "./admin-icon-placement.module.css";
-import "./admin-topbar-sticky.module.css";
 
 export type AdminNavPermissions = {
   appointmentsRead: boolean;
