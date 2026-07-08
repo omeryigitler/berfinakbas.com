@@ -1,0 +1,209 @@
+.root {
+  display: contents;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid article) {
+  border: 1px solid rgb(88 62 49 / 10%);
+  border-radius: 22px;
+  background: rgb(255 253 249 / 78%);
+  padding: 18px;
+  box-shadow: 0 12px 28px rgb(83 53 35 / 5%);
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid span) {
+  display: block;
+  color: #45694f;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid strong) {
+  display: block;
+  margin-top: 10px;
+  color: #2f2622;
+  font-family: var(--serif);
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  line-height: 1;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid small) {
+  display: block;
+  margin-top: 9px;
+  color: #77665c;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-layout) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(360px, 0.94fr);
+  gap: 18px;
+  align-items: start;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-layout > section) {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgb(88 62 49 / 9%);
+  border-radius: 24px;
+  background: rgb(255 250 244 / 52%);
+  padding: 18px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-subheading) {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-subheading h3) {
+  margin: 0;
+  color: #332824;
+  font-family: var(--serif);
+  font-size: 1.24rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-subheading p) {
+  max-width: 44rem;
+  margin: 5px 0 0;
+  color: #77665c;
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-subheading > span) {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border: 1px solid rgb(67 98 75 / 12%);
+  border-radius: 999px;
+  background: rgb(67 98 75 / 7%);
+  padding: 7px 11px;
+  color: #45694f;
+  font-size: 0.68rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card-list) {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card) {
+  display: grid;
+  gap: 13px;
+  border: 1px solid rgb(88 62 49 / 10%);
+  border-radius: 22px;
+  background: rgb(255 253 249 / 88%);
+  padding: 18px;
+  box-shadow: 0 14px 30px rgb(83 53 35 / 5%);
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card-main) {
+  display: grid;
+  gap: 5px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card-main strong) {
+  color: #2f2622;
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card-main span) {
+  color: #87766b;
+  font-size: 0.7rem;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-chip-row) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-chip-row em) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgb(88 62 49 / 8%);
+  border-radius: 999px;
+  background: rgb(255 241 231 / 60%);
+  padding: 6px 10px;
+  color: #6c5a51;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 820;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-metrics) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-metrics div) {
+  border-radius: 16px;
+  background: rgb(255 246 238 / 76%);
+  padding: 11px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-metrics dt) {
+  color: #8a786e;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-metrics dd) {
+  margin: 5px 0 0;
+  color: #3f312c;
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-note) {
+  margin: 0;
+  border: 1px dashed rgb(67 98 75 / 18%);
+  border-radius: 16px;
+  background: rgb(67 98 75 / 5%);
+  padding: 11px 12px;
+  color: #5c6e60;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 1180px) {
+  :global([data-admin-refresh="shell"] .admin-config-layout),
+  :global([data-admin-refresh="shell"] .admin-config-summary-grid) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  :global([data-admin-refresh="shell"] .admin-config-subheading) {
+    display: grid;
+  }
+
+  :global([data-admin-refresh="shell"] .admin-config-metrics) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
