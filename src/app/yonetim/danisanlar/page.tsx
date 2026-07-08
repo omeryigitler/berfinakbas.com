@@ -122,28 +122,31 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
             <span>Filtreleri temizleyebilir veya yeni danışan oluşturabilirsiniz.</span>
           </div>
         ) : (
-          <ul className="admin-service-list">
+          <ul className="admin-service-list admin-client-list">
             {clients.map((client) => (
-              <li key={client.id}>
-                <div>
+              <li className="admin-client-list-item" key={client.id}>
+                <div className="admin-client-list-main">
                   <strong>
                     {client.firstName} {client.lastName}
                   </strong>
-                  <span>
+                  <span className="admin-client-contact">
                     {client.preferredName ? `${client.preferredName} · ` : ""}
                     {client.phone ?? "Telefon yok"} · {client.email ?? "E-posta yok"}
                   </span>
-                  <span>
-                    {clientTypeLabels[client.type]} · {clientStatusLabels[client.status]}
+                  <span className="admin-client-meta">
+                    <em>{clientTypeLabels[client.type]}</em>
+                    <em>{clientStatusLabels[client.status]}</em>
                   </span>
                 </div>
-                <Link href={`/yonetim/danisanlar/${client.id}` as Route}>Profili aç</Link>
+                <Link className="admin-client-profile-link" href={`/yonetim/danisanlar/${client.id}` as Route}>
+                  Profili aç
+                </Link>
               </li>
             ))}
           </ul>
         )}
 
-        <div className="admin-list-footer">
+        <div className="admin-list-footer admin-client-list-footer">
           <span>
             {clients.length} kayıt gösteriliyor · Toplam {totalCount}
           </span>
