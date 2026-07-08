@@ -56,6 +56,15 @@ type ProfileFinanceEntry = {
   type: string;
 };
 
+type OperationEvent = {
+  badge: string;
+  description: string;
+  href?: Route;
+  id: string;
+  occurredAt: Date;
+  title: string;
+};
+
 const appointmentStatusLabels: Record<string, string> = {
   CANCELLED_BY_CLIENT: "Danışan iptal etti",
   CANCELLED_BY_PRACTITIONER: "Uzman iptal etti",
@@ -73,7 +82,7 @@ const financeEntryTypeLabels: Record<string, string> = {
   ADJUSTMENT: "Düzeltme",
   PAYMENT: "Ödeme",
   REFUND: "İade",
-  REVERSAL: "Ters kayıt",
+  REVERSAL: "Dengeleyici kayıt",
 };
 
 const invoiceStatusLabels: Record<string, string> = {
@@ -108,6 +117,14 @@ function singleParam(
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(date);
+}
+
+function formatDateTime(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone,
+  }).format(date);
 }
 
 function formatAppointmentRange(startsAt: Date, endsAt: Date, timeZone: string): string {
@@ -155,6 +172,37 @@ function planStatusLabel(status: string): string {
 
 function positiveMoney(amountMinor: bigint, currency: string): string {
   return formatMoney(amountMinor < 0n ? -amountMinor : amountMinor, currency);
+}
+
+function buildOperationEvents({
+  appointments,
+  financeEntries,
+  financePageHref,
+}: {
+  appointments: ProfileAppointment[];
+  financeEntries: ProfileFinanceEntry[];
+  financePageHref: Route;
+}): OperationEvent[] {
+  const appointmentEvents = appointments.map((appointment) => ({
+    badge: appointmentStatusLabel(appointment.status),
+    description: `${appointmentServiceName(appointment)} · ${locationLabels[appointment.locationTypeSnapshot]} · ${appointment.publicReference}`,
+    id: `appointment-${appointment.id}`,
+    occurredAt: appointment.startsAt,
+    title: appointment.startsAt >= new Date() ? "Yaklaşan randevu" : "Randevu kaydı",
+  }));
+
+  const financeEvents = financeEntries.map((entry) => ({
+    badge: financeEntryTypeLabel(entry.type),
+    description: `${positiveMoney(entry.amountMinor, entry.currency)} · ${entry.plan?.name ?? "Plansız hareket"}`,
+    href: financePageHref,
+    id: `finance-${entry.id}`,
+    occurredAt: entry.occurredAt,
+    title: entry.type === "PAYMENT" ? "Ödeme alındı" : financeEntryTypeLabel(entry.type),
+  }));
+
+  return [...appointmentEvents, ...financeEvents]
+    .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
+    .slice(0, 8);
 }
 
 function AppointmentList({
@@ -259,6 +307,46 @@ function FinanceEntryList({ entries }: { entries: ProfileFinanceEntry[] }) {
               {entry.note ? <em>{entry.note}</em> : null}
             </span>
           </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function OperationFlow({
+  events,
+  timeZone,
+}: {
+  events: OperationEvent[];
+  timeZone: string;
+}) {
+  if (events.length === 0) {
+    return (
+      <div className="admin-empty-state">
+        <strong>Operasyon hareketi yok</strong>
+        <span>Randevu, ödeme veya plan hareketi oluştuğunda burada kronolojik görünecek.</span>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="admin-client-list admin-dashboard-client-list">
+      {events.map((event) => (
+        <li className="admin-client-list-item admin-dashboard-client-card" key={event.id}>
+          <div className="admin-client-list-main">
+            <strong>{event.title}</strong>
+            <span className="admin-client-contact">
+              {formatDateTime(event.occurredAt, timeZone)} · {event.description}
+            </span>
+            <span className="admin-client-meta">
+              <em>{event.badge}</em>
+            </span>
+          </div>
+          {event.href ? (
+            <Link className="admin-client-profile-link admin-dashboard-client-action" href={event.href}>
+              Detay
+            </Link>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -405,18 +493,38 @@ export default async function AdminClientProfilePage({
     0,
   );
   const focusAppointment = upcomingAppointments[0] ?? appointmentHistory[0] ?? null;
+  const lastPayment = recentFinanceEntries.find((entry) => entry.type === "PAYMENT") ?? null;
   const clientName = `${client.firstName} ${client.lastName}`;
   const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
   const primaryGuardian = client.guardians[0];
   const noteModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
-  const appointmentModalHref =
-    `/yonetim/danisan-profili?clientId=${client.id}&modal=randevu-olustur` as Route;
   const appointmentsPageHref =
     `/yonetim/randevular?clientId=${client.id}&modal=randevu-olustur` as Route;
   const financePageHref = `/yonetim/odemeler?clientId=${client.id}` as Route;
   const planModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=odeme-plani` as Route;
+  const operationAlert =
+    client.type === "CHILD" && !primaryGuardian
+      ? "Veli eksik"
+      : openBalanceMinor > 0n
+        ? "Açık bakiye var"
+        : !focusAppointment
+          ? "Randevu yok"
+          : "Takip temiz";
+  const operationAlertDetail =
+    client.type === "CHILD" && !primaryGuardian
+      ? "Çocuk danışan için veli bilgisi bağlanmalı"
+      : openBalanceMinor > 0n
+        ? formatMoney(openBalanceMinor, financeCurrency)
+        : !focusAppointment
+          ? "Yeni randevu oluşturulabilir"
+          : "Randevu ve finans akışı izleniyor";
+  const operationEvents = buildOperationEvents({
+    appointments: [...upcomingAppointments, ...appointmentHistory],
+    financeEntries: recentFinanceEntries,
+    financePageHref,
+  });
 
   return (
     <AdminShell
@@ -431,7 +539,7 @@ export default async function AdminClientProfilePage({
           "technical-health:read",
         ),
       }}
-      subtitle="Danışan için hızlı işlem ve operasyon özeti. İşlemler URL tabanlı modal olarak açılır."
+      subtitle="Danışan için hızlı işlem, randevu, ödeme ve operasyon akışı tek ekranda görünür."
       title={clientName}
     >
       <Link className="admin-back-link" href="/yonetim/danisanlar">
@@ -442,38 +550,36 @@ export default async function AdminClientProfilePage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="hizli-islemler">Hızlı işlemler</h2>
-            <p>Danışanı açınca yapılacak temel işler modal üzerinden başlar.</p>
+            <p>En sık kullanılan danışan işlemleri; randevu ve ödeme ekranı seçili danışanla açılır.</p>
           </div>
-          <span className="admin-count">URL modal</span>
+          <span className="admin-count">Operasyon</span>
         </div>
         <div className="finance-operation-grid finance-operation-grid--buttons">
-          <Link href="/yonetim/danisanlar">Danışan listesi</Link>
-          <Link href={noteModalHref} scroll={false}>
-            Not ekle
-          </Link>
           {canReadAppointments ? (
-            <Link href={appointmentModalHref} scroll={false}>
+            <Link href={appointmentsPageHref} scroll={false}>
               Randevu oluştur
             </Link>
           ) : null}
-          {canReadFinance ? (
-            <Link href={financePageHref}>Ödeme ekranı</Link>
-          ) : null}
+          {canReadFinance ? <Link href={financePageHref}>Ödeme ekranı</Link> : null}
+          <Link href={noteModalHref} scroll={false}>
+            Not ekle
+          </Link>
+          <Link href="/yonetim/danisanlar">Danışan listesi</Link>
         </div>
       </section>
 
       <div className={styles.dashboardGrid}>
         <article className={styles.dashboardCard}>
-          <span>Durum</span>
+          <span>Profil durumu</span>
           <strong>
             {clientStatusLabels[client.status as ClientStatusValue]}
           </strong>
           <small>{clientTypeLabels[client.type as ClientTypeValue]}</small>
         </article>
         <article className={styles.dashboardCard}>
-          <span>İletişim</span>
-          <strong>{client.phone ?? "Telefon yok"}</strong>
-          <small>{client.email ?? "E-posta yok"}</small>
+          <span>Operasyon uyarısı</span>
+          <strong>{operationAlert}</strong>
+          <small>{operationAlertDetail}</small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Sıradaki randevu</span>
@@ -499,7 +605,30 @@ export default async function AdminClientProfilePage({
                 : "Plan açılabilir"}
           </small>
         </article>
+        <article className={styles.dashboardCard}>
+          <span>Kalan seans</span>
+          <strong>{canReadFinance ? remainingSessions : "—"}</strong>
+          <small>{financePlans.length} plan üzerinden</small>
+        </article>
+        <article className={styles.dashboardCard}>
+          <span>Son ödeme</span>
+          <strong>
+            {lastPayment ? positiveMoney(lastPayment.amountMinor, lastPayment.currency) : "Yok"}
+          </strong>
+          <small>{lastPayment ? formatDate(lastPayment.occurredAt) : "Ödeme hareketi yok"}</small>
+        </article>
       </div>
+
+      <section className="admin-panel" aria-labelledby="operasyon-akisi">
+        <div className="admin-panel-heading">
+          <div>
+            <h2 id="operasyon-akisi">Operasyon akışı</h2>
+            <p>Bu danışanın randevu ve finans hareketleri en yeniden eskiye tek akışta görünür.</p>
+          </div>
+          <span className="admin-count">{operationEvents.length} hareket</span>
+        </div>
+        <OperationFlow events={operationEvents} timeZone={environment.BUSINESS_TIME_ZONE} />
+      </section>
 
       <section className="admin-panel" aria-labelledby="profil">
         <div className="admin-panel-heading">
@@ -660,7 +789,7 @@ export default async function AdminClientProfilePage({
                 <div className={styles.panelHeader}>
                   <div>
                     <h2 id="son-finans-hareketleri">Son finans hareketleri</h2>
-                    <p>Plan borcu, ödeme, iade ve ters kayıt hareketleri.</p>
+                    <p>Plan borcu, ödeme, iade ve dengeleyici kayıt hareketleri.</p>
                   </div>
                   <span className={styles.panelBadge}>{recentFinanceEntries.length} kayıt</span>
                 </div>
