@@ -14,6 +14,7 @@ describe("getAdminNavItems", () => {
     expect(items.map((item) => item.href)).toEqual([
       "/yonetim",
       "/yonetim/randevular",
+      "/yonetim/musaitlik",
       "/yonetim/saglik",
     ]);
   });
