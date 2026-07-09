@@ -18,6 +18,15 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+type AvailabilityRuleView = {
+  id: string;
+  localEndTime: string;
+  localStartTime: string;
+  slotIncrementMinutes: number;
+  status: string;
+  weekday: number;
+};
+
 const appointmentStatusLabels: Record<string, string> = {
   CANCELLED_BY_CLIENT: "Danışan iptal etti",
   CANCELLED_BY_PRACTITIONER: "Uzman iptal etti",
@@ -36,6 +45,13 @@ const approvalModeLabels: Record<string, string> = {
 };
 
 const approvalModeOptions = ["MANUAL", "AUTOMATIC"] as const;
+
+const availabilityRuleStatusLabels: Record<string, string> = {
+  ACTIVE: "Aktif",
+  INACTIVE: "Pasif",
+};
+
+const availabilityRuleStatusOptions = ["ACTIVE", "INACTIVE"] as const;
 
 const locationTypeLabels: Record<string, string> = {
   HYBRID: "Yüz yüze / çevrim içi",
@@ -119,6 +135,10 @@ function enumValue<T extends string>(
 ): T {
   const value = textValue(formData, key);
   return options.includes(value as T) ? (value as T) : fallback;
+}
+
+function isTimeValue(value: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
 function isValidTimeZone(timeZone: string): boolean {
@@ -216,6 +236,66 @@ async function updatePractitionerSettings(formData: FormData) {
   revalidatePath("/yonetim");
 }
 
+async function createAvailabilityRule(formData: FormData) {
+  "use server";
+  await requirePermission("availability:manage");
+
+  const practitionerId = textValue(formData, "practitionerId");
+  const localStartTime = textValue(formData, "localStartTime");
+  const localEndTime = textValue(formData, "localEndTime");
+  if (
+    !practitionerId ||
+    !isTimeValue(localStartTime) ||
+    !isTimeValue(localEndTime) ||
+    localStartTime >= localEndTime
+  ) {
+    return;
+  }
+
+  const weekday = boundedIntegerValue(formData, "weekday", 1, 0, 6);
+  const slotIncrementMinutes = boundedIntegerValue(
+    formData,
+    "slotIncrementMinutes",
+    15,
+    5,
+    120,
+  );
+  const status = enumValue(
+    formData,
+    "status",
+    availabilityRuleStatusOptions,
+    "ACTIVE",
+  );
+
+  await getDatabase().availabilityRule.create({
+    data: {
+      localEndTime,
+      localStartTime,
+      practitionerId,
+      slotIncrementMinutes,
+      status,
+      weekday,
+    },
+  });
+
+  revalidatePath("/yonetim");
+}
+
+async function deactivateAvailabilityRule(formData: FormData) {
+  "use server";
+  await requirePermission("availability:manage");
+
+  const ruleId = textValue(formData, "ruleId");
+  if (!ruleId) return;
+
+  await getDatabase().availabilityRule.update({
+    data: { status: "INACTIVE" },
+    where: { id: ruleId },
+  });
+
+  revalidatePath("/yonetim");
+}
+
 function formatMoney(amountMinor: bigint | number, currency = "TRY"): string {
   return new Intl.NumberFormat("tr-TR", {
     currency,
@@ -271,12 +351,15 @@ function formatPolicySummary(
   return `${policy.bookingMinNoticeMinutes} dk min. bildirim · ${policy.bookingMaxAdvanceDays} gün ileri · ${dailyLimit}`;
 }
 
-function formatRuleSummary(
-  rules: { localEndTime: string; localStartTime: string; weekday: number }[],
-): string {
-  if (rules.length === 0) return "Aktif müsaitlik kuralı yok";
-  const firstRule = rules[0];
+function formatRuleSummary(rules: AvailabilityRuleView[]): string {
+  const activeRules = rules.filter((rule) => rule.status === "ACTIVE");
+  if (activeRules.length === 0) return "Aktif müsaitlik kuralı yok";
+  const firstRule = activeRules[0];
   return `${weekdayLabels[firstRule.weekday] ?? "Gün"} ${firstRule.localStartTime}-${firstRule.localEndTime}`;
+}
+
+function ruleLabel(rule: AvailabilityRuleView): string {
+  return `${weekdayLabels[rule.weekday] ?? "Gün"} · ${rule.localStartTime}-${rule.localEndTime} · ${rule.slotIncrementMinutes} dk slot`;
 }
 
 export default async function AdminHomePage({
@@ -361,13 +444,14 @@ export default async function AdminHomePage({
       availabilityRules: {
         orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
         select: {
+          id: true,
           localEndTime: true,
           localStartTime: true,
           slotIncrementMinutes: true,
+          status: true,
           weekday: true,
         },
-        take: 7,
-        where: { status: "ACTIVE" },
+        take: 14,
       },
       displayName: true,
       id: true,
@@ -385,8 +469,8 @@ export default async function AdminHomePage({
   const activePractitionerCount = practitioners.filter(
     (practitioner) => practitioner.status === "ACTIVE",
   ).length;
-  const configuredAvailabilityCount = practitioners.filter(
-    (practitioner) => practitioner.availabilityRules.length > 0,
+  const configuredAvailabilityCount = practitioners.filter((practitioner) =>
+    practitioner.availabilityRules.some((rule) => rule.status === "ACTIVE"),
   ).length;
 
   const totalClients = canReadClients ? await db.client.count() : 0;
@@ -978,90 +1062,200 @@ export default async function AdminHomePage({
               </div>
             ) : (
               <ul className="admin-config-card-list">
-                {practitioners.map((practitioner) => (
-                  <li className="admin-config-card" key={practitioner.id}>
-                    <div className="admin-config-card-main">
-                      <strong>{practitioner.displayName}</strong>
-                      <span>{practitioner.timeZone}</span>
-                    </div>
-                    <div className="admin-config-chip-row">
-                      <em>{statusLabel(practitioner.status, practitionerStatusLabels)}</em>
-                      <em>{practitioner.availabilityRules.length} aktif kural</em>
-                      <em>{practitioner._count.availabilityExceptions} istisna</em>
-                    </div>
-                    <dl className="admin-config-metrics">
-                      <div>
-                        <dt>Randevu</dt>
-                        <dd>{practitioner._count.appointments}</dd>
-                      </div>
-                      <div>
-                        <dt>Müsaitlik</dt>
-                        <dd>{practitioner._count.availabilityRules}</dd>
-                      </div>
-                      <div>
-                        <dt>Slot</dt>
-                        <dd>{practitioner.availabilityRules[0]?.slotIncrementMinutes ?? "—"} dk</dd>
-                      </div>
-                    </dl>
-                    <p className="admin-config-note">
-                      {formatRuleSummary(practitioner.availabilityRules)}
-                    </p>
-                    {canManageAvailability ? (
-                      <details className="admin-config-edit-panel">
-                        <summary>Düzenle</summary>
-                        <form action={updatePractitionerSettings}>
-                          <input
-                            name="practitionerId"
-                            type="hidden"
-                            value={practitioner.id}
-                          />
-                          <div className="admin-config-form-grid admin-config-form-grid--two">
-                            <label>
-                              Terapist adı
-                              <input
-                                defaultValue={practitioner.displayName}
-                                maxLength={90}
-                                minLength={2}
-                                name="displayName"
-                                required
-                                type="text"
-                              />
-                            </label>
-                            <label>
-                              Saat dilimi
-                              <input
-                                defaultValue={practitioner.timeZone}
-                                maxLength={80}
-                                minLength={3}
-                                name="timeZone"
-                                placeholder="Europe/Istanbul"
-                                required
-                                type="text"
-                              />
-                            </label>
-                          </div>
+                {practitioners.map((practitioner) => {
+                  const activeRules = practitioner.availabilityRules.filter(
+                    (rule) => rule.status === "ACTIVE",
+                  );
 
-                          <fieldset className="admin-config-radio-group">
-                            <legend>Durum</legend>
-                            {practitionerStatusOptions.map((option) => (
-                              <label key={option}>
+                  return (
+                    <li className="admin-config-card" key={practitioner.id}>
+                      <div className="admin-config-card-main">
+                        <strong>{practitioner.displayName}</strong>
+                        <span>{practitioner.timeZone}</span>
+                      </div>
+                      <div className="admin-config-chip-row">
+                        <em>{statusLabel(practitioner.status, practitionerStatusLabels)}</em>
+                        <em>{activeRules.length} aktif kural</em>
+                        <em>{practitioner._count.availabilityExceptions} istisna</em>
+                      </div>
+                      <dl className="admin-config-metrics">
+                        <div>
+                          <dt>Randevu</dt>
+                          <dd>{practitioner._count.appointments}</dd>
+                        </div>
+                        <div>
+                          <dt>Müsaitlik</dt>
+                          <dd>{activeRules.length}</dd>
+                        </div>
+                        <div>
+                          <dt>Slot</dt>
+                          <dd>{activeRules[0]?.slotIncrementMinutes ?? "—"} dk</dd>
+                        </div>
+                      </dl>
+                      <p className="admin-config-note">
+                        {formatRuleSummary(practitioner.availabilityRules)}
+                      </p>
+
+                      <div className="admin-availability-rule-list">
+                        {practitioner.availabilityRules.length === 0 ? (
+                          <span>Henüz müsaitlik kuralı yok.</span>
+                        ) : (
+                          practitioner.availabilityRules.map((rule) => (
+                            <div className="admin-availability-rule-row" key={rule.id}>
+                              <div>
+                                <strong>{ruleLabel(rule)}</strong>
+                                <span>
+                                  {statusLabel(rule.status, availabilityRuleStatusLabels)}
+                                </span>
+                              </div>
+                              {canManageAvailability && rule.status === "ACTIVE" ? (
+                                <form action={deactivateAvailabilityRule}>
+                                  <input name="ruleId" type="hidden" value={rule.id} />
+                                  <button type="submit">Pasife al</button>
+                                </form>
+                              ) : null}
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {canManageAvailability ? (
+                        <details className="admin-config-edit-panel">
+                          <summary>Düzenle / kural ekle</summary>
+                          <form action={updatePractitionerSettings}>
+                            <input
+                              name="practitionerId"
+                              type="hidden"
+                              value={practitioner.id}
+                            />
+                            <div className="admin-config-form-grid admin-config-form-grid--two">
+                              <label>
+                                Terapist adı
                                 <input
-                                  defaultChecked={practitioner.status === option}
-                                  name="status"
-                                  type="radio"
-                                  value={option}
+                                  defaultValue={practitioner.displayName}
+                                  maxLength={90}
+                                  minLength={2}
+                                  name="displayName"
+                                  required
+                                  type="text"
                                 />
-                                <span>{statusLabel(option, practitionerStatusLabels)}</span>
                               </label>
-                            ))}
-                          </fieldset>
+                              <label>
+                                Saat dilimi
+                                <input
+                                  defaultValue={practitioner.timeZone}
+                                  maxLength={80}
+                                  minLength={3}
+                                  name="timeZone"
+                                  placeholder="Europe/Istanbul"
+                                  required
+                                  type="text"
+                                />
+                              </label>
+                            </div>
 
-                          <button type="submit">Terapisti güncelle</button>
-                        </form>
-                      </details>
-                    ) : null}
-                  </li>
-                ))}
+                            <fieldset className="admin-config-radio-group">
+                              <legend>Terapist durumu</legend>
+                              {practitionerStatusOptions.map((option) => (
+                                <label key={option}>
+                                  <input
+                                    defaultChecked={practitioner.status === option}
+                                    name="status"
+                                    type="radio"
+                                    value={option}
+                                  />
+                                  <span>{statusLabel(option, practitionerStatusLabels)}</span>
+                                </label>
+                              ))}
+                            </fieldset>
+
+                            <button type="submit">Terapisti güncelle</button>
+                          </form>
+
+                          <form action={createAvailabilityRule}>
+                            <input
+                              name="practitionerId"
+                              type="hidden"
+                              value={practitioner.id}
+                            />
+                            <fieldset className="admin-config-radio-group admin-config-radio-group--weekdays">
+                              <legend>Gün</legend>
+                              {weekdayLabels.map((label, index) => (
+                                <label key={label}>
+                                  <input
+                                    defaultChecked={index === 1}
+                                    name="weekday"
+                                    type="radio"
+                                    value={index}
+                                  />
+                                  <span>{label}</span>
+                                </label>
+                              ))}
+                            </fieldset>
+
+                            <div className="admin-config-form-grid">
+                              <label>
+                                Başlangıç saati
+                                <input
+                                  defaultValue="09:00"
+                                  maxLength={5}
+                                  minLength={5}
+                                  name="localStartTime"
+                                  pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+                                  placeholder="09:00"
+                                  required
+                                  type="text"
+                                />
+                              </label>
+                              <label>
+                                Bitiş saati
+                                <input
+                                  defaultValue="17:00"
+                                  maxLength={5}
+                                  minLength={5}
+                                  name="localEndTime"
+                                  pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+                                  placeholder="17:00"
+                                  required
+                                  type="text"
+                                />
+                              </label>
+                              <label>
+                                Slot aralığı / dakika
+                                <input
+                                  defaultValue="15"
+                                  inputMode="numeric"
+                                  max="120"
+                                  min="5"
+                                  name="slotIncrementMinutes"
+                                  required
+                                  type="number"
+                                />
+                              </label>
+                            </div>
+
+                            <fieldset className="admin-config-radio-group">
+                              <legend>Kural durumu</legend>
+                              {availabilityRuleStatusOptions.map((option) => (
+                                <label key={option}>
+                                  <input
+                                    defaultChecked={option === "ACTIVE"}
+                                    name="status"
+                                    type="radio"
+                                    value={option}
+                                  />
+                                  <span>{statusLabel(option, availabilityRuleStatusLabels)}</span>
+                                </label>
+                              ))}
+                            </fieldset>
+
+                            <button type="submit">Müsaitlik kuralı ekle</button>
+                          </form>
+                        </details>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>
