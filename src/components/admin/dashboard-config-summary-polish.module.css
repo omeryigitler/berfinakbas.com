@@ -1,0 +1,44 @@
+:global([data-admin-refresh="shell"] .admin-config-summary-grid) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 22px;
+  align-items: stretch;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid article) {
+  display: grid;
+  min-height: 132px;
+  align-content: space-between;
+  border-radius: 26px;
+  padding: 20px 22px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid span) {
+  min-height: 18px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid strong) {
+  min-height: 44px;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-summary-grid small) {
+  min-height: 34px;
+}
+
+@media (max-width: 1180px) {
+  :global([data-admin-refresh="shell"] .admin-config-summary-grid) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  :global([data-admin-refresh="shell"] .admin-config-summary-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  :global([data-admin-refresh="shell"] .admin-config-summary-grid article) {
+    min-height: auto;
+  }
+}
