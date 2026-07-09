@@ -1,4 +1,5 @@
 import type { Route } from "next";
+import { revalidatePath } from "next/cache";
 import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -30,15 +31,19 @@ const appointmentStatusLabels: Record<string, string> = {
 };
 
 const approvalModeLabels: Record<string, string> = {
-  AUTO_APPROVE: "Otomatik onay",
+  AUTOMATIC: "Otomatik onay",
   MANUAL: "Manuel onay",
 };
+
+const approvalModeOptions = ["MANUAL", "AUTOMATIC"] as const;
 
 const locationTypeLabels: Record<string, string> = {
   HYBRID: "Yüz yüze / çevrim içi",
   IN_PERSON: "Yüz yüze",
   ONLINE: "Çevrim içi",
 };
+
+const locationTypeOptions = ["IN_PERSON", "ONLINE", "HYBRID"] as const;
 
 const practitionerStatusLabels: Record<string, string> = {
   ACTIVE: "Aktif",
@@ -48,9 +53,10 @@ const practitionerStatusLabels: Record<string, string> = {
 const serviceStatusLabels: Record<string, string> = {
   ACTIVE: "Aktif",
   DRAFT: "Taslak",
-  RETIRED: "Arşiv",
+  INACTIVE: "Pasif",
 };
 
+const serviceStatusOptions = ["DRAFT", "ACTIVE", "INACTIVE"] as const;
 const weekdayLabels = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
 
 function singleParam(
@@ -60,6 +66,87 @@ function singleParam(
   const value = params[key];
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";
+}
+
+function textValue(formData: FormData, key: string): string {
+  return String(formData.get(key) ?? "").trim();
+}
+
+function integerValue(formData: FormData, key: string, fallback: number): number {
+  const value = Number(textValue(formData, key));
+  if (!Number.isInteger(value)) return fallback;
+  return value;
+}
+
+function boundedIntegerValue(
+  formData: FormData,
+  key: string,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const value = integerValue(formData, key, fallback);
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+function enumValue<T extends string>(
+  formData: FormData,
+  key: string,
+  options: readonly T[],
+  fallback: T,
+): T {
+  const value = textValue(formData, key);
+  return options.includes(value as T) ? (value as T) : fallback;
+}
+
+async function updateServiceSettings(formData: FormData) {
+  "use server";
+  await requirePermission("services:manage");
+
+  const serviceId = textValue(formData, "serviceId");
+  if (!serviceId) return;
+
+  const defaultDurationMinutes = boundedIntegerValue(
+    formData,
+    "defaultDurationMinutes",
+    15,
+    5,
+    240,
+  );
+  const defaultBufferBeforeMinutes = boundedIntegerValue(
+    formData,
+    "defaultBufferBeforeMinutes",
+    0,
+    0,
+    120,
+  );
+  const defaultBufferAfterMinutes = boundedIntegerValue(
+    formData,
+    "defaultBufferAfterMinutes",
+    0,
+    0,
+    120,
+  );
+  const status = enumValue(formData, "status", serviceStatusOptions, "DRAFT");
+  const approvalMode = enumValue(formData, "approvalMode", approvalModeOptions, "MANUAL");
+  const locationType = enumValue(formData, "locationType", locationTypeOptions, "IN_PERSON");
+
+  await getDatabase().service.update({
+    data: {
+      approvalMode,
+      defaultBufferAfterMinutes,
+      defaultBufferBeforeMinutes,
+      defaultDurationMinutes,
+      locationType,
+      publicVisible: formData.get("publicVisible") === "on",
+      status,
+    },
+    where: { id: serviceId },
+  });
+
+  revalidatePath("/yonetim");
 }
 
 function formatMoney(amountMinor: bigint | number, currency = "TRY"): string {
@@ -145,6 +232,7 @@ export default async function AdminHomePage({
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
+  const canManageServices = hasPermission(session.user.roles, "services:manage");
   const canReadTechnicalHealth = hasPermission(
     session.user.roles,
     "technical-health:read",
@@ -690,6 +778,108 @@ export default async function AdminHomePage({
                         </div>
                       </dl>
                       <p className="admin-config-note">{formatPolicySummary(latestPolicy)}</p>
+                      {canManageServices ? (
+                        <details className="admin-config-edit-panel">
+                          <summary>Düzenle</summary>
+                          <form action={updateServiceSettings}>
+                            <input name="serviceId" type="hidden" value={service.id} />
+                            <div className="admin-config-form-grid">
+                              <label>
+                                Varsayılan süre / dakika
+                                <input
+                                  defaultValue={service.defaultDurationMinutes}
+                                  inputMode="numeric"
+                                  max="240"
+                                  min="5"
+                                  name="defaultDurationMinutes"
+                                  required
+                                  type="number"
+                                />
+                              </label>
+                              <label>
+                                Ön buffer / dakika
+                                <input
+                                  defaultValue={service.defaultBufferBeforeMinutes}
+                                  inputMode="numeric"
+                                  max="120"
+                                  min="0"
+                                  name="defaultBufferBeforeMinutes"
+                                  required
+                                  type="number"
+                                />
+                              </label>
+                              <label>
+                                Son buffer / dakika
+                                <input
+                                  defaultValue={service.defaultBufferAfterMinutes}
+                                  inputMode="numeric"
+                                  max="120"
+                                  min="0"
+                                  name="defaultBufferAfterMinutes"
+                                  required
+                                  type="number"
+                                />
+                              </label>
+                            </div>
+
+                            <fieldset className="admin-config-radio-group">
+                              <legend>Durum</legend>
+                              {serviceStatusOptions.map((option) => (
+                                <label key={option}>
+                                  <input
+                                    defaultChecked={service.status === option}
+                                    name="status"
+                                    type="radio"
+                                    value={option}
+                                  />
+                                  <span>{statusLabel(option, serviceStatusLabels)}</span>
+                                </label>
+                              ))}
+                            </fieldset>
+
+                            <fieldset className="admin-config-radio-group">
+                              <legend>Görüşme tipi</legend>
+                              {locationTypeOptions.map((option) => (
+                                <label key={option}>
+                                  <input
+                                    defaultChecked={service.locationType === option}
+                                    name="locationType"
+                                    type="radio"
+                                    value={option}
+                                  />
+                                  <span>{statusLabel(option, locationTypeLabels)}</span>
+                                </label>
+                              ))}
+                            </fieldset>
+
+                            <fieldset className="admin-config-radio-group">
+                              <legend>Onay modu</legend>
+                              {approvalModeOptions.map((option) => (
+                                <label key={option}>
+                                  <input
+                                    defaultChecked={service.approvalMode === option}
+                                    name="approvalMode"
+                                    type="radio"
+                                    value={option}
+                                  />
+                                  <span>{statusLabel(option, approvalModeLabels)}</span>
+                                </label>
+                              ))}
+                            </fieldset>
+
+                            <label className="admin-config-check-row">
+                              <input
+                                defaultChecked={service.publicVisible}
+                                name="publicVisible"
+                                type="checkbox"
+                              />
+                              <span>Public sitede görünür olsun</span>
+                            </label>
+
+                            <button type="submit">Hizmeti güncelle</button>
+                          </form>
+                        </details>
+                      ) : null}
                     </li>
                   );
                 })}
