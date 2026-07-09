@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 
 import "./admin-dashboard-refresh.module.css";
 import "./dashboard-action-order.module.css";
+import "./service-practitioner-symmetry.module.css";
 import styles from "./admin-shell.module.css";
 import "./admin-icon-placement.module.css";
 
