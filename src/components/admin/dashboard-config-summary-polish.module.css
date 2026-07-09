@@ -1,4 +1,5 @@
 :global([data-admin-refresh="shell"] .admin-config-summary-grid) {
+  display: grid;
   grid-template-columns: 1fr !important;
   gap: 14px;
   margin-bottom: 22px;
