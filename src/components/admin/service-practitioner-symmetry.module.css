@@ -1,0 +1,83 @@
+:global([data-admin-refresh="shell"] .admin-config-layout) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-layout > section) {
+  min-width: 0;
+  align-content: start;
+  border-radius: 28px;
+  padding: 22px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-subheading) {
+  min-height: 72px;
+  align-items: start;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-subheading h3) {
+  font-size: 1.28rem;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card-list) {
+  gap: 14px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card) {
+  border-radius: 24px;
+  padding: 20px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-card-main) {
+  min-height: 50px;
+  align-content: start;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-chip-row) {
+  min-height: 30px;
+  align-items: center;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-metrics) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-metrics div) {
+  display: grid;
+  min-height: 74px;
+  align-content: center;
+  border-radius: 18px;
+  padding: 12px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-metrics dd) {
+  line-height: 1.16;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-note),
+:global([data-admin-refresh="shell"] .admin-availability-rule-list),
+:global([data-admin-refresh="shell"] .admin-config-edit-panel) {
+  border-radius: 18px;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-edit-panel summary) {
+  min-height: 50px;
+}
+
+@media (max-width: 1280px) {
+  :global([data-admin-refresh="shell"] .admin-config-layout) {
+    grid-template-columns: 1fr;
+  }
+
+  :global([data-admin-refresh="shell"] .admin-config-subheading) {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  :global([data-admin-refresh="shell"] .admin-config-metrics) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
