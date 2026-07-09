@@ -1,14 +1,16 @@
 :global([data-admin-refresh="shell"] .admin-config-summary-grid) {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 14px;
   margin-bottom: 22px;
   align-items: stretch;
 }
 
 :global([data-admin-refresh="shell"] .admin-config-summary-grid article) {
   display: grid;
-  min-height: 132px;
-  align-content: space-between;
+  min-height: 112px;
+  grid-template-columns: minmax(150px, 0.22fr) minmax(140px, 0.18fr) minmax(0, 0.6fr);
+  align-items: center;
+  gap: 18px;
   border-radius: 26px;
   padding: 20px 22px;
 }
@@ -19,26 +21,24 @@
 
 :global([data-admin-refresh="shell"] .admin-config-summary-grid strong) {
   min-height: 44px;
-  margin-top: 12px;
+  margin-top: 0;
   overflow-wrap: anywhere;
 }
 
 :global([data-admin-refresh="shell"] .admin-config-summary-grid small) {
   min-height: 34px;
-}
-
-@media (max-width: 1180px) {
-  :global([data-admin-refresh="shell"] .admin-config-summary-grid) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  margin-top: 0;
 }
 
 @media (max-width: 860px) {
-  :global([data-admin-refresh="shell"] .admin-config-summary-grid) {
+  :global([data-admin-refresh="shell"] .admin-config-summary-grid article) {
+    min-height: auto;
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  :global([data-admin-refresh="shell"] .admin-config-summary-grid article) {
+  :global([data-admin-refresh="shell"] .admin-config-summary-grid strong),
+  :global([data-admin-refresh="shell"] .admin-config-summary-grid small) {
     min-height: auto;
   }
 }
