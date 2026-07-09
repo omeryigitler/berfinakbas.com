@@ -50,6 +50,8 @@ const practitionerStatusLabels: Record<string, string> = {
   INACTIVE: "Pasif",
 };
 
+const practitionerStatusOptions = ["ACTIVE", "INACTIVE"] as const;
+
 const serviceStatusLabels: Record<string, string> = {
   ACTIVE: "Aktif",
   DRAFT: "Taslak",
@@ -57,7 +59,15 @@ const serviceStatusLabels: Record<string, string> = {
 };
 
 const serviceStatusOptions = ["DRAFT", "ACTIVE", "INACTIVE"] as const;
-const weekdayLabels = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+const weekdayLabels = [
+  "Pazar",
+  "Pazartesi",
+  "Salı",
+  "Çarşamba",
+  "Perşembe",
+  "Cuma",
+  "Cumartesi",
+];
 
 function singleParam(
   params: Record<string, string | string[] | undefined>,
@@ -70,6 +80,16 @@ function singleParam(
 
 function textValue(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
+}
+
+function boundedTextValue(
+  formData: FormData,
+  key: string,
+  minLength: number,
+  maxLength: number,
+): string {
+  const value = textValue(formData, key).slice(0, maxLength);
+  return value.length >= minLength ? value : "";
 }
 
 function integerValue(formData: FormData, key: string, fallback: number): number {
@@ -101,6 +121,15 @@ function enumValue<T extends string>(
   return options.includes(value as T) ? (value as T) : fallback;
 }
 
+function isValidTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("tr-TR", { timeZone }).format(new Date());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function updateServiceSettings(formData: FormData) {
   "use server";
   await requirePermission("services:manage");
@@ -130,8 +159,18 @@ async function updateServiceSettings(formData: FormData) {
     120,
   );
   const status = enumValue(formData, "status", serviceStatusOptions, "DRAFT");
-  const approvalMode = enumValue(formData, "approvalMode", approvalModeOptions, "MANUAL");
-  const locationType = enumValue(formData, "locationType", locationTypeOptions, "IN_PERSON");
+  const approvalMode = enumValue(
+    formData,
+    "approvalMode",
+    approvalModeOptions,
+    "MANUAL",
+  );
+  const locationType = enumValue(
+    formData,
+    "locationType",
+    locationTypeOptions,
+    "IN_PERSON",
+  );
 
   await getDatabase().service.update({
     data: {
@@ -144,6 +183,34 @@ async function updateServiceSettings(formData: FormData) {
       status,
     },
     where: { id: serviceId },
+  });
+
+  revalidatePath("/yonetim");
+}
+
+async function updatePractitionerSettings(formData: FormData) {
+  "use server";
+  await requirePermission("availability:manage");
+
+  const practitionerId = textValue(formData, "practitionerId");
+  const displayName = boundedTextValue(formData, "displayName", 2, 90);
+  const timeZone = boundedTextValue(formData, "timeZone", 3, 80);
+  if (!practitionerId || !displayName || !isValidTimeZone(timeZone)) return;
+
+  const status = enumValue(
+    formData,
+    "status",
+    practitionerStatusOptions,
+    "ACTIVE",
+  );
+
+  await getDatabase().practitioner.update({
+    data: {
+      displayName,
+      status,
+      timeZone,
+    },
+    where: { id: practitionerId },
   });
 
   revalidatePath("/yonetim");
@@ -233,6 +300,10 @@ export default async function AdminHomePage({
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const canManageServices = hasPermission(session.user.roles, "services:manage");
+  const canManageAvailability = hasPermission(
+    session.user.roles,
+    "availability:manage",
+  );
   const canReadTechnicalHealth = hasPermission(
     session.user.roles,
     "technical-health:read",
@@ -305,8 +376,12 @@ export default async function AdminHomePage({
     },
   });
 
-  const activeServiceCount = services.filter((service) => service.status === "ACTIVE").length;
-  const publicServiceCount = services.filter((service) => service.publicVisible).length;
+  const activeServiceCount = services.filter(
+    (service) => service.status === "ACTIVE",
+  ).length;
+  const publicServiceCount = services.filter(
+    (service) => service.publicVisible,
+  ).length;
   const activePractitionerCount = practitioners.filter(
     (practitioner) => practitioner.status === "ACTIVE",
   ).length;
@@ -931,6 +1006,60 @@ export default async function AdminHomePage({
                     <p className="admin-config-note">
                       {formatRuleSummary(practitioner.availabilityRules)}
                     </p>
+                    {canManageAvailability ? (
+                      <details className="admin-config-edit-panel">
+                        <summary>Düzenle</summary>
+                        <form action={updatePractitionerSettings}>
+                          <input
+                            name="practitionerId"
+                            type="hidden"
+                            value={practitioner.id}
+                          />
+                          <div className="admin-config-form-grid admin-config-form-grid--two">
+                            <label>
+                              Terapist adı
+                              <input
+                                defaultValue={practitioner.displayName}
+                                maxLength={90}
+                                minLength={2}
+                                name="displayName"
+                                required
+                                type="text"
+                              />
+                            </label>
+                            <label>
+                              Saat dilimi
+                              <input
+                                defaultValue={practitioner.timeZone}
+                                maxLength={80}
+                                minLength={3}
+                                name="timeZone"
+                                placeholder="Europe/Istanbul"
+                                required
+                                type="text"
+                              />
+                            </label>
+                          </div>
+
+                          <fieldset className="admin-config-radio-group">
+                            <legend>Durum</legend>
+                            {practitionerStatusOptions.map((option) => (
+                              <label key={option}>
+                                <input
+                                  defaultChecked={practitioner.status === option}
+                                  name="status"
+                                  type="radio"
+                                  value={option}
+                                />
+                                <span>{statusLabel(option, practitionerStatusLabels)}</span>
+                              </label>
+                            ))}
+                          </fieldset>
+
+                          <button type="submit">Terapisti güncelle</button>
+                        </form>
+                      </details>
+                    ) : null}
                   </li>
                 ))}
               </ul>
