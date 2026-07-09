@@ -191,6 +191,64 @@
   line-height: 1.55;
 }
 
+:global([data-admin-refresh="shell"] .admin-availability-rule-list) {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgb(88 62 49 / 8%);
+  border-radius: 18px;
+  background: rgb(255 250 244 / 62%);
+  padding: 12px;
+}
+
+:global([data-admin-refresh="shell"] .admin-availability-rule-list > span) {
+  color: #87766b;
+  font-size: 0.7rem;
+}
+
+:global([data-admin-refresh="shell"] .admin-availability-rule-row) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  background: rgb(255 253 249 / 86%);
+  padding: 10px 11px;
+}
+
+:global([data-admin-refresh="shell"] .admin-availability-rule-row div) {
+  display: grid;
+  gap: 4px;
+}
+
+:global([data-admin-refresh="shell"] .admin-availability-rule-row strong) {
+  color: #3f312c;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+:global([data-admin-refresh="shell"] .admin-availability-rule-row span) {
+  color: #6f8070;
+  font-size: 0.66rem;
+  font-weight: 820;
+}
+
+:global([data-admin-refresh="shell"] .admin-availability-rule-row form) {
+  margin: 0;
+}
+
+:global([data-admin-refresh="shell"] .admin-availability-rule-row button) {
+  min-height: 32px;
+  border: 1px solid rgb(185 74 54 / 12%);
+  border-radius: 999px;
+  background: rgb(185 74 54 / 8%);
+  padding: 7px 10px;
+  color: #9b4337;
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 :global([data-admin-refresh="shell"] .admin-config-edit-panel) {
   overflow: hidden;
   border: 1px solid rgb(217 111 77 / 14%);
@@ -281,6 +339,10 @@
   padding: 0;
 }
 
+:global([data-admin-refresh="shell"] .admin-config-radio-group--weekdays) {
+  gap: 7px;
+}
+
 :global([data-admin-refresh="shell"] .admin-config-radio-group legend) {
   width: 100%;
   margin-bottom: 2px;
@@ -315,6 +377,12 @@
   font-size: 0.7rem;
   font-weight: 820;
   cursor: pointer;
+}
+
+:global([data-admin-refresh="shell"] .admin-config-radio-group--weekdays span) {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 0.66rem;
 }
 
 :global([data-admin-refresh="shell"] .admin-config-radio-group input:checked + span) {
@@ -365,6 +433,10 @@
   :global([data-admin-refresh="shell"] .admin-config-form-grid),
   :global([data-admin-refresh="shell"] .admin-config-form-grid--two) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :global([data-admin-refresh="shell"] .admin-availability-rule-row) {
+    grid-template-columns: 1fr;
   }
 }
 
