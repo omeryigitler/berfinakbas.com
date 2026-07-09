@@ -8,7 +8,7 @@
 :global([data-admin-refresh="shell"] .admin-config-summary-grid article) {
   display: grid;
   min-height: 112px;
-  grid-template-columns: minmax(150px, 0.22fr) minmax(140px, 0.18fr) minmax(0, 0.6fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 18px;
   border-radius: 26px;
