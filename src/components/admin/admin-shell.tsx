@@ -39,6 +39,10 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
     items.push({ href: "/yonetim/randevular", icon: "◷", label: "Randevular" });
   }
 
+  if (permissions.servicesRead) {
+    items.push({ href: "/yonetim/musaitlik", icon: "□", label: "Müsaitlik" });
+  }
+
   if (permissions.financeRead) {
     items.push({ href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" });
   }
