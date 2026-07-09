@@ -1,7 +1,7 @@
 :global([data-admin-refresh="shell"] .admin-config-layout) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  align-items: start;
+  grid-template-columns: 1fr !important;
+  gap: 18px;
+  align-items: stretch;
 }
 
 :global([data-admin-refresh="shell"] .admin-config-layout > section) {
@@ -12,7 +12,7 @@
 }
 
 :global([data-admin-refresh="shell"] .admin-config-subheading) {
-  min-height: 72px;
+  min-height: auto;
   align-items: start;
 }
 
@@ -25,6 +25,8 @@
 }
 
 :global([data-admin-refresh="shell"] .admin-config-card) {
+  display: grid;
+  min-height: 214px;
   border-radius: 24px;
   padding: 20px;
 }
@@ -66,18 +68,37 @@
   min-height: 50px;
 }
 
-@media (max-width: 1280px) {
-  :global([data-admin-refresh="shell"] .admin-config-layout) {
-    grid-template-columns: 1fr;
+@media (min-width: 980px) {
+  :global([data-admin-refresh="shell"] .admin-config-card) {
+    grid-template-columns: minmax(220px, 0.9fr) minmax(220px, 1fr) minmax(260px, 1.25fr);
+    align-items: center;
+    gap: 18px;
   }
 
-  :global([data-admin-refresh="shell"] .admin-config-subheading) {
-    min-height: auto;
+  :global([data-admin-refresh="shell"] .admin-config-card-main),
+  :global([data-admin-refresh="shell"] .admin-config-chip-row) {
+    grid-column: 1;
+  }
+
+  :global([data-admin-refresh="shell"] .admin-config-metrics) {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :global([data-admin-refresh="shell"] .admin-config-note),
+  :global([data-admin-refresh="shell"] .admin-availability-rule-list),
+  :global([data-admin-refresh="shell"] .admin-config-edit-panel) {
+    grid-column: 3;
   }
 }
 
 @media (max-width: 760px) {
   :global([data-admin-refresh="shell"] .admin-config-metrics) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :global([data-admin-refresh="shell"] .admin-config-card) {
+    min-height: auto;
   }
 }
