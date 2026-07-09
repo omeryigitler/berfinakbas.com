@@ -242,6 +242,10 @@
   gap: 12px;
 }
 
+:global([data-admin-refresh="shell"] .admin-config-form-grid--two) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 :global([data-admin-refresh="shell"] .admin-config-form-grid label),
 :global([data-admin-refresh="shell"] .admin-config-check-row) {
   display: grid;
@@ -358,14 +362,16 @@
   }
 
   :global([data-admin-refresh="shell"] .admin-config-metrics),
-  :global([data-admin-refresh="shell"] .admin-config-form-grid) {
+  :global([data-admin-refresh="shell"] .admin-config-form-grid),
+  :global([data-admin-refresh="shell"] .admin-config-form-grid--two) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 560px) {
   :global([data-admin-refresh="shell"] .admin-config-metrics),
-  :global([data-admin-refresh="shell"] .admin-config-form-grid) {
+  :global([data-admin-refresh="shell"] .admin-config-form-grid),
+  :global([data-admin-refresh="shell"] .admin-config-form-grid--two) {
     grid-template-columns: 1fr;
   }
 }
