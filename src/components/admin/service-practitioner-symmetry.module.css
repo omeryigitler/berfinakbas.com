@@ -62,7 +62,7 @@
 }
 
 :global([data-admin-refresh="shell"] .admin-config-metrics) {
-  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
 }
 
@@ -104,9 +104,9 @@
   min-height: 52px;
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 900px) {
   :global([data-admin-refresh="shell"] .admin-config-card) {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.52fr);
     align-items: start;
     column-gap: 24px;
   }
