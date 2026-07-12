@@ -138,7 +138,10 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
                     <em>{clientStatusLabels[client.status]}</em>
                   </span>
                 </div>
-                <Link className="admin-client-profile-link" href={`/yonetim/danisanlar/${client.id}` as Route}>
+                <Link
+                  className="admin-client-profile-link"
+                  href={`/yonetim/danisan-profili?clientId=${client.id}` as Route}
+                >
                   Profili aç
                 </Link>
               </li>
