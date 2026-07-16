@@ -381,6 +381,7 @@ export default async function AdminClientProfilePage({
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
   const canManageConsents = hasPermission(session.user.roles, "consents:manage");
+  const canReadConsents = hasPermission(session.user.roles, "consents:read");
   const canReadAppointments = hasPermission(
     session.user.roles,
     "appointments:read",
@@ -390,22 +391,24 @@ export default async function AdminClientProfilePage({
     include: {
       _count: {
         select: {
-          appointments: true,
-          consents: true,
-          financeEntries: true,
-          plans: true,
+          appointments: canReadAppointments,
+          consents: canReadConsents,
+          financeEntries: canReadFinance,
+          plans: canReadFinance,
         },
       },
-      consents: {
-        orderBy: [{ capturedAt: "desc" }],
-        select: {
-          capturedAt: true,
-          document: { select: { publicTitle: true, type: true, version: true } },
-          id: true,
-          status: true,
-        },
-        take: 5,
-      },
+      consents: canReadConsents
+        ? {
+            orderBy: [{ capturedAt: "desc" }],
+            select: {
+              capturedAt: true,
+              document: { select: { publicTitle: true, type: true, version: true } },
+              id: true,
+              status: true,
+            },
+            take: 5,
+          }
+        : false,
       guardians: {
         include: {
           guardian: {
@@ -419,19 +422,6 @@ export default async function AdminClientProfilePage({
           },
         },
         orderBy: [{ isPrimary: "desc" }, { guardian: { lastName: "asc" } }],
-      },
-      plans: {
-        orderBy: [{ createdAt: "desc" }],
-        select: {
-          currency: true,
-          id: true,
-          name: true,
-          sessionCount: true,
-          status: true,
-          totalAmountMinor: true,
-          validFrom: true,
-        },
-        take: 3,
       },
     },
     where: { id: clientId },
@@ -536,7 +526,6 @@ export default async function AdminClientProfilePage({
   const focusAppointment = upcomingAppointments[0] ?? appointmentHistory[0] ?? null;
   const lastPayment = recentFinanceEntries.find((entry) => entry.type === "PAYMENT") ?? null;
   const clientName = `${client.firstName} ${client.lastName}`;
-  const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
   const primaryGuardian = client.guardians[0];
   const noteModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
@@ -663,24 +652,34 @@ export default async function AdminClientProfilePage({
             {canReadFinance ? formatMoney(openBalanceMinor, financeCurrency) : "—"}
           </strong>
           <small>
-            {activeFinancePlan
-              ? `${activeFinancePlan.name} · ${remainingSessions} kalan seans`
-              : activePlan
-                ? activePlan.name
-                : "Plan açılabilir"}
+            {canReadFinance
+              ? activeFinancePlan
+                ? `${activeFinancePlan.name} · ${remainingSessions} kalan seans`
+                : "Plan açılabilir"
+              : "Finans yetkisi gerekir"}
           </small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Kalan seans</span>
           <strong>{canReadFinance ? remainingSessions : "—"}</strong>
-          <small>{financePlans.length} plan üzerinden</small>
+          <small>{canReadFinance ? `${financePlans.length} plan üzerinden` : "Finans yetkisi gerekir"}</small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Son ödeme</span>
           <strong>
-            {lastPayment ? positiveMoney(lastPayment.amountMinor, lastPayment.currency) : "Yok"}
+            {canReadFinance
+              ? lastPayment
+                ? positiveMoney(lastPayment.amountMinor, lastPayment.currency)
+                : "Yok"
+              : "—"}
           </strong>
-          <small>{lastPayment ? formatDate(lastPayment.occurredAt) : "Ödeme hareketi yok"}</small>
+          <small>
+            {canReadFinance
+              ? lastPayment
+                ? formatDate(lastPayment.occurredAt)
+                : "Ödeme hareketi yok"
+              : "Finans yetkisi gerekir"}
+          </small>
         </article>
       </div>
 
@@ -769,27 +768,37 @@ export default async function AdminClientProfilePage({
             <h2 id="kvkk-onaylari">KVKK / onay geçmişi</h2>
             <p>Son onay kayıtları ve kullanılan belge versiyonları.</p>
           </div>
-          <span className="admin-count">{client._count.consents} kayıt</span>
+          <span className="admin-count">
+            {canReadConsents ? `${client._count.consents} kayıt` : "Yetki gerekli"}
+          </span>
         </div>
-        {client.consents.length === 0 ? (
-          <div className="admin-empty-state">
-            <strong>Onay kaydı yok</strong>
-            <span>Danışana ait KVKK veya onay kaydı henüz oluşturulmamış.</span>
-          </div>
+        {canReadConsents ? (
+          client.consents.length === 0 ? (
+            <div className="admin-empty-state">
+              <strong>Onay kaydı yok</strong>
+              <span>Danışana ait KVKK veya onay kaydı henüz oluşturulmamış.</span>
+            </div>
+          ) : (
+            <ul className="admin-service-list">
+              {client.consents.map((consent) => (
+                <li key={consent.id}>
+                  <div>
+                    <strong>{consent.document.publicTitle ?? consent.document.type}</strong>
+                    <span>Belge versiyonu {consent.document.version}</span>
+                  </div>
+                  <span>
+                    {consentStatusLabel(consent.status)} ·{" "}
+                    {formatDateTime(consent.capturedAt, environment.BUSINESS_TIME_ZONE)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
-          <ul className="admin-service-list">
-            {client.consents.map((consent) => (
-              <li key={consent.id}>
-                <div>
-                  <strong>{consent.document.publicTitle ?? consent.document.type}</strong>
-                  <span>Belge versiyonu {consent.document.version}</span>
-                </div>
-                <span>
-                  {consentStatusLabel(consent.status)} · {formatDateTime(consent.capturedAt, environment.BUSINESS_TIME_ZONE)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="admin-empty-state">
+            <strong>Onay kayıtları için yetki gerekli</strong>
+            <span>Bu danışanın onay geçmişini görmek için onay okuma yetkisi gerekir.</span>
+          </div>
         )}
       </section>
 
