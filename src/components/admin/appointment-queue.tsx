@@ -139,7 +139,9 @@ export function AppointmentQueue({
       const decisionKey = `${appointment.id}:${decision}`;
       if (pendingDecision !== decisionKey) {
         setPendingDecision(decisionKey);
-        setFeedback(`${appointment.publicReference} için ${decision === "confirm" ? "onaylama" : "reddetme"} işlemini tamamlamak üzere aynı butona tekrar basın.`);
+        setFeedback(
+          `${appointment.publicReference} için ${decision === "confirm" ? "onaylama" : "reddetme"} işlemini tamamlamak üzere aynı butona tekrar basın.`,
+        );
         return;
       }
       setPendingDecision(null);
@@ -262,7 +264,11 @@ export function AppointmentQueue({
                         disabled={actingAppointmentId !== null}
                         onClick={() => void decideAppointment(appointment, "confirm")}
                       >
-                        {actingAppointmentId === appointment.id ? "İşleniyor…" : pendingDecision === `${appointment.id}:confirm` ? "Onayı tamamla" : "Onayla"}
+                        {actingAppointmentId === appointment.id
+                          ? "İşleniyor…"
+                          : pendingDecision === `${appointment.id}:confirm`
+                            ? "Onayı tamamla"
+                            : "Onayla"}
                       </button>
                       <button
                         className="danger"
@@ -270,7 +276,9 @@ export function AppointmentQueue({
                         disabled={actingAppointmentId !== null}
                         onClick={() => void decideAppointment(appointment, "reject")}
                       >
-                        {pendingDecision === `${appointment.id}:reject` ? "Reddi tamamla" : "Reddet"}
+                        {pendingDecision === `${appointment.id}:reject`
+                          ? "Reddi tamamla"
+                          : "Reddet"}
                       </button>
                     </div>
                   ) : (

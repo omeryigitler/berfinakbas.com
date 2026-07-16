@@ -6,7 +6,7 @@ Türkiye pazarı için tamamen Türkçe çalışan bir Dil ve Konuşma Terapisti
 
 Public portfolyo, kontrollü randevu akışı ve yönetim panelinin çekirdek operasyonları hazırdır. Yönetim panelinde danışan/veli, KVKK onayı, randevu durumları, müsaitlik, özel plan/taksit, ödeme, fatura durumu ve beklenen ödeme takibi bulunur. Görüşme süreleri ile public iletişim bilgileri deploy gerektirmeden yönetim panelinden değiştirilebilir.
 
-Tamamlanan randevu aktif plandan bir seans hakkını atomik olarak düşürür. Kritik randevu, finans, consent ve ayar değişiklikleri audit veya hareket kaydı bırakır. Public site canonical metadata, sitemap, robots, KVKK ve gizlilik sayfalarını içerir.
+Tamamlanan randevu aktif plandan bir seans hakkını Serializable transaction içinde düşürür. WEB kaynaklı randevular onaylanmadan önce yürürlükte consent kayıtları ve çocuk danışanlarda doğrulanmış veli yetkisi yeniden kontrol edilir. Kritik randevu, finans, consent, danışan/veli ve ayar değişiklikleri audit veya hareket kaydı bırakır. Public site canonical metadata, sitemap, robots, KVKK ve gizlilik sayfalarını içerir.
 
 Public randevu gönderimi feature flag’ler, yürürlükteki consent belgeleri ve production yapılandırması hazır olduğunda açılır. E-posta/Calendar için provider-neutral outbox çekirdeği vardır; gerçek provider worker’ı ayrı operasyonel yayın adımıdır.
 
@@ -93,9 +93,11 @@ Kalite komutları:
 ## Sonraki iş
 
 - Production iletişim kanallarını yönetim panelinden doğrulamak
+- Public randevu açılmadan önce kalıcı rate limit/bot koruması ve mükerrer danışan inceleme akışını tamamlamak
 - Public randevu feature flag ve yürürlükte consent belgelerini yayın kontrolünden geçirmek
 - E-posta/Calendar outbox provider worker’ını devreye almak
-- Yedek geri yükleme ve canlı rol matrisi tatbikatını tamamlamak
+- Yedek geri yükleme, Google MFA ve canlı rol matrisi tatbikatını tamamlamak
+- KVKK, saklama süreleri ve veri aktarımı metinlerini uzman kontrolünden geçirmek
 
 ## Hukuki not
 

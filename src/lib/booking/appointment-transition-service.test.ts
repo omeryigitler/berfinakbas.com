@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getDatabaseMock } = vi.hoisted(() => ({ getDatabaseMock: vi.fn() }));
+const { getDatabaseMock, getServerEnvironmentMock } = vi.hoisted(() => ({
+  getDatabaseMock: vi.fn(),
+  getServerEnvironmentMock: vi.fn(),
+}));
 
 vi.mock("@/lib/db", () => ({ getDatabase: getDatabaseMock }));
+vi.mock("@/lib/env", () => ({ getServerEnvironment: getServerEnvironmentMock }));
+
+import { BookingConsentGateError } from "@/domain/consent/booking-consent";
 
 import {
   AppointmentNotFoundError,
@@ -22,8 +28,10 @@ const command = {
 function createDatabase(
   options: {
     allocationStatus?: "ACTIVE" | "RELEASED" | null;
+    clientType?: "ADULT" | "CHILD";
     currentStatus?: "REQUESTED" | "PENDING_REVIEW" | "CONFIRMED" | "RESCHEDULE_PROPOSED";
     exists?: boolean;
+    source?: "ADMIN" | "WEB";
     updateCount?: number;
   } = {},
 ) {
@@ -37,8 +45,13 @@ function createDatabase(
                 options.allocationStatus === null
                   ? null
                   : { status: options.allocationStatus ?? "ACTIVE" },
+              client: { type: options.clientType ?? "ADULT" },
               clientId: "44444444-4444-4444-8444-444444444444",
+              consents: [],
+              guardianId:
+                options.clientType === "CHILD" ? "66666666-6666-4666-8666-666666666666" : null,
               id: command.appointmentId,
+              source: options.source ?? "ADMIN",
               status: options.currentStatus ?? "REQUESTED",
             },
       ),
@@ -49,6 +62,9 @@ function createDatabase(
     },
     auditLog: { create: vi.fn().mockResolvedValue({}) },
     bookingAllocation: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+    clientGuardian: {
+      findUnique: vi.fn().mockResolvedValue({ authorityVerifiedAt: null }),
+    },
     clientPlan: {
       findMany: vi.fn().mockResolvedValue([
         {
@@ -72,6 +88,9 @@ function createDatabase(
 describe("transitionAppointment", () => {
   beforeEach(() => {
     getDatabaseMock.mockReset();
+    getServerEnvironmentMock.mockReturnValue({
+      BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: [],
+    });
   });
 
   it("rejects invalid boundary input before opening a database transaction", async () => {
@@ -229,6 +248,24 @@ describe("transitionAppointment", () => {
         type: "CONSUME",
       },
     });
+  });
+
+  it("blocks web appointment confirmation until consent and guardian authority are valid", async () => {
+    const { database, transaction } = createDatabase({
+      clientType: "CHILD",
+      currentStatus: "PENDING_REVIEW",
+      source: "WEB",
+    });
+    getDatabaseMock.mockReturnValue(database);
+
+    await expect(
+      transitionAppointment({
+        ...command,
+        reasonCode: "ADMIN_APPROVED",
+        toStatus: "CONFIRMED",
+      }),
+    ).rejects.toBeInstanceOf(BookingConsentGateError);
+    expect(transaction.appointment.updateMany).not.toHaveBeenCalled();
   });
 
   it("rejects transitions that are not allowed by the domain state machine", async () => {

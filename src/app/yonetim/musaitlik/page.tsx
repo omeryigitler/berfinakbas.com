@@ -60,7 +60,9 @@ function enumValue<T extends string>(
 }
 
 function isDateValue(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime());
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime())
+  );
 }
 
 function isTimeValue(value: string): boolean {
@@ -193,7 +195,9 @@ export default async function AvailabilityPage() {
 
   const activeExceptionCount = practitioners.reduce(
     (total, practitioner) =>
-      total + practitioner.availabilityExceptions.filter((exception) => exception.status === "ACTIVE").length,
+      total +
+      practitioner.availabilityExceptions.filter((exception) => exception.status === "ACTIVE")
+        .length,
     0,
   );
   const closedDayCount = practitioners.reduce(
@@ -272,7 +276,9 @@ export default async function AvailabilityPage() {
               const activeExceptions = practitioner.availabilityExceptions.filter(
                 (exception) => exception.status === "ACTIVE",
               );
-              const activeRules = practitioner.availabilityRules.filter((rule) => rule.status === "ACTIVE");
+              const activeRules = practitioner.availabilityRules.filter(
+                (rule) => rule.status === "ACTIVE",
+              );
 
               return (
                 <article className={styles.practitionerCard} key={practitioner.id}>
@@ -281,7 +287,9 @@ export default async function AvailabilityPage() {
                       <strong>{practitioner.displayName}</strong>
                       <span>{practitioner.timeZone}</span>
                     </div>
-                    <em>{statusLabel(practitioner.status, { ACTIVE: "Aktif", INACTIVE: "Pasif" })}</em>
+                    <em>
+                      {statusLabel(practitioner.status, { ACTIVE: "Aktif", INACTIVE: "Pasif" })}
+                    </em>
                   </header>
 
                   <dl className={styles.metricGrid}>
@@ -307,10 +315,12 @@ export default async function AvailabilityPage() {
                         <div className={styles.exceptionRow} key={exception.id}>
                           <div>
                             <strong>
-                              {formatLocalDate(exception.localDate)} · {exceptionTimeLabel(exception)}
+                              {formatLocalDate(exception.localDate)} ·{" "}
+                              {exceptionTimeLabel(exception)}
                             </strong>
                             <span>
-                              {statusLabel(exception.type, exceptionTypeLabels)} · {exception.reasonCode} ·{" "}
+                              {statusLabel(exception.type, exceptionTypeLabels)} ·{" "}
+                              {exception.reasonCode} ·{" "}
                               {statusLabel(exception.status, exceptionStatusLabels)}
                             </span>
                             {exception.privateNote ? <small>{exception.privateNote}</small> : null}

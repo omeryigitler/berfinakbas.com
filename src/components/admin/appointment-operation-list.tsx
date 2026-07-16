@@ -59,12 +59,18 @@ const locationLabels = {
 
 const actionConfig = {
   clientCancel: {
-    label: "Danışan iptal etti", pendingLabel: "İşleniyor...", reasonCode: "CLIENT_CANCELLED_BY_ADMIN",
-    successLabel: "danışan iptali olarak kaydedildi", toStatus: "CANCELLED_BY_CLIENT",
+    label: "Danışan iptal etti",
+    pendingLabel: "İşleniyor...",
+    reasonCode: "CLIENT_CANCELLED_BY_ADMIN",
+    successLabel: "danışan iptali olarak kaydedildi",
+    toStatus: "CANCELLED_BY_CLIENT",
   },
   noShow: {
-    label: "Gelmedi", pendingLabel: "İşleniyor...", reasonCode: "ADMIN_NO_SHOW",
-    successLabel: "gelmedi olarak kaydedildi", toStatus: "NO_SHOW",
+    label: "Gelmedi",
+    pendingLabel: "İşleniyor...",
+    reasonCode: "ADMIN_NO_SHOW",
+    successLabel: "gelmedi olarak kaydedildi",
+    toStatus: "NO_SHOW",
   },
   cancel: {
     label: "İptal et",
@@ -122,12 +128,17 @@ export function AppointmentOperationList({
   emptyTitle: string;
 }) {
   const router = useRouter();
-  const [acting, setActing] = useState<{ action: AppointmentAction; appointmentId: string } | null>(null);
+  const [acting, setActing] = useState<{ action: AppointmentAction; appointmentId: string } | null>(
+    null,
+  );
   const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
   const [items, setItems] = useState(appointments);
   const [message, setMessage] = useState<string | null>(null);
 
-  async function updateAppointment(appointment: AppointmentOperationItem, action: AppointmentAction) {
+  async function updateAppointment(
+    appointment: AppointmentOperationItem,
+    action: AppointmentAction,
+  ) {
     const config = actionConfig[action];
     setActing({ action, appointmentId: appointment.id });
     setMessage(null);
@@ -176,7 +187,11 @@ export function AppointmentOperationList({
                   {appointment.client.firstName} {appointment.client.lastName}
                 </strong>
                 <span className="admin-client-contact">
-                  {formatAppointmentRange(appointment.startsAt, appointment.endsAt, businessTimeZone)}
+                  {formatAppointmentRange(
+                    appointment.startsAt,
+                    appointment.endsAt,
+                    businessTimeZone,
+                  )}
                 </span>
                 <span className="admin-client-meta">
                   <em>{appointment.serviceNameSnapshot}</em>
@@ -201,7 +216,9 @@ export function AppointmentOperationList({
                       onClick={() => void updateAppointment(appointment, "complete")}
                       type="button"
                     >
-                      {activeAction === "complete" ? actionConfig.complete.pendingLabel : actionConfig.complete.label}
+                      {activeAction === "complete"
+                        ? actionConfig.complete.pendingLabel
+                        : actionConfig.complete.label}
                     </button>
                     <button
                       className="admin-appointment-card-button"
@@ -209,7 +226,9 @@ export function AppointmentOperationList({
                       onClick={() => void updateAppointment(appointment, "noShow")}
                       type="button"
                     >
-                      {activeAction === "noShow" ? actionConfig.noShow.pendingLabel : actionConfig.noShow.label}
+                      {activeAction === "noShow"
+                        ? actionConfig.noShow.pendingLabel
+                        : actionConfig.noShow.label}
                     </button>
                     <button
                       className="admin-appointment-card-button"
@@ -217,7 +236,9 @@ export function AppointmentOperationList({
                       onClick={() => void updateAppointment(appointment, "clientCancel")}
                       type="button"
                     >
-                      {activeAction === "clientCancel" ? actionConfig.clientCancel.pendingLabel : actionConfig.clientCancel.label}
+                      {activeAction === "clientCancel"
+                        ? actionConfig.clientCancel.pendingLabel
+                        : actionConfig.clientCancel.label}
                     </button>
                     <button
                       className="admin-appointment-card-button danger"
@@ -249,7 +270,11 @@ export function AppointmentOperationList({
           );
         })}
       </ul>
-      {message ? <p className="admin-inline-success" role="status">{message}</p> : null}
+      {message ? (
+        <p className="admin-inline-success" role="status">
+          {message}
+        </p>
+      ) : null}
     </>
   );
 }

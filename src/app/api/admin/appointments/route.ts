@@ -23,7 +23,10 @@ const appointmentCreateSchema = z
     clientId: z.uuid(),
     durationMinutes: z.coerce.number().int().min(5).max(240),
     guardianId: z.uuid().nullable().optional(),
-    locationType: z.enum(["SERVICE_DEFAULT", "IN_PERSON", "ONLINE", "HYBRID"]).nullable().optional(),
+    locationType: z
+      .enum(["SERVICE_DEFAULT", "IN_PERSON", "ONLINE", "HYBRID"])
+      .nullable()
+      .optional(),
     practitionerId: z.uuid(),
     requestNote: z.string().trim().max(500).nullable().optional(),
     serviceId: z.uuid(),
@@ -180,7 +183,8 @@ export async function POST(request: Request) {
       ]);
 
       if (!client) throw new AppointmentCreateError("Danışan bulunamadı.", 404);
-      if (!practitioner) throw new AppointmentCreateError("Terapist bulunamadı veya yetkiniz yok.", 403);
+      if (!practitioner)
+        throw new AppointmentCreateError("Terapist bulunamadı veya yetkiniz yok.", 403);
       if (!service || service.status !== "ACTIVE") {
         throw new AppointmentCreateError("Aktif hizmet bulunamadı.", 404);
       }
@@ -213,7 +217,10 @@ export async function POST(request: Request) {
       });
 
       if (conflict) {
-        throw new AppointmentCreateError("Bu terapist için seçilen saatte aktif randevu/blok var.", 409);
+        throw new AppointmentCreateError(
+          "Bu terapist için seçilen saatte aktif randevu/blok var.",
+          409,
+        );
       }
 
       const created = await transaction.appointment.create({

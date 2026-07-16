@@ -19,9 +19,11 @@ type Guardian = {
 };
 
 type Relation = {
+  authorityVerifiedAt: Date | null;
   guardian: Guardian;
   isPrimary: boolean;
   relationship: string;
+  verificationNote: string | null;
 };
 
 type ConsentDocument = {
@@ -85,6 +87,15 @@ async function grantConsent(formData: FormData) {
     return;
 
   await database.$transaction(async (transaction) => {
+    const activeConsentCount = await transaction.consent.count({
+      where: {
+        clientId,
+        document: { type: document.type },
+        status: "GRANTED",
+      },
+    });
+    if (activeConsentCount > 0) return;
+
     const consent = await transaction.consent.create({
       data: {
         actorUserId: session.user.id,
@@ -128,9 +139,15 @@ async function withdrawConsent(formData: FormData) {
     });
     if (!existing) return;
     const withdrawnAt = new Date();
+    const existingEvidence =
+      existing.evidenceMetadata &&
+      typeof existing.evidenceMetadata === "object" &&
+      !Array.isArray(existing.evidenceMetadata)
+        ? existing.evidenceMetadata
+        : {};
     await transaction.consent.update({
       data: {
-        evidenceMetadata: { withdrawalNote: reason },
+        evidenceMetadata: { ...existingEvidence, withdrawalNote: reason },
         status: "WITHDRAWN",
         withdrawnAt,
       },
@@ -157,29 +174,108 @@ async function withdrawConsent(formData: FormData) {
   redirect(closeHref(clientId));
 }
 
+async function verifyGuardianAuthority(formData: FormData) {
+  "use server";
+  const session = await requirePermission("clients:manage");
+  const clientId = text(formData, "clientId");
+  const guardianId = text(formData, "guardianId");
+  const verificationNote = text(formData, "verificationNote");
+  if (!clientId || !guardianId || verificationNote.length < 8) return;
+
+  const verifiedAt = new Date();
+  const database = getDatabase();
+  await database.$transaction(async (transaction) => {
+    const relation = await transaction.clientGuardian.findUnique({
+      select: { authorityVerifiedAt: true },
+      where: { clientId_guardianId: { clientId, guardianId } },
+    });
+    if (!relation) return;
+
+    await transaction.clientGuardian.update({
+      data: { authorityVerifiedAt: verifiedAt, verificationNote },
+      where: { clientId_guardianId: { clientId, guardianId } },
+    });
+    await transaction.auditLog.create({
+      data: {
+        action: "guardian.authority_verified",
+        actorType: "USER",
+        actorUserId: session.user.id,
+        afterSummary: { authorityVerified: true },
+        beforeSummary: { authorityVerified: Boolean(relation.authorityVerifiedAt) },
+        correlationId: crypto.randomUUID(),
+        entityId: guardianId,
+        entityType: "GUARDIAN",
+        reason: verificationNote,
+      },
+    });
+  });
+  revalidatePath("/yonetim/danisan-profili");
+  redirect(closeHref(clientId));
+}
+
 async function updateClient(formData: FormData) {
   "use server";
-  await requirePermission("clients:manage");
+  const session = await requirePermission("clients:manage");
   const clientId = text(formData, "clientId");
   const firstName = text(formData, "firstName");
   const lastName = text(formData, "lastName");
   const birthYearValue = optional(formData, "birthYear");
+  const status = text(formData, "status");
   if (!clientId || !firstName || !lastName) return;
+  if (!["ACTIVE", "INACTIVE", "PROSPECTIVE"].includes(status)) return;
 
   const birthYear = birthYearValue ? Number(birthYearValue) : null;
-  if (birthYear !== null && (!Number.isInteger(birthYear) || birthYear < 1900)) return;
+  const currentYear = new Date().getFullYear();
+  if (
+    birthYear !== null &&
+    (!Number.isInteger(birthYear) || birthYear < 1900 || birthYear > currentYear)
+  )
+    return;
 
-  await getDatabase().client.update({
-    data: {
-      birthYear,
-      email: optional(formData, "email"),
-      firstName,
-      lastName,
-      phone: optional(formData, "phone"),
-      preferredName: optional(formData, "preferredName"),
-      status: text(formData, "status") as "ACTIVE" | "INACTIVE" | "PROSPECTIVE",
-    },
-    where: { id: clientId },
+  const nextValues = {
+    birthYear,
+    email: optional(formData, "email"),
+    firstName,
+    lastName,
+    phone: optional(formData, "phone"),
+    preferredName: optional(formData, "preferredName"),
+    status: status as "ACTIVE" | "INACTIVE" | "PROSPECTIVE",
+  };
+  const database = getDatabase();
+  await database.$transaction(async (transaction) => {
+    const existing = await transaction.client.findUnique({
+      select: {
+        birthYear: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        preferredName: true,
+        status: true,
+      },
+      where: { id: clientId },
+    });
+    if (!existing) return;
+
+    const changedFields = Object.entries(nextValues)
+      .filter(([key, value]) => existing[key as keyof typeof existing] !== value)
+      .map(([key]) => key);
+    if (changedFields.length === 0) return;
+
+    await transaction.client.update({ data: nextValues, where: { id: clientId } });
+    await transaction.auditLog.create({
+      data: {
+        action: "client.profile_updated",
+        actorType: "USER",
+        actorUserId: session.user.id,
+        afterSummary: { changedFields, status: nextValues.status },
+        beforeSummary: { status: existing.status },
+        correlationId: crypto.randomUUID(),
+        entityId: clientId,
+        entityType: "CLIENT",
+        reason: "CLIENT_PROFILE_UPDATED",
+      },
+    });
   });
   revalidatePath("/yonetim/danisanlar");
   revalidatePath("/yonetim/danisan-profili");
@@ -188,27 +284,43 @@ async function updateClient(formData: FormData) {
 
 async function addExistingGuardian(formData: FormData) {
   "use server";
-  await requirePermission("clients:manage");
+  const session = await requirePermission("clients:manage");
   const clientId = text(formData, "clientId");
   const guardianId = text(formData, "guardianId");
   const relationship = text(formData, "relationship");
   if (!clientId || !guardianId || !relationship) return;
 
-  const count = await getDatabase().clientGuardian.count({
-    where: { clientId },
-  });
-  await getDatabase().clientGuardian.upsert({
-    create: { clientId, guardianId, isPrimary: count === 0, relationship },
-    update: { relationship },
-    where: { clientId_guardianId: { clientId, guardianId } },
-  });
+  const database = getDatabase();
+  await database.$transaction(
+    async (transaction) => {
+      const count = await transaction.clientGuardian.count({ where: { clientId } });
+      await transaction.clientGuardian.upsert({
+        create: { clientId, guardianId, isPrimary: count === 0, relationship },
+        update: { relationship },
+        where: { clientId_guardianId: { clientId, guardianId } },
+      });
+      await transaction.auditLog.create({
+        data: {
+          action: "guardian.relation_upserted",
+          actorType: "USER",
+          actorUserId: session.user.id,
+          afterSummary: { isPrimary: count === 0, linked: true },
+          correlationId: crypto.randomUUID(),
+          entityId: guardianId,
+          entityType: "GUARDIAN",
+          reason: "GUARDIAN_RELATION_UPSERTED",
+        },
+      });
+    },
+    { isolationLevel: "Serializable" },
+  );
   revalidatePath("/yonetim/danisan-profili");
   redirect(closeHref(clientId));
 }
 
 async function createGuardian(formData: FormData) {
   "use server";
-  await requirePermission("clients:manage");
+  const session = await requirePermission("clients:manage");
   const clientId = text(formData, "clientId");
   const firstName = text(formData, "firstName");
   const lastName = text(formData, "lastName");
@@ -217,30 +329,43 @@ async function createGuardian(formData: FormData) {
   if (!clientId || !firstName || !lastName || !phone || !relationship) return;
 
   const database = getDatabase();
-  await database.$transaction(async (transaction) => {
-    const count = await transaction.clientGuardian.count({
-      where: { clientId },
-    });
-    const guardian = await transaction.guardian.create({
-      data: { email: optional(formData, "email"), firstName, lastName, phone },
-      select: { id: true },
-    });
-    await transaction.clientGuardian.create({
-      data: {
-        clientId,
-        guardianId: guardian.id,
-        isPrimary: count === 0,
-        relationship,
-      },
-    });
-  });
+  await database.$transaction(
+    async (transaction) => {
+      const count = await transaction.clientGuardian.count({ where: { clientId } });
+      const guardian = await transaction.guardian.create({
+        data: { email: optional(formData, "email"), firstName, lastName, phone },
+        select: { id: true },
+      });
+      await transaction.clientGuardian.create({
+        data: {
+          clientId,
+          guardianId: guardian.id,
+          isPrimary: count === 0,
+          relationship,
+        },
+      });
+      await transaction.auditLog.create({
+        data: {
+          action: "guardian.created_and_linked",
+          actorType: "USER",
+          actorUserId: session.user.id,
+          afterSummary: { isPrimary: count === 0, linked: true },
+          correlationId: crypto.randomUUID(),
+          entityId: guardian.id,
+          entityType: "GUARDIAN",
+          reason: "GUARDIAN_CREATED_AND_LINKED",
+        },
+      });
+    },
+    { isolationLevel: "Serializable" },
+  );
   revalidatePath("/yonetim/danisan-profili");
   redirect(closeHref(clientId));
 }
 
 async function updateGuardian(formData: FormData) {
   "use server";
-  await requirePermission("clients:manage");
+  const session = await requirePermission("clients:manage");
   const clientId = text(formData, "clientId");
   const guardianId = text(formData, "guardianId");
   const firstName = text(formData, "firstName");
@@ -250,72 +375,117 @@ async function updateGuardian(formData: FormData) {
   if (!clientId || !guardianId || !firstName || !lastName || !phone || !relationship) return;
 
   const database = getDatabase();
-  await database.$transaction([
-    database.guardian.update({
+  await database.$transaction(async (transaction) => {
+    await transaction.guardian.update({
       data: { email: optional(formData, "email"), firstName, lastName, phone },
       where: { id: guardianId },
-    }),
-    database.clientGuardian.update({
+    });
+    await transaction.clientGuardian.update({
       data: { relationship },
       where: { clientId_guardianId: { clientId, guardianId } },
-    }),
-  ]);
+    });
+    await transaction.auditLog.create({
+      data: {
+        action: "guardian.profile_updated",
+        actorType: "USER",
+        actorUserId: session.user.id,
+        afterSummary: {
+          changedFields: ["email", "firstName", "lastName", "phone", "relationship"],
+        },
+        correlationId: crypto.randomUUID(),
+        entityId: guardianId,
+        entityType: "GUARDIAN",
+        reason: "GUARDIAN_PROFILE_UPDATED",
+      },
+    });
+  });
   revalidatePath("/yonetim/danisan-profili");
   redirect(closeHref(clientId));
 }
 
 async function setPrimaryGuardian(formData: FormData) {
   "use server";
-  await requirePermission("clients:manage");
+  const session = await requirePermission("clients:manage");
   const clientId = text(formData, "clientId");
   const guardianId = text(formData, "guardianId");
   if (!clientId || !guardianId) return;
 
   const database = getDatabase();
-  await database.$transaction([
-    database.clientGuardian.updateMany({
+  await database.$transaction(async (transaction) => {
+    await transaction.clientGuardian.updateMany({
       data: { isPrimary: false },
       where: { clientId },
-    }),
-    database.clientGuardian.update({
+    });
+    await transaction.clientGuardian.update({
       data: { isPrimary: true },
       where: { clientId_guardianId: { clientId, guardianId } },
-    }),
-  ]);
+    });
+    await transaction.auditLog.create({
+      data: {
+        action: "guardian.primary_changed",
+        actorType: "USER",
+        actorUserId: session.user.id,
+        afterSummary: { isPrimary: true },
+        correlationId: crypto.randomUUID(),
+        entityId: guardianId,
+        entityType: "GUARDIAN",
+        reason: "PRIMARY_GUARDIAN_CHANGED",
+      },
+    });
+  });
   revalidatePath("/yonetim/danisan-profili");
   redirect(closeHref(clientId));
 }
 
 async function removeGuardian(formData: FormData) {
   "use server";
-  await requirePermission("clients:manage");
+  const session = await requirePermission("clients:manage");
   const clientId = text(formData, "clientId");
   const guardianId = text(formData, "guardianId");
   if (!clientId || !guardianId) return;
 
   const database = getDatabase();
-  const client = await database.client.findUnique({
-    include: { guardians: { select: { guardianId: true, isPrimary: true } } },
-    where: { id: clientId },
-  });
-  if (!client) return;
-  if (client.type === "CHILD" && client.guardians.length <= 1) return;
+  await database.$transaction(
+    async (transaction) => {
+      const client = await transaction.client.findUnique({
+        include: { guardians: { select: { guardianId: true, isPrimary: true } } },
+        where: { id: clientId },
+      });
+      if (!client) return;
+      if (client.type === "CHILD" && client.guardians.length <= 1) return;
 
-  const removed = client.guardians.find((item) => item.guardianId === guardianId);
-  await database.clientGuardian.delete({
-    where: { clientId_guardianId: { clientId, guardianId } },
-  });
-  if (removed?.isPrimary) {
-    const replacement = client.guardians.find((item) => item.guardianId !== guardianId);
-    if (replacement) {
-      await database.clientGuardian.update({
-        data: { isPrimary: true },
-        where: {
-          clientId_guardianId: { clientId, guardianId: replacement.guardianId },
+      const removed = client.guardians.find((item) => item.guardianId === guardianId);
+      if (!removed) return;
+      await transaction.clientGuardian.delete({
+        where: { clientId_guardianId: { clientId, guardianId } },
+      });
+      if (removed.isPrimary) {
+        const replacement = client.guardians.find((item) => item.guardianId !== guardianId);
+        if (replacement) {
+          await transaction.clientGuardian.update({
+            data: { isPrimary: true },
+            where: {
+              clientId_guardianId: { clientId, guardianId: replacement.guardianId },
+            },
+          });
+        }
+      }
+      await transaction.auditLog.create({
+        data: {
+          action: "guardian.relation_removed",
+          actorType: "USER",
+          actorUserId: session.user.id,
+          afterSummary: { linked: false },
+          beforeSummary: { isPrimary: removed.isPrimary, linked: true },
+          correlationId: crypto.randomUUID(),
+          entityId: guardianId,
+          entityType: "GUARDIAN",
+          reason: "GUARDIAN_RELATION_REMOVED",
         },
       });
-    }
-  }
+    },
+    { isolationLevel: "Serializable" },
+  );
   revalidatePath("/yonetim/danisan-profili");
   redirect(closeHref(clientId));
 }
@@ -549,6 +719,7 @@ export function ClientProfileManagementModals({
             <h3>
               {relation.guardian.firstName} {relation.guardian.lastName}
               {relation.isPrimary ? " · Birincil" : ""}
+              {relation.authorityVerifiedAt ? " · Yetkisi doğrulandı" : " · Yetki bekliyor"}
             </h3>
             <input name="clientId" type="hidden" value={client.id} />
             <input name="guardianId" type="hidden" value={relation.guardian.id} />
@@ -574,14 +745,37 @@ export function ClientProfileManagementModals({
                 <input defaultValue={relation.relationship} name="relationship" required />
               </label>
             </div>
+            {!relation.authorityVerifiedAt ? (
+              <label className="booking-field">
+                Yetki doğrulama notu
+                <textarea
+                  minLength={8}
+                  name="verificationNote"
+                  placeholder="Temsil yetkisinin nasıl doğrulandığını yazın."
+                  required
+                />
+              </label>
+            ) : relation.verificationNote ? (
+              <p>Doğrulama notu: {relation.verificationNote}</p>
+            ) : null}
             <div className={modalStyles.footerActions}>
-              <button className={modalStyles.modalButton} type="submit">
+              <button className={modalStyles.modalButton} formNoValidate type="submit">
                 Bilgileri kaydet
               </button>
+              {!relation.authorityVerifiedAt ? (
+                <button
+                  className={modalStyles.modalButtonSecondary}
+                  formAction={verifyGuardianAuthority}
+                  type="submit"
+                >
+                  Temsil yetkisini doğrula
+                </button>
+              ) : null}
               {!relation.isPrimary ? (
                 <button
                   className={modalStyles.modalButtonSecondary}
                   formAction={setPrimaryGuardian}
+                  formNoValidate
                   type="submit"
                 >
                   Birincil yap
@@ -591,6 +785,7 @@ export function ClientProfileManagementModals({
                 <button
                   className={modalStyles.modalButtonSecondary}
                   formAction={removeGuardian}
+                  formNoValidate
                   type="submit"
                 >
                   İlişkiyi kaldır

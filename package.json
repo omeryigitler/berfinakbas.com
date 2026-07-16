@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && if [ \"${VERCEL:-0}\" = \"1\" ]; then prisma migrate deploy; fi && next build",
+    "build": "prisma generate && if [ \"${VERCEL_ENV:-development}\" = \"production\" ]; then prisma migrate deploy; fi && next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
