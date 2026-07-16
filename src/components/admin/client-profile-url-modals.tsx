@@ -14,8 +14,6 @@ type Props = {
   activeModal: string;
   clientId: string;
   clientName: string;
-  canReadAppointments: boolean;
-  canReadFinance: boolean;
 };
 
 function textValue(formData: FormData, key: string): string {
@@ -57,15 +55,9 @@ export async function ClientProfileUrlModals({
   activeModal,
   clientId,
   clientName,
-  canReadAppointments,
-  canReadFinance,
 }: Props) {
   const closeHref = `/yonetim/danisan-profili?clientId=${clientId}` as Route;
-  if (activeModal === "randevu-olustur" && !canReadAppointments) return null;
-  if (activeModal === "odeme-plani" && !canReadFinance) return null;
-  if (!["not-ekle", "randevu-olustur", "odeme-plani"].includes(activeModal)) {
-    return null;
-  }
+  if (activeModal !== "not-ekle") return null;
 
   if (activeModal === "not-ekle") {
     const session = await requirePermission("clients:read");
@@ -141,66 +133,6 @@ export async function ClientProfileUrlModals({
     );
   }
 
-  if (activeModal === "randevu-olustur") {
-    const appointmentHref =
-      `/yonetim/randevular?clientId=${clientId}&modal=randevu-olustur` as Route;
-
-    return (
-      <AdminUrlModal
-        closeHref={closeHref}
-        footer={
-          <ModalLinkFooter
-            closeHref={closeHref}
-            primaryHref={appointmentHref}
-            primaryLabel="Randevu ekranına geç"
-          />
-        }
-        title="Randevu oluştur"
-      >
-        <div className={modalStyles.modalGrid}>
-          <ModalFieldPreview
-            helper="Randevu oluşturma ekranı seçili danışanla açılır."
-            label="Danışan"
-            value={clientName}
-          />
-          <ModalFieldPreview
-            helper="Takvim ve çakışma kontrolü randevu ekranında çalışır."
-            label="Bağlantı"
-            value="Takvim ekranına yönlendirme"
-          />
-        </div>
-      </AdminUrlModal>
-    );
-  }
-
-  const financeHref = `/yonetim/odemeler?clientId=${clientId}` as Route;
-
-  return (
-    <AdminUrlModal
-      closeHref={closeHref}
-      footer={
-        <ModalLinkFooter
-          closeHref={closeHref}
-          primaryHref={financeHref}
-          primaryLabel="Ödeme ekranına geç"
-        />
-      }
-      title="Ödeme planı"
-    >
-      <div className={modalStyles.modalGrid}>
-        <ModalFieldPreview
-          helper="Finans motoru seçili danışan filtresiyle ödeme ekranında çalışır."
-          label="Danışan"
-          value={clientName}
-        />
-        <ModalFieldPreview
-          helper="Plan ve ödeme işlemleri tam sayfa akışta daha rahat yapılır."
-          label="Bağlantı"
-          value="Ödeme ekranına yönlendirme"
-        />
-      </div>
-    </AdminUrlModal>
-  );
 }
 
 function ModalFooter({ closeHref }: { closeHref: Route }) {
@@ -217,31 +149,3 @@ function ModalFooter({ closeHref }: { closeHref: Route }) {
   );
 }
 
-function ModalLinkFooter({
-  closeHref,
-  primaryHref,
-  primaryLabel,
-}: {
-  closeHref: Route;
-  primaryHref: Route;
-  primaryLabel: string;
-}) {
-  return (
-    <div className={modalStyles.footerActions}>
-      <Link
-        className={modalStyles.modalButtonSecondary}
-        href={closeHref}
-        scroll={false}
-      >
-        Kapat
-      </Link>
-      <Link
-        className={modalStyles.modalButton}
-        href={primaryHref}
-        scroll={false}
-      >
-        {primaryLabel}
-      </Link>
-    </div>
-  );
-}
