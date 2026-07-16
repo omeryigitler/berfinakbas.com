@@ -19,10 +19,14 @@ export const defaultAppointmentDurationSettings: AppointmentDurationSettings = O
 });
 
 export async function getAppointmentDurationSettings(): Promise<AppointmentDurationSettings> {
-  const setting = await getDatabase().operationalSetting.findUnique({
-    select: { value: true },
-    where: { key: appointmentDurationSettingsKey },
-  });
-  const parsed = appointmentDurationSettingsSchema.safeParse(setting?.value);
-  return parsed.success ? parsed.data : defaultAppointmentDurationSettings;
+  try {
+    const setting = await getDatabase().operationalSetting.findUnique({
+      select: { value: true },
+      where: { key: appointmentDurationSettingsKey },
+    });
+    const parsed = appointmentDurationSettingsSchema.safeParse(setting?.value);
+    return parsed.success ? parsed.data : defaultAppointmentDurationSettings;
+  } catch {
+    return defaultAppointmentDurationSettings;
+  }
 }

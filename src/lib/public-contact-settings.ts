@@ -29,10 +29,14 @@ export const defaultPublicContactSettings: PublicContactSettings = Object.freeze
 });
 
 export async function getPublicContactSettings(): Promise<PublicContactSettings> {
-  const setting = await getDatabase().operationalSetting.findUnique({
-    select: { value: true },
-    where: { key: publicContactSettingsKey },
-  });
-  const parsed = publicContactSettingsSchema.safeParse(setting?.value);
-  return parsed.success ? parsed.data : defaultPublicContactSettings;
+  try {
+    const setting = await getDatabase().operationalSetting.findUnique({
+      select: { value: true },
+      where: { key: publicContactSettingsKey },
+    });
+    const parsed = publicContactSettingsSchema.safeParse(setting?.value);
+    return parsed.success ? parsed.data : defaultPublicContactSettings;
+  } catch {
+    return defaultPublicContactSettings;
+  }
 }
