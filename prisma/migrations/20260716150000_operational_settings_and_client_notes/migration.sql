@@ -30,3 +30,17 @@ ALTER TABLE "client_notes"
 ALTER TABLE "client_notes"
   ADD CONSTRAINT "client_notes_created_by_user_id_fkey"
   FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+INSERT INTO "client_notes" ("id", "client_id", "category", "note", "created_by_user_id", "created_at")
+SELECT
+  gen_random_uuid(),
+  audit."entity_id"::uuid,
+  CASE WHEN audit."after_summary"->>'category' = 'PAYMENT' THEN 'PAYMENT' ELSE 'ADMIN' END,
+  LEFT(COALESCE(audit."after_summary"->>'note', audit."reason", 'Operasyon notu'), 500),
+  audit."actor_user_id",
+  audit."created_at"
+FROM "audit_logs" audit
+WHERE audit."action" = 'CLIENT_NOTE_CREATED'
+  AND audit."entity_type" = 'CLIENT'
+  AND audit."actor_user_id" IS NOT NULL
+  AND EXISTS (SELECT 1 FROM "clients" client WHERE client."id" = audit."entity_id"::uuid);
