@@ -5,7 +5,8 @@ import { getDatabase } from "@/lib/db";
 export const publicContactSettingsKey = "PUBLIC_CONTACT_DETAILS";
 
 const nullableEmail = z.union([z.email().max(320), z.null()]);
-const nullableUrl = z.union([z.url().max(500), z.null()]);
+const httpsUrl = z.url().max(500).refine((value) => new URL(value).protocol === "https:", "HTTPS bağlantısı gereklidir.");
+const nullableUrl = z.union([httpsUrl, z.null()]);
 export const publicContactSettingsSchema = z.object({
   address: z.string().trim().min(2).max(300),
   email: nullableEmail,
