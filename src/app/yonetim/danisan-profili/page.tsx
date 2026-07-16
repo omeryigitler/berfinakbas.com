@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
+import { ClientProfileManagementModals } from "@/components/admin/client-profile-management-modals";
 import { ClientProfileUrlModals } from "@/components/admin/client-profile-url-modals";
 import { hasPermission } from "@/domain/auth/permissions";
 import {
@@ -436,6 +437,14 @@ export default async function AdminClientProfilePage({
 
   if (!client) notFound();
 
+  const allGuardians = canManageClients
+    ? await database.guardian.findMany({
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+        select: { email: true, firstName: true, id: true, lastName: true, phone: true },
+        take: 250,
+      })
+    : [];
+
   const now = new Date();
   const [upcomingAppointments, appointmentHistory] = canReadAppointments
     ? await Promise.all([
@@ -586,7 +595,23 @@ export default async function AdminClientProfilePage({
               Not ekle
             </Link>
           ) : null}
-          <Link href="/yonetim/danisanlar">Danışan listesi</Link>
+          {canManageClients ? (
+            <Link
+              href={`/yonetim/danisan-profili?clientId=${client.id}&modal=profili-duzenle` as Route}
+              scroll={false}
+            >
+              Profili düzenle
+            </Link>
+          ) : null}
+          {canManageClients ? (
+            <Link
+              href={`/yonetim/danisan-profili?clientId=${client.id}&modal=veli-yonetimi` as Route}
+              scroll={false}
+            >
+              Veli yönetimi
+            </Link>
+          ) : null}
+                    <Link href="/yonetim/danisanlar">Danışan listesi</Link>
         </div>
       </section>
 
@@ -881,6 +906,15 @@ export default async function AdminClientProfilePage({
           </div>
         )}
       </section>
+
+      {canManageClients ? (
+        <ClientProfileManagementModals
+          activeModal={activeModal}
+          allGuardians={allGuardians}
+          client={client}
+          relations={client.guardians}
+        />
+      ) : null}
 
       <ClientProfileUrlModals
         activeModal={activeModal}
