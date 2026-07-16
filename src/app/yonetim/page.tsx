@@ -17,6 +17,11 @@ import {
   appointmentDurationSettingsSchema,
   getAppointmentDurationSettings,
 } from "@/lib/booking/appointment-duration-settings";
+import {
+  getPublicContactSettings,
+  publicContactSettingsKey,
+  publicContactSettingsSchema,
+} from "@/lib/public-contact-settings";
 import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -153,6 +158,38 @@ function isValidTimeZone(timeZone: string): boolean {
   } catch {
     return false;
   }
+}
+
+async function updatePublicContactSettings(formData: FormData) {
+  "use server";
+  const session = await requirePermission("services:manage");
+  const optionalValue = (key: string) => textValue(formData, key) || null;
+  const value = publicContactSettingsSchema.parse({
+    address: textValue(formData, "address"),
+    email: optionalValue("email"),
+    mapsUrl: optionalValue("mapsUrl"),
+    phone: optionalValue("phone"),
+    whatsappUrl: optionalValue("whatsappUrl"),
+  });
+  const reason = boundedTextValue(formData, "reason", 8, 500);
+  if (!reason) return;
+
+  const database = getDatabase();
+  await database.$transaction(async (transaction) => {
+    const previous = await transaction.operationalSetting.findUnique({ where: { key: publicContactSettingsKey } });
+    await transaction.operationalSetting.upsert({
+      create: { key: publicContactSettingsKey, updatedByUserId: session.user.id, value },
+      update: { updatedByUserId: session.user.id, value },
+      where: { key: publicContactSettingsKey },
+    });
+    await transaction.settingChangeLog.create({ data: {
+      actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: publicContactSettingsKey,
+      newValue: value, oldValue: previous?.value ?? null, reason, settingKey: publicContactSettingsKey,
+    } });
+  });
+  revalidatePath("/");
+  revalidatePath("/iletisim");
+  revalidatePath("/yonetim");
 }
 
 async function updateAppointmentDurationSettings(formData: FormData) {
@@ -425,7 +462,10 @@ export default async function AdminHomePage({
     "technical-health:read",
   );
   const db = getDatabase();
-  const durationSettings = await getAppointmentDurationSettings();
+  const [durationSettings, contactSettings] = await Promise.all([
+    getAppointmentDurationSettings(),
+    getPublicContactSettings(),
+  ]);
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -883,6 +923,26 @@ export default async function AdminHomePage({
           </section>
         </aside>
       </div>
+
+      <section className="admin-panel" aria-labelledby="public-iletisim-ayarlari">
+        <div className="admin-panel-heading">
+          <div><h2 id="public-iletisim-ayarlari">Public iletişim ayarları</h2><p>İletişim sayfasındaki bilgiler deploy gerekmeden buradan yönetilir.</p></div>
+          <span className="admin-count">{contactSettings.address}</span>
+        </div>
+        {canManageServices ? (
+          <form action={updatePublicContactSettings} className="admin-config-edit-panel">
+            <div className="admin-config-form-grid">
+              <label>Konum / adres<input defaultValue={contactSettings.address} maxLength={300} name="address" required /></label>
+              <label>E-posta<input defaultValue={contactSettings.email ?? ""} maxLength={320} name="email" type="email" /></label>
+              <label>Telefon<input defaultValue={contactSettings.phone ?? ""} maxLength={40} name="phone" /></label>
+              <label>WhatsApp bağlantısı<input defaultValue={contactSettings.whatsappUrl ?? ""} maxLength={500} name="whatsappUrl" placeholder="https://wa.me/90..." type="url" /></label>
+              <label>Harita bağlantısı<input defaultValue={contactSettings.mapsUrl ?? ""} maxLength={500} name="mapsUrl" type="url" /></label>
+            </div>
+            <label>Değişiklik nedeni<textarea minLength={8} maxLength={500} name="reason" required /></label>
+            <button type="submit">İletişim bilgilerini kaydet</button>
+          </form>
+        ) : null}
+      </section>
 
       <section className="admin-panel" aria-labelledby="hizmet-terapist-ayarlari">
         <div className="admin-panel-heading">
