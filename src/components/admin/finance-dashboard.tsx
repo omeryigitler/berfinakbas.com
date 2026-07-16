@@ -115,6 +115,11 @@ export function formatMoney(amountMinor: string, currency: string): string {
   return amount < 0n ? `-${formatted}` : formatted;
 }
 
+function minorToInput(amountMinor: string): string {
+  const amount = BigInt(amountMinor);
+  return `${amount / 100n}.${(amount % 100n).toString().padStart(2, "0")}`;
+}
+
 function today(): string {
   const now = new Date();
   return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
@@ -344,6 +349,23 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
       invoiceStatus: String(data.get("invoiceStatus") ?? "NOT_REQUIRED"),
       planId,
       reason: String(data.get("reason") ?? ""),
+    });
+  }
+
+  async function updatePlanStatus(event: FormEvent<HTMLFormElement>, planId: string) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    await operation({ action: "UPDATE_PLAN_STATUS", planId, reason: String(data.get("reason") ?? ""), status: String(data.get("status") ?? "ACTIVE") });
+  }
+
+  async function updateInstallment(event: FormEvent<HTMLFormElement>, installmentId: string) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const amountMinor = amountToMinor(String(data.get("amount") ?? ""));
+    if (!amountMinor) { setMessage("Taksit tutarını kontrol edin."); return; }
+    await operation({
+      action: "UPDATE_INSTALLMENT", amountMinor, dueDate: String(data.get("dueDate") ?? ""),
+      idempotencyKey: crypto.randomUUID(), installmentId, reason: String(data.get("reason") ?? ""),
     });
   }
 
@@ -751,9 +773,33 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                     <small className={`finance-state finance-state--${installment.state.toLowerCase()}`}>
                       {installmentStateLabels[installment.state]}
                     </small>
+                    {canManage && plan.status === "ACTIVE" ? (
+                      <details className="finance-history">
+                        <summary>Taksiti düzenle</summary>
+                        <form onSubmit={(event) => void updateInstallment(event, installment.id)}>
+                          <label>Tutar<input defaultValue={minorToInput(installment.amountDueMinor)} inputMode="decimal" name="amount" required /></label>
+                          <label>Son ödeme tarihi<DateControl defaultValue={installment.dueDate} name="dueDate" required /></label>
+                          <label>İşlem notu<textarea minLength={8} name="reason" required /></label>
+                          <button disabled={busy} type="submit">Taksiti kaydet</button>
+                        </form>
+                      </details>
+                    ) : null}
                   </div>
                 ))}
               </div>
+              {canManage ? (
+                <details className="finance-history">
+                  <summary>Plan durumunu değiştir</summary>
+                  <form onSubmit={(event) => void updatePlanStatus(event, plan.id)}>
+                    <label>Durum<SelectControl defaultValue={plan.status} name="status" options={[
+                      { label: "Aktif", value: "ACTIVE" }, { label: "Tamamlandı", value: "COMPLETED" },
+                      { label: "İptal", value: "CANCELLED" }, { label: "Süresi doldu", value: "EXPIRED" },
+                    ]} /></label>
+                    <label>İşlem notu<textarea minLength={8} name="reason" required /></label>
+                    <button disabled={busy} type="submit">Plan durumunu kaydet</button>
+                  </form>
+                </details>
+              ) : null}
               <details className="finance-history">
                 <summary>Fatura / belge durumu · {invoiceStatusLabels[plan.invoiceStatus]}</summary>
                 {canManage ? (
