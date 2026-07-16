@@ -167,7 +167,6 @@ async function updateAppointmentDurationSettings(formData: FormData) {
   if (!reason) return;
 
   const database = getDatabase();
-  const durationSettings = await getAppointmentDurationSettings();
   await database.$transaction(async (transaction) => {
     const previous = await transaction.operationalSetting.findUnique({ where: { key: appointmentDurationSettingsKey } });
     await transaction.operationalSetting.upsert({
@@ -426,6 +425,7 @@ export default async function AdminHomePage({
     "technical-health:read",
   );
   const db = getDatabase();
+  const durationSettings = await getAppointmentDurationSettings();
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
