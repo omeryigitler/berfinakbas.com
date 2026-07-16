@@ -4,13 +4,14 @@ import { getDatabase } from "@/lib/db";
 
 export const publicContactSettingsKey = "PUBLIC_CONTACT_DETAILS";
 
-const nullableContactValue = z.string().trim().max(320).nullable();
+const nullableEmail = z.union([z.email().max(320), z.null()]);
+const nullableUrl = z.union([z.url().max(500), z.null()]);
 export const publicContactSettingsSchema = z.object({
   address: z.string().trim().min(2).max(300),
-  email: nullableContactValue,
-  mapsUrl: nullableContactValue,
-  phone: z.string().trim().max(40).nullable(),
-  whatsappUrl: nullableContactValue,
+  email: nullableEmail,
+  mapsUrl: nullableUrl,
+  phone: z.union([z.string().trim().min(7).max(40), z.null()]),
+  whatsappUrl: nullableUrl,
 });
 
 export type PublicContactSettings = z.infer<typeof publicContactSettingsSchema>;
