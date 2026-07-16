@@ -64,8 +64,8 @@ export async function AppointmentCreateModal({
     <AdminUrlModal closeHref={closeHref} title="Randevu oluştur">
       <div className={modalStyles.modalStack}>
         <p className={modalStyles.footerText}>
-          Admin tarafından oluşturulan randevu doğrudan onaylı açılır. Aynı terapistte
-          çakışan saat varsa kayıt engellenir.
+          Admin tarafından oluşturulan randevu doğrudan onaylı açılır. Aynı terapistte çakışan saat
+          varsa kayıt engellenir.
         </p>
         <AppointmentCreateForm
           clients={clients.map((client) => ({

@@ -51,7 +51,10 @@ function createDatabase(
     bookingAllocation: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
     clientPlan: {
       findMany: vi.fn().mockResolvedValue([
-        { id: "55555555-5555-4555-8555-555555555555", sessionCreditEntries: [{ quantityDelta: 2 }] },
+        {
+          id: "55555555-5555-4555-8555-555555555555",
+          sessionCreditEntries: [{ quantityDelta: 2 }],
+        },
       ]),
     },
     sessionCreditEntry: { create: vi.fn().mockResolvedValue({}) },
@@ -134,7 +137,9 @@ describe("transitionAppointment", () => {
   });
 
   it("records the approving user and timestamp when confirming", async () => {
-    const { database, transaction } = createDatabase({ currentStatus: "PENDING_REVIEW" });
+    const { database, transaction } = createDatabase({
+      currentStatus: "PENDING_REVIEW",
+    });
     const now = new Date("2026-07-01T09:00:00.000Z");
     getDatabaseMock.mockReturnValue(database);
 
@@ -172,7 +177,9 @@ describe("transitionAppointment", () => {
   });
 
   it("releases the active allocation when a confirmed appointment is cancelled", async () => {
-    const { database, transaction } = createDatabase({ currentStatus: "CONFIRMED" });
+    const { database, transaction } = createDatabase({
+      currentStatus: "CONFIRMED",
+    });
     const now = new Date("2026-07-01T09:00:00.000Z");
     getDatabaseMock.mockReturnValue(database);
 
@@ -200,10 +207,16 @@ describe("transitionAppointment", () => {
   });
 
   it("consumes one available session credit when a confirmed appointment completes", async () => {
-    const { database, transaction } = createDatabase({ currentStatus: "CONFIRMED" });
+    const { database, transaction } = createDatabase({
+      currentStatus: "CONFIRMED",
+    });
     getDatabaseMock.mockReturnValue(database);
 
-    await transitionAppointment({ ...command, reasonCode: "ADMIN_COMPLETED", toStatus: "COMPLETED" });
+    await transitionAppointment({
+      ...command,
+      reasonCode: "ADMIN_COMPLETED",
+      toStatus: "COMPLETED",
+    });
 
     expect(transaction.sessionCreditEntry.create).toHaveBeenCalledWith({
       data: {
@@ -223,7 +236,11 @@ describe("transitionAppointment", () => {
     getDatabaseMock.mockReturnValue(database);
 
     await expect(
-      transitionAppointment({ ...command, reasonCode: "ADMIN_APPROVED", toStatus: "CONFIRMED" }),
+      transitionAppointment({
+        ...command,
+        reasonCode: "ADMIN_APPROVED",
+        toStatus: "CONFIRMED",
+      }),
     ).rejects.toBeInstanceOf(AppointmentTransitionConflictError);
     expect(transaction.appointment.updateMany).not.toHaveBeenCalled();
     expect(transaction.appointmentStatusLog.create).not.toHaveBeenCalled();

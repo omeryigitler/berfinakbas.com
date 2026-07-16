@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   description:
     "Berfin Akbaş için bilgilendirici Dil ve Konuşma Terapisti portfolyosu ve kontrollü randevu talep sistemi.",
   openGraph: {
-    description: "Çocuklar, ergenler ve yetişkinler için bilgilendirici dil ve konuşma terapisi ve kontrollü randevu talebi.",
+    description:
+      "Çocuklar, ergenler ve yetişkinler için bilgilendirici dil ve konuşma terapisi ve kontrollü randevu talebi.",
     locale: "tr_TR",
     siteName: "Berfin Akbaş",
     title: "Berfin Akbaş | Dil ve Konuşma Terapisti",
