@@ -186,11 +186,12 @@ panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
 ### Fazlar
 
 - **Faz 0 (tamam):** Bu plan.
-- **Faz 1:** Yukarıdaki dosyalarla hub kabuğu + sentetik veri +
-  `/yonetim/hub` önizlemesi. Kalite kapıları: `pnpm quality`, `pnpm build`.
-- **Faz 2:** `/yonetim/hub` liste panelinin gerçek verilerle (randevu
-  talepleri; mevcut Prisma sorguları server component'te serileştirilir)
-  beslenmesi.
+- **Faz 1 (tamam):** Hub kabuğu + sentetik veri + `/yonetim/hub` önizlemesi.
+- **Faz 2 (tamam):** `/yonetim/hub` gerçek verilerle besleniyor: sayfa
+  `appointments:read` yetkisiyle son 30 talebi (client, guardian,
+  practitioner, statusLogs dahil) çeker; `hub-data.ts` saf eşleyicisi durum →
+  aşama/çip, zaman grubu, hazırlık skoru (ağırlıklar kodda), sıradaki adımlar
+  ve zaman çizelgesini üretir; nav rozetleri açık taleplerden hesaplanır.
 - **Faz 3:** Kayıt çalışma alanı eylemleri: onay/red/tamamlama mevcut
   server action'lara bağlanır; aşama şeridi gerçek durum makinesini
   (REQUESTED/CONFIRMED/…) yansıtır; panel durumu URL'e taşınır.

@@ -11,7 +11,6 @@ import {
   groupRecords,
   hubGroupLabels,
   hubNavGroups,
-  hubRecords,
   hubStages,
   hubStatusLabels,
   type HubRecord,
@@ -51,17 +50,41 @@ function ScoreRing({ grade, score }: { grade: string; score: number }) {
   );
 }
 
-export function DashboardHub() {
+export function DashboardHub({
+  listCaption,
+  records,
+}: {
+  listCaption: string;
+  records: readonly HubRecord[];
+}) {
   const [openGroup, setOpenGroup] = useState<string>("randevular");
   const [activeChild, setActiveChild] = useState<string | null>("talepler");
   const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
   const [focusMode, setFocusMode] = useState(false);
 
   const record = useMemo(
-    () => hubRecords.find((candidate) => candidate.id === activeRecordId) ?? null,
-    [activeRecordId],
+    () => records.find((candidate) => candidate.id === activeRecordId) ?? null,
+    [activeRecordId, records],
   );
-  const buckets = useMemo(() => groupRecords(hubRecords), []);
+  const buckets = useMemo(() => groupRecords(records), [records]);
+  const openCount = useMemo(
+    () =>
+      records.filter((candidate) => candidate.status === "yeni" || candidate.status === "bekliyor")
+        .length,
+    [records],
+  );
+  const navGroups = useMemo(
+    () =>
+      hubNavGroups.map((group) => ({
+        ...group,
+        children: group.children.map((child) =>
+          child.id === "talepler" || child.id === "kuyruk"
+            ? { ...child, badge: openCount || undefined }
+            : child,
+        ),
+      })),
+    [openCount],
+  );
   const listOpen = activeChild !== null;
   const stageIndex = record ? getStageIndex(record.stage) : -1;
 
@@ -81,7 +104,7 @@ export function DashboardHub() {
         </Link>
 
         <nav className={styles.railNav}>
-          {hubNavGroups.map((group) => {
+          {navGroups.map((group) => {
             const isOpen = openGroup === group.id;
             return (
               <div
@@ -153,11 +176,16 @@ export function DashboardHub() {
             </button>
             <div>
               <strong>Talep kuyruğu</strong>
-              <small>{hubRecords.length} kayıt · sentetik önizleme</small>
+              <small>
+                {records.length} kayıt · {listCaption}
+              </small>
             </div>
           </header>
 
           <div className={styles.listScroll}>
+            {buckets.length === 0 ? (
+              <p className={styles.listEmpty}>Henüz kayıt yok. Yeni talepler burada listelenir.</p>
+            ) : null}
             {buckets.map((bucket) => (
               <div key={bucket.group}>
                 <p className={styles.listGroupLabel}>{hubGroupLabels[bucket.group]}</p>
@@ -217,6 +245,7 @@ export function DashboardHub() {
                   <div className={styles.recordChips}>
                     <StatusChip status={record.status} />
                     <span className={styles.softChip}>{record.channel}</span>
+                    <span className={styles.softChip}>{record.reference}</span>
                   </div>
                 </div>
               </div>
@@ -251,6 +280,10 @@ export function DashboardHub() {
                     <div>
                       <dt>Kanal</dt>
                       <dd>{record.channel}</dd>
+                    </div>
+                    <div>
+                      <dt>Planlanan saat</dt>
+                      <dd>{record.plannedAt}</dd>
                     </div>
                   </dl>
                 </article>

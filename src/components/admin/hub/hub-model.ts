@@ -1,6 +1,7 @@
 export type HubStage = "talep" | "kontrol" | "onay" | "gorusme";
 
-export type HubStatus = "yeni" | "bekliyor" | "onaylandi" | "tamamlandi";
+export type HubStatus =
+  "bekliyor" | "gelmedi" | "iptal" | "onaylandi" | "reddedildi" | "tamamlandi" | "yeni";
 
 export type HubTaskState = "done" | "active" | "upcoming";
 
@@ -14,6 +15,8 @@ export type HubRecord = Readonly<{
   lastAction: string;
   lastActionAt: string;
   name: string;
+  plannedAt: string;
+  reference: string;
   nextSteps: readonly {
     detail: string;
     due: string;
@@ -47,7 +50,10 @@ export const hubStages: readonly { id: HubStage; label: string }[] = [
 
 export const hubStatusLabels: Readonly<Record<HubStatus, string>> = {
   bekliyor: "Bekliyor",
+  gelmedi: "Gelmedi",
+  iptal: "İptal",
   onaylandi: "Onaylandı",
+  reddedildi: "Reddedildi",
   tamamlandi: "Tamamlandı",
   yeni: "Yeni",
 };
@@ -61,7 +67,7 @@ export const hubGroupLabels: Readonly<Record<HubRecord["group"], string>> = {
 export const hubNavGroups: readonly HubNavGroup[] = [
   {
     children: [
-      { id: "kuyruk", label: "Talep kuyruğu", badge: 4 },
+      { id: "kuyruk", label: "Talep kuyruğu" },
       { id: "gunum", label: "Günüm" },
     ],
     icon: "⌂",
@@ -70,7 +76,7 @@ export const hubNavGroups: readonly HubNavGroup[] = [
   },
   {
     children: [
-      { id: "talepler", label: "Talepler", badge: 4 },
+      { id: "talepler", label: "Talepler" },
       { id: "takvim", label: "Takvim" },
       { id: "musaitlik", label: "Müsaitlik" },
     ],
@@ -125,6 +131,8 @@ export const hubRecords: readonly HubRecord[] = [
     lastAction: "İlk değerlendirme talebi",
     lastActionAt: "Bugün 09:24",
     name: "Arya Işık",
+    plannedAt: "Yarın 10:00",
+    reference: "BA-2026-1001",
     nextSteps: [
       {
         detail: "Veli ile kısa tanışma araması planla.",
@@ -171,6 +179,8 @@ export const hubRecords: readonly HubRecord[] = [
     lastAction: "Saat önerisi bekleniyor",
     lastActionAt: "Bugün 08:12",
     name: "Baran Toprak",
+    plannedAt: "Perşembe 14:30",
+    reference: "BA-2026-1002",
     nextSteps: [
       {
         detail: "İki uygun saat seçeneği ilet.",
@@ -210,6 +220,8 @@ export const hubRecords: readonly HubRecord[] = [
     lastAction: "Randevu onaylandı",
     lastActionAt: "Salı 15:05",
     name: "Cem Yalın",
+    plannedAt: "Cuma 11:00",
+    reference: "BA-2026-1003",
     nextSteps: [
       {
         detail: "Görüşme öncesi hatırlatma mesajı planla.",
@@ -250,6 +262,8 @@ export const hubRecords: readonly HubRecord[] = [
     lastAction: "İlk görüşme tamamlandı",
     lastActionAt: "Geçen hafta",
     name: "Duru Aksu",
+    plannedAt: "Geçen hafta 09:30",
+    reference: "BA-2026-1004",
     nextSteps: [
       {
         detail: "Aileye özet ve öneri planını ilet.",

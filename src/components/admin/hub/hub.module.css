@@ -279,6 +279,14 @@
   overflow-y: auto;
 }
 
+.listEmpty {
+  margin: 24px 10px;
+  color: var(--hub-muted);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .listGroupLabel {
   margin: 12px 6px 8px;
   color: var(--hub-muted);
@@ -398,6 +406,17 @@
 .statusChip[data-status="tamamlandi"] {
   background: #ece9e4;
   color: var(--hub-muted);
+}
+
+.statusChip[data-status="iptal"],
+.statusChip[data-status="gelmedi"] {
+  background: #f6e0dc;
+  color: #a5473a;
+}
+
+.statusChip[data-status="reddedildi"] {
+  background: #efe7ee;
+  color: #7d5876;
 }
 
 .softChip {
