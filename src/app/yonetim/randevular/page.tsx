@@ -247,10 +247,7 @@ export default async function AdminAppointmentsPage({
       </section>
 
       {activeModal === "randevu-olustur" && canManageAppointments ? (
-        <AppointmentCreateModal
-          closeHref="/yonetim/randevular"
-          initialClientId={initialClientId}
-        />
+        <AppointmentCreateModal closeHref="/yonetim/randevular" initialClientId={initialClientId} />
       ) : null}
     </AdminShell>
   );

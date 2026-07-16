@@ -117,9 +117,7 @@ export function DateControl({
                 <button
                   aria-pressed={
                     selectedValue ===
-                    formatValue(
-                      new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day),
-                    )
+                    formatValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day))
                   }
                   key={day}
                   onClick={() => selectDay(day)}

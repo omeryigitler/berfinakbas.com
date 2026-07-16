@@ -69,15 +69,21 @@
   align-items: start;
 }
 
-:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1)) {
+:global(
+  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1)
+) {
   order: 3;
 }
 
-:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2)) {
+:global(
+  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2)
+) {
   order: 1;
 }
 
-:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3)) {
+:global(
+  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3)
+) {
   order: 2;
 }
 
@@ -155,16 +161,26 @@
   padding: 0 28px 28px;
 }
 
-:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2) form) {
+:global(
+  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2) form
+) {
   gap: 20px;
 }
 
-:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form) {
+:global(
+  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form
+) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: end;
 }
 
-:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form label:last-of-type) {
+:global(
+  [data-admin-refresh="shell"]
+    .finance-operation-grid
+    > .finance-operation-card:nth-of-type(1)
+    form
+    label:last-of-type
+) {
   grid-column: span 3;
 }
 
@@ -213,7 +229,12 @@
   gap: 15px;
 }
 
-:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3) .finance-inline-fields) {
+:global(
+  [data-admin-refresh="shell"]
+    .finance-operation-grid
+    > .finance-operation-card:nth-of-type(3)
+    .finance-inline-fields
+) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -420,13 +441,29 @@
 
   :global([data-admin-refresh="shell"] .finance-plan-card dl),
   :global([data-admin-refresh="shell"] .finance-inline-fields),
-  :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form),
-  :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3) .finance-inline-fields),
+  :global(
+    [data-admin-refresh="shell"]
+      .finance-operation-grid
+      > .finance-operation-card:nth-of-type(1)
+      form
+  ),
+  :global(
+    [data-admin-refresh="shell"]
+      .finance-operation-grid
+      > .finance-operation-card:nth-of-type(3)
+      .finance-inline-fields
+  ),
   :global([data-admin-refresh="shell"] .finance-installment-editor .finance-inline-fields) {
     grid-template-columns: 1fr;
   }
 
-  :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form label:last-of-type) {
+  :global(
+    [data-admin-refresh="shell"]
+      .finance-operation-grid
+      > .finance-operation-card:nth-of-type(1)
+      form
+      label:last-of-type
+  ) {
     grid-column: auto;
   }
 

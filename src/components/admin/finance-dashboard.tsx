@@ -158,7 +158,13 @@ function selectedClientLabel(clients: Client[], clientId: string): string {
   return client ? `${client.firstName} ${client.lastName}` : "Seçili danışan";
 }
 
-export function FinanceDashboard({ canManage, clientId = "" }: { canManage: boolean; clientId?: string }) {
+export function FinanceDashboard({
+  canManage,
+  clientId = "",
+}: {
+  canManage: boolean;
+  clientId?: string;
+}) {
   const [overview, setOverview] = useState<Overview>({
     clients: [],
     paymentMethods: [],
@@ -232,28 +238,47 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
       if (planStatusFilter !== "ALL" && plan.status !== planStatusFilter) return false;
       if (invoiceFilter !== "ALL" && plan.invoiceStatus !== invoiceFilter) return false;
       if (!search) return true;
-      return `${plan.client.firstName} ${plan.client.lastName} ${plan.name}`.toLocaleLowerCase("tr-TR").includes(search);
+      return `${plan.client.firstName} ${plan.client.lastName} ${plan.name}`
+        .toLocaleLowerCase("tr-TR")
+        .includes(search);
     });
   }, [financeSearch, invoiceFilter, overview.plans, planStatusFilter]);
   const expectedPayments = useMemo(() => {
-    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
     const sevenDays = new Date(start.getTime() + 7 * 86_400_000);
     const thirtyDays = new Date(start.getTime() + 30 * 86_400_000);
-    const rows = displayedPlans.flatMap((plan) => plan.installments
-      .filter((installment) => installment.state !== "PAID")
-      .map((installment) => ({
-        currency: plan.currency, dueDate: new Date(`${installment.dueDate}T00:00:00`),
-        remaining: BigInt(installment.amountDueMinor) - BigInt(installment.paidAmountMinor), state: installment.state,
-      })));
+    const rows = displayedPlans.flatMap((plan) =>
+      plan.installments
+        .filter((installment) => installment.state !== "PAID")
+        .map((installment) => ({
+          currency: plan.currency,
+          dueDate: new Date(`${installment.dueDate}T00:00:00`),
+          remaining: BigInt(installment.amountDueMinor) - BigInt(installment.paidAmountMinor),
+          state: installment.state,
+        })),
+    );
     const summarize = (items: typeof rows) => {
       const totals = new Map<string, bigint>();
-      items.forEach((item) => totals.set(item.currency, (totals.get(item.currency) ?? 0n) + item.remaining));
-      return { count: items.length, label: [...totals].map(([currency, amount]) => formatMoney(amount.toString(), currency)).join(" + ") || "₺0,00" };
+      items.forEach((item) =>
+        totals.set(item.currency, (totals.get(item.currency) ?? 0n) + item.remaining),
+      );
+      return {
+        count: items.length,
+        label:
+          [...totals]
+            .map(([currency, amount]) => formatMoney(amount.toString(), currency))
+            .join(" + ") || "₺0,00",
+      };
     };
     return {
       overdue: summarize(rows.filter((item) => item.state === "OVERDUE")),
-      sevenDays: summarize(rows.filter((item) => item.dueDate >= start && item.dueDate <= sevenDays)),
-      thirtyDays: summarize(rows.filter((item) => item.dueDate >= start && item.dueDate <= thirtyDays)),
+      sevenDays: summarize(
+        rows.filter((item) => item.dueDate >= start && item.dueDate <= sevenDays),
+      ),
+      thirtyDays: summarize(
+        rows.filter((item) => item.dueDate >= start && item.dueDate <= thirtyDays),
+      ),
     };
   }, [displayedPlans]);
   const paymentPlan = overview.plans.find((plan) => plan.id === paymentPlanId);
@@ -388,17 +413,29 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
   async function updatePlanStatus(event: FormEvent<HTMLFormElement>, planId: string) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    await operation({ action: "UPDATE_PLAN_STATUS", planId, reason: String(data.get("reason") ?? ""), status: String(data.get("status") ?? "ACTIVE") });
+    await operation({
+      action: "UPDATE_PLAN_STATUS",
+      planId,
+      reason: String(data.get("reason") ?? ""),
+      status: String(data.get("status") ?? "ACTIVE"),
+    });
   }
 
   async function updateInstallment(event: FormEvent<HTMLFormElement>, installmentId: string) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const amountMinor = amountToMinor(String(data.get("amount") ?? ""));
-    if (!amountMinor) { setMessage("Taksit tutarını kontrol edin."); return; }
+    if (!amountMinor) {
+      setMessage("Taksit tutarını kontrol edin.");
+      return;
+    }
     await operation({
-      action: "UPDATE_INSTALLMENT", amountMinor, dueDate: String(data.get("dueDate") ?? ""),
-      idempotencyKey: crypto.randomUUID(), installmentId, reason: String(data.get("reason") ?? ""),
+      action: "UPDATE_INSTALLMENT",
+      amountMinor,
+      dueDate: String(data.get("dueDate") ?? ""),
+      idempotencyKey: crypto.randomUUID(),
+      installmentId,
+      reason: String(data.get("reason") ?? ""),
     });
   }
 
@@ -477,21 +514,36 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
         </label>
         <label>
           <span>Plan durumu</span>
-          <SelectControl name="planStatusFilter" onValueChange={setPlanStatusFilter} options={[
-            { label: "Tümü", value: "ALL" }, { label: "Aktif", value: "ACTIVE" },
-            { label: "Tamamlandı", value: "COMPLETED" }, { label: "İptal", value: "CANCELLED" },
-            { label: "Süresi doldu", value: "EXPIRED" },
-          ]} value={planStatusFilter} />
+          <SelectControl
+            name="planStatusFilter"
+            onValueChange={setPlanStatusFilter}
+            options={[
+              { label: "Tümü", value: "ALL" },
+              { label: "Aktif", value: "ACTIVE" },
+              { label: "Tamamlandı", value: "COMPLETED" },
+              { label: "İptal", value: "CANCELLED" },
+              { label: "Süresi doldu", value: "EXPIRED" },
+            ]}
+            value={planStatusFilter}
+          />
         </label>
         <label>
           <span>Fatura durumu</span>
-          <SelectControl name="invoiceFilter" onValueChange={setInvoiceFilter} options={[
-            { label: "Tümü", value: "ALL" }, ...invoiceStatusOptions,
-          ]} value={invoiceFilter} />
+          <SelectControl
+            name="invoiceFilter"
+            onValueChange={setInvoiceFilter}
+            options={[{ label: "Tümü", value: "ALL" }, ...invoiceStatusOptions]}
+            value={invoiceFilter}
+          />
         </label>
         <label>
           <span>Danışan / plan ara</span>
-          <input onChange={(event) => setFinanceSearch(event.target.value)} placeholder="Ad veya plan adı" type="search" value={financeSearch} />
+          <input
+            onChange={(event) => setFinanceSearch(event.target.value)}
+            placeholder="Ad veya plan adı"
+            type="search"
+            value={financeSearch}
+          />
         </label>
         <span>{displayedPlans.length} plan</span>
         {isFilteredByClient ? (
@@ -500,9 +552,21 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
       </div>
 
       <section aria-label="Beklenen ödeme özeti" className="finance-operation-grid">
-        <article className="finance-operation-card"><small>Gecikmiş</small><h3>{expectedPayments.overdue.label}</h3><p>{expectedPayments.overdue.count} açık taksit</p></article>
-        <article className="finance-operation-card"><small>7 gün içinde beklenen</small><h3>{expectedPayments.sevenDays.label}</h3><p>{expectedPayments.sevenDays.count} açık taksit</p></article>
-        <article className="finance-operation-card"><small>30 gün içinde beklenen</small><h3>{expectedPayments.thirtyDays.label}</h3><p>{expectedPayments.thirtyDays.count} açık taksit</p></article>
+        <article className="finance-operation-card">
+          <small>Gecikmiş</small>
+          <h3>{expectedPayments.overdue.label}</h3>
+          <p>{expectedPayments.overdue.count} açık taksit</p>
+        </article>
+        <article className="finance-operation-card">
+          <small>7 gün içinde beklenen</small>
+          <h3>{expectedPayments.sevenDays.label}</h3>
+          <p>{expectedPayments.sevenDays.count} açık taksit</p>
+        </article>
+        <article className="finance-operation-card">
+          <small>30 gün içinde beklenen</small>
+          <h3>{expectedPayments.thirtyDays.label}</h3>
+          <p>{expectedPayments.thirtyDays.count} açık taksit</p>
+        </article>
       </section>
 
       {canManage && (
@@ -519,11 +583,21 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
               </label>
               <label>
                 Kısa kod
-                <input name="key" pattern="[A-Za-z][A-Za-z0-9 _-]+" placeholder="Örn. BANKA" required />
+                <input
+                  name="key"
+                  pattern="[A-Za-z][A-Za-z0-9 _-]+"
+                  placeholder="Örn. BANKA"
+                  required
+                />
               </label>
               <label>
                 İşlem notu
-                <textarea minLength={8} name="reason" placeholder="Bu kanal neden eklendi?" required />
+                <textarea
+                  minLength={8}
+                  name="reason"
+                  placeholder="Bu kanal neden eklendi?"
+                  required
+                />
               </label>
               <button disabled={busy} type="submit">
                 Kanalı kaydet
@@ -531,7 +605,9 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
             </form>
           </details>
           <details className="finance-operation-card">
-            <summary>{isFilteredByClient ? "Bu danışana plan oluştur" : "Danışan planı oluştur"}</summary>
+            <summary>
+              {isFilteredByClient ? "Bu danışana plan oluştur" : "Danışan planı oluştur"}
+            </summary>
             <p className="finance-operation-help">
               Seans sayısı, toplam ücret ve ödeme takvimini tek plan altında oluşturun.
             </p>
@@ -557,7 +633,13 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 </label>
                 <label>
                   Seans süresi / dk
-                  <input min="5" name="sessionDurationMinutes" placeholder="45" required type="number" />
+                  <input
+                    min="5"
+                    name="sessionDurationMinutes"
+                    placeholder="45"
+                    required
+                    type="number"
+                  />
                 </label>
                 <label>
                   Para birimi
@@ -642,9 +724,17 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
               </fieldset>
               <label>
                 İşlem notu
-                <textarea minLength={8} name="reason" placeholder="Plan neden oluşturuldu?" required />
+                <textarea
+                  minLength={8}
+                  name="reason"
+                  placeholder="Plan neden oluşturuldu?"
+                  required
+                />
               </label>
-              <button disabled={busy || (isFilteredByClient && overview.clients.length === 0)} type="submit">
+              <button
+                disabled={busy || (isFilteredByClient && overview.clients.length === 0)}
+                type="submit"
+              >
                 Planı oluştur
               </button>
             </form>
@@ -770,7 +860,9 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
               />
             </label>
 
-            {reverseDialog.error ? <p className="admin-modal-error">{reverseDialog.error}</p> : null}
+            {reverseDialog.error ? (
+              <p className="admin-modal-error">{reverseDialog.error}</p>
+            ) : null}
 
             <div className="admin-modal-actions">
               <button disabled={busy} onClick={() => setReverseDialog(null)} type="button">
@@ -803,7 +895,9 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                   </small>
                   <h3>{plan.name}</h3>
                 </div>
-                <span>{planStatusLabels[plan.status as keyof typeof planStatusLabels] ?? plan.status}</span>
+                <span>
+                  {planStatusLabels[plan.status as keyof typeof planStatusLabels] ?? plan.status}
+                </span>
               </header>
               <dl>
                 <div>
@@ -827,17 +921,39 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                     </span>
                     <strong>{formatMoney(installment.amountDueMinor, plan.currency)}</strong>
                     <small>Ödenen {formatMoney(installment.paidAmountMinor, plan.currency)}</small>
-                    <small className={`finance-state finance-state--${installment.state.toLowerCase()}`}>
+                    <small
+                      className={`finance-state finance-state--${installment.state.toLowerCase()}`}
+                    >
                       {installmentStateLabels[installment.state]}
                     </small>
                     {canManage && plan.status === "ACTIVE" ? (
                       <details className="finance-history">
                         <summary>Taksiti düzenle</summary>
                         <form onSubmit={(event) => void updateInstallment(event, installment.id)}>
-                          <label>Tutar<input defaultValue={minorToInput(installment.amountDueMinor)} inputMode="decimal" name="amount" required /></label>
-                          <label>Son ödeme tarihi<DateControl defaultValue={installment.dueDate} name="dueDate" required /></label>
-                          <label>İşlem notu<textarea minLength={8} name="reason" required /></label>
-                          <button disabled={busy} type="submit">Taksiti kaydet</button>
+                          <label>
+                            Tutar
+                            <input
+                              defaultValue={minorToInput(installment.amountDueMinor)}
+                              inputMode="decimal"
+                              name="amount"
+                              required
+                            />
+                          </label>
+                          <label>
+                            Son ödeme tarihi
+                            <DateControl
+                              defaultValue={installment.dueDate}
+                              name="dueDate"
+                              required
+                            />
+                          </label>
+                          <label>
+                            İşlem notu
+                            <textarea minLength={8} name="reason" required />
+                          </label>
+                          <button disabled={busy} type="submit">
+                            Taksiti kaydet
+                          </button>
                         </form>
                       </details>
                     ) : null}
@@ -848,12 +964,26 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 <details className="finance-history">
                   <summary>Plan durumunu değiştir</summary>
                   <form onSubmit={(event) => void updatePlanStatus(event, plan.id)}>
-                    <label>Durum<SelectControl defaultValue={plan.status} name="status" options={[
-                      { label: "Aktif", value: "ACTIVE" }, { label: "Tamamlandı", value: "COMPLETED" },
-                      { label: "İptal", value: "CANCELLED" }, { label: "Süresi doldu", value: "EXPIRED" },
-                    ]} /></label>
-                    <label>İşlem notu<textarea minLength={8} name="reason" required /></label>
-                    <button disabled={busy} type="submit">Plan durumunu kaydet</button>
+                    <label>
+                      Durum
+                      <SelectControl
+                        defaultValue={plan.status}
+                        name="status"
+                        options={[
+                          { label: "Aktif", value: "ACTIVE" },
+                          { label: "Tamamlandı", value: "COMPLETED" },
+                          { label: "İptal", value: "CANCELLED" },
+                          { label: "Süresi doldu", value: "EXPIRED" },
+                        ]}
+                      />
+                    </label>
+                    <label>
+                      İşlem notu
+                      <textarea minLength={8} name="reason" required />
+                    </label>
+                    <button disabled={busy} type="submit">
+                      Plan durumunu kaydet
+                    </button>
                   </form>
                 </details>
               ) : null}
@@ -894,12 +1024,17 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                   {plan.ledgerEntries.map((entry) => (
                     <li key={entry.id}>
                       <span>
-                        {financeEntryLabels[entry.type as keyof typeof financeEntryLabels] ?? entry.type} ·{" "}
-                        {new Date(entry.occurredAt).toLocaleDateString("tr-TR")}
+                        {financeEntryLabels[entry.type as keyof typeof financeEntryLabels] ??
+                          entry.type}{" "}
+                        · {new Date(entry.occurredAt).toLocaleDateString("tr-TR")}
                       </span>
                       <strong>{formatMoney(entry.amountMinor, plan.currency)}</strong>
                       {canManage && entry.type === "PAYMENT" && !reversedEntryIds.has(entry.id) && (
-                        <button disabled={busy} onClick={() => openReversePayment(entry.id)} type="button">
+                        <button
+                          disabled={busy}
+                          onClick={() => openReversePayment(entry.id)}
+                          type="button"
+                        >
                           Ödemeyi geri al
                         </button>
                       )}
