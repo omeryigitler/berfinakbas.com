@@ -602,9 +602,9 @@ export default async function AdminHomePage({
       : null,
     canReadClients
       ? {
-          href: "/yonetim?modal=not-ekle" as Route,
+          href: "/yonetim/danisanlar" as Route,
           kicker: "✎",
-          title: "Not ekle",
+          title: "Danışan notu",
         }
       : null,
     canManageAppointments
@@ -616,7 +616,7 @@ export default async function AdminHomePage({
       : null,
     canReadFinance
       ? {
-          href: "/yonetim?modal=odeme-plani" as Route,
+          href: "/yonetim/odemeler" as Route,
           kicker: "₺",
           title: "Ödeme planı",
         }
