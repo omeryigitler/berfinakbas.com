@@ -53,6 +53,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Production-build smoke
+        run: pnpm test:smoke
+
   postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 15
