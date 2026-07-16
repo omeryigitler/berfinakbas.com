@@ -70,16 +70,16 @@ async function grantConsent(formData: FormData) {
   if (client.type === "CHILD" && !grantedByGuardianId) return;
   if (grantedByGuardianId && !client.guardians.some((item) => item.guardianId === grantedByGuardianId)) return;
 
-  await database.consent.create({
-    data: {
-      actorUserId: session.user.id,
-      captureChannel: "ADMIN",
-      clientId,
-      documentId,
-      evidenceMetadata: { note: reason },
-      grantedByGuardianId,
-      status: "GRANTED",
-    },
+  await database.$transaction(async (transaction) => {
+    const consent = await transaction.consent.create({ data: {
+      actorUserId: session.user.id, captureChannel: "ADMIN", clientId, documentId,
+      evidenceMetadata: { note: reason }, grantedByGuardianId, status: "GRANTED",
+    } });
+    await transaction.auditLog.create({ data: {
+      action: "consent.granted", actorType: "USER", actorUserId: session.user.id,
+      afterSummary: { documentId, status: "GRANTED" }, correlationId: crypto.randomUUID(),
+      entityId: consent.id, entityType: "CONSENT", reason,
+    } });
   });
   revalidatePath("/yonetim/danisan-profili");
   redirect(closeHref(clientId));
