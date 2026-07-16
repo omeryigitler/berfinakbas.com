@@ -1,3 +1,5 @@
+import "@fontsource-variable/inter/index.css";
+
 import type { Metadata } from "next";
 
 import { DashboardHub } from "@/components/admin/hub/dashboard-hub";

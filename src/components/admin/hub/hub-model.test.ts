@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import * as hubModelModule from "./hub-model";
 import {
   getMonogram,
   getMonogramColors,
@@ -52,5 +53,24 @@ describe("getStageIndex", () => {
     hubStages.forEach((stage, index) => {
       expect(getStageIndex(stage.id)).toBe(index);
     });
+  });
+});
+
+describe("getAdjacentRecordId", () => {
+  const { getAdjacentRecordId } = hubModelModule;
+  const ordered = hubModelModule
+    .groupRecords(hubRecords)
+    .flatMap((bucket) => bucket.items.map((item) => item.id));
+
+  it("walks the grouped list order in both directions", () => {
+    expect(getAdjacentRecordId(hubRecords, ordered[0], 1)).toBe(ordered[1]);
+    expect(getAdjacentRecordId(hubRecords, ordered[1], -1)).toBe(ordered[0]);
+  });
+
+  it("starts from the edges when nothing is selected and clamps at ends", () => {
+    expect(getAdjacentRecordId(hubRecords, null, 1)).toBe(ordered[0]);
+    expect(getAdjacentRecordId(hubRecords, null, -1)).toBe(ordered.at(-1));
+    expect(getAdjacentRecordId(hubRecords, ordered.at(-1)!, 1)).toBe(ordered.at(-1));
+    expect(getAdjacentRecordId([], null, 1)).toBeNull();
   });
 });

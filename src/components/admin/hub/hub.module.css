@@ -17,7 +17,7 @@
   --hub-teal-soft: #d9ece8;
   --hub-peach: #fbe3d2;
   --hub-peach-deep: #f6d0c0;
-  --hub-font: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --hub-font: "Inter Variable", "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
 
   display: flex;
   gap: 14px;
@@ -948,6 +948,72 @@
   line-height: 1.65;
 }
 
+/* ---------- record view transition ---------- */
+
+.recordView {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .recordView {
+    animation: hubViewIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .listItem,
+  .railChild,
+  .railGroupHead {
+    transition-duration: 0.22s;
+  }
+}
+
+@keyframes hubViewIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- keyboard affordances ---------- */
+
+.kbdHint {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 0;
+  color: var(--hub-muted);
+  font-size: 0.7rem;
+}
+
+.kbdHint kbd {
+  display: inline-grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid var(--hub-line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0 5px;
+  font-family: inherit;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.hub :focus-visible {
+  outline: 2px solid var(--hub-teal);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
 /* ---------- responsive ---------- */
 
 @media (max-width: 1180px) {
@@ -956,9 +1022,13 @@
   }
 }
 
+/* Narrow screens: panels stack; the rail becomes a horizontal strip whose
+   open group's children wrap as chips, and the list caps its height so the
+   work area stays reachable. */
 @media (max-width: 940px) {
   .hub {
     flex-direction: column;
+    padding: 10px;
   }
 
   .rail,
@@ -966,7 +1036,47 @@
     width: 100%;
   }
 
+  .rail {
+    padding: 12px;
+  }
+
+  .railBrand {
+    margin-bottom: 8px;
+  }
+
+  .railNav {
+    flex-flow: row wrap;
+    gap: 6px;
+  }
+
+  .railGroup[data-open="true"] {
+    flex-basis: 100%;
+  }
+
+  .railChildren {
+    flex-flow: row wrap;
+    gap: 6px;
+    padding-left: 40px;
+  }
+
+  .railFoot {
+    display: none;
+  }
+
+  .listPanel {
+    flex-shrink: 1;
+  }
+
+  .listScroll {
+    max-height: 300px;
+  }
+
   .workGrid {
     grid-template-columns: 1fr;
+  }
+
+  .recordHead {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

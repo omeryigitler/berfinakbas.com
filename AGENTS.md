@@ -205,11 +205,17 @@ panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
   "Profili aç" köprüsüyle); menü rayı gerçek navigasyona bağlandı
   (Müsaitlik, Randevu operasyonu, Ödemeler, Sağlık mevcut sayfalara ↗
   linkler); klasik `AdminShell` menüsüne "Hub görünümü" girişi eklendi.
-- **Faz 5:** Cila — gerçek Inter fontu, klavye kısayolları, panel geçiş
-  animasyonları, dar ekran davranışı (ray ikonlaşır, paneller üst üste
-  kayar). Ek kapsam (OPEN): Müsaitlik/Ödemeler için hub içi içerik
-  panelleri ve `AdminShell`'in tam emekliliği — ağır düzenleme akışları
-  hub'a taşınmadan emeklilik yapılmaz.
+- **Faz 5 (tamam):** Cila teslim edildi — gerçek Inter Variable fontu
+  (`@fontsource-variable/inter`, self-host, latin-ext ile Türkçe tam);
+  klavye kısayolları (↑/↓ veya j/k liste gezinme, Esc kapat/onay iptal,
+  F genişlet, 1/2 bölüm değiştirme; girdi alanlarında devre dışı);
+  kayıt değişiminde yumuşak giriş animasyonu (`prefers-reduced-motion`
+  korumalı) ve `:focus-visible` halkaları; dar ekranda (≤940px) ray
+  yatay şeride dönüşür, açık grubun alt öğeleri chip olarak sarar,
+  liste yüksekliği sınırlanır ve paneller üst üste yığılır.
+- **Kalan (OPEN):** Müsaitlik/Ödemeler için hub içi içerik panelleri ve
+  `AdminShell`'in tam emekliliği — ağır düzenleme akışları hub'a
+  taşınmadan emeklilik yapılmaz.
 
 ### Faz 1 kabul ölçütleri
 

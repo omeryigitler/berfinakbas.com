@@ -4,12 +4,13 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { buildHubStatusUrl, getHubActions, type HubAction } from "./hub-actions";
 import { HubAvatar } from "./hub-avatar";
 import styles from "./hub.module.css";
 import {
+  getAdjacentRecordId,
   getStageIndex,
   groupRecords,
   hubGroupLabels,
@@ -190,6 +191,50 @@ export function DashboardHub({
     [canReadClients, openCount],
   );
   const stageIndex = record ? getStageIndex(record.stage) : -1;
+
+  /* Keyboard shortcuts: arrows/j-k walk the list, Esc closes (or disarms a
+     pending confirmation first), F toggles focus mode, 1/2 switch sections. */
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
+      ) {
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      if (event.key === "ArrowDown" || event.key === "j") {
+        const next = getAdjacentRecordId(records, activeRecordId, 1);
+        if (next) {
+          event.preventDefault();
+          navigate(section, next);
+        }
+      } else if (event.key === "ArrowUp" || event.key === "k") {
+        const previous = getAdjacentRecordId(records, activeRecordId, -1);
+        if (previous) {
+          event.preventDefault();
+          navigate(section, previous);
+        }
+      } else if (event.key === "Escape") {
+        if (armedActionId) {
+          setArmedActionId(null);
+        } else if (activeRecordId) {
+          navigate(section, null);
+        }
+      } else if (event.key === "f" || event.key === "F") {
+        setFocusMode((value) => !value);
+      } else if (event.key === "1") {
+        navigate("talepler", null);
+      } else if (event.key === "2" && canReadClients) {
+        navigate("danisanlar", null);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeRecordId, armedActionId, canReadClients, navigate, records, section]);
 
   return (
     <div className={styles.hub} data-focus={focusMode ? "true" : undefined}>
@@ -397,121 +442,123 @@ export function DashboardHub({
               </p>
             ) : null}
 
-            <header className={styles.recordHead}>
-              <div className={styles.recordIdentity}>
-                <HubAvatar name={record.name} size={56} />
-                <div>
-                  <h2>{record.name}</h2>
-                  <p>{record.service}</p>
-                  <div className={styles.recordChips}>
-                    <StatusChip status={record.status} />
-                    <span className={styles.softChip}>{record.channel}</span>
-                    {record.reference ? (
-                      <span className={styles.softChip}>{record.reference}</span>
-                    ) : null}
+            <div className={styles.recordView} key={record.id}>
+              <header className={styles.recordHead}>
+                <div className={styles.recordIdentity}>
+                  <HubAvatar name={record.name} size={56} />
+                  <div>
+                    <h2>{record.name}</h2>
+                    <p>{record.service}</p>
+                    <div className={styles.recordChips}>
+                      <StatusChip status={record.status} />
+                      <span className={styles.softChip}>{record.channel}</span>
+                      {record.reference ? (
+                        <span className={styles.softChip}>{record.reference}</span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {record.kind === "randevu" ? (
-                <ol className={styles.stageStrip} aria-label="Randevu aşaması">
-                  {hubStages.map((stage, index) => (
-                    <li
-                      data-state={
-                        index < stageIndex ? "done" : index === stageIndex ? "active" : "upcoming"
-                      }
-                      key={stage.id}
-                    >
-                      {stage.label}
-                    </li>
-                  ))}
-                </ol>
-              ) : null}
-            </header>
-
-            <div className={styles.workGrid}>
-              <section className={styles.workColumn}>
-                <article className={styles.card}>
-                  <h3>İletişim</h3>
-                  <dl className={styles.contactList}>
-                    <div>
-                      <dt>Telefon</dt>
-                      <dd>{record.contactPhone}</dd>
-                    </div>
-                    <div>
-                      <dt>E-posta</dt>
-                      <dd>{record.contactEmail}</dd>
-                    </div>
-                    <div>
-                      <dt>{record.kind === "randevu" ? "Kanal" : "Danışan tipi"}</dt>
-                      <dd>{record.channel}</dd>
-                    </div>
-                    <div>
-                      <dt>Planlanan saat</dt>
-                      <dd>{record.plannedAt}</dd>
-                    </div>
-                  </dl>
-                </article>
-
-                <article className={styles.card}>
-                  <h3>Zaman çizelgesi</h3>
-                  <ol className={styles.timeline}>
-                    {record.timeline.map((entry) => (
-                      <li key={`${entry.at}-${entry.label}`}>
-                        <time>{entry.at}</time>
-                        <span>{entry.label}</span>
+                {record.kind === "randevu" ? (
+                  <ol className={styles.stageStrip} aria-label="Randevu aşaması">
+                    {hubStages.map((stage, index) => (
+                      <li
+                        data-state={
+                          index < stageIndex ? "done" : index === stageIndex ? "active" : "upcoming"
+                        }
+                        key={stage.id}
+                      >
+                        {stage.label}
                       </li>
                     ))}
                   </ol>
-                </article>
-              </section>
+                ) : null}
+              </header>
 
-              <section className={styles.workColumn}>
-                <article className={`${styles.card} ${styles.nextStepsCard}`}>
-                  <h3>Sıradaki adımlar</h3>
-                  <ol className={styles.nextSteps}>
-                    {record.nextSteps.map((step, index) => (
-                      <li data-state={step.state} key={step.title}>
-                        <span className={styles.stepIndex}>{index + 1}</span>
-                        <div>
-                          <strong>{step.title}</strong>
-                          <p>{step.detail}</p>
-                          <small>{step.due}</small>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                </article>
-              </section>
-
-              <section className={styles.workColumn}>
-                <article className={styles.card}>
-                  <h3>Hazırlık skoru</h3>
-                  <ScoreRing grade={record.readinessGrade} score={record.readinessScore} />
-                  <ul className={styles.readinessNotes}>
-                    {record.readinessNotes.map((note) => (
-                      <li key={note}>{note}</li>
-                    ))}
-                  </ul>
-                </article>
-
-                {record.connections.length > 0 ? (
+              <div className={styles.workGrid}>
+                <section className={styles.workColumn}>
                   <article className={styles.card}>
-                    <h3>Bağlantılı kayıtlar</h3>
-                    <ul className={styles.connections}>
-                      {record.connections.map((connection) => (
-                        <li key={connection.name}>
-                          <HubAvatar name={connection.name} size={34} />
+                    <h3>İletişim</h3>
+                    <dl className={styles.contactList}>
+                      <div>
+                        <dt>Telefon</dt>
+                        <dd>{record.contactPhone}</dd>
+                      </div>
+                      <div>
+                        <dt>E-posta</dt>
+                        <dd>{record.contactEmail}</dd>
+                      </div>
+                      <div>
+                        <dt>{record.kind === "randevu" ? "Kanal" : "Danışan tipi"}</dt>
+                        <dd>{record.channel}</dd>
+                      </div>
+                      <div>
+                        <dt>Planlanan saat</dt>
+                        <dd>{record.plannedAt}</dd>
+                      </div>
+                    </dl>
+                  </article>
+
+                  <article className={styles.card}>
+                    <h3>Zaman çizelgesi</h3>
+                    <ol className={styles.timeline}>
+                      {record.timeline.map((entry) => (
+                        <li key={`${entry.at}-${entry.label}`}>
+                          <time>{entry.at}</time>
+                          <span>{entry.label}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </article>
+                </section>
+
+                <section className={styles.workColumn}>
+                  <article className={`${styles.card} ${styles.nextStepsCard}`}>
+                    <h3>Sıradaki adımlar</h3>
+                    <ol className={styles.nextSteps}>
+                      {record.nextSteps.map((step, index) => (
+                        <li data-state={step.state} key={step.title}>
+                          <span className={styles.stepIndex}>{index + 1}</span>
                           <div>
-                            <strong>{connection.name}</strong>
-                            <small>{connection.relation}</small>
+                            <strong>{step.title}</strong>
+                            <p>{step.detail}</p>
+                            <small>{step.due}</small>
                           </div>
                         </li>
                       ))}
+                    </ol>
+                  </article>
+                </section>
+
+                <section className={styles.workColumn}>
+                  <article className={styles.card}>
+                    <h3>Hazırlık skoru</h3>
+                    <ScoreRing grade={record.readinessGrade} score={record.readinessScore} />
+                    <ul className={styles.readinessNotes}>
+                      {record.readinessNotes.map((note) => (
+                        <li key={note}>{note}</li>
+                      ))}
                     </ul>
                   </article>
-                ) : null}
-              </section>
+
+                  {record.connections.length > 0 ? (
+                    <article className={styles.card}>
+                      <h3>Bağlantılı kayıtlar</h3>
+                      <ul className={styles.connections}>
+                        {record.connections.map((connection) => (
+                          <li key={connection.name}>
+                            <HubAvatar name={connection.name} size={34} />
+                            <div>
+                              <strong>{connection.name}</strong>
+                              <small>{connection.relation}</small>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  ) : null}
+                </section>
+              </div>
             </div>
           </>
         ) : (
@@ -521,6 +568,10 @@ export function DashboardHub({
             </div>
             <h2>Çalışma alanı hazır</h2>
             <p>Soldaki listeden bir kayıt seçin; özet ve sıradaki adımlar burada açılır.</p>
+            <p className={styles.kbdHint}>
+              <kbd>↑</kbd>
+              <kbd>↓</kbd> gezin · <kbd>Esc</kbd> kapat · <kbd>F</kbd> genişlet
+            </p>
           </div>
         )}
       </section>

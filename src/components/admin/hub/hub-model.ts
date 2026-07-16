@@ -368,3 +368,24 @@ export function groupRecords(
 export function getStageIndex(stage: HubStage): number {
   return hubStages.findIndex((candidate) => candidate.id === stage);
 }
+
+/*
+ * Keyboard navigation: records are traversed in the same order the list
+ * renders them (grouped bugun -> buHafta -> dahaEski). With no selection,
+ * "next" starts at the first record and "previous" at the last.
+ */
+export function getAdjacentRecordId(
+  records: readonly HubRecord[],
+  currentId: string | null,
+  direction: 1 | -1,
+): string | null {
+  const ordered = groupRecords(records).flatMap((bucket) => bucket.items);
+  if (ordered.length === 0) return null;
+  const index = ordered.findIndex((record) => record.id === currentId);
+  if (index === -1) {
+    return direction === 1 ? ordered[0].id : ordered[ordered.length - 1].id;
+  }
+  const next = index + direction;
+  if (next < 0 || next >= ordered.length) return ordered[index].id;
+  return ordered[next].id;
+}
