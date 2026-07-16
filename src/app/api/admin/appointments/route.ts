@@ -9,11 +9,17 @@ import { databaseAppointmentStatuses } from "@/lib/booking/appointment-transitio
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
+import { findPotentialDuplicateClients } from "@/lib/clients/client-duplicate-review";
 
+const appointmentStatusListSchema = z
+  .string()
+  .default("REQUESTED,PENDING_REVIEW")
+  .transform((value) => value.split(",").filter(Boolean))
+  .pipe(z.array(z.enum(databaseAppointmentStatuses)).min(1).max(2));
 const appointmentListQuerySchema = z
   .object({
     cursor: z.uuid().optional(),
-    status: z.enum(databaseAppointmentStatuses).default("PENDING_REVIEW"),
+    status: appointmentStatusListSchema,
     take: z.coerce.number().int().min(1).max(100).default(25),
   })
   .strict();
@@ -77,25 +83,67 @@ export async function GET(request: Request) {
     );
   }
 
-  const appointments = await getDatabase().appointment.findMany({
+  const database = getDatabase();
+  const appointments = await database.appointment.findMany({
     ...(parsed.data.cursor ? { cursor: { id: parsed.data.cursor }, skip: 1 } : {}),
     orderBy: [{ startsAt: "asc" }, { id: "asc" }],
     select: {
-      client: { select: { firstName: true, lastName: true, type: true } },
+      client: { select: { firstName: true, id: true, lastName: true, type: true } },
+      duplicateReviewStatus: true,
       endsAt: true,
       id: true,
       locationTypeSnapshot: true,
       practitioner: { select: { displayName: true } },
       publicReference: true,
       serviceNameSnapshot: true,
+      source: true,
       startsAt: true,
       status: true,
     },
     take: parsed.data.take + 1,
-    where: { ...accessWhere, status: parsed.data.status },
+    where: {
+      ...accessWhere,
+      status: parsed.data.status.length === 1 ? parsed.data.status[0] : { in: parsed.data.status },
+    },
   });
   const hasMore = appointments.length > parsed.data.take;
-  const data = hasMore ? appointments.slice(0, parsed.data.take) : appointments;
+  const page = hasMore ? appointments.slice(0, parsed.data.take) : appointments;
+  const data = await Promise.all(
+    page.map(async (appointment) => {
+      const candidates =
+        appointment.source === "WEB" && ["REQUESTED", "PENDING_REVIEW"].includes(appointment.status)
+          ? await findPotentialDuplicateClients(database, appointment.client.id, {
+              ...(Object.keys(accessWhere).length > 0
+                ? {
+                    candidateWhere: {
+                      appointments: { some: accessWhere },
+                    },
+                  }
+                : {}),
+            })
+          : [];
+      const duplicateReviewStatus =
+        appointment.duplicateReviewStatus === "NOT_REQUIRED" && candidates.length > 0
+          ? "PENDING"
+          : appointment.duplicateReviewStatus;
+
+      return {
+        ...appointment,
+        duplicateReview: {
+          candidates: candidates.map(({ clientId, firstName, lastName, matchReasons, type }) => ({
+            clientId,
+            firstName,
+            lastName,
+            matchReasons,
+            type,
+          })),
+          status: duplicateReviewStatus,
+        },
+        duplicateReviewStatus: undefined,
+        source: undefined,
+      };
+    }),
+  );
 
   return NextResponse.json({
     data,

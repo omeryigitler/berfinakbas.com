@@ -12,6 +12,7 @@ import { isRetryableTransactionError } from "@/lib/booking/appointment-hold-serv
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { enqueueAppointmentStatusChangedEvent } from "@/lib/integrations/appointment-outbox";
+import { findPotentialDuplicateClients } from "@/lib/clients/client-duplicate-review";
 
 const MAX_TRANSACTION_ATTEMPTS = 3;
 
@@ -85,6 +86,15 @@ export class AppointmentTransitionConflictError extends Error {
   }
 }
 
+export class AppointmentDuplicateReviewRequiredError extends Error {
+  readonly code = "DUPLICATE_REVIEW_REQUIRED";
+
+  constructor() {
+    super("Olası mükerrer danışan kaydı incelenmeden randevu onaylanamaz.");
+    this.name = "AppointmentDuplicateReviewRequiredError";
+  }
+}
+
 export type TransitionedAppointment = Readonly<{
   appointmentId: string;
   fromStatus: DatabaseAppointmentStatus;
@@ -126,6 +136,7 @@ export async function transitionAppointment(
               },
               guardianId: true,
               id: true,
+              duplicateReviewStatus: true,
               source: true,
               status: true,
             },
@@ -147,6 +158,14 @@ export async function transitionAppointment(
           }
 
           if (command.toStatus === "CONFIRMED" && appointment.source === "WEB") {
+            if (
+              appointment.duplicateReviewStatus === "PENDING" ||
+              (appointment.duplicateReviewStatus === "NOT_REQUIRED" &&
+                (await findPotentialDuplicateClients(transaction, appointment.clientId)).length > 0)
+            ) {
+              throw new AppointmentDuplicateReviewRequiredError();
+            }
+
             const guardianRelationship = appointment.guardianId
               ? await transaction.clientGuardian.findUnique({
                   select: { authorityVerifiedAt: true },

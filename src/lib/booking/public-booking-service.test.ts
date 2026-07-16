@@ -8,6 +8,7 @@ import { BookingResourceUnavailableError } from "@/domain/booking/appointment-ho
 import { BookingRequestConflictError } from "@/lib/booking/appointment-request-service";
 import {
   publicBookingSubmissionPayloadSchema,
+  getInitialDuplicateReviewStatus,
   resolveRequiredPublicConsentDocuments,
   submitPublicBookingRequest,
 } from "@/lib/booking/public-booking-service";
@@ -99,6 +100,16 @@ describe("publicBookingSubmissionPayloadSchema", () => {
         }).success,
       ).toBe(false);
     }
+  });
+});
+
+describe("getInitialDuplicateReviewStatus", () => {
+  it.each([
+    [0, "NOT_REQUIRED"],
+    [1, "PENDING"],
+    [3, "PENDING"],
+  ] as const)("maps %s exact candidates to %s", (candidateCount, expected) => {
+    expect(getInitialDuplicateReviewStatus(candidateCount)).toBe(expected);
   });
 });
 

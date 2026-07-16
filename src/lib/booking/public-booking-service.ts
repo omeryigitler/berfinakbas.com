@@ -20,6 +20,7 @@ import {
 } from "@/lib/booking/appointment-request-service";
 import { isRetryableTransactionError } from "@/lib/booking/appointment-hold-service";
 import { getDatabase } from "@/lib/db";
+import { findPotentialDuplicateClients } from "@/lib/clients/client-duplicate-review";
 
 const MAX_TRANSACTION_ATTEMPTS = 3;
 
@@ -136,6 +137,12 @@ export type PublicBookingServiceOptions = Readonly<{
   referenceFactory?: () => string;
   requiredExplicitConsentDocumentTypes?: readonly string[];
 }>;
+
+export function getInitialDuplicateReviewStatus(
+  candidateCount: number,
+): "NOT_REQUIRED" | "PENDING" {
+  return candidateCount > 0 ? "PENDING" : "NOT_REQUIRED";
+}
 
 function getRequiredDocumentTypes(explicitTypes: readonly string[]): readonly string[] {
   return Object.freeze([...new Set([...mandatoryBookingDocumentTypes, ...explicitTypes])]);
@@ -439,12 +446,17 @@ export async function submitPublicBookingRequest(
             documents,
             now,
           );
+          const duplicateCandidates = await findPotentialDuplicateClients(
+            transaction,
+            identity.clientId,
+          );
 
           return createAppointmentRequest(
             {
               clientId: identity.clientId,
               consentIds: identity.consentIds,
               correlationId: command.correlationId,
+              duplicateReviewStatus: getInitialDuplicateReviewStatus(duplicateCandidates.length),
               guardianId: identity.guardianId,
               holdId: command.holdId,
               holderToken: command.holderToken,

@@ -2,15 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/auth";
-import { BookingConsentGateError } from "@/domain/consent/booking-consent";
 import { canManageAppointmentApi } from "@/lib/booking/appointment-api-access";
 import {
-  AppointmentDuplicateReviewRequiredError,
-  AppointmentNotFoundError,
-  AppointmentTransitionConflictError,
-  transitionAppointment,
-  transitionAppointmentRequestSchema,
-} from "@/lib/booking/appointment-transition-service";
+  duplicateReviewRequestSchema,
+  DuplicateReviewConflictError,
+  DuplicateReviewNotFoundError,
+  resolveAppointmentDuplicateReview,
+} from "@/lib/clients/appointment-duplicate-review-service";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
@@ -33,8 +31,8 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Güvenilmeyen istek kaynağı." }, { status: 403 });
   }
 
-  const parsedAppointmentId = appointmentIdSchema.safeParse((await context.params).appointmentId);
-  if (!parsedAppointmentId.success) {
+  const appointmentId = appointmentIdSchema.safeParse((await context.params).appointmentId);
+  if (!appointmentId.success) {
     return NextResponse.json({ error: "Randevu kimliği geçersiz." }, { status: 400 });
   }
 
@@ -44,46 +42,38 @@ export async function PATCH(request: Request, context: RouteContext) {
   } catch {
     return NextResponse.json({ error: "İstek gövdesi geçerli JSON olmalıdır." }, { status: 400 });
   }
-  const parsed = transitionAppointmentRequestSchema.safeParse(body);
+  const parsed = duplicateReviewRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Randevu durum geçişi geçersiz.", issues: parsed.error.flatten() },
+      { error: "Mükerrer kayıt inceleme kararı geçersiz.", issues: parsed.error.flatten() },
       { status: 400 },
     );
   }
 
   if (
     !(await canManageAppointmentApi({
-      appointmentId: parsedAppointmentId.data,
+      appointmentId: appointmentId.data,
       roles: session.user.roles,
       userId: session.user.id,
     }))
-  )
+  ) {
     return forbidden();
+  }
 
   try {
-    const transition = await transitionAppointment({
+    const resolution = await resolveAppointmentDuplicateReview({
       ...parsed.data,
       actorUserId: session.user.id,
-      appointmentId: parsedAppointmentId.data,
+      appointmentId: appointmentId.data,
       correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
     });
-    return NextResponse.json({ data: transition });
+    return NextResponse.json({ data: resolution });
   } catch (error) {
-    if (error instanceof AppointmentNotFoundError) {
+    if (error instanceof DuplicateReviewNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
-    if (error instanceof AppointmentTransitionConflictError) {
+    if (error instanceof DuplicateReviewConflictError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
-    }
-    if (error instanceof AppointmentDuplicateReviewRequiredError) {
-      return NextResponse.json({ code: error.code, error: error.message }, { status: 409 });
-    }
-    if (error instanceof BookingConsentGateError) {
-      return NextResponse.json(
-        { code: error.code, error: error.message, issues: error.issues },
-        { status: 422 },
-      );
     }
     throw error;
   }

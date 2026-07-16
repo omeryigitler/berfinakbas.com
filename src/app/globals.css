@@ -2450,7 +2450,29 @@ summary:focus-visible {
 
 .admin-appointment-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
+}
+
+.admin-inline-warning {
+  color: #9b5a23 !important;
+  font-weight: 800;
+}
+
+.admin-duplicate-candidate {
+  display: grid;
+  min-width: 190px;
+  gap: 5px;
+  border: 1px solid rgb(192 113 70 / 22%);
+  border-radius: 14px;
+  background: #fffaf4;
+  padding: 9px;
+}
+
+.admin-duplicate-candidate-link {
+  color: var(--coral-dark);
+  font-size: 0.72rem;
+  font-weight: 850;
 }
 
 .admin-appointment-actions button {

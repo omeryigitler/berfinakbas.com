@@ -28,6 +28,7 @@ export const appointmentRequestPayloadSchema = z
       .max(20)
       .refine((ids) => new Set(ids).size === ids.length, "Consent kimlikleri tekil olmalıdır."),
     guardianId: z.uuid().nullable().optional().default(null),
+    duplicateReviewStatus: z.enum(["NOT_REQUIRED", "PENDING"]).optional().default("NOT_REQUIRED"),
     holdId: z.uuid(),
     holderToken: z.string().min(32).max(512),
     requestNote: z
@@ -276,6 +277,7 @@ export async function createAppointmentRequest(
         clientId: client.id,
         createdAt: now,
         durationMinutesSnapshot: minutesBetween(hold.endsAt, hold.startsAt),
+        duplicateReviewStatus: command.duplicateReviewStatus,
         endsAt: hold.endsAt,
         guardianId: command.guardianId,
         locationTypeSnapshot: service.locationType,

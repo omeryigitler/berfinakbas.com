@@ -23,6 +23,7 @@ vi.mock("@/lib/booking/appointment-transition-service", async (importOriginal) =
 vi.mock("@/lib/env", () => ({ getServerEnvironment: getServerEnvironmentMock }));
 
 import {
+  AppointmentDuplicateReviewRequiredError,
   AppointmentNotFoundError,
   AppointmentTransitionConflictError,
 } from "@/lib/booking/appointment-transition-service";
@@ -146,6 +147,19 @@ describe("PATCH /api/admin/appointments/[appointmentId]/status", () => {
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toEqual({
       error: "Randevu durumu değişti veya istenen geçişe izin verilmiyor.",
+    });
+  });
+
+  it("returns a safe conflict when duplicate review is required", async () => {
+    canManageAppointmentApiMock.mockResolvedValue(true);
+    transitionAppointmentMock.mockRejectedValue(new AppointmentDuplicateReviewRequiredError());
+
+    const response = await PATCH(request(JSON.stringify(validMutation)), context());
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      code: "DUPLICATE_REVIEW_REQUIRED",
+      error: "Olası mükerrer danışan kaydı incelenmeden randevu onaylanamaz.",
     });
   });
 
