@@ -47,6 +47,13 @@
   font-weight: 850;
 }
 
+:global([data-admin-refresh="shell"] .finance-overview-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 :global([data-admin-refresh="shell"] .finance-overview-note) {
   margin: 16px 0 0;
   border-top: 1px solid rgb(88 62 49 / 9%);
