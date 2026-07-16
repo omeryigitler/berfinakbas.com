@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/yonetim/danisanlar/:id",
-        destination: "/yonetim/danisan-profili/:id",
+        destination: "/yonetim/danisan-profili?clientId=:id",
         permanent: false,
       },
     ];
