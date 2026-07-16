@@ -92,7 +92,12 @@ export async function transitionAppointment(
 
   return database.$transaction(async (transaction) => {
     const appointment = await transaction.appointment.findUnique({
-      select: { allocation: { select: { status: true } }, id: true, status: true },
+      select: {
+        allocation: { select: { status: true } },
+        clientId: true,
+        id: true,
+        status: true,
+      },
       where: { id: command.appointmentId },
     });
 
@@ -125,6 +130,32 @@ export async function transitionAppointment(
     });
 
     if (transition.count !== 1) throw new AppointmentTransitionConflictError();
+
+    if (command.toStatus === "COMPLETED") {
+      const plans = await transaction.clientPlan.findMany({
+        include: { sessionCreditEntries: { select: { quantityDelta: true } } },
+        orderBy: [{ createdAt: "desc" }],
+        where: { clientId: appointment.clientId, status: "ACTIVE" },
+      });
+      const plan = plans.find(
+        (candidate) =>
+          candidate.sessionCreditEntries.reduce((total, entry) => total + entry.quantityDelta, 0) >
+          0,
+      );
+      if (plan) {
+        await transaction.sessionCreditEntry.create({
+          data: {
+            actorUserId: command.actorUserId,
+            appointmentId: appointment.id,
+            idempotencyKey: `appointment:${appointment.id}:session-consume`,
+            planId: plan.id,
+            quantityDelta: -1,
+            reasonCode: "APPOINTMENT_COMPLETED",
+            type: "CONSUME",
+          },
+        });
+      }
+    }
 
     const statusLog = await transaction.appointmentStatusLog.create({
       data: {

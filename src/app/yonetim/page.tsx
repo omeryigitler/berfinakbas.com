@@ -7,11 +7,22 @@ import styles from "@/components/admin/admin-shell.module.css";
 import { DashboardUrlModals } from "@/components/admin/dashboard-url-modals";
 import "@/components/admin/service-practitioner-overview.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
+import type { Prisma } from "@/generated/prisma/client";
 import {
   clientStatusLabels,
   clientTypeLabels,
 } from "@/domain/clients/client-management";
 import { requirePermission } from "@/lib/authorization";
+import {
+  appointmentDurationSettingsKey,
+  appointmentDurationSettingsSchema,
+  getAppointmentDurationSettings,
+} from "@/lib/booking/appointment-duration-settings";
+import {
+  getPublicContactSettings,
+  publicContactSettingsKey,
+  publicContactSettingsSchema,
+} from "@/lib/public-contact-settings";
 import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -148,6 +159,66 @@ function isValidTimeZone(timeZone: string): boolean {
   } catch {
     return false;
   }
+}
+
+async function updatePublicContactSettings(formData: FormData) {
+  "use server";
+  const session = await requirePermission("services:manage");
+  const optionalValue = (key: string) => textValue(formData, key) || null;
+  const value = publicContactSettingsSchema.parse({
+    address: textValue(formData, "address"),
+    email: optionalValue("email"),
+    mapsUrl: optionalValue("mapsUrl"),
+    phone: optionalValue("phone"),
+    whatsappUrl: optionalValue("whatsappUrl"),
+  });
+  const reason = boundedTextValue(formData, "reason", 8, 500);
+  if (!reason) return;
+
+  const database = getDatabase();
+  await database.$transaction(async (transaction) => {
+    const previous = await transaction.operationalSetting.findUnique({ where: { key: publicContactSettingsKey } });
+    await transaction.operationalSetting.upsert({
+      create: { key: publicContactSettingsKey, updatedByUserId: session.user.id, value },
+      update: { updatedByUserId: session.user.id, value },
+      where: { key: publicContactSettingsKey },
+    });
+    await transaction.settingChangeLog.create({ data: {
+      actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: publicContactSettingsKey,
+      newValue: value, oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined, reason, settingKey: publicContactSettingsKey,
+    } });
+  });
+  revalidatePath("/");
+  revalidatePath("/iletisim");
+  revalidatePath("/yonetim");
+}
+
+async function updateAppointmentDurationSettings(formData: FormData) {
+  "use server";
+  const session = await requirePermission("services:manage");
+  const value = appointmentDurationSettingsSchema.parse({
+    adultMinutes: Number(textValue(formData, "adultMinutes")),
+    childMinutes: Number(textValue(formData, "childMinutes")),
+    firstMeetingMinutes: Number(textValue(formData, "firstMeetingMinutes")),
+  });
+  const reason = boundedTextValue(formData, "reason", 8, 500);
+  if (!reason) return;
+
+  const database = getDatabase();
+  await database.$transaction(async (transaction) => {
+    const previous = await transaction.operationalSetting.findUnique({ where: { key: appointmentDurationSettingsKey } });
+    await transaction.operationalSetting.upsert({
+      create: { key: appointmentDurationSettingsKey, updatedByUserId: session.user.id, value },
+      update: { updatedByUserId: session.user.id, value },
+      where: { key: appointmentDurationSettingsKey },
+    });
+    await transaction.settingChangeLog.create({ data: {
+      actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: appointmentDurationSettingsKey,
+      newValue: value, oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined, reason, settingKey: appointmentDurationSettingsKey,
+    } });
+  });
+  revalidatePath("/yonetim");
+  revalidatePath("/yonetim/randevular");
 }
 
 async function updateServiceSettings(formData: FormData) {
@@ -392,6 +463,10 @@ export default async function AdminHomePage({
     "technical-health:read",
   );
   const db = getDatabase();
+  const [durationSettings, contactSettings] = await Promise.all([
+    getAppointmentDurationSettings(),
+    getPublicContactSettings(),
+  ]);
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -568,9 +643,9 @@ export default async function AdminHomePage({
       : null,
     canReadClients
       ? {
-          href: "/yonetim?modal=not-ekle" as Route,
+          href: "/yonetim/danisanlar" as Route,
           kicker: "✎",
-          title: "Not ekle",
+          title: "Danışan notu",
         }
       : null,
     canManageAppointments
@@ -582,7 +657,7 @@ export default async function AdminHomePage({
       : null,
     canReadFinance
       ? {
-          href: "/yonetim?modal=odeme-plani" as Route,
+          href: "/yonetim/odemeler" as Route,
           kicker: "₺",
           title: "Ödeme planı",
         }
@@ -850,6 +925,26 @@ export default async function AdminHomePage({
         </aside>
       </div>
 
+      <section className="admin-panel" aria-labelledby="public-iletisim-ayarlari">
+        <div className="admin-panel-heading">
+          <div><h2 id="public-iletisim-ayarlari">Public iletişim ayarları</h2><p>İletişim sayfasındaki bilgiler deploy gerekmeden buradan yönetilir.</p></div>
+          <span className="admin-count">{contactSettings.address}</span>
+        </div>
+        {canManageServices ? (
+          <form action={updatePublicContactSettings} className="admin-config-edit-panel">
+            <div className="admin-config-form-grid">
+              <label>Konum / adres<input defaultValue={contactSettings.address} maxLength={300} name="address" required /></label>
+              <label>E-posta<input defaultValue={contactSettings.email ?? ""} maxLength={320} name="email" type="email" /></label>
+              <label>Telefon<input defaultValue={contactSettings.phone ?? ""} maxLength={40} name="phone" /></label>
+              <label>WhatsApp bağlantısı<input defaultValue={contactSettings.whatsappUrl ?? ""} maxLength={500} name="whatsappUrl" placeholder="https://wa.me/90..." type="url" /></label>
+              <label>Harita bağlantısı<input defaultValue={contactSettings.mapsUrl ?? ""} maxLength={500} name="mapsUrl" type="url" /></label>
+            </div>
+            <label>Değişiklik nedeni<textarea minLength={8} maxLength={500} name="reason" required /></label>
+            <button type="submit">İletişim bilgilerini kaydet</button>
+          </form>
+        ) : null}
+      </section>
+
       <section className="admin-panel" aria-labelledby="hizmet-terapist-ayarlari">
         <div className="admin-panel-heading">
           <div>
@@ -863,6 +958,26 @@ export default async function AdminHomePage({
             {services.length} hizmet · {practitioners.length} terapist
           </span>
         </div>
+
+        {canManageServices ? (
+          <form action={updateAppointmentDurationSettings} className="admin-config-edit-panel" style={{ marginBottom: "1.5rem" }}>
+            <h3>Görüşme süresi varsayılanları</h3>
+            <p>İlk görüşme, çocuk ve yetişkin randevularında otomatik seçilecek süreler.</p>
+            <div className="admin-config-form-grid">
+              <label>İlk görüşme / dakika<input defaultValue={durationSettings.firstMeetingMinutes} min="5" max="240" name="firstMeetingMinutes" required type="number" /></label>
+              <label>Çocuk görüşmesi / dakika<input defaultValue={durationSettings.childMinutes} min="5" max="240" name="childMinutes" required type="number" /></label>
+              <label>Yetişkin görüşmesi / dakika<input defaultValue={durationSettings.adultMinutes} min="5" max="240" name="adultMinutes" required type="number" /></label>
+            </div>
+            <label>Değişiklik nedeni<textarea minLength={8} maxLength={500} name="reason" required /></label>
+            <button type="submit">Süre ayarlarını kaydet</button>
+          </form>
+        ) : (
+          <div className="admin-config-summary-grid">
+            <article><span>İlk görüşme</span><strong>{durationSettings.firstMeetingMinutes} dk</strong></article>
+            <article><span>Çocuk görüşmesi</span><strong>{durationSettings.childMinutes} dk</strong></article>
+            <article><span>Yetişkin görüşmesi</span><strong>{durationSettings.adultMinutes} dk</strong></article>
+          </div>
+        )}
 
         <div className="admin-config-summary-grid">
           <article>
@@ -1266,7 +1381,6 @@ export default async function AdminHomePage({
         activeModal={activeModal}
         canManageAppointments={canManageAppointments}
         canManageClients={canManageClients}
-        canReadFinance={canReadFinance}
         initialClientId={initialClientId}
       />
     </AdminShell>

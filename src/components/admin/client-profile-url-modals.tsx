@@ -14,23 +14,10 @@ type Props = {
   activeModal: string;
   clientId: string;
   clientName: string;
-  canReadAppointments: boolean;
-  canReadFinance: boolean;
 };
-
-type NoteSummary = { category?: string; note?: string };
 
 function textValue(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
-}
-
-function readNoteSummary(value: unknown): NoteSummary {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  const record = value as Record<string, unknown>;
-  return {
-    category: typeof record.category === "string" ? record.category : undefined,
-    note: typeof record.note === "string" ? record.note : undefined,
-  };
 }
 
 async function saveClientNote(formData: FormData) {
@@ -46,19 +33,29 @@ async function saveClientNote(formData: FormData) {
     select: { id: true },
     where: { id: clientId },
   });
-  if (!client) return;
+  if (!client || !["ADMIN", "PAYMENT"].includes(category)) return;
 
-  await database.auditLog.create({
-    data: {
-      action: "CLIENT_NOTE_CREATED",
-      actorType: "USER",
-      actorUserId: session.user.id,
-      afterSummary: { category, note },
-      correlationId: crypto.randomUUID(),
-      entityId: client.id,
-      entityType: "CLIENT",
-      reason: note.slice(0, 500),
-    },
+  await database.$transaction(async (transaction) => {
+    const created = await transaction.clientNote.create({
+      data: {
+        category,
+        clientId: client.id,
+        createdByUserId: session.user.id,
+        note,
+      },
+    });
+    await transaction.auditLog.create({
+      data: {
+        action: "client_note.created",
+        actorType: "USER",
+        actorUserId: session.user.id,
+        afterSummary: { category },
+        correlationId: crypto.randomUUID(),
+        entityId: created.id,
+        entityType: "CLIENT_NOTE",
+        reason: "Operasyon notu oluşturuldu.",
+      },
+    });
   });
 
   revalidatePath("/yonetim/danisan-profili");
@@ -69,157 +66,77 @@ export async function ClientProfileUrlModals({
   activeModal,
   clientId,
   clientName,
-  canReadAppointments,
-  canReadFinance,
 }: Props) {
+  if (activeModal !== "not-ekle") return null;
+
+  const session = await requirePermission("clients:read");
+  if (!hasPermission(session.user.roles, "clients:manage")) return null;
+
   const closeHref = `/yonetim/danisan-profili?clientId=${clientId}` as Route;
-  if (activeModal === "randevu-olustur" && !canReadAppointments) return null;
-  if (activeModal === "odeme-plani" && !canReadFinance) return null;
-  if (!["not-ekle", "randevu-olustur", "odeme-plani"].includes(activeModal)) {
-    return null;
-  }
-
-  if (activeModal === "not-ekle") {
-    const session = await requirePermission("clients:read");
-    if (!hasPermission(session.user.roles, "clients:manage")) return null;
-
-    const notes = await getDatabase().auditLog.findMany({
-      orderBy: [{ createdAt: "desc" }],
-      select: { afterSummary: true, createdAt: true, id: true, reason: true },
-      take: 5,
-      where: {
-        action: "CLIENT_NOTE_CREATED",
-        entityId: clientId,
-        entityType: "CLIENT",
-      },
-    });
-
-    return (
-      <AdminUrlModal
-        closeHref={closeHref}
-        footer={<ModalFooter closeHref={closeHref} />}
-        title="Not ekle"
-      >
-        <form action={saveClientNote} className={`${modalStyles.modalStack} admin-note-form`}>
-          <input name="clientId" type="hidden" value={clientId} />
-          <ModalFieldPreview
-            helper="Not bu profile kalıcı olarak bağlanır. Klinik değerlendirme detayı yerine operasyon takibi için kullanın."
-            label="Danışan"
-            value={clientName}
-          />
-          <div className="booking-subject-type">
-            <label>
-              <input
-                defaultChecked
-                name="category"
-                type="radio"
-                value="ADMIN"
-              />
-              <span>Admin notu</span>
-            </label>
-            <label>
-              <input name="category" type="radio" value="SESSION" />
-              <span>Seans notu</span>
-            </label>
-            <label>
-              <input name="category" type="radio" value="PAYMENT" />
-              <span>Ödeme notu</span>
-            </label>
-          </div>
-          <label className="booking-field">
-            Not
-            <textarea
-              className="admin-url-modal-large-textarea"
-              maxLength={500}
-              minLength={3}
-              name="note"
-              placeholder="Bu danışanla ilgili operasyon notunu buraya yazın."
-              required
-            />
-            <small>En fazla 500 karakter. Kaydedildikten sonra profil geçmişinde görünür.</small>
-          </label>
-          <button className={modalStyles.modalButton} type="submit">
-            Notu kaydet
-          </button>
-        </form>
-
-        {notes.length > 0 ? (
-          <div className={modalStyles.modalStack}>
-            {notes.map((note) => {
-              const summary = readNoteSummary(note.afterSummary);
-              return (
-                <ModalFieldPreview
-                  helper={note.createdAt.toLocaleDateString("tr-TR")}
-                  key={note.id}
-                  label={summary.category ?? "NOTE"}
-                  value={summary.note ?? note.reason ?? "Not"}
-                />
-              );
-            })}
-          </div>
-        ) : null}
-      </AdminUrlModal>
-    );
-  }
-
-  if (activeModal === "randevu-olustur") {
-    const appointmentHref =
-      `/yonetim/randevular?clientId=${clientId}&modal=randevu-olustur` as Route;
-
-    return (
-      <AdminUrlModal
-        closeHref={closeHref}
-        footer={
-          <ModalLinkFooter
-            closeHref={closeHref}
-            primaryHref={appointmentHref}
-            primaryLabel="Randevu ekranına geç"
-          />
-        }
-        title="Randevu oluştur"
-      >
-        <div className={modalStyles.modalGrid}>
-          <ModalFieldPreview
-            helper="Randevu oluşturma ekranı seçili danışanla açılır."
-            label="Danışan"
-            value={clientName}
-          />
-          <ModalFieldPreview
-            helper="Takvim ve çakışma kontrolü randevu ekranında çalışır."
-            label="Bağlantı"
-            value="Takvim ekranına yönlendirme"
-          />
-        </div>
-      </AdminUrlModal>
-    );
-  }
-
-  const financeHref = `/yonetim/odemeler?clientId=${clientId}` as Route;
+  const notes = await getDatabase().clientNote.findMany({
+    orderBy: [{ createdAt: "desc" }],
+    select: { category: true, createdAt: true, id: true, note: true },
+    take: 5,
+    where: { clientId },
+  });
 
   return (
     <AdminUrlModal
       closeHref={closeHref}
-      footer={
-        <ModalLinkFooter
-          closeHref={closeHref}
-          primaryHref={financeHref}
-          primaryLabel="Ödeme ekranına geç"
-        />
-      }
-      title="Ödeme planı"
+      footer={<ModalFooter closeHref={closeHref} />}
+      title="Not ekle"
     >
-      <div className={modalStyles.modalGrid}>
+      <form
+        action={saveClientNote}
+        className={`${modalStyles.modalStack} admin-note-form`}
+      >
+        <input name="clientId" type="hidden" value={clientId} />
         <ModalFieldPreview
-          helper="Finans motoru seçili danışan filtresiyle ödeme ekranında çalışır."
+          helper="Not bu profile kalıcı olarak bağlanır. Klinik değerlendirme detayı yerine operasyon takibi için kullanın."
           label="Danışan"
           value={clientName}
         />
-        <ModalFieldPreview
-          helper="Plan ve ödeme işlemleri tam sayfa akışta daha rahat yapılır."
-          label="Bağlantı"
-          value="Ödeme ekranına yönlendirme"
-        />
-      </div>
+        <div className="booking-subject-type">
+          <label>
+            <input defaultChecked name="category" type="radio" value="ADMIN" />
+            <span>Admin notu</span>
+          </label>
+          <label>
+            <input name="category" type="radio" value="PAYMENT" />
+            <span>Ödeme notu</span>
+          </label>
+        </div>
+        <label className="booking-field">
+          Not
+          <textarea
+            className="admin-url-modal-large-textarea"
+            maxLength={500}
+            minLength={3}
+            name="note"
+            placeholder="Bu danışanla ilgili operasyon notunu buraya yazın."
+            required
+          />
+          <small>
+            En fazla 500 karakter. Kaydedildikten sonra profil geçmişinde görünür.
+          </small>
+        </label>
+        <button className={modalStyles.modalButton} type="submit">
+          Notu kaydet
+        </button>
+      </form>
+
+      {notes.length > 0 ? (
+        <div className={modalStyles.modalStack}>
+          {notes.map((note) => (
+            <ModalFieldPreview
+              helper={note.createdAt.toLocaleDateString("tr-TR")}
+              key={note.id}
+              label={note.category === "PAYMENT" ? "Ödeme notu" : "Admin notu"}
+              value={note.note}
+            />
+          ))}
+        </div>
+      ) : null}
     </AdminUrlModal>
   );
 }
@@ -233,35 +150,6 @@ function ModalFooter({ closeHref }: { closeHref: Route }) {
         scroll={false}
       >
         Kapat
-      </Link>
-    </div>
-  );
-}
-
-function ModalLinkFooter({
-  closeHref,
-  primaryHref,
-  primaryLabel,
-}: {
-  closeHref: Route;
-  primaryHref: Route;
-  primaryLabel: string;
-}) {
-  return (
-    <div className={modalStyles.footerActions}>
-      <Link
-        className={modalStyles.modalButtonSecondary}
-        href={closeHref}
-        scroll={false}
-      >
-        Kapat
-      </Link>
-      <Link
-        className={modalStyles.modalButton}
-        href={primaryHref}
-        scroll={false}
-      >
-        {primaryLabel}
       </Link>
     </div>
   );

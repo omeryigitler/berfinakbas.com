@@ -6,6 +6,12 @@ import { useMemo, useState } from "react";
 import { DateControl } from "./date-control";
 import { SelectControl } from "./select-control";
 
+type DurationSettings = {
+  adultMinutes: number;
+  childMinutes: number;
+  firstMeetingMinutes: number;
+};
+
 type ClientOption = {
   appointmentCount: number;
   email: string | null;
@@ -80,23 +86,40 @@ function defaultDateTimeLocal(): string {
   return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
 }
 
-function durationOptions(defaultDuration: number, contextualDuration: number, contextualLabel: string): { label: string; value: string }[] {
-  const durations = Array.from(new Set([defaultDuration, contextualDuration, 15, 30, 45, 50, 60])).sort((a, b) => a - b);
+function durationOptions(
+  defaultDuration: number,
+  contextualDuration: number,
+  contextualLabel: string,
+): { label: string; value: string }[] {
+  const durations = Array.from(
+    new Set([defaultDuration, contextualDuration, 15, 30, 45, 50, 60]),
+  ).sort((a, b) => a - b);
   return [
-    { label: `${contextualLabel} (${contextualDuration} dk)`, value: "CONTEXT_DEFAULT" },
-    { label: `Hizmet varsayılanı (${defaultDuration} dk)`, value: "SERVICE_DEFAULT" },
-    ...durations.map((duration) => ({ label: `${duration} dk`, value: String(duration) })),
+    {
+      label: `${contextualLabel} (${contextualDuration} dk)`,
+      value: "CONTEXT_DEFAULT",
+    },
+    {
+      label: `Hizmet varsayılanı (${defaultDuration} dk)`,
+      value: "SERVICE_DEFAULT",
+    },
+    ...durations.map((duration) => ({
+      label: `${duration} dk`,
+      value: String(duration),
+    })),
     { label: "Özel süre", value: "CUSTOM" },
   ];
 }
 
 export function AppointmentCreateForm({
   clients,
+  durationSettings,
   initialClientId,
   practitioners,
   services,
 }: {
   clients: ClientOption[];
+  durationSettings: DurationSettings;
   initialClientId?: string | null;
   practitioners: PractitionerOption[];
   services: ServiceOption[];
@@ -117,20 +140,26 @@ export function AppointmentCreateForm({
 
   const selectedClient = clients.find((client) => client.id === clientId) ?? null;
   const selectedService = services.find((service) => service.id === serviceId) ?? null;
-  const contextualDuration = selectedClient?.appointmentCount === 0 ? 60 : selectedClient?.type === "CHILD" ? 45 : 50;
-  const contextualDurationLabel = selectedClient?.appointmentCount === 0
-    ? "İlk görüşme varsayılanı"
-    : selectedClient?.type === "CHILD"
-      ? "Çocuk görüşmesi varsayılanı"
-      : "Yetişkin görüşmesi varsayılanı";
+  const contextualDuration =
+    selectedClient?.appointmentCount === 0
+      ? durationSettings.firstMeetingMinutes
+      : selectedClient?.type === "CHILD"
+        ? durationSettings.childMinutes
+        : durationSettings.adultMinutes;
+  const contextualDurationLabel =
+    selectedClient?.appointmentCount === 0
+      ? "İlk görüşme varsayılanı"
+      : selectedClient?.type === "CHILD"
+        ? "Çocuk görüşmesi varsayılanı"
+        : "Yetişkin görüşmesi varsayılanı";
   const selectedDuration =
     durationMode === "CONTEXT_DEFAULT"
       ? contextualDuration
       : durationMode === "SERVICE_DEFAULT"
-      ? (selectedService?.defaultDurationMinutes ?? 15)
-      : durationMode === "CUSTOM"
-        ? Number(customDuration)
-        : Number(durationMode);
+        ? (selectedService?.defaultDurationMinutes ?? 15)
+        : durationMode === "CUSTOM"
+          ? Number(customDuration)
+          : Number(durationMode);
 
   const clientOptions = useMemo(
     () =>
@@ -157,7 +186,12 @@ export function AppointmentCreateForm({
     [practitioners],
   );
   const selectedServiceDurationOptions = useMemo(
-    () => durationOptions(selectedService?.defaultDurationMinutes ?? 15, contextualDuration, contextualDurationLabel),
+    () =>
+      durationOptions(
+        selectedService?.defaultDurationMinutes ?? 15,
+        contextualDuration,
+        contextualDurationLabel,
+      ),
     [contextualDuration, contextualDurationLabel, selectedService?.defaultDurationMinutes],
   );
 
@@ -169,11 +203,18 @@ export function AppointmentCreateForm({
         headers: { accept: "application/json" },
         method: "POST",
       });
-      const payload = await readResponse<{ practitionerCreated: boolean; serviceCreated: boolean }>(response);
+      const payload = await readResponse<{
+        practitionerCreated: boolean;
+        serviceCreated: boolean;
+      }>(response);
       if (!response.ok || !payload.data) throw new Error(issueMessage(payload));
       window.location.reload();
     } catch (error) {
-      setMessage(error instanceof Error && error.message ? error.message : "Randevu altyapısı tamamlanamadı.");
+      setMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : "Randevu altyapısı tamamlanamadı.",
+      );
     } finally {
       setSetupBusy(false);
     }
@@ -227,14 +268,19 @@ export function AppointmentCreateForm({
           serviceId: selectedService.id,
           startsAt: startsAtDate.toISOString(),
         }),
-        headers: { accept: "application/json", "content-type": "application/json" },
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+        },
         method: "POST",
       });
       const payload = await readResponse<{ id: string }>(response);
       if (!response.ok || !payload.data) throw new Error(issueMessage(payload));
       window.location.assign(`/yonetim/danisan-profili?clientId=${selectedClient.id}`);
     } catch (error) {
-      setMessage(error instanceof Error && error.message ? error.message : "Randevu oluşturulamadı.");
+      setMessage(
+        error instanceof Error && error.message ? error.message : "Randevu oluşturulamadı.",
+      );
     } finally {
       setBusy(false);
     }
@@ -258,7 +304,12 @@ export function AppointmentCreateForm({
           </a>
         ) : null}
         {canAutoSetup ? (
-          <button className="primary-button" disabled={setupBusy} onClick={setupPrerequisites} type="button">
+          <button
+            className="primary-button"
+            disabled={setupBusy}
+            onClick={setupPrerequisites}
+            type="button"
+          >
             {setupBusy ? "Tamamlanıyor..." : "Hizmet ve terapisti tamamla"}
           </button>
         ) : null}
@@ -283,7 +334,10 @@ export function AppointmentCreateForm({
             <SelectControl
               disabled={busy}
               name="clientId"
-              onValueChange={(value) => { setClientId(value); setDurationMode("CONTEXT_DEFAULT"); }}
+              onValueChange={(value) => {
+                setClientId(value);
+                setDurationMode("CONTEXT_DEFAULT");
+              }}
               options={clientOptions}
               placeholder="Danışan seçin"
               required
@@ -297,11 +351,15 @@ export function AppointmentCreateForm({
                 disabled={busy || selectedClient.guardians.length === 0}
                 name="guardianId"
                 options={selectedClient.guardians}
-                placeholder={selectedClient.guardians.length === 0 ? "Veli kaydı yok" : "Veli seçin"}
+                placeholder={
+                  selectedClient.guardians.length === 0 ? "Veli kaydı yok" : "Veli seçin"
+                }
                 required
               />
               {selectedClient.guardians.length === 0 ? (
-                <small className="appointment-warning-text">Önce danışan profiline veli bağlayın.</small>
+                <small className="appointment-warning-text">
+                  Önce danışan profiline veli bağlayın.
+                </small>
               ) : (
                 <small>Seçilen veli bu çocuk danışanın randevusuna bağlanır.</small>
               )}
@@ -320,7 +378,10 @@ export function AppointmentCreateForm({
           <span>2</span>
           <div>
             <h3 id="appointment-service-section">Hizmet ve terapist</h3>
-            <p>İlk görüşme 60, çocuk görüşmesi 45, yetişkin görüşmesi 50 dakika varsayılanıyla açılır; gerektiğinde hizmet veya özel süre seçilebilir.</p>
+            <p>
+              İlk görüşme, çocuk ve yetişkin süreleri yönetim ayarlarından gelir; gerektiğinde
+              hizmet veya özel süre seçilebilir.
+            </p>
           </div>
         </div>
         <div className="booking-field-grid">
@@ -356,7 +417,10 @@ export function AppointmentCreateForm({
           <span>3</span>
           <div>
             <h3 id="appointment-time-section">Tarih, saat ve süre</h3>
-            <p>Seçilen saat doğrudan onaylı randevu olarak açılır; aynı terapistte çakışma engellenir.</p>
+            <p>
+              Seçilen saat doğrudan onaylı randevu olarak açılır; aynı terapistte çakışma
+              engellenir.
+            </p>
           </div>
         </div>
         <div className="booking-field-grid appointment-time-grid">

@@ -4,6 +4,7 @@ import AboutHighlight from "@/components/about-highlight";
 import { SiteFooter, SiteHeader } from "@/components/public-shell";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/hakkimda" },
   description: "Berfin Akbaş’ın görüşme yaklaşımı ve çalışma prensipleri hakkında bilgi.",
   title: "Hakkımda | Berfin Akbaş",
 };

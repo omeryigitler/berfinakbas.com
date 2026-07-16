@@ -114,7 +114,9 @@ const consentStatusLabels = {
 } as const;
 
 function consentStatusLabel(status: string): string {
-  return consentStatusLabels[status as keyof typeof consentStatusLabels] ?? status;
+  return (
+    consentStatusLabels[status as keyof typeof consentStatusLabels] ?? status
+  );
 }
 
 function singleParam(
@@ -138,7 +140,11 @@ function formatDateTime(date: Date, timeZone: string): string {
   }).format(date);
 }
 
-function formatAppointmentRange(startsAt: Date, endsAt: Date, timeZone: string): string {
+function formatAppointmentRange(
+  startsAt: Date,
+  endsAt: Date,
+  timeZone: string,
+): string {
   const start = new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -166,7 +172,9 @@ function appointmentStatusLabel(status: string): string {
 }
 
 function appointmentServiceName(appointment: ProfileAppointment): string {
-  return appointment.serviceNameSnapshot || appointment.service?.name || "Hizmet";
+  return (
+    appointment.serviceNameSnapshot || appointment.service?.name || "Hizmet"
+  );
 }
 
 function financeEntryTypeLabel(type: string): string {
@@ -199,7 +207,8 @@ function buildOperationEvents({
     description: `${appointmentServiceName(appointment)} · ${locationLabels[appointment.locationTypeSnapshot]} · ${appointment.publicReference}`,
     id: `appointment-${appointment.id}`,
     occurredAt: appointment.startsAt,
-    title: appointment.startsAt >= new Date() ? "Yaklaşan randevu" : "Randevu kaydı",
+    title:
+      appointment.startsAt >= new Date() ? "Yaklaşan randevu" : "Randevu kaydı",
   }));
 
   const financeEvents = financeEntries.map((entry) => ({
@@ -208,7 +217,10 @@ function buildOperationEvents({
     href: financePageHref,
     id: `finance-${entry.id}`,
     occurredAt: entry.occurredAt,
-    title: entry.type === "PAYMENT" ? "Ödeme alındı" : financeEntryTypeLabel(entry.type),
+    title:
+      entry.type === "PAYMENT"
+        ? "Ödeme alındı"
+        : financeEntryTypeLabel(entry.type),
   }));
 
   return [...appointmentEvents, ...financeEvents]
@@ -239,11 +251,18 @@ function AppointmentList({
   return (
     <ul className="admin-client-list admin-dashboard-client-list">
       {appointments.map((appointment) => (
-        <li className="admin-client-list-item admin-dashboard-client-card" key={appointment.id}>
+        <li
+          className="admin-client-list-item admin-dashboard-client-card"
+          key={appointment.id}
+        >
           <div className="admin-client-list-main">
             <strong>{appointmentServiceName(appointment)}</strong>
             <span className="admin-client-contact">
-              {formatAppointmentRange(appointment.startsAt, appointment.endsAt, timeZone)}
+              {formatAppointmentRange(
+                appointment.startsAt,
+                appointment.endsAt,
+                timeZone,
+              )}
             </span>
             <span className="admin-client-meta">
               <em>{appointmentStatusLabel(appointment.status)}</em>
@@ -263,7 +282,9 @@ function FinancePlanList({ plans }: { plans: readonly FinancePlanSummary[] }) {
     return (
       <div className="admin-empty-state">
         <strong>Plan kaydı yok</strong>
-        <span>Ödeme planı oluşturulduğunda bakiye ve seans bilgisi burada görünür.</span>
+        <span>
+          Ödeme planı oluşturulduğunda bakiye ve seans bilgisi burada görünür.
+        </span>
       </div>
     );
   }
@@ -271,15 +292,22 @@ function FinancePlanList({ plans }: { plans: readonly FinancePlanSummary[] }) {
   return (
     <ul className="admin-client-list admin-dashboard-client-list">
       {plans.map((plan) => (
-        <li className="admin-client-list-item admin-dashboard-client-card" key={plan.id}>
+        <li
+          className="admin-client-list-item admin-dashboard-client-card"
+          key={plan.id}
+        >
           <div className="admin-client-list-main">
             <strong>{plan.name}</strong>
             <span className="admin-client-contact">
-              {formatMoney(BigInt(plan.totalAmountMinor), plan.currency)} toplam · {plan.remainingSessions} kalan seans
+              {formatMoney(BigInt(plan.totalAmountMinor), plan.currency)} toplam
+              · {plan.remainingSessions} kalan seans
             </span>
             <span className="admin-client-meta">
               <em>{planStatusLabel(plan.status)}</em>
-              <em>{formatMoney(BigInt(plan.balanceMinor), plan.currency)} açık bakiye</em>
+              <em>
+                {formatMoney(BigInt(plan.balanceMinor), plan.currency)} açık
+                bakiye
+              </em>
               <em>{plan.installments.length} taksit</em>
               <em>{invoiceStatusLabel(plan.invoiceStatus)}</em>
             </span>
@@ -306,11 +334,15 @@ function FinanceEntryList({ entries }: { entries: ProfileFinanceEntry[] }) {
   return (
     <ul className="admin-client-list admin-dashboard-client-list">
       {entries.map((entry) => (
-        <li className="admin-client-list-item admin-dashboard-client-card" key={entry.id}>
+        <li
+          className="admin-client-list-item admin-dashboard-client-card"
+          key={entry.id}
+        >
           <div className="admin-client-list-main">
             <strong>{financeEntryTypeLabel(entry.type)}</strong>
             <span className="admin-client-contact">
-              {formatDate(entry.occurredAt)} · {entry.plan?.name ?? "Plansız hareket"}
+              {formatDate(entry.occurredAt)} ·{" "}
+              {entry.plan?.name ?? "Plansız hareket"}
             </span>
             <span className="admin-client-meta">
               <em>{positiveMoney(entry.amountMinor, entry.currency)}</em>
@@ -335,7 +367,10 @@ function OperationFlow({
     return (
       <div className="admin-empty-state">
         <strong>Operasyon hareketi yok</strong>
-        <span>Randevu, ödeme veya plan hareketi oluştuğunda burada kronolojik görünecek.</span>
+        <span>
+          Randevu, ödeme veya plan hareketi oluştuğunda burada kronolojik
+          görünecek.
+        </span>
       </div>
     );
   }
@@ -343,7 +378,10 @@ function OperationFlow({
   return (
     <ul className="admin-client-list admin-dashboard-client-list">
       {events.map((event) => (
-        <li className="admin-client-list-item admin-dashboard-client-card" key={event.id}>
+        <li
+          className="admin-client-list-item admin-dashboard-client-card"
+          key={event.id}
+        >
           <div className="admin-client-list-main">
             <strong>{event.title}</strong>
             <span className="admin-client-contact">
@@ -354,7 +392,10 @@ function OperationFlow({
             </span>
           </div>
           {event.href ? (
-            <Link className="admin-client-profile-link admin-dashboard-client-action" href={event.href}>
+            <Link
+              className="admin-client-profile-link admin-dashboard-client-action"
+              href={event.href}
+            >
               Detay
             </Link>
           ) : null}
@@ -380,29 +421,27 @@ export default async function AdminClientProfilePage({
   const database = getDatabase();
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
+  const canManageConsents = hasPermission(
+    session.user.roles,
+    "consents:manage",
+  );
+  const canReadConsents = hasPermission(session.user.roles, "consents:read");
   const canReadAppointments = hasPermission(
     session.user.roles,
     "appointments:read",
+  );
+  const canManageAppointments = hasPermission(
+    session.user.roles,
+    "appointments:manage",
   );
   const client = await database.client.findUnique({
     include: {
       _count: {
         select: {
-          appointments: true,
-          consents: true,
-          financeEntries: true,
-          plans: true,
+          appointments: canReadAppointments,
+          financeEntries: canReadFinance,
+          plans: canReadFinance,
         },
-      },
-      consents: {
-        orderBy: [{ capturedAt: "desc" }],
-        select: {
-          capturedAt: true,
-          document: { select: { publicTitle: true, type: true, version: true } },
-          id: true,
-          status: true,
-        },
-        take: 5,
       },
       guardians: {
         include: {
@@ -418,34 +457,46 @@ export default async function AdminClientProfilePage({
         },
         orderBy: [{ isPrimary: "desc" }, { guardian: { lastName: "asc" } }],
       },
-      plans: {
-        orderBy: [{ createdAt: "desc" }],
-        select: {
-          currency: true,
-          id: true,
-          name: true,
-          sessionCount: true,
-          status: true,
-          totalAmountMinor: true,
-          validFrom: true,
-        },
-        take: 3,
-      },
     },
     where: { id: clientId },
   });
 
   if (!client) notFound();
 
+  const [clientConsents, consentCount] = canReadConsents
+    ? await Promise.all([
+        database.consent.findMany({
+          orderBy: [{ capturedAt: "desc" }],
+          select: {
+            capturedAt: true,
+            document: {
+              select: { publicTitle: true, type: true, version: true },
+            },
+            id: true,
+            status: true,
+          },
+          take: 5,
+          where: { clientId: client.id },
+        }),
+        database.consent.count({ where: { clientId: client.id } }),
+      ])
+    : [[], 0];
+
   const allGuardians = canManageClients
     ? await database.guardian.findMany({
         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-        select: { email: true, firstName: true, id: true, lastName: true, phone: true },
+        select: {
+          email: true,
+          firstName: true,
+          id: true,
+          lastName: true,
+          phone: true,
+        },
         take: 250,
       })
     : [];
 
-  const consentDocuments = canManageClients
+  const consentDocuments = canManageConsents
     ? await database.consentDocument.findMany({
         orderBy: [{ effectiveFrom: "desc" }],
         select: { id: true, publicTitle: true, type: true, version: true },
@@ -473,7 +524,9 @@ export default async function AdminClientProfilePage({
           where: {
             clientId: client.id,
             startsAt: { gte: now },
-            status: { in: ["CONFIRMED", "PENDING_REVIEW", "RESCHEDULE_PROPOSED"] },
+            status: {
+              in: ["CONFIRMED", "PENDING_REVIEW", "RESCHEDULE_PROPOSED"],
+            },
           },
         }),
         database.appointment.findMany({
@@ -515,7 +568,8 @@ export default async function AdminClientProfilePage({
       ])
     : [null, []];
   const financePlans = financeOverview?.plans ?? [];
-  const activeFinancePlan = financePlans.find((plan) => plan.status === "ACTIVE") ?? null;
+  const activeFinancePlan =
+    financePlans.find((plan) => plan.status === "ACTIVE") ?? null;
   const financeCurrency = financePlans[0]?.currency ?? "TRY";
   const totalPlanMinor = financePlans.reduce(
     (total, plan) => total + BigInt(plan.totalAmountMinor),
@@ -526,15 +580,17 @@ export default async function AdminClientProfilePage({
     0n,
   );
   const openBalanceMinor = rawBalanceMinor > 0n ? rawBalanceMinor : 0n;
-  const paidMinor = totalPlanMinor > rawBalanceMinor ? totalPlanMinor - rawBalanceMinor : 0n;
+  const paidMinor =
+    totalPlanMinor > rawBalanceMinor ? totalPlanMinor - rawBalanceMinor : 0n;
   const remainingSessions = financePlans.reduce(
     (total, plan) => total + Number(plan.remainingSessions),
     0,
   );
-  const focusAppointment = upcomingAppointments[0] ?? appointmentHistory[0] ?? null;
-  const lastPayment = recentFinanceEntries.find((entry) => entry.type === "PAYMENT") ?? null;
+  const focusAppointment =
+    upcomingAppointments[0] ?? appointmentHistory[0] ?? null;
+  const lastPayment =
+    recentFinanceEntries.find((entry) => entry.type === "PAYMENT") ?? null;
   const clientName = `${client.firstName} ${client.lastName}`;
-  const activePlan = client.plans.find((plan) => plan.status === "ACTIVE");
   const primaryGuardian = client.guardians[0];
   const noteModalHref =
     `/yonetim/danisan-profili?clientId=${client.id}&modal=not-ekle` as Route;
@@ -587,17 +643,22 @@ export default async function AdminClientProfilePage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="hizli-islemler">Hızlı işlemler</h2>
-            <p>En sık kullanılan danışan işlemleri; randevu ve ödeme ekranı seçili danışanla açılır.</p>
+            <p>
+              En sık kullanılan danışan işlemleri; randevu ve ödeme ekranı
+              seçili danışanla açılır.
+            </p>
           </div>
           <span className="admin-count">Operasyon</span>
         </div>
         <div className="finance-operation-grid finance-operation-grid--buttons">
-          {canReadAppointments ? (
+          {canManageAppointments ? (
             <Link href={appointmentsPageHref} scroll={false}>
               Randevu oluştur
             </Link>
           ) : null}
-          {canReadFinance ? <Link href={financePageHref}>Ödeme ekranı</Link> : null}
+          {canReadFinance ? (
+            <Link href={financePageHref}>Ödeme ekranı</Link>
+          ) : null}
           {canManageClients ? (
             <Link href={noteModalHref} scroll={false}>
               Not ekle
@@ -605,7 +666,9 @@ export default async function AdminClientProfilePage({
           ) : null}
           {canManageClients ? (
             <Link
-              href={`/yonetim/danisan-profili?clientId=${client.id}&modal=profili-duzenle` as Route}
+              href={
+                `/yonetim/danisan-profili?clientId=${client.id}&modal=profili-duzenle` as Route
+              }
               scroll={false}
             >
               Profili düzenle
@@ -613,21 +676,25 @@ export default async function AdminClientProfilePage({
           ) : null}
           {canManageClients ? (
             <Link
-              href={`/yonetim/danisan-profili?clientId=${client.id}&modal=veli-yonetimi` as Route}
+              href={
+                `/yonetim/danisan-profili?clientId=${client.id}&modal=veli-yonetimi` as Route
+              }
               scroll={false}
             >
               Veli yönetimi
             </Link>
           ) : null}
-          {canManageClients ? (
+          {canManageConsents ? (
             <Link
-              href={`/yonetim/danisan-profili?clientId=${client.id}&modal=onay-yonetimi` as Route}
+              href={
+                `/yonetim/danisan-profili?clientId=${client.id}&modal=onay-yonetimi` as Route
+              }
               scroll={false}
             >
               KVKK / onay yönetimi
             </Link>
           ) : null}
-                    <Link href="/yonetim/danisanlar">Danışan listesi</Link>
+          <Link href="/yonetim/danisanlar">Danışan listesi</Link>
         </div>
       </section>
 
@@ -658,27 +725,43 @@ export default async function AdminClientProfilePage({
         <article className={styles.dashboardCard}>
           <span>Açık bakiye</span>
           <strong>
-            {canReadFinance ? formatMoney(openBalanceMinor, financeCurrency) : "—"}
+            {canReadFinance
+              ? formatMoney(openBalanceMinor, financeCurrency)
+              : "—"}
           </strong>
           <small>
-            {activeFinancePlan
-              ? `${activeFinancePlan.name} · ${remainingSessions} kalan seans`
-              : activePlan
-                ? activePlan.name
-                : "Plan açılabilir"}
+            {canReadFinance
+              ? activeFinancePlan
+                ? `${activeFinancePlan.name} · ${remainingSessions} kalan seans`
+                : "Plan açılabilir"
+              : "Finans yetkisi gerekir"}
           </small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Kalan seans</span>
           <strong>{canReadFinance ? remainingSessions : "—"}</strong>
-          <small>{financePlans.length} plan üzerinden</small>
+          <small>
+            {canReadFinance
+              ? `${financePlans.length} plan üzerinden`
+              : "Finans yetkisi gerekir"}
+          </small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Son ödeme</span>
           <strong>
-            {lastPayment ? positiveMoney(lastPayment.amountMinor, lastPayment.currency) : "Yok"}
+            {canReadFinance
+              ? lastPayment
+                ? positiveMoney(lastPayment.amountMinor, lastPayment.currency)
+                : "Yok"
+              : "—"}
           </strong>
-          <small>{lastPayment ? formatDate(lastPayment.occurredAt) : "Ödeme hareketi yok"}</small>
+          <small>
+            {canReadFinance
+              ? lastPayment
+                ? formatDate(lastPayment.occurredAt)
+                : "Ödeme hareketi yok"
+              : "Finans yetkisi gerekir"}
+          </small>
         </article>
       </div>
 
@@ -686,11 +769,17 @@ export default async function AdminClientProfilePage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="operasyon-akisi">Operasyon akışı</h2>
-            <p>Bu danışanın randevu ve finans hareketleri en yeniden eskiye tek akışta görünür.</p>
+            <p>
+              Bu danışanın randevu ve finans hareketleri en yeniden eskiye tek
+              akışta görünür.
+            </p>
           </div>
           <span className="admin-count">{operationEvents.length} hareket</span>
         </div>
-        <OperationFlow events={operationEvents} timeZone={environment.BUSINESS_TIME_ZONE} />
+        <OperationFlow
+          events={operationEvents}
+          timeZone={environment.BUSINESS_TIME_ZONE}
+        />
       </section>
 
       <section className="admin-panel" aria-labelledby="profil">
@@ -749,11 +838,13 @@ export default async function AdminClientProfilePage({
                     {relation.guardian.firstName} {relation.guardian.lastName}
                   </strong>
                   <span>
-                    {relation.relationship} · {relation.isPrimary ? "Birincil veli" : "Ek veli"}
+                    {relation.relationship} ·{" "}
+                    {relation.isPrimary ? "Birincil veli" : "Ek veli"}
                   </span>
                 </div>
                 <span>
-                  {relation.guardian.phone ?? "Telefon yok"} · {relation.guardian.email ?? "E-posta yok"}
+                  {relation.guardian.phone ?? "Telefon yok"} ·{" "}
+                  {relation.guardian.email ?? "E-posta yok"}
                 </span>
               </li>
             ))}
@@ -767,27 +858,47 @@ export default async function AdminClientProfilePage({
             <h2 id="kvkk-onaylari">KVKK / onay geçmişi</h2>
             <p>Son onay kayıtları ve kullanılan belge versiyonları.</p>
           </div>
-          <span className="admin-count">{client._count.consents} kayıt</span>
+          <span className="admin-count">
+            {canReadConsents ? `${consentCount} kayıt` : "Yetki gerekli"}
+          </span>
         </div>
-        {client.consents.length === 0 ? (
-          <div className="admin-empty-state">
-            <strong>Onay kaydı yok</strong>
-            <span>Danışana ait KVKK veya onay kaydı henüz oluşturulmamış.</span>
-          </div>
+        {canReadConsents ? (
+          clientConsents.length === 0 ? (
+            <div className="admin-empty-state">
+              <strong>Onay kaydı yok</strong>
+              <span>
+                Danışana ait KVKK veya onay kaydı henüz oluşturulmamış.
+              </span>
+            </div>
+          ) : (
+            <ul className="admin-service-list">
+              {clientConsents.map((consent) => (
+                <li key={consent.id}>
+                  <div>
+                    <strong>
+                      {consent.document.publicTitle ?? consent.document.type}
+                    </strong>
+                    <span>Belge versiyonu {consent.document.version}</span>
+                  </div>
+                  <span>
+                    {consentStatusLabel(consent.status)} ·{" "}
+                    {formatDateTime(
+                      consent.capturedAt,
+                      environment.BUSINESS_TIME_ZONE,
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
-          <ul className="admin-service-list">
-            {client.consents.map((consent) => (
-              <li key={consent.id}>
-                <div>
-                  <strong>{consent.document.publicTitle ?? consent.document.type}</strong>
-                  <span>Belge versiyonu {consent.document.version}</span>
-                </div>
-                <span>
-                  {consentStatusLabel(consent.status)} · {formatDateTime(consent.capturedAt, environment.BUSINESS_TIME_ZONE)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="admin-empty-state">
+            <strong>Onay kayıtları için yetki gerekli</strong>
+            <span>
+              Bu danışanın onay geçmişini görmek için onay okuma yetkisi
+              gerekir.
+            </span>
+          </div>
         )}
       </section>
 
@@ -795,9 +906,12 @@ export default async function AdminClientProfilePage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="randevular">Randevular</h2>
-            <p>Yaklaşan randevular ve geçmiş randevu kayıtları gerçek veriden gelir.</p>
+            <p>
+              Yaklaşan randevular ve geçmiş randevu kayıtları gerçek veriden
+              gelir.
+            </p>
           </div>
-          {canReadAppointments ? (
+          {canManageAppointments ? (
             <Link
               className="primary-button admin-dashboard-clients-cta"
               href={appointmentsPageHref}
@@ -810,13 +924,18 @@ export default async function AdminClientProfilePage({
 
         {canReadAppointments ? (
           <div className={styles.dashboardLayout}>
-            <section className={styles.compactPanel} aria-labelledby="yaklasan-randevular">
+            <section
+              className={styles.compactPanel}
+              aria-labelledby="yaklasan-randevular"
+            >
               <div className={styles.panelHeader}>
                 <div>
                   <h2 id="yaklasan-randevular">Yaklaşan randevular</h2>
                   <p>Bu danışan için bekleyen ve onaylı gelecek kayıtlar.</p>
                 </div>
-                <span className={styles.panelBadge}>{upcomingAppointments.length} kayıt</span>
+                <span className={styles.panelBadge}>
+                  {upcomingAppointments.length} kayıt
+                </span>
               </div>
               <AppointmentList
                 appointments={upcomingAppointments}
@@ -826,13 +945,20 @@ export default async function AdminClientProfilePage({
               />
             </section>
 
-            <section className={styles.compactPanel} aria-labelledby="randevu-gecmisi">
+            <section
+              className={styles.compactPanel}
+              aria-labelledby="randevu-gecmisi"
+            >
               <div className={styles.panelHeader}>
                 <div>
                   <h2 id="randevu-gecmisi">Randevu geçmişi</h2>
-                  <p>Son tamamlanan, iptal edilen veya geçmiş tarihli kayıtlar.</p>
+                  <p>
+                    Son tamamlanan, iptal edilen veya geçmiş tarihli kayıtlar.
+                  </p>
                 </div>
-                <span className={styles.panelBadge}>{appointmentHistory.length} kayıt</span>
+                <span className={styles.panelBadge}>
+                  {appointmentHistory.length} kayıt
+                </span>
               </div>
               <AppointmentList
                 appointments={appointmentHistory}
@@ -845,7 +971,10 @@ export default async function AdminClientProfilePage({
         ) : (
           <div className="admin-empty-state">
             <strong>Randevu yetkisi yok</strong>
-            <span>Bu danışanın randevu kayıtlarını görmek için randevu okuma yetkisi gerekir.</span>
+            <span>
+              Bu danışanın randevu kayıtlarını görmek için randevu okuma yetkisi
+              gerekir.
+            </span>
           </div>
         )}
       </section>
@@ -854,7 +983,10 @@ export default async function AdminClientProfilePage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="finans">Ödeme ve planlar</h2>
-            <p>Bu danışanın plan, açık bakiye, kalan seans ve son finans hareketleri.</p>
+            <p>
+              Bu danışanın plan, açık bakiye, kalan seans ve son finans
+              hareketleri.
+            </p>
           </div>
           {canReadFinance ? (
             <Link
@@ -881,7 +1013,9 @@ export default async function AdminClientProfilePage({
               </article>
               <article className={styles.dashboardCard}>
                 <span>Açık bakiye</span>
-                <strong>{formatMoney(openBalanceMinor, financeCurrency)}</strong>
+                <strong>
+                  {formatMoney(openBalanceMinor, financeCurrency)}
+                </strong>
                 <small>Ödeme ekranındaki bakiye ile aynı hesap</small>
               </article>
               <article className={styles.dashboardCard}>
@@ -892,24 +1026,36 @@ export default async function AdminClientProfilePage({
             </div>
 
             <div className={styles.dashboardLayout}>
-              <section className={styles.compactPanel} aria-labelledby="danisan-planlari">
+              <section
+                className={styles.compactPanel}
+                aria-labelledby="danisan-planlari"
+              >
                 <div className={styles.panelHeader}>
                   <div>
                     <h2 id="danisan-planlari">Danışan planları</h2>
                     <p>Plan tutarı, açık bakiye, taksit ve fatura durumu.</p>
                   </div>
-                  <span className={styles.panelBadge}>{financePlans.length} plan</span>
+                  <span className={styles.panelBadge}>
+                    {financePlans.length} plan
+                  </span>
                 </div>
                 <FinancePlanList plans={financePlans} />
               </section>
 
-              <section className={styles.compactPanel} aria-labelledby="son-finans-hareketleri">
+              <section
+                className={styles.compactPanel}
+                aria-labelledby="son-finans-hareketleri"
+              >
                 <div className={styles.panelHeader}>
                   <div>
                     <h2 id="son-finans-hareketleri">Son finans hareketleri</h2>
-                    <p>Plan borcu, ödeme, iade ve dengeleyici kayıt hareketleri.</p>
+                    <p>
+                      Plan borcu, ödeme, iade ve dengeleyici kayıt hareketleri.
+                    </p>
                   </div>
-                  <span className={styles.panelBadge}>{recentFinanceEntries.length} kayıt</span>
+                  <span className={styles.panelBadge}>
+                    {recentFinanceEntries.length} kayıt
+                  </span>
                 </div>
                 <FinanceEntryList entries={recentFinanceEntries} />
               </section>
@@ -918,26 +1064,29 @@ export default async function AdminClientProfilePage({
         ) : (
           <div className="admin-empty-state">
             <strong>Finans yetkisi yok</strong>
-            <span>Bu danışanın ödeme ve plan kayıtlarını görmek için finans okuma yetkisi gerekir.</span>
+            <span>
+              Bu danışanın ödeme ve plan kayıtlarını görmek için finans okuma
+              yetkisi gerekir.
+            </span>
           </div>
         )}
       </section>
 
-      {canManageClients ? (
+      {canManageClients || canManageConsents ? (
         <ClientProfileManagementModals
           activeModal={activeModal}
           allGuardians={allGuardians}
+          canManageClients={canManageClients}
+          canManageConsents={canManageConsents}
           client={client}
           consentDocuments={consentDocuments}
-          consents={client.consents}
+          consents={clientConsents}
           relations={client.guardians}
         />
       ) : null}
 
       <ClientProfileUrlModals
         activeModal={activeModal}
-        canReadAppointments={canReadAppointments}
-        canReadFinance={canReadFinance}
         clientId={client.id}
         clientName={clientName}
       />

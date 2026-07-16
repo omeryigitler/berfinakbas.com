@@ -185,6 +185,8 @@ model User {
   clientPlansCreated      ClientPlan[]               @relation("ClientPlanCreator")
   financeEntriesCreated   FinanceLedgerEntry[]       @relation("FinanceEntryActor")
   sessionCreditsCreated   SessionCreditEntry[]       @relation("SessionCreditActor")
+  clientNotesCreated       ClientNote[]                @relation("ClientNoteCreator")
+  operationalSettingsUpdated OperationalSetting[]      @relation("OperationalSettingUpdater")
 
   @@index([status], map: "users_status_idx")
   @@map("users")
@@ -272,6 +274,7 @@ model Client {
   appointments   Appointment[]
   plans          ClientPlan[]
   financeEntries FinanceLedgerEntry[]
+  notes          ClientNote[]
 
   @@index([status, createdAt], map: "clients_status_created_at_idx")
   @@map("clients")
@@ -688,6 +691,31 @@ model AppointmentStatusLog {
 
   @@index([appointmentId, createdAt], map: "appointment_status_logs_appointment_created_idx")
   @@map("appointment_status_logs")
+}
+
+model OperationalSetting {
+  key             String   @id @db.VarChar(120)
+  value           Json
+  updatedByUserId String   @map("updated_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  updatedBy       User     @relation("OperationalSettingUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict, map: "operational_settings_updated_by_user_id_fkey")
+
+  @@map("operational_settings")
+}
+
+model ClientNote {
+  id              String   @id @default(uuid()) @db.Uuid
+  clientId        String   @map("client_id") @db.Uuid
+  category        String   @db.VarChar(40)
+  note            String   @db.VarChar(500)
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "client_notes_client_id_fkey")
+  createdBy       User     @relation("ClientNoteCreator", fields: [createdByUserId], references: [id], onDelete: Restrict, map: "client_notes_created_by_user_id_fkey")
+
+  @@index([clientId, createdAt(sort: Desc)], map: "client_notes_client_created_idx")
+  @@map("client_notes")
 }
 
 model SettingChangeLog {

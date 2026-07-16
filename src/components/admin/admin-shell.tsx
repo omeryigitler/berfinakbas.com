@@ -47,11 +47,19 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
   }
 
   if (permissions.financeRead) {
-    items.push({ href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" });
+    items.push({
+      href: "/yonetim/odemeler",
+      icon: "₺",
+      label: "Ödeme ve planlar",
+    });
   }
 
   if (permissions.technicalHealthRead) {
-    items.push({ href: "/yonetim/saglik", icon: "◇", label: "Entegrasyon sağlığı" });
+    items.push({
+      href: "/yonetim/saglik",
+      icon: "◇",
+      label: "Entegrasyon sağlığı",
+    });
   }
 
   return items;
@@ -59,19 +67,22 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
 
 function isActivePath(pathname: string, href: Route): boolean {
   if (href === "/yonetim") return pathname === href;
-  if (href === "/yonetim/danisanlar" && pathname.startsWith("/yonetim/danisan-profili")) return true;
+  if (href === "/yonetim/danisanlar" && pathname.startsWith("/yonetim/danisan-profili"))
+    return true;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function getInitials(email?: string | null): string {
   if (!email) return "BA";
   const [name] = email.split("@");
-  return name
-    .split(/[._-]/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase("tr-TR"))
-    .join("") || "BA";
+  return (
+    name
+      .split(/[._-]/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toLocaleUpperCase("tr-TR"))
+      .join("") || "BA"
+  );
 }
 
 export function AdminShell({
@@ -89,11 +100,12 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const navigationItems = getAdminNavItems(permissions);
+  const homeHref = navigationItems[0]?.href ?? ("/yonetim/baslangic" as Route);
 
   return (
     <main className={styles.shell} data-admin-refresh="shell">
       <aside className={styles.sidebar} data-admin-region="sidebar" aria-label="Yönetim alanı">
-        <Link className={styles.brand} data-admin-region="brand" href="/yonetim">
+        <Link className={styles.brand} data-admin-region="brand" href={homeHref}>
           <span className={styles.brandMark} data-admin-region="brand-mark">
             <Image src="/logo-mark.png" alt="" width={44} height={44} priority />
           </span>
@@ -105,7 +117,9 @@ export function AdminShell({
 
         {navigationItems.length > 0 ? (
           <nav className={styles.nav} data-admin-region="nav" aria-label="Yönetim menüsü">
-            <span className={styles.navSection} data-admin-region="nav-section">MENÜ</span>
+            <span className={styles.navSection} data-admin-region="nav-section">
+              MENÜ
+            </span>
             {navigationItems.map((item) => {
               const isActive = isActivePath(pathname, item.href);
               const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
@@ -117,7 +131,9 @@ export function AdminShell({
                   href={item.href}
                   key={item.href}
                 >
-                  <span className={styles.navIcon} data-admin-region="nav-icon">{item.icon}</span>
+                  <span className={styles.navIcon} data-admin-region="nav-icon">
+                    {item.icon}
+                  </span>
                   <span>{item.label}</span>
                 </Link>
               );
@@ -128,7 +144,11 @@ export function AdminShell({
 
       <section className={styles.workspace} data-admin-region="workspace">
         <header className={styles.topbar} data-admin-region="topbar">
-          <form className={styles.searchForm} data-admin-region="search" action="/yonetim/danisanlar">
+          <form
+            className={styles.searchForm}
+            data-admin-region="search"
+            action="/yonetim/danisanlar"
+          >
             <span aria-hidden="true">⌕</span>
             <input name="q" placeholder="Danışan, telefon veya e-posta ara" type="search" />
             <kbd>Enter</kbd>
@@ -150,11 +170,17 @@ export function AdminShell({
             <div className={styles.titleGroup} data-admin-region="title-group">
               <p className="section-kicker">Berfin Akbaş · Yönetim</p>
               <h1>{title}</h1>
-              {subtitle ? <p className={styles.subtitle} data-admin-region="subtitle">{subtitle}</p> : null}
+              {subtitle ? (
+                <p className={styles.subtitle} data-admin-region="subtitle">
+                  {subtitle}
+                </p>
+              ) : null}
             </div>
           </div>
 
-          <section className={styles.content} data-admin-region="content">{children}</section>
+          <section className={styles.content} data-admin-region="content">
+            {children}
+          </section>
         </div>
       </section>
     </main>

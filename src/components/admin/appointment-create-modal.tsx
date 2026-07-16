@@ -1,5 +1,6 @@
 import type { Route } from "next";
 
+import { getAppointmentDurationSettings } from "@/lib/booking/appointment-duration-settings";
 import { getDatabase } from "@/lib/db";
 
 import { AdminUrlModal } from "./admin-url-modal";
@@ -15,7 +16,7 @@ export async function AppointmentCreateModal({
   initialClientId?: string | null;
 }) {
   const database = getDatabase();
-  const [clients, practitioners, services] = await Promise.all([
+  const [clients, practitioners, services, durationSettings] = await Promise.all([
     database.client.findMany({
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       select: {
@@ -56,14 +57,15 @@ export async function AppointmentCreateModal({
       },
       where: { status: "ACTIVE" },
     }),
+    getAppointmentDurationSettings(),
   ]);
 
   return (
     <AdminUrlModal closeHref={closeHref} title="Randevu oluştur">
       <div className={modalStyles.modalStack}>
         <p className={modalStyles.footerText}>
-          Admin tarafından oluşturulan randevu doğrudan onaylı açılır. Aynı terapistte
-          çakışan saat varsa kayıt engellenir.
+          Admin tarafından oluşturulan randevu doğrudan onaylı açılır. Aynı terapistte çakışan saat
+          varsa kayıt engellenir.
         </p>
         <AppointmentCreateForm
           clients={clients.map((client) => ({
@@ -74,6 +76,7 @@ export async function AppointmentCreateModal({
               value: guardian.id,
             })),
           }))}
+          durationSettings={durationSettings}
           initialClientId={initialClientId}
           practitioners={practitioners}
           services={services}
