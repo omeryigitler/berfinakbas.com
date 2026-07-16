@@ -1,5 +1,4 @@
 import type { Route } from "next";
-import type { Prisma } from "@/generated/prisma/client";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 
@@ -8,6 +7,7 @@ import styles from "@/components/admin/admin-shell.module.css";
 import { DashboardUrlModals } from "@/components/admin/dashboard-url-modals";
 import "@/components/admin/service-practitioner-overview.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
+import type { Prisma } from "@/generated/prisma/client";
 import {
   clientStatusLabels,
   clientTypeLabels,
