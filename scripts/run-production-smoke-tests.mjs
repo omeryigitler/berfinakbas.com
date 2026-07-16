@@ -5,11 +5,11 @@ const port = "3210";
 const baseUrl = `http://${host}:${port}`;
 const packageManagerPath = process.env.npm_execpath;
 const child = packageManagerPath
-  ? spawn(process.execPath, [packageManagerPath, "start", "--", "-H", host, "-p", port], {
+  ? spawn(process.execPath, [packageManagerPath, "start", "-H", host, "-p", port], {
       env: { ...process.env, PORT: port },
       stdio: "inherit",
     })
-  : spawn("pnpm", ["start", "--", "-H", host, "-p", port], {
+  : spawn("pnpm", ["start", "-H", host, "-p", port], {
       env: { ...process.env, PORT: port },
       stdio: "inherit",
     });
