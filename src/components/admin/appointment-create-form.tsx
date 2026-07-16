@@ -109,7 +109,7 @@ export function AppointmentCreateForm({
   const [message, setMessage] = useState("");
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [setupBusy, setSetupBusy] = useState(false);
-  const initialDateTime = useMemo(defaultDateTimeLocal, []);
+  const initialDateTime = useMemo(() => defaultDateTimeLocal(), []);
   const [appointmentDate, setAppointmentDate] = useState(initialDateTime.slice(0, 10));
   const [appointmentTime, setAppointmentTime] = useState(initialDateTime.slice(11, 16));
 
