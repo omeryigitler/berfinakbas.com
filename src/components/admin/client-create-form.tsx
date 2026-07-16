@@ -108,7 +108,7 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
       });
       const payload = await readResponse<{ id: string }>(response);
       if (!response.ok || !payload.data) throw new Error(issueMessage(payload));
-      window.location.assign(`/yonetim/danisanlar/${payload.data.id}`);
+      window.location.assign(`/yonetim/danisan-profili?clientId=${payload.data.id}`);
     } catch (error) {
       setMessage(
         error instanceof Error && error.message ? error.message : "Danışan kaydedilemedi.",
