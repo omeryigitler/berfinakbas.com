@@ -87,7 +87,9 @@ export default async function AdminAppointmentsPage({
 
   const [pendingCount, todayAppointments, upcomingAppointments, confirmedCount, weeklyCount] =
     await Promise.all([
-      database.appointment.count({ where: { status: "PENDING_REVIEW" } }),
+      database.appointment.count({
+        where: { status: { in: ["REQUESTED", "PENDING_REVIEW"] } },
+      }),
       database.appointment.findMany({
         orderBy: [{ startsAt: "asc" }, { id: "asc" }],
         select: {
@@ -235,7 +237,10 @@ export default async function AdminAppointmentsPage({
         <div className="admin-panel-heading">
           <div>
             <h2 id="bekleyen-randevular">İnceleme sırası</h2>
-            <p>Public formdan gelen ve henüz karar verilmemiş randevu talepleri.</p>
+            <p>
+              Public formdan gelen talepleri incelemeye alın, olası mükerrer kayıtları çözümleyin ve
+              ardından karar verin.
+            </p>
           </div>
           <span className="admin-count">{pendingCount} bekleyen</span>
         </div>

@@ -1,17 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getDatabaseMock, getServerEnvironmentMock } = vi.hoisted(() => ({
-  getDatabaseMock: vi.fn(),
-  getServerEnvironmentMock: vi.fn(),
-}));
+const { findPotentialDuplicateClientsMock, getDatabaseMock, getServerEnvironmentMock } = vi.hoisted(
+  () => ({
+    findPotentialDuplicateClientsMock: vi.fn(),
+    getDatabaseMock: vi.fn(),
+    getServerEnvironmentMock: vi.fn(),
+  }),
+);
 
 vi.mock("@/lib/db", () => ({ getDatabase: getDatabaseMock }));
 vi.mock("@/lib/env", () => ({ getServerEnvironment: getServerEnvironmentMock }));
+vi.mock("@/lib/clients/client-duplicate-review", () => ({
+  findPotentialDuplicateClients: findPotentialDuplicateClientsMock,
+}));
 
 import { BookingConsentGateError } from "@/domain/consent/booking-consent";
 
 import {
   AppointmentNotFoundError,
+  AppointmentDuplicateReviewRequiredError,
   AppointmentTransitionConflictError,
   transitionAppointment,
 } from "./appointment-transition-service";
@@ -30,6 +37,7 @@ function createDatabase(
     allocationStatus?: "ACTIVE" | "RELEASED" | null;
     clientType?: "ADULT" | "CHILD";
     currentStatus?: "REQUESTED" | "PENDING_REVIEW" | "CONFIRMED" | "RESCHEDULE_PROPOSED";
+    duplicateReviewStatus?: "KEPT_SEPARATE" | "LINKED_EXISTING" | "NOT_REQUIRED" | "PENDING";
     exists?: boolean;
     source?: "ADMIN" | "WEB";
     updateCount?: number;
@@ -51,6 +59,7 @@ function createDatabase(
               guardianId:
                 options.clientType === "CHILD" ? "66666666-6666-4666-8666-666666666666" : null,
               id: command.appointmentId,
+              duplicateReviewStatus: options.duplicateReviewStatus ?? "NOT_REQUIRED",
               source: options.source ?? "ADMIN",
               status: options.currentStatus ?? "REQUESTED",
             },
@@ -88,6 +97,8 @@ function createDatabase(
 describe("transitionAppointment", () => {
   beforeEach(() => {
     getDatabaseMock.mockReset();
+    findPotentialDuplicateClientsMock.mockReset();
+    findPotentialDuplicateClientsMock.mockResolvedValue([]);
     getServerEnvironmentMock.mockReturnValue({
       BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES: [],
     });
@@ -265,6 +276,43 @@ describe("transitionAppointment", () => {
         toStatus: "CONFIRMED",
       }),
     ).rejects.toBeInstanceOf(BookingConsentGateError);
+    expect(transaction.appointment.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("blocks web confirmation while a duplicate review is pending", async () => {
+    const { database, transaction } = createDatabase({
+      currentStatus: "PENDING_REVIEW",
+      duplicateReviewStatus: "PENDING",
+      source: "WEB",
+    });
+    getDatabaseMock.mockReturnValue(database);
+
+    await expect(
+      transitionAppointment({
+        ...command,
+        reasonCode: "ADMIN_APPROVED",
+        toStatus: "CONFIRMED",
+      }),
+    ).rejects.toBeInstanceOf(AppointmentDuplicateReviewRequiredError);
+    expect(transaction.appointment.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("rechecks legacy web requests for a newly discovered exact match", async () => {
+    const { database, transaction } = createDatabase({
+      currentStatus: "PENDING_REVIEW",
+      duplicateReviewStatus: "NOT_REQUIRED",
+      source: "WEB",
+    });
+    getDatabaseMock.mockReturnValue(database);
+    findPotentialDuplicateClientsMock.mockResolvedValue([{ clientId: "candidate" }]);
+
+    await expect(
+      transitionAppointment({
+        ...command,
+        reasonCode: "ADMIN_APPROVED",
+        toStatus: "CONFIRMED",
+      }),
+    ).rejects.toBeInstanceOf(AppointmentDuplicateReviewRequiredError);
     expect(transaction.appointment.updateMany).not.toHaveBeenCalled();
   });
 

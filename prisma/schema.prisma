@@ -88,6 +88,13 @@ enum AppointmentSource {
   PHONE
 }
 
+enum DuplicateReviewStatus {
+  NOT_REQUIRED
+  PENDING
+  KEPT_SEPARATE
+  LINKED_EXISTING
+}
+
 enum BookingAllocationStatus {
   ACTIVE
   RELEASED
@@ -159,34 +166,35 @@ enum OutboxEventStatus {
 }
 
 model User {
-  id                      String                     @id @default(uuid()) @db.Uuid
-  name                    String?                    @db.VarChar(160)
-  email                   String?                    @unique @db.VarChar(320)
-  emailVerified           DateTime?                  @map("email_verified") @db.Timestamptz(3)
-  image                   String?
-  status                  UserStatus                 @default(INVITED)
-  mfaEnforcedAt           DateTime?                  @map("mfa_enforced_at") @db.Timestamptz(3)
-  lastLoginAt             DateTime?                  @map("last_login_at") @db.Timestamptz(3)
-  createdAt               DateTime                   @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt               DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(3)
-  accounts                Account[]
-  sessions                Session[]
-  roles                   UserRole[]                 @relation("UserRoleMember")
-  roleAssignmentsMade     UserRole[]                 @relation("UserRoleAssigner")
-  policiesCreated         ServicePolicy[]            @relation("ServicePolicyCreator")
-  consentsCaptured        Consent[]                  @relation("ConsentActor")
-  settingChanges          SettingChangeLog[]         @relation("SettingChangeActor")
-  auditEvents             AuditLog[]                 @relation("AuditActor")
-  practitioner            Practitioner?
-  appointmentsApproved    Appointment[]              @relation("AppointmentApprover")
-  appointmentStatusEvents AppointmentStatusLog[]     @relation("AppointmentStatusActor")
-  holdStatusEvents        AppointmentHoldStatusLog[] @relation("AppointmentHoldStatusActor")
-  paymentMethodsCreated   PaymentMethod[]            @relation("PaymentMethodCreator")
-  clientPlansCreated      ClientPlan[]               @relation("ClientPlanCreator")
-  financeEntriesCreated   FinanceLedgerEntry[]       @relation("FinanceEntryActor")
-  sessionCreditsCreated   SessionCreditEntry[]       @relation("SessionCreditActor")
-  clientNotesCreated       ClientNote[]                @relation("ClientNoteCreator")
-  operationalSettingsUpdated OperationalSetting[]      @relation("OperationalSettingUpdater")
+  id                         String                     @id @default(uuid()) @db.Uuid
+  name                       String?                    @db.VarChar(160)
+  email                      String?                    @unique @db.VarChar(320)
+  emailVerified              DateTime?                  @map("email_verified") @db.Timestamptz(3)
+  image                      String?
+  status                     UserStatus                 @default(INVITED)
+  mfaEnforcedAt              DateTime?                  @map("mfa_enforced_at") @db.Timestamptz(3)
+  lastLoginAt                DateTime?                  @map("last_login_at") @db.Timestamptz(3)
+  createdAt                  DateTime                   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                  DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  accounts                   Account[]
+  sessions                   Session[]
+  roles                      UserRole[]                 @relation("UserRoleMember")
+  roleAssignmentsMade        UserRole[]                 @relation("UserRoleAssigner")
+  policiesCreated            ServicePolicy[]            @relation("ServicePolicyCreator")
+  consentsCaptured           Consent[]                  @relation("ConsentActor")
+  settingChanges             SettingChangeLog[]         @relation("SettingChangeActor")
+  auditEvents                AuditLog[]                 @relation("AuditActor")
+  practitioner               Practitioner?
+  appointmentsApproved       Appointment[]              @relation("AppointmentApprover")
+  duplicateReviewsResolved   Appointment[]              @relation("AppointmentDuplicateReviewResolver")
+  appointmentStatusEvents    AppointmentStatusLog[]     @relation("AppointmentStatusActor")
+  holdStatusEvents           AppointmentHoldStatusLog[] @relation("AppointmentHoldStatusActor")
+  paymentMethodsCreated      PaymentMethod[]            @relation("PaymentMethodCreator")
+  clientPlansCreated         ClientPlan[]               @relation("ClientPlanCreator")
+  financeEntriesCreated      FinanceLedgerEntry[]       @relation("FinanceEntryActor")
+  sessionCreditsCreated      SessionCreditEntry[]       @relation("SessionCreditActor")
+  clientNotesCreated         ClientNote[]               @relation("ClientNoteCreator")
+  operationalSettingsUpdated OperationalSetting[]       @relation("OperationalSettingUpdater")
 
   @@index([status], map: "users_status_idx")
   @@map("users")
@@ -258,25 +266,31 @@ model UserRole {
 }
 
 model Client {
-  id             String               @id @default(uuid()) @db.Uuid
-  type           ClientType
-  firstName      String               @map("first_name") @db.VarChar(120)
-  lastName       String               @map("last_name") @db.VarChar(120)
-  preferredName  String?              @map("preferred_name") @db.VarChar(120)
-  phone          String?              @db.VarChar(40)
-  email          String?              @db.VarChar(320)
-  birthYear      Int?                 @map("birth_year")
-  status         ClientStatus         @default(PROSPECTIVE)
-  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
-  guardians      ClientGuardian[]
-  consents       Consent[]
-  appointments   Appointment[]
-  plans          ClientPlan[]
-  financeEntries FinanceLedgerEntry[]
-  notes          ClientNote[]
+  id                     String               @id @default(uuid()) @db.Uuid
+  type                   ClientType
+  firstName              String               @map("first_name") @db.VarChar(120)
+  lastName               String               @map("last_name") @db.VarChar(120)
+  preferredName          String?              @map("preferred_name") @db.VarChar(120)
+  phone                  String?              @db.VarChar(40)
+  email                  String?              @db.VarChar(320)
+  birthYear              Int?                 @map("birth_year")
+  status                 ClientStatus         @default(PROSPECTIVE)
+  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  guardians              ClientGuardian[]
+  consents               Consent[]
+  appointments           Appointment[]
+  plans                  ClientPlan[]
+  financeEntries         FinanceLedgerEntry[]
+  notes                  ClientNote[]
+  duplicateReviewTargets Appointment[]        @relation("AppointmentDuplicateReviewTarget")
+
+  emailNormalized String? @map("email_normalized") @db.VarChar(320)
+  phoneNormalized String? @map("phone_normalized") @db.VarChar(40)
 
   @@index([status, createdAt], map: "clients_status_created_at_idx")
+  @@index([emailNormalized], map: "clients_email_normalized_idx")
+  @@index([phoneNormalized], map: "clients_phone_normalized_idx")
   @@map("clients")
 }
 
@@ -292,7 +306,11 @@ model Guardian {
   subjectConsents Consent[]        @relation("ConsentGuardianSubject")
   grantedConsents Consent[]        @relation("ConsentGuardianGrantor")
   appointments    Appointment[]
+  emailNormalized String?          @map("email_normalized") @db.VarChar(320)
+  phoneNormalized String?          @map("phone_normalized") @db.VarChar(40)
 
+  @@index([emailNormalized], map: "guardians_email_normalized_idx")
+  @@index([phoneNormalized], map: "guardians_phone_normalized_idx")
   @@map("guardians")
 }
 
@@ -474,45 +492,53 @@ model AppointmentHold {
 }
 
 model Appointment {
-  id                          String                 @id @default(uuid()) @db.Uuid
-  publicReference             String                 @unique @map("public_reference") @db.VarChar(32)
-  clientId                    String                 @map("client_id") @db.Uuid
-  guardianId                  String?                @map("guardian_id") @db.Uuid
-  practitionerId              String                 @map("practitioner_id") @db.Uuid
-  serviceId                   String                 @map("service_id") @db.Uuid
-  status                      AppointmentStatus      @default(REQUESTED)
-  startsAt                    DateTime               @map("starts_at") @db.Timestamptz(3)
-  endsAt                      DateTime               @map("ends_at") @db.Timestamptz(3)
-  busyStartsAt                DateTime               @map("busy_starts_at") @db.Timestamptz(3)
-  busyEndsAt                  DateTime               @map("busy_ends_at") @db.Timestamptz(3)
-  serviceNameSnapshot         String                 @map("service_name_snapshot") @db.VarChar(160)
-  durationMinutesSnapshot     Int                    @map("duration_minutes_snapshot")
-  bufferBeforeMinutesSnapshot Int                    @map("buffer_before_minutes_snapshot")
-  bufferAfterMinutesSnapshot  Int                    @map("buffer_after_minutes_snapshot")
-  locationTypeSnapshot        LocationType           @map("location_type_snapshot")
-  policySnapshot              Json                   @map("policy_snapshot")
-  requestNote                 String?                @map("request_note") @db.VarChar(500)
-  source                      AppointmentSource
-  approvedByUserId            String?                @map("approved_by_user_id") @db.Uuid
-  approvedAt                  DateTime?              @map("approved_at") @db.Timestamptz(3)
-  cancellationReasonCode      String?                @map("cancellation_reason_code") @db.VarChar(80)
-  cancelledAt                 DateTime?              @map("cancelled_at") @db.Timestamptz(3)
-  createdAt                   DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt                   DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
-  client                      Client                 @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "appointments_client_id_fkey")
-  guardian                    Guardian?              @relation(fields: [guardianId], references: [id], onDelete: Restrict, map: "appointments_guardian_id_fkey")
-  practitioner                Practitioner           @relation(fields: [practitionerId], references: [id], onDelete: Restrict, map: "appointments_practitioner_id_fkey")
-  service                     Service                @relation(fields: [serviceId], references: [id], onDelete: Restrict, map: "appointments_service_id_fkey")
-  approvedBy                  User?                  @relation("AppointmentApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull, map: "appointments_approved_by_user_id_fkey")
-  allocation                  BookingAllocation?
-  statusLogs                  AppointmentStatusLog[]
-  consents                    AppointmentConsent[]
-  financeEntries              FinanceLedgerEntry[]
-  sessionCreditEntries        SessionCreditEntry[]
+  id                              String                 @id @default(uuid()) @db.Uuid
+  publicReference                 String                 @unique @map("public_reference") @db.VarChar(32)
+  clientId                        String                 @map("client_id") @db.Uuid
+  guardianId                      String?                @map("guardian_id") @db.Uuid
+  practitionerId                  String                 @map("practitioner_id") @db.Uuid
+  serviceId                       String                 @map("service_id") @db.Uuid
+  status                          AppointmentStatus      @default(REQUESTED)
+  startsAt                        DateTime               @map("starts_at") @db.Timestamptz(3)
+  endsAt                          DateTime               @map("ends_at") @db.Timestamptz(3)
+  busyStartsAt                    DateTime               @map("busy_starts_at") @db.Timestamptz(3)
+  busyEndsAt                      DateTime               @map("busy_ends_at") @db.Timestamptz(3)
+  serviceNameSnapshot             String                 @map("service_name_snapshot") @db.VarChar(160)
+  durationMinutesSnapshot         Int                    @map("duration_minutes_snapshot")
+  bufferBeforeMinutesSnapshot     Int                    @map("buffer_before_minutes_snapshot")
+  bufferAfterMinutesSnapshot      Int                    @map("buffer_after_minutes_snapshot")
+  locationTypeSnapshot            LocationType           @map("location_type_snapshot")
+  policySnapshot                  Json                   @map("policy_snapshot")
+  requestNote                     String?                @map("request_note") @db.VarChar(500)
+  source                          AppointmentSource
+  approvedByUserId                String?                @map("approved_by_user_id") @db.Uuid
+  approvedAt                      DateTime?              @map("approved_at") @db.Timestamptz(3)
+  cancellationReasonCode          String?                @map("cancellation_reason_code") @db.VarChar(80)
+  cancelledAt                     DateTime?              @map("cancelled_at") @db.Timestamptz(3)
+  duplicateReviewStatus           DuplicateReviewStatus  @default(NOT_REQUIRED) @map("duplicate_review_status")
+  duplicateReviewResolvedAt       DateTime?              @map("duplicate_review_resolved_at") @db.Timestamptz(3)
+  duplicateReviewResolvedByUserId String?                @map("duplicate_review_resolved_by_user_id") @db.Uuid
+  duplicateReviewTargetClientId   String?                @map("duplicate_review_target_client_id") @db.Uuid
+  duplicateReviewReason           String?                @map("duplicate_review_reason") @db.VarChar(500)
+  createdAt                       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                       DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  client                          Client                 @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "appointments_client_id_fkey")
+  guardian                        Guardian?              @relation(fields: [guardianId], references: [id], onDelete: Restrict, map: "appointments_guardian_id_fkey")
+  practitioner                    Practitioner           @relation(fields: [practitionerId], references: [id], onDelete: Restrict, map: "appointments_practitioner_id_fkey")
+  service                         Service                @relation(fields: [serviceId], references: [id], onDelete: Restrict, map: "appointments_service_id_fkey")
+  approvedBy                      User?                  @relation("AppointmentApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull, map: "appointments_approved_by_user_id_fkey")
+  duplicateReviewResolvedBy       User?                  @relation("AppointmentDuplicateReviewResolver", fields: [duplicateReviewResolvedByUserId], references: [id], onDelete: SetNull, map: "appointments_duplicate_review_resolved_by_user_id_fkey")
+  duplicateReviewTargetClient     Client?                @relation("AppointmentDuplicateReviewTarget", fields: [duplicateReviewTargetClientId], references: [id], onDelete: SetNull, map: "appointments_duplicate_review_target_client_id_fkey")
+  allocation                      BookingAllocation?
+  statusLogs                      AppointmentStatusLog[]
+  consents                        AppointmentConsent[]
+  financeEntries                  FinanceLedgerEntry[]
+  sessionCreditEntries            SessionCreditEntry[]
 
   @@index([practitionerId, startsAt], map: "appointments_practitioner_starts_idx")
   @@index([clientId, startsAt(sort: Desc)], map: "appointments_client_starts_idx")
   @@index([status, startsAt], map: "appointments_status_starts_idx")
+  @@index([duplicateReviewStatus, status], map: "appointments_duplicate_review_status_idx")
   @@map("appointments")
 }
 
