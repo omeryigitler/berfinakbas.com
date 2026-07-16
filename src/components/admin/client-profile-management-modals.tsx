@@ -265,6 +265,7 @@ async function removeGuardian(formData: FormData) {
 export function ClientProfileManagementModals({
   activeModal,
   allGuardians,
+  canManageClients,
   canManageConsents,
   client,
   consentDocuments,
@@ -273,6 +274,7 @@ export function ClientProfileManagementModals({
 }: {
   activeModal: string;
   allGuardians: Guardian[];
+  canManageClients: boolean;
   canManageConsents: boolean;
   client: ClientSummary;
   consentDocuments: ConsentDocument[];
@@ -281,7 +283,7 @@ export function ClientProfileManagementModals({
 }) {
   const close = closeHref(client.id);
 
-  if (activeModal === "profili-duzenle") {
+  if (activeModal === "profili-duzenle" && canManageClients) {
     return (
       <AdminUrlModal closeHref={close} title="Danışan profilini düzenle">
         <form action={updateClient} className={modalStyles.modalStack}>
@@ -328,7 +330,7 @@ export function ClientProfileManagementModals({
     );
   }
 
-  if (activeModal !== "veli-yonetimi") return null;
+  if (activeModal !== "veli-yonetimi" || !canManageClients) return null;
 
   const availableGuardians = allGuardians.filter(
     (guardian) => !relations.some((relation) => relation.guardian.id === guardian.id),
