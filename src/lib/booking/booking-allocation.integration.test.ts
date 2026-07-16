@@ -459,6 +459,7 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       busyStartsAt,
       busyEndsAt,
     );
+    await pool.query(`UPDATE appointments SET source = 'ADMIN' WHERE id = $1`, [appointment.id]);
     const client = await pool.connect();
     await insertAllocation(
       client,
