@@ -136,8 +136,11 @@ export function DateControl({
             className={styles.today}
             onClick={() => {
               const now = new Date();
+              const nextValue = formatValue(now);
               setVisibleMonth(new Date(now.getFullYear(), now.getMonth(), 1));
-              selectDay(now.getDate());
+              if (value === undefined) setInternalValue(nextValue);
+              onValueChange?.(nextValue);
+              setOpen(false);
             }}
             type="button"
           >
