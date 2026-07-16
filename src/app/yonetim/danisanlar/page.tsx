@@ -49,12 +49,16 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
   const where: Prisma.ClientWhereInput = {};
 
   if (query) {
-    where.OR = [
-      { firstName: { contains: query, mode: "insensitive" } },
-      { lastName: { contains: query, mode: "insensitive" } },
-      { phone: { contains: query, mode: "insensitive" } },
-      { email: { contains: query, mode: "insensitive" } },
-    ];
+    const searchTerms = query.split(/\s+/).filter(Boolean).slice(0, 6);
+    where.AND = searchTerms.map((term) => ({
+      OR: [
+        { firstName: { contains: term, mode: "insensitive" } },
+        { lastName: { contains: term, mode: "insensitive" } },
+        { preferredName: { contains: term, mode: "insensitive" } },
+        { phone: { contains: term, mode: "insensitive" } },
+        { email: { contains: term, mode: "insensitive" } },
+      ],
+    }));
   }
 
   if (isClientStatus(status)) where.status = status;
