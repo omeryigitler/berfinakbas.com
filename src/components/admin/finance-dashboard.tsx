@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import "./finance-friendly-copy.module.css";
+import { DateControl } from "./date-control";
 import { SelectControl } from "./select-control";
 
 type Client = { firstName: string; id: string; lastName: string; status: string };
@@ -487,11 +488,11 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
               <div className="finance-inline-fields">
                 <label>
                   Plan başlangıcı
-                  <input defaultValue={today()} name="validFrom" required type="date" />
+                  <DateControl defaultValue={today()} name="validFrom" required />
                 </label>
                 <label>
                   Plan bitişi / opsiyonel
-                  <input name="validUntil" type="date" />
+                  <DateControl name="validUntil" />
                 </label>
                 <label>
                   Fatura / belge durumu
@@ -524,16 +525,16 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                     </label>
                     <label>
                       Son ödeme tarihi
-                      <input
-                        onChange={(event) =>
+                      <DateControl
+                        name={`installmentDueDate-${index}`}
+                        onValueChange={(nextValue) =>
                           setInstallments((current) =>
                             current.map((item, itemIndex) =>
-                              itemIndex === index ? { ...item, dueDate: event.target.value } : item,
+                              itemIndex === index ? { ...item, dueDate: nextValue } : item,
                             ),
                           )
                         }
                         required
-                        type="date"
                         value={installment.dueDate}
                       />
                     </label>
@@ -635,7 +636,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
                 </label>
                 <label>
                   Ödeme tarihi
-                  <input defaultValue={today()} name="occurredDate" required type="date" />
+                  <DateControl defaultValue={today()} name="occurredDate" required />
                 </label>
               </div>
               <label>

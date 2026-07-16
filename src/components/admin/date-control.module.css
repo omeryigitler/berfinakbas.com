@@ -1,0 +1,89 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  width: 100% !important;
+  min-height: 48px !important;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgb(88 62 49 / 18%) !important;
+  border-radius: 15px !important;
+  background: #fffdf9 !important;
+  padding: 12px 14px !important;
+  color: var(--ink) !important;
+  font: inherit;
+  font-size: 0.8rem !important;
+}
+
+.popover {
+  position: absolute;
+  z-index: 90;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(330px, 88vw);
+  border: 1px solid rgb(217 111 77 / 24%);
+  border-radius: 20px;
+  background: #fffaf4;
+  padding: 14px;
+  box-shadow: 0 24px 56px rgb(83 53 35 / 18%);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+}
+
+.header strong {
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.header button,
+.days button,
+.today {
+  display: grid;
+  min-width: 0 !important;
+  min-height: 34px !important;
+  place-items: center;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: var(--ink) !important;
+  box-shadow: none !important;
+}
+
+.weekdays,
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.weekdays span {
+  color: var(--muted);
+  font-size: 0.65rem;
+  text-align: center;
+}
+
+.days button[aria-pressed="true"] {
+  background: var(--coral-dark) !important;
+  color: #fff !important;
+}
+
+.days button:hover {
+  background: #fff1e7 !important;
+}
+
+.today {
+  width: 100% !important;
+  margin-top: 10px;
+  color: var(--coral-dark) !important;
+  font-weight: 800;
+}
