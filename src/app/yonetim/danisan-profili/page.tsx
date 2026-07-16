@@ -928,6 +928,7 @@ export default async function AdminClientProfilePage({
         <ClientProfileManagementModals
           activeModal={activeModal}
           allGuardians={allGuardians}
+          canManageClients={canManageClients}
           canManageConsents={canManageConsents}
           client={client}
           consentDocuments={consentDocuments}
