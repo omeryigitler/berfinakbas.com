@@ -25,9 +25,7 @@ describe("readBoundedJsonBody", () => {
       method: "POST",
     });
 
-    await expect(readBoundedJsonBody(request, 64)).rejects.toBeInstanceOf(
-      RequestBodyTooLargeError,
-    );
+    await expect(readBoundedJsonBody(request, 64)).rejects.toBeInstanceOf(RequestBodyTooLargeError);
   });
 
   it("rejects a streamed body that exceeds the configured byte limit", async () => {
@@ -36,9 +34,7 @@ describe("readBoundedJsonBody", () => {
       method: "POST",
     });
 
-    await expect(readBoundedJsonBody(request, 8)).rejects.toBeInstanceOf(
-      RequestBodyTooLargeError,
-    );
+    await expect(readBoundedJsonBody(request, 8)).rejects.toBeInstanceOf(RequestBodyTooLargeError);
   });
 
   it("rejects malformed JSON", async () => {

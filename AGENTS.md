@@ -161,7 +161,7 @@ panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
 - Pill butonlar: beyaz zemin, 1px `#e3ded7` kenar, 999px radius; kayıt
   üstünde yatay eylem şeridi (Kaydet, Yeni, Yenile, PDF, Süreç…).
 - Font: Inter benzeri geometrik sans yığını (`"Inter", "SF Pro Text",
-  "Segoe UI", system-ui, sans-serif`) — yalnızca hub kapsamında
+"Segoe UI", system-ui, sans-serif`) — yalnızca hub kapsamında
   (`--hub-font`); kamu sitesinin serif kimliğine dokunulmaz. Gerçek Inter
   dosyası Faz 5'te `next/font` ile eklenebilir.
 - **Gerçek fotoğraf yok:** üyelerden görsel alınmaz. Avatar yerine
