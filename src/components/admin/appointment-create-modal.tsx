@@ -19,6 +19,7 @@ export async function AppointmentCreateModal({
     database.client.findMany({
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       select: {
+        _count: { select: { appointments: true } },
         email: true,
         firstName: true,
         guardians: {
@@ -67,6 +68,7 @@ export async function AppointmentCreateModal({
         <AppointmentCreateForm
           clients={clients.map((client) => ({
             ...client,
+            appointmentCount: client._count.appointments,
             guardians: client.guardians.map(({ guardian }) => ({
               label: `${guardian.firstName} ${guardian.lastName} · ${guardian.phone}`,
               value: guardian.id,

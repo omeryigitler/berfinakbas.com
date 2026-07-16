@@ -35,7 +35,7 @@ type AppointmentOperationItem = Readonly<{
   status: AppointmentStatus;
 }>;
 
-type AppointmentAction = "cancel" | "complete";
+type AppointmentAction = "cancel" | "clientCancel" | "complete" | "noShow";
 
 type ApiResponse = Readonly<{ data?: unknown; error?: string }>;
 
@@ -58,6 +58,14 @@ const locationLabels = {
 } as const;
 
 const actionConfig = {
+  clientCancel: {
+    label: "Danışan iptal etti", pendingLabel: "İşleniyor...", reasonCode: "CLIENT_CANCELLED_BY_ADMIN",
+    successLabel: "danışan iptali olarak kaydedildi", toStatus: "CANCELLED_BY_CLIENT",
+  },
+  noShow: {
+    label: "Gelmedi", pendingLabel: "İşleniyor...", reasonCode: "ADMIN_NO_SHOW",
+    successLabel: "gelmedi olarak kaydedildi", toStatus: "NO_SHOW",
+  },
   cancel: {
     label: "İptal et",
     pendingLabel: "İptal ediliyor...",
@@ -194,6 +202,22 @@ export function AppointmentOperationList({
                       type="button"
                     >
                       {activeAction === "complete" ? actionConfig.complete.pendingLabel : actionConfig.complete.label}
+                    </button>
+                    <button
+                      className="admin-appointment-card-button"
+                      disabled={acting !== null}
+                      onClick={() => void updateAppointment(appointment, "noShow")}
+                      type="button"
+                    >
+                      {activeAction === "noShow" ? actionConfig.noShow.pendingLabel : actionConfig.noShow.label}
+                    </button>
+                    <button
+                      className="admin-appointment-card-button"
+                      disabled={acting !== null}
+                      onClick={() => void updateAppointment(appointment, "clientCancel")}
+                      type="button"
+                    >
+                      {activeAction === "clientCancel" ? actionConfig.clientCancel.pendingLabel : actionConfig.clientCancel.label}
                     </button>
                     <button
                       className="admin-appointment-card-button danger"
