@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authMock, getDatabaseMock } = vi.hoisted(() => ({
+const { authMock, findPotentialDuplicateClientsMock, getDatabaseMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
+  findPotentialDuplicateClientsMock: vi.fn(),
   getDatabaseMock: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({ auth: authMock }));
 vi.mock("@/lib/db", () => ({ getDatabase: getDatabaseMock }));
+vi.mock("@/lib/clients/client-duplicate-review", () => ({
+  findPotentialDuplicateClients: findPotentialDuplicateClientsMock,
+}));
 
 import { GET } from "./route";
 
@@ -25,6 +29,7 @@ function createDatabase(rows: Array<Record<string, unknown>> = []) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  findPotentialDuplicateClientsMock.mockResolvedValue([]);
   authMock.mockResolvedValue({ user: activeTherapist });
 });
 
@@ -66,13 +71,20 @@ describe("GET /api/admin/appointments", () => {
   it("returns a data-minimized pending queue scoped to the therapist", async () => {
     const rows = [
       {
-        client: { firstName: "Sentetik", lastName: "Danışan", type: "ADULT" },
+        client: {
+          firstName: "Sentetik",
+          id: "55555555-5555-4555-8555-555555555555",
+          lastName: "Danışan",
+          type: "ADULT",
+        },
+        duplicateReviewStatus: "NOT_REQUIRED",
         endsAt: new Date("2031-07-01T10:00:00.000Z"),
         id: "22222222-2222-4222-8222-222222222222",
         locationTypeSnapshot: "IN_PERSON",
         practitioner: { displayName: "Sentetik Uzman" },
         publicReference: "IT-SENTETIK",
         serviceNameSnapshot: "Sentetik Hizmet",
+        source: "WEB",
         startsAt: new Date("2031-07-01T09:00:00.000Z"),
         status: "PENDING_REVIEW",
       },
@@ -87,6 +99,7 @@ describe("GET /api/admin/appointments", () => {
       data: [
         {
           client: { firstName: "Sentetik", lastName: "Danışan", type: "ADULT" },
+          duplicateReview: { candidates: [], status: "NOT_REQUIRED" },
           publicReference: "IT-SENTETIK",
           serviceNameSnapshot: "Sentetik Hizmet",
           status: "PENDING_REVIEW",
@@ -97,22 +110,35 @@ describe("GET /api/admin/appointments", () => {
     expect(database.appointment.findMany).toHaveBeenCalledWith({
       orderBy: [{ startsAt: "asc" }, { id: "asc" }],
       select: {
-        client: { select: { firstName: true, lastName: true, type: true } },
+        client: { select: { firstName: true, id: true, lastName: true, type: true } },
+        duplicateReviewStatus: true,
         endsAt: true,
         id: true,
         locationTypeSnapshot: true,
         practitioner: { select: { displayName: true } },
         publicReference: true,
         serviceNameSnapshot: true,
+        source: true,
         startsAt: true,
         status: true,
       },
       take: 26,
       where: {
         practitioner: { is: { userId } },
-        status: "PENDING_REVIEW",
+        status: { in: ["REQUESTED", "PENDING_REVIEW"] },
       },
     });
+    expect(findPotentialDuplicateClientsMock).toHaveBeenCalledWith(
+      database,
+      "55555555-5555-4555-8555-555555555555",
+      {
+        candidateWhere: {
+          appointments: {
+            some: { practitioner: { is: { userId } } },
+          },
+        },
+      },
+    );
   });
 
   it("uses a bounded cursor page and returns only the next cursor", async () => {
@@ -130,7 +156,10 @@ describe("GET /api/admin/appointments", () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      data: rows.slice(0, 2),
+      data: rows.slice(0, 2).map((row) => ({
+        ...row,
+        duplicateReview: { candidates: [] },
+      })),
       pagination: { nextCursor: rows[1].id },
     });
     expect(database.appointment.findMany).toHaveBeenCalledWith(
@@ -144,5 +173,59 @@ describe("GET /api/admin/appointments", () => {
         },
       }),
     );
+  });
+
+  it("returns privacy-minimized duplicate candidates for the review queue", async () => {
+    const sourceClientId = "55555555-5555-4555-8555-555555555555";
+    const candidateClientId = "66666666-6666-4666-8666-666666666666";
+    const rows = [
+      {
+        client: {
+          firstName: "Yeni",
+          id: sourceClientId,
+          lastName: "Danışan",
+          type: "ADULT",
+        },
+        duplicateReviewStatus: "NOT_REQUIRED",
+        endsAt: new Date("2031-07-01T10:00:00.000Z"),
+        id: "22222222-2222-4222-8222-222222222222",
+        locationTypeSnapshot: "IN_PERSON",
+        practitioner: { displayName: "Sentetik Uzman" },
+        publicReference: "IT-SENTETIK",
+        serviceNameSnapshot: "Sentetik Hizmet",
+        source: "WEB",
+        startsAt: new Date("2031-07-01T09:00:00.000Z"),
+        status: "PENDING_REVIEW",
+      },
+    ];
+    const database = createDatabase(rows);
+    getDatabaseMock.mockReturnValue(database);
+    findPotentialDuplicateClientsMock.mockResolvedValue([
+      {
+        clientId: candidateClientId,
+        firstName: "Mevcut",
+        lastName: "Danışan",
+        matchReasons: ["PHONE"],
+        targetGuardianId: "private-guardian-id",
+        type: "ADULT",
+      },
+    ]);
+
+    const response = await GET(request());
+    const payload = await response.json();
+
+    expect(payload.data[0].duplicateReview).toEqual({
+      candidates: [
+        {
+          clientId: candidateClientId,
+          firstName: "Mevcut",
+          lastName: "Danışan",
+          matchReasons: ["PHONE"],
+          type: "ADULT",
+        },
+      ],
+      status: "PENDING",
+    });
+    expect(JSON.stringify(payload)).not.toContain("private-guardian-id");
   });
 });

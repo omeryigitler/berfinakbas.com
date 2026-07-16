@@ -1,0 +1,67 @@
+.root {
+  display: contents;
+}
+
+:global([class*="scrollHeroNav"]) {
+  backdrop-filter: blur(10px);
+}
+
+:global([class*="scrollProgressCard"]),
+:global(.process-card),
+:global(.booking-flowcard) {
+  backdrop-filter: none;
+}
+
+:global([class*="nameCard"]),
+:global([class*="noteCard"]),
+:global(.berfin-name-card) {
+  backdrop-filter: blur(8px);
+}
+
+:global([class*="scrollHeroRoom"]),
+:global([class*="scrollHeroPortrait"]),
+:global([class*="scrollHeroCopy"]),
+:global([class*="scrollProgressCard"]) {
+  backface-visibility: hidden;
+}
+
+@media (max-width: 980px) {
+  :global(.booking-status::before) {
+    animation: none;
+    box-shadow: 0 0 0 4px rgb(217 111 77 / 14%);
+  }
+
+  :global(.audience-card),
+  :global(.audience-photo),
+  :global(.principles-strip article > span),
+  :global(.booking-steplist li),
+  :global(.booking-flownum),
+  :global(.site-footer),
+  :global(.site-footer::before),
+  :global([class*="nameCard"]),
+  :global([class*="noteCard"]),
+  :global([class*="valueGrid"] article),
+  :global([class*="valueGrid"] article > span) {
+    transition-duration: 140ms;
+  }
+
+  :global(.audience-photo) {
+    filter: drop-shadow(0 12px 18px rgb(80 55 35 / 16%));
+  }
+
+  :global(.audience-card:hover .audience-photo) {
+    filter: drop-shadow(0 16px 22px rgb(80 55 35 / 20%));
+    rotate: 0deg;
+    scale: 1.03;
+    translate: -50% -4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(*),
+  :global(*::before),
+  :global(*::after) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

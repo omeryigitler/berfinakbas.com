@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/components/public-shell";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/surec" },
   description: "Randevu talebi, uygunluk kontrolü ve görüşme onayı sürecinin adımları.",
   title: "Süreç Nasıl İşler? | Berfin Akbaş",
 };

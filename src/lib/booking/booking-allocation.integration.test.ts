@@ -231,6 +231,14 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await pool.query(
+    `DELETE FROM outbox_events
+     WHERE aggregate_type = 'APPOINTMENT'
+       AND aggregate_id IN (
+         SELECT id::text FROM appointments WHERE practitioner_id = ANY($1::uuid[])
+       )`,
+    [fixture.practitionerIds],
+  );
+  await pool.query(
     `DELETE FROM appointment_hold_status_logs
      WHERE hold_id IN (
        SELECT id FROM appointment_holds WHERE practitioner_id = ANY($1::uuid[])
@@ -451,6 +459,7 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       busyStartsAt,
       busyEndsAt,
     );
+    await pool.query(`UPDATE appointments SET source = 'ADMIN' WHERE id = $1`, [appointment.id]);
     const client = await pool.connect();
     await insertAllocation(
       client,
@@ -518,6 +527,15 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       `SELECT status, released_at FROM booking_allocations WHERE appointment_id = $1`,
       [appointment.id],
     );
+    const outbox = await pool.query<{
+      event_type: string;
+      payload: { fromStatus: string; toStatus: string };
+    }>(
+      `SELECT event_type, payload FROM outbox_events
+       WHERE aggregate_type = 'APPOINTMENT' AND aggregate_id = $1
+       ORDER BY created_at, id`,
+      [appointment.id],
+    );
 
     expect(persisted.rows[0]).toMatchObject({
       approved_by_user_id: fixture.userIds[0],
@@ -532,6 +550,16 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
       "CANCELLED_BY_PRACTITIONER",
     ]);
     expect(Number(audit.rows[0].count)).toBe(3);
+    expect(outbox.rows.map((row) => row.event_type)).toEqual([
+      "APPOINTMENT_STATUS_CHANGED",
+      "APPOINTMENT_STATUS_CHANGED",
+      "APPOINTMENT_STATUS_CHANGED",
+    ]);
+    expect(outbox.rows.map((row) => row.payload.toStatus)).toEqual([
+      "PENDING_REVIEW",
+      "CONFIRMED",
+      "CANCELLED_BY_PRACTITIONER",
+    ]);
     expect(allocation.rows[0]).toMatchObject({ status: "RELEASED" });
     expect(allocation.rows[0].released_at).toEqual(cancelledAt);
   });
@@ -565,11 +593,17 @@ describe.sequential("booking allocation PostgreSQL integration", () => {
        WHERE appointment_id = $1`,
       [appointment.id],
     );
+    const outbox = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM outbox_events
+       WHERE aggregate_type = 'APPOINTMENT' AND aggregate_id = $1`,
+      [appointment.id],
+    );
 
     expect(fulfilled).toHaveLength(1);
     expect(rejected).toHaveLength(1);
     expect(rejected[0]).toMatchObject({ reason: new AppointmentTransitionConflictError() });
     expect(Number(history.rows[0].count)).toBe(1);
+    expect(Number(outbox.rows[0].count)).toBe(1);
   });
 
   it("allows only one concurrent hold or appointment for the same range", async () => {

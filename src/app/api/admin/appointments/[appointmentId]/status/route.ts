@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/auth";
+import { BookingConsentGateError } from "@/domain/consent/booking-consent";
 import { canManageAppointmentApi } from "@/lib/booking/appointment-api-access";
 import {
+  AppointmentDuplicateReviewRequiredError,
   AppointmentNotFoundError,
   AppointmentTransitionConflictError,
   transitionAppointment,
@@ -73,6 +75,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     if (error instanceof AppointmentTransitionConflictError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    if (error instanceof AppointmentDuplicateReviewRequiredError) {
+      return NextResponse.json({ code: error.code, error: error.message }, { status: 409 });
+    }
+    if (error instanceof BookingConsentGateError) {
+      return NextResponse.json(
+        { code: error.code, error: error.message, issues: error.issues },
+        { status: 422 },
+      );
     }
     throw error;
   }

@@ -406,8 +406,9 @@ Bu tablo resmi e-Belge üretmez; durum takibi yapar.
 - status: pending | processing | sent | failed | dead
 - attempt_count
 - next_attempt_at
+- locked_at (nullable worker lease)
 - last_error_code (nullable)
-- created_at / processed_at
+- created_at / updated_at / processed_at
 
 ### calendar_sync_records
 

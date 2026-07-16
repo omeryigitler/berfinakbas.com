@@ -110,10 +110,10 @@ function DisabledBookingPreview() {
   );
 }
 
-export function PublicBookingFlow() {
+export function PublicBookingFlow({ initiallyEnabled }: { initiallyEnabled: boolean }) {
   const [bootstrap, setBootstrap] = useState<BookingBootstrap | null>(null);
   const [bootstrapState, setBootstrapState] = useState<"loading" | "ready" | "disabled" | "error">(
-    "loading",
+    initiallyEnabled ? "loading" : "disabled",
   );
   const [serviceId, setServiceId] = useState("");
   const [localDate, setLocalDate] = useState(todayForDateInput);
@@ -127,6 +127,8 @@ export function PublicBookingFlow() {
   const [result, setResult] = useState<BookingResult | null>(null);
 
   useEffect(() => {
+    if (!initiallyEnabled) return;
+
     const controller = new AbortController();
     void fetch("/api/public/appointments/bootstrap", {
       cache: "no-store",
@@ -153,7 +155,7 @@ export function PublicBookingFlow() {
         setBootstrapState("error");
       });
     return () => controller.abort();
-  }, []);
+  }, [initiallyEnabled]);
 
   const selectedService = useMemo(
     () => bootstrap?.services.find((service) => service.id === serviceId) ?? null,
@@ -580,7 +582,11 @@ export function PublicBookingFlow() {
                         required
                         type="checkbox"
                       />
-                      <span>Bu metni okudum ve anladım.</span>
+                      <span>
+                        {document.type === "PRIVACY_NOTICE" || document.type === "BOOKING_TERMS"
+                          ? "Bu metni okudum ve anladım."
+                          : "Bu açık rıza metnini okudum ve rıza gösteriyorum."}
+                      </span>
                     </label>
                   </article>
                 ))}

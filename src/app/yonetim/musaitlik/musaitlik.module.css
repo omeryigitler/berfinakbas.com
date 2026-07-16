@@ -1,0 +1,416 @@
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.summaryGrid article,
+.panel,
+.practitionerCard {
+  border: 1px solid rgb(88 62 49 / 10%);
+  background: rgb(255 253 249 / 86%);
+  box-shadow: 0 14px 32px rgb(83 53 35 / 6%);
+}
+
+.summaryGrid article {
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.summaryGrid span {
+  display: block;
+  color: #45694f;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.summaryGrid strong {
+  display: block;
+  margin-top: 10px;
+  color: #2f2622;
+  font-family: var(--serif);
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  line-height: 1;
+}
+
+.summaryGrid small {
+  display: block;
+  margin-top: 9px;
+  color: #77665c;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+  border-radius: 28px;
+  padding: 22px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  color: #332824;
+  font-family: var(--serif);
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+}
+
+.panelHeader p {
+  max-width: 48rem;
+  margin: 7px 0 0;
+  color: #77665c;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.panelHeader > span {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  border: 1px solid rgb(67 98 75 / 12%);
+  border-radius: 999px;
+  background: rgb(67 98 75 / 7%);
+  padding: 8px 12px;
+  color: #45694f;
+  font-size: 0.7rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.practitionerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.practitionerCard {
+  display: grid;
+  gap: 14px;
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.practitionerCard header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.practitionerCard header div {
+  display: grid;
+  gap: 5px;
+}
+
+.practitionerCard header strong {
+  color: #2f2622;
+  font-size: 0.96rem;
+  font-weight: 900;
+}
+
+.practitionerCard header span {
+  color: #87766b;
+  font-size: 0.7rem;
+}
+
+.practitionerCard header em {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border-radius: 999px;
+  background: rgb(67 98 75 / 8%);
+  padding: 7px 10px;
+  color: #45694f;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.metricGrid div {
+  border-radius: 16px;
+  background: rgb(255 246 238 / 78%);
+  padding: 11px;
+}
+
+.metricGrid dt {
+  color: #8a786e;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metricGrid dd {
+  margin: 5px 0 0;
+  color: #3f312c;
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+.exceptionList {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgb(88 62 49 / 8%);
+  border-radius: 18px;
+  background: rgb(255 250 244 / 62%);
+  padding: 12px;
+}
+
+.exceptionList > span,
+.emptyState span {
+  color: #87766b;
+  font-size: 0.72rem;
+}
+
+.exceptionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-radius: 15px;
+  background: rgb(255 253 249 / 90%);
+  padding: 11px;
+}
+
+.exceptionRow div {
+  display: grid;
+  gap: 4px;
+}
+
+.exceptionRow strong {
+  color: #3f312c;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.exceptionRow span,
+.exceptionRow small {
+  color: #6f8070;
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+.exceptionRow button {
+  min-height: 32px;
+  border: 1px solid rgb(185 74 54 / 12%);
+  border-radius: 999px;
+  background: rgb(185 74 54 / 8%);
+  padding: 7px 10px;
+  color: #9b4337;
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.editPanel {
+  overflow: hidden;
+  border: 1px solid rgb(217 111 77 / 14%);
+  border-radius: 18px;
+  background: rgb(255 247 239 / 70%);
+}
+
+.editPanel summary {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  color: var(--coral-dark);
+  font-size: 0.74rem;
+  font-weight: 900;
+  cursor: pointer;
+  list-style: none;
+}
+
+.editPanel summary::-webkit-details-marker {
+  display: none;
+}
+
+.editPanel summary::after {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(217 111 77 / 10%);
+  content: "+";
+}
+
+.editPanel[open] summary::after {
+  content: "−";
+}
+
+.editPanel form {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid rgb(88 62 49 / 8%);
+  padding: 14px;
+}
+
+.formGrid,
+.formGridTwo {
+  display: grid;
+  gap: 12px;
+}
+
+.formGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.formGridTwo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.formGrid label,
+.formGridTwo label {
+  display: grid;
+  gap: 7px;
+  color: #665148;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.formGrid input,
+.formGridTwo input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgb(88 62 49 / 14%);
+  border-radius: 14px;
+  background: #fffdf9;
+  padding: 10px 12px;
+  color: var(--ink);
+  font: inherit;
+  outline: none;
+}
+
+.formGrid input:focus,
+.formGridTwo input:focus {
+  border-color: rgb(217 111 77 / 44%);
+  box-shadow: 0 0 0 4px rgb(217 111 77 / 10%);
+}
+
+.formGrid small {
+  color: #88776d;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.radioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.radioGroup legend {
+  width: 100%;
+  margin-bottom: 2px;
+  color: #665148;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.radioGroup label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.radioGroup input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radioGroup span {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  border: 1px solid rgb(88 62 49 / 10%);
+  border-radius: 999px;
+  background: rgb(255 253 249 / 84%);
+  padding: 8px 12px;
+  color: #665148;
+  font-size: 0.7rem;
+  font-weight: 820;
+  cursor: pointer;
+}
+
+.radioGroup input:checked + span {
+  border-color: rgb(217 111 77 / 26%);
+  background: rgb(217 111 77 / 12%);
+  color: var(--coral-dark);
+}
+
+.editPanel form > button {
+  width: fit-content;
+  min-height: 42px;
+  border: 1px solid rgb(217 111 77 / 20%);
+  border-radius: 999px;
+  background: var(--coral-dark);
+  padding: 10px 16px;
+  color: #fffaf4;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.emptyState {
+  display: grid;
+  gap: 7px;
+  border: 1px dashed rgb(88 62 49 / 16%);
+  border-radius: 20px;
+  background: rgb(255 250 244 / 72%);
+  padding: 18px;
+}
+
+.emptyState strong {
+  color: #3f312c;
+}
+
+@media (max-width: 1180px) {
+  .summaryGrid,
+  .practitionerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .summaryGrid,
+  .practitionerGrid,
+  .formGrid,
+  .formGridTwo,
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .panelHeader,
+  .practitionerCard header,
+  .exceptionRow {
+    display: grid;
+  }
+}

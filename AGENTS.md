@@ -5,7 +5,7 @@ Bu dosya, projede çalışan geliştirici ve kod ajanları için bağlayıcı ç
 ## Cihazlar arası çalışma ve devir teslim
 
 GitHub deposu tek gerçek kaynaktır. Aynı anda yalnızca bir aktif Draft PR bulunur; bu PR’ın dalı Windows ve macOS cihazları arasında devam eden çalışmayı temsil eder.
-
+**Continue davranışı:** Eğer GitHub'daki açık Draft PR bulunur ise, cihaz değiştirince o PR'ın dalına geç ve `git pull --ff-only` uygula. Bu "continue" davranışıdır. Eğer Draft PR yok ise (yeni görev) veya mevcut dal `main` ile aynı ise (önceki çalışma kaybolmuş), güncel `main`'den yeni `codex/<görev>` dalı oluştur.
 Her çalışma oturumunun başında:
 
 1. Yerel değişiklikleri ve mevcut dalı kontrol et; kullanıcıya ait veya açıklanamayan değişiklikleri ezme.
@@ -34,8 +34,9 @@ Ek kurallar:
 GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda bağlayıcıdır:
 
 - Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren, review edilebilir milestone PR’larında toplanır; ilişkisiz kapsamlar aynı PR’a doldurulmaz.
-- Aktif milestone `#18 — homepage scroll hero ve Hakkımda görsel düzeltmesi`dir. Public booking flow bu PR’ın kapsamına eklenmez; #18 kapandıktan sonraki milestone’dur.
-- Public booking flow; hizmet/uzman seçimi, slot arayüzü, hold, minimum client/guardian verisi, consent edinimi, request gönderimi ve uçtan uca doğrulamayı kapsar. Riskli veri/migration sınırı oluşursa bağımsız ve review edilebilir PR’lara bölünür.
+- PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını, PR #22 admin finans operasyonunu, PR #23 transactional outbox çekirdeğini ve PR #24 read-only entegrasyon/outbox sağlık panelini teslim etti.
+- PR #99 sonrası aktif durum: production sertleştirmeleri, consent/veli doğrulama kapıları, session-credit bütünlüğü, sağlık kontrolü ve güvenlik başlıkları canlıdır. Sıradaki işler Issue #19 roadmap, `docs/HANDOFF.md` ve açık ürün kararlarına göre review edilebilir milestone’lara bölünür. Sağlayıcı, mesaj şablonu, alıcı matrisi, worker hosting veya production politikası netleşmeden gerçek dış gönderim açılmaz.
+- Öncelikli pending başlıklar: kalıcı rate limit/bot koruması, mükerrer public talep incelemesi, bildirim/Calendar provider worker, mesaj şablonu ve alıcı matrisi, backup restore tatbikatı, Google OAuth/MFA doğrulaması ve canlı yayın hukuki kapılarıdır.
 - Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
 - İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tamamlandıktan sonra sonuç tek kez okunur.
 - Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı merge onayı istenmez.
@@ -93,7 +94,7 @@ GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda 
 
 - Her özellik için uygun seviyede unit, integration veya end-to-end test eklenir.
 - Randevu motorunda eşzamanlı istek, saat dilimi, yaz/kış saati, buffer ve ayar snapshot testleri zorunludur.
-- `20260629030000_booking_hold_core` migration’ı gerçek PostgreSQL üzerinde uygulanıp hold-hold, hold-randevu ve randevu-randevu eşzamanlılık testleri geçene kadar bu konu canlıya çıkış engelidir. Randevu çekirdeğiyle ilgili her teslimde bu açık test yeniden belirtilir.
+- `20260629030000_booking_hold_core` migration’ı ile hold-hold, hold-randevu ve randevu-randevu eşzamanlılık testleri gerçek PostgreSQL kapısında geçmektedir. Randevu çekirdeğiyle ilgili her teslim bu kapıyı yeniden çalıştırır; başarısızlık canlıya çıkış engelidir.
 - Finans modülünde kısmi ödeme, ters kayıt, yuvarlama ve aynı isteğin tekrar gönderilmesi test edilir.
 - Yetki testleri hem izin verilen hem reddedilen erişimi kapsar.
 - Bir hata düzeltmesi, mümkünse önce hatayı yeniden üreten regresyon testiyle başlar.

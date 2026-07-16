@@ -1,14 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createAppointmentHoldMock, getServerEnvironmentMock } = vi.hoisted(() => ({
-  createAppointmentHoldMock: vi.fn(),
-  getServerEnvironmentMock: vi.fn(),
-}));
+const { checkPublicBotProtectionMock, createAppointmentHoldMock, getServerEnvironmentMock } =
+  vi.hoisted(() => ({
+    checkPublicBotProtectionMock: vi.fn(),
+    createAppointmentHoldMock: vi.fn(),
+    getServerEnvironmentMock: vi.fn(),
+  }));
 
 vi.mock("@/lib/booking/appointment-hold-service", () => ({
   createAppointmentHold: createAppointmentHoldMock,
 }));
-vi.mock("@/lib/env", () => ({ getServerEnvironment: getServerEnvironmentMock }));
+vi.mock("@/lib/env", () => ({
+  getServerEnvironment: getServerEnvironmentMock,
+}));
+vi.mock("@/lib/security/public-bot-protection", () => ({
+  checkPublicBotProtection: checkPublicBotProtectionMock,
+}));
 
 import {
   BookingResourceUnavailableError,
@@ -41,6 +48,7 @@ function request(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  checkPublicBotProtectionMock.mockResolvedValue("allowed");
   getServerEnvironmentMock.mockReturnValue({
     APP_URL: "https://berfinakbas.com",
     BOOKING_HOLD_DURATION_MINUTES: 8,
@@ -67,6 +75,7 @@ describe("POST /api/public/appointments/holds", () => {
       code: "BOOKING_HOLDS_DISABLED",
       error: "Randevu saati ayırma şu anda kullanıma açık değil.",
     });
+    expect(checkPublicBotProtectionMock).not.toHaveBeenCalled();
     expect(createAppointmentHoldMock).not.toHaveBeenCalled();
   });
 
@@ -92,8 +101,11 @@ describe("POST /api/public/appointments/holds", () => {
       const response = await POST(request("{", { origin }));
 
       expect(response.status).toBe(403);
-      await expect(response.json()).resolves.toMatchObject({ code: "UNTRUSTED_ORIGIN" });
+      await expect(response.json()).resolves.toMatchObject({
+        code: "UNTRUSTED_ORIGIN",
+      });
     }
+    expect(checkPublicBotProtectionMock).not.toHaveBeenCalled();
     expect(createAppointmentHoldMock).not.toHaveBeenCalled();
   });
 
@@ -103,7 +115,22 @@ describe("POST /api/public/appointments/holds", () => {
     );
 
     expect(response.status).toBe(415);
-    await expect(response.json()).resolves.toMatchObject({ code: "UNSUPPORTED_MEDIA_TYPE" });
+    await expect(response.json()).resolves.toMatchObject({
+      code: "UNSUPPORTED_MEDIA_TYPE",
+    });
+    expect(createAppointmentHoldMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["blocked", 403, "AUTOMATED_REQUEST_REJECTED"],
+    ["unavailable", 503, "BOT_PROTECTION_UNAVAILABLE"],
+  ])("fails closed when BotID is %s", async (result, status, code) => {
+    checkPublicBotProtectionMock.mockResolvedValue(result);
+
+    const response = await POST(request("{"));
+
+    expect(response.status).toBe(status);
+    await expect(response.json()).resolves.toMatchObject({ code });
     expect(createAppointmentHoldMock).not.toHaveBeenCalled();
   });
 
@@ -112,9 +139,13 @@ describe("POST /api/public/appointments/holds", () => {
     const oversizedResponse = await POST(request(JSON.stringify({ value: "x".repeat(4_096) })));
 
     expect(malformedResponse.status).toBe(400);
-    await expect(malformedResponse.json()).resolves.toMatchObject({ code: "INVALID_JSON" });
+    await expect(malformedResponse.json()).resolves.toMatchObject({
+      code: "INVALID_JSON",
+    });
     expect(oversizedResponse.status).toBe(413);
-    await expect(oversizedResponse.json()).resolves.toMatchObject({ code: "BODY_TOO_LARGE" });
+    await expect(oversizedResponse.json()).resolves.toMatchObject({
+      code: "BODY_TOO_LARGE",
+    });
     expect(createAppointmentHoldMock).not.toHaveBeenCalled();
   });
 

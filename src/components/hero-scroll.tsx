@@ -8,6 +8,8 @@ import { BrandMark } from "@/components/public-shell";
 import { getHeroMotionState, heroContent } from "./hero-scroll-model";
 import styles from "./hero-scroll.module.css";
 
+const MOBILE_HERO_QUERY = "(max-width: 980px)";
+
 export default function HeroScroll() {
   const heroRef = useRef<HTMLElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
@@ -21,6 +23,7 @@ export default function HeroScroll() {
     }
 
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobileHeroQuery = window.matchMedia(MOBILE_HERO_QUERY);
     let animationFrame: number | null = null;
     const motionProperties = [
       "--hero-overlay-opacity",
@@ -70,7 +73,7 @@ export default function HeroScroll() {
     };
 
     const syncMotionMode = () => {
-      const shouldUseStaticMode = reducedMotionQuery.matches;
+      const shouldUseStaticMode = reducedMotionQuery.matches || mobileHeroQuery.matches;
       hero.dataset.motion = shouldUseStaticMode ? "static" : "scroll";
 
       if (shouldUseStaticMode) {
@@ -89,11 +92,13 @@ export default function HeroScroll() {
     window.addEventListener("scroll", scheduleHeroUpdate, { passive: true });
     window.addEventListener("resize", scheduleHeroUpdate);
     reducedMotionQuery.addEventListener("change", syncMotionMode);
+    mobileHeroQuery.addEventListener("change", syncMotionMode);
 
     return () => {
       window.removeEventListener("scroll", scheduleHeroUpdate);
       window.removeEventListener("resize", scheduleHeroUpdate);
       reducedMotionQuery.removeEventListener("change", syncMotionMode);
+      mobileHeroQuery.removeEventListener("change", syncMotionMode);
       if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
     };
   }, []);

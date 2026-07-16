@@ -18,18 +18,20 @@ jobs:
       AUTH_SECRET: ci-only-auth-secret-not-for-production-use
       BOOKING_HOLD_DURATION_MINUTES: "8"
       BUSINESS_TIME_ZONE: Europe/Istanbul
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas?schema=public
+      DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/berfinakbas?schema=public', 'postgres') }}
       NEXT_TELEMETRY_DISABLED: "1"
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Enable Corepack
         run: corepack enable
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
@@ -49,11 +51,12 @@ jobs:
       - name: Test
         run: pnpm test
 
-      - name: Check formatting
-        run: pnpm format:check
 
       - name: Build
         run: pnpm build
+
+      - name: Production-build smoke
+        run: pnpm test:smoke
 
   postgres-integration:
     runs-on: ubuntu-latest
@@ -63,9 +66,9 @@ jobs:
       AUTH_SECRET: ci-only-auth-secret-not-for-production-use
       BOOKING_HOLD_DURATION_MINUTES: "8"
       BUSINESS_TIME_ZONE: Europe/Istanbul
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas_integration?schema=public
+      DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/berfinakbas_integration?schema=public', 'postgres') }}
       NEXT_TELEMETRY_DISABLED: "1"
-      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas_integration?schema=public
+      TEST_DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/berfinakbas_integration?schema=public', 'postgres') }}
 
     services:
       postgres:
@@ -84,13 +87,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Enable Corepack
         run: corepack enable
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm

@@ -1,9 +1,26 @@
 "use client";
 
+import type { Route } from "next";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 type AppointmentQueueItem = Readonly<{
-  client: Readonly<{ firstName: string; lastName: string; type: "ADULT" | "CHILD" }>;
+  client: Readonly<{
+    firstName: string;
+    id: string;
+    lastName: string;
+    type: "ADULT" | "CHILD";
+  }>;
+  duplicateReview: Readonly<{
+    candidates: readonly Readonly<{
+      clientId: string;
+      firstName: string;
+      lastName: string;
+      matchReasons: readonly ("EMAIL" | "PHONE" | "GUARDIAN_EMAIL" | "GUARDIAN_PHONE")[];
+      type: "ADULT" | "CHILD";
+    }>[];
+    status: "KEPT_SEPARATE" | "LINKED_EXISTING" | "NOT_REQUIRED" | "PENDING";
+  }>;
   endsAt: string;
   id: string;
   locationTypeSnapshot: "HYBRID" | "IN_PERSON" | "ONLINE";
@@ -11,7 +28,7 @@ type AppointmentQueueItem = Readonly<{
   publicReference: string;
   serviceNameSnapshot: string;
   startsAt: string;
-  status: "PENDING_REVIEW";
+  status: "PENDING_REVIEW" | "REQUESTED";
 }>;
 
 type AppointmentQueueResponse = Readonly<{
@@ -19,7 +36,7 @@ type AppointmentQueueResponse = Readonly<{
   pagination: Readonly<{ nextCursor: string | null }>;
 }>;
 
-type AppointmentDecision = "confirm" | "reject";
+type AppointmentDecision = "confirm" | "reject" | "review";
 
 const clientTypeLabels = { ADULT: "Yetişkin", CHILD: "Çocuk" } as const;
 const locationLabels = {
@@ -38,12 +55,30 @@ const decisionConfig = {
     successLabel: "reddedildi",
     toStatus: "REJECTED",
   },
+  review: {
+    reasonCode: "ADMIN_REVIEW_STARTED",
+    successLabel: "incelemeye alındı",
+    toStatus: "PENDING_REVIEW",
+  },
+} as const;
+const matchReasonLabels = {
+  EMAIL: "e-posta",
+  GUARDIAN_EMAIL: "veli e-postası",
+  GUARDIAN_PHONE: "veli telefonu",
+  PHONE: "telefon",
 } as const;
 
 export function buildAppointmentListUrl(cursor: string | null): string {
-  const search = new URLSearchParams({ status: "PENDING_REVIEW", take: "25" });
+  const search = new URLSearchParams({
+    status: "REQUESTED,PENDING_REVIEW",
+    take: "25",
+  });
   if (cursor) search.set("cursor", cursor);
   return `/api/admin/appointments?${search.toString()}`;
+}
+
+export function buildDuplicateReviewUrl(appointmentId: string): string {
+  return `/api/admin/appointments/${encodeURIComponent(appointmentId)}/duplicate-review`;
 }
 
 export function formatAppointmentDate(value: string, timeZone: string): string {
@@ -94,6 +129,23 @@ async function requestAppointmentDecision(
   }
 }
 
+async function requestDuplicateResolution(
+  appointmentId: string,
+  body:
+    | Readonly<{ action: "KEEP_SEPARATE" }>
+    | Readonly<{ action: "LINK_EXISTING"; targetClientId: string }>,
+): Promise<void> {
+  const response = await fetch(buildDuplicateReviewUrl(appointmentId), {
+    body: JSON.stringify(body),
+    headers: { accept: "application/json", "content-type": "application/json" },
+    method: "PATCH",
+  });
+  const payload = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok) {
+    throw new Error(payload.error ?? "Mükerrer kayıt incelemesi güncellenemedi.");
+  }
+}
+
 function isAbortError(cause: unknown): boolean {
   return cause instanceof DOMException && cause.name === "AbortError";
 }
@@ -107,6 +159,7 @@ export function AppointmentQueue({
 }) {
   const [actingAppointmentId, setActingAppointmentId] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<AppointmentQueueItem[]>([]);
+  const [pendingDecision, setPendingDecision] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,20 +188,34 @@ export function AppointmentQueue({
 
   const decideAppointment = useCallback(
     async (appointment: AppointmentQueueItem, decision: AppointmentDecision) => {
-      const confirmed = window.confirm(
-        decision === "confirm"
-          ? `${appointment.publicReference} numaralı talep onaylanacak. Gerekirse daha sonra iptal durumuna alınabilir. Devam edilsin mi?`
-          : `${appointment.publicReference} numaralı talep reddedilecek ve saat tahsisi serbest bırakılacak. Bu işlem geri alınamaz; yeni talep gerekir. Devam edilsin mi?`,
-      );
-      if (!confirmed) return;
-
+      const decisionKey = `${appointment.id}:${decision}`;
+      if (pendingDecision !== decisionKey) {
+        setPendingDecision(decisionKey);
+        const decisionLabel =
+          decision === "confirm"
+            ? "onaylama"
+            : decision === "reject"
+              ? "reddetme"
+              : "incelemeye alma";
+        setFeedback(
+          `${appointment.publicReference} için ${decisionLabel} işlemini tamamlamak üzere aynı butona tekrar basın.`,
+        );
+        return;
+      }
+      setPendingDecision(null);
       setActingAppointmentId(appointment.id);
       setError(null);
       setFeedback(null);
 
       try {
         await requestAppointmentDecision(appointment.id, decision);
-        setAppointments((current) => current.filter((item) => item.id !== appointment.id));
+        setAppointments((current) =>
+          decision === "review"
+            ? current.map((item) =>
+                item.id === appointment.id ? { ...item, status: "PENDING_REVIEW" as const } : item,
+              )
+            : current.filter((item) => item.id !== appointment.id),
+        );
         setFeedback(
           `${appointment.publicReference} numaralı talep ${decisionConfig[decision].successLabel}.`,
         );
@@ -158,7 +225,80 @@ export function AppointmentQueue({
         setActingAppointmentId(null);
       }
     },
-    [],
+    [pendingDecision],
+  );
+
+  const resolveDuplicate = useCallback(
+    async (
+      appointment: AppointmentQueueItem,
+      action: "KEEP_SEPARATE" | "LINK_EXISTING",
+      targetClientId?: string,
+    ) => {
+      const decisionKey = `${appointment.id}:duplicate:${action}:${targetClientId ?? "new"}`;
+      if (pendingDecision !== decisionKey) {
+        setPendingDecision(decisionKey);
+        setFeedback(
+          action === "KEEP_SEPARATE"
+            ? "Yeni kaydı ayrı tutmak için aynı butona tekrar basın."
+            : "Talebi seçilen mevcut danışana bağlamak için aynı butona tekrar basın.",
+        );
+        return;
+      }
+
+      setPendingDecision(null);
+      setActingAppointmentId(appointment.id);
+      setError(null);
+      setFeedback(null);
+
+      try {
+        await requestDuplicateResolution(
+          appointment.id,
+          action === "KEEP_SEPARATE"
+            ? { action }
+            : { action, targetClientId: targetClientId ?? "" },
+        );
+        const selectedCandidate = appointment.duplicateReview.candidates.find(
+          (candidate) => candidate.clientId === targetClientId,
+        );
+        setAppointments((current) =>
+          current.map((item) =>
+            item.id === appointment.id
+              ? {
+                  ...item,
+                  client:
+                    action === "LINK_EXISTING" && selectedCandidate
+                      ? {
+                          firstName: selectedCandidate.firstName,
+                          id: selectedCandidate.clientId,
+                          lastName: selectedCandidate.lastName,
+                          type: selectedCandidate.type,
+                        }
+                      : item.client,
+                  duplicateReview: {
+                    candidates: [],
+                    status:
+                      action === "KEEP_SEPARATE"
+                        ? ("KEPT_SEPARATE" as const)
+                        : ("LINKED_EXISTING" as const),
+                  },
+                }
+              : item,
+          ),
+        );
+        setFeedback(
+          action === "KEEP_SEPARATE"
+            ? `${appointment.publicReference} yeni ve ayrı danışan kaydı olarak tutuldu.`
+            : `${appointment.publicReference} mevcut danışan kaydına bağlandı.`,
+        );
+      } catch (cause) {
+        setError(
+          cause instanceof Error ? cause.message : "Mükerrer kayıt incelemesi güncellenemedi.",
+        );
+      } finally {
+        setActingAppointmentId(null);
+      }
+    },
+    [pendingDecision],
   );
 
   useEffect(() => {
@@ -239,6 +379,11 @@ export function AppointmentQueue({
                     {appointment.client.firstName} {appointment.client.lastName}
                   </strong>
                   <span>{clientTypeLabels[appointment.client.type]}</span>
+                  {appointment.duplicateReview.status === "PENDING" ? (
+                    <span className="admin-inline-warning">
+                      Olası mükerrer kayıt · {appointment.duplicateReview.candidates.length} aday
+                    </span>
+                  ) : null}
                 </td>
                 <td>{appointment.serviceNameSnapshot}</td>
                 <td>
@@ -256,21 +401,88 @@ export function AppointmentQueue({
                 <td>
                   {canManage ? (
                     <div className="admin-appointment-actions">
-                      <button
-                        type="button"
-                        disabled={actingAppointmentId !== null}
-                        onClick={() => void decideAppointment(appointment, "confirm")}
-                      >
-                        {actingAppointmentId === appointment.id ? "İşleniyor…" : "Onayla"}
-                      </button>
-                      <button
-                        className="danger"
-                        type="button"
-                        disabled={actingAppointmentId !== null}
-                        onClick={() => void decideAppointment(appointment, "reject")}
-                      >
-                        Reddet
-                      </button>
+                      {appointment.status === "REQUESTED" ? (
+                        <button
+                          type="button"
+                          disabled={actingAppointmentId !== null}
+                          onClick={() => void decideAppointment(appointment, "review")}
+                        >
+                          {pendingDecision === `${appointment.id}:review`
+                            ? "İncelemeyi başlat"
+                            : "İncelemeye al"}
+                        </button>
+                      ) : appointment.duplicateReview.status === "PENDING" ? (
+                        <>
+                          {appointment.duplicateReview.candidates.map((candidate) => {
+                            const key = `${appointment.id}:duplicate:LINK_EXISTING:${candidate.clientId}`;
+                            return (
+                              <div className="admin-duplicate-candidate" key={candidate.clientId}>
+                                <Link
+                                  className="admin-duplicate-candidate-link"
+                                  href={
+                                    `/yonetim/danisan-profili?clientId=${candidate.clientId}` as Route
+                                  }
+                                >
+                                  {candidate.firstName} {candidate.lastName}
+                                </Link>
+                                <span>
+                                  {candidate.matchReasons
+                                    .map((reason) => matchReasonLabels[reason])
+                                    .join(", ")}
+                                </span>
+                                <button
+                                  type="button"
+                                  disabled={actingAppointmentId !== null}
+                                  onClick={() =>
+                                    void resolveDuplicate(
+                                      appointment,
+                                      "LINK_EXISTING",
+                                      candidate.clientId,
+                                    )
+                                  }
+                                >
+                                  {pendingDecision === key
+                                    ? "Bağlamayı tamamla"
+                                    : "Bu danışana bağla"}
+                                </button>
+                              </div>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            disabled={actingAppointmentId !== null}
+                            onClick={() => void resolveDuplicate(appointment, "KEEP_SEPARATE")}
+                          >
+                            {pendingDecision === `${appointment.id}:duplicate:KEEP_SEPARATE:new`
+                              ? "Ayrı tutmayı tamamla"
+                              : "Yeni kayıt olarak tut"}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            disabled={actingAppointmentId !== null}
+                            onClick={() => void decideAppointment(appointment, "confirm")}
+                          >
+                            {actingAppointmentId === appointment.id
+                              ? "İşleniyor…"
+                              : pendingDecision === `${appointment.id}:confirm`
+                                ? "Onayı tamamla"
+                                : "Onayla"}
+                          </button>
+                          <button
+                            className="danger"
+                            type="button"
+                            disabled={actingAppointmentId !== null}
+                            onClick={() => void decideAppointment(appointment, "reject")}
+                          >
+                            {pendingDecision === `${appointment.id}:reject`
+                              ? "Reddi tamamla"
+                              : "Reddet"}
+                          </button>
+                        </>
+                      )}
                     </div>
                   ) : (
                     <span>Yalnızca görüntüleme</span>

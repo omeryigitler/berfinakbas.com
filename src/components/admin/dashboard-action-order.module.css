@@ -1,0 +1,67 @@
+:global([data-admin-refresh="shell"] [class*="dashboardLayout"]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:global([data-admin-refresh="shell"] [class*="mainStack"]),
+:global([data-admin-refresh="shell"] [class*="asideStack"]) {
+  display: contents;
+}
+
+:global([data-admin-refresh="shell"] [class*="actionPanel"]) {
+  order: 1;
+}
+
+:global([data-admin-refresh="shell"] [class*="overviewPanel"]) {
+  order: 2;
+}
+
+:global([data-admin-refresh="shell"] [class*="compactPanel"]) {
+  order: 3;
+}
+
+:global([data-admin-refresh="shell"] [class*="financeHighlight"]) {
+  order: 4;
+}
+
+:global([data-admin-refresh="shell"] [class*="actionPanel"] [class*="panelHeader"]) {
+  margin-bottom: 14px;
+}
+
+:global([data-admin-refresh="shell"] [class*="actionGrid"]) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+:global([data-admin-refresh="shell"] [class*="actionCard"]) {
+  min-height: 92px;
+}
+
+:global([data-admin-refresh="shell"] [class*="analyticsBars"]) {
+  grid-template-columns: repeat(7, minmax(72px, 1fr));
+  min-height: 196px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+:global([data-admin-refresh="shell"] [class*="barTrack"]) {
+  height: 148px;
+}
+
+@media (max-width: 980px) {
+  :global([data-admin-refresh="shell"] [class*="actionGrid"]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :global([data-admin-refresh="shell"] [class*="analyticsBars"]) {
+    grid-template-columns: repeat(7, minmax(70px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  :global([data-admin-refresh="shell"] [class*="actionGrid"]) {
+    grid-template-columns: 1fr;
+  }
+
+  :global([data-admin-refresh="shell"] [class*="analyticsBars"]) {
+    grid-template-columns: repeat(7, minmax(64px, 1fr));
+  }
+}
