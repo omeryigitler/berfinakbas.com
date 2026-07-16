@@ -54,7 +54,7 @@ function closeHref(clientId: string): Route {
 
 async function grantConsent(formData: FormData) {
   "use server";
-  const session = await requirePermission("clients:manage");
+  const session = await requirePermission("consents:manage");
   const clientId = text(formData, "clientId");
   const documentId = text(formData, "documentId");
   const grantedByGuardianId = optional(formData, "grantedByGuardianId");
@@ -87,15 +87,27 @@ async function grantConsent(formData: FormData) {
 
 async function withdrawConsent(formData: FormData) {
   "use server";
-  await requirePermission("clients:manage");
+  const session = await requirePermission("consents:manage");
   const clientId = text(formData, "clientId");
   const consentId = text(formData, "consentId");
   const reason = text(formData, "reason");
   if (!clientId || !consentId || reason.length < 8) return;
 
-  await getDatabase().consent.updateMany({
-    data: { evidenceMetadata: { withdrawalNote: reason }, status: "WITHDRAWN", withdrawnAt: new Date() },
-    where: { clientId, id: consentId, status: "GRANTED" },
+  const database = getDatabase();
+  await database.$transaction(async (transaction) => {
+    const existing = await transaction.consent.findFirst({ where: { clientId, id: consentId, status: "GRANTED" } });
+    if (!existing) return;
+    const withdrawnAt = new Date();
+    await transaction.consent.update({
+      data: { evidenceMetadata: { withdrawalNote: reason }, status: "WITHDRAWN", withdrawnAt },
+      where: { id: existing.id },
+    });
+    await transaction.auditLog.create({ data: {
+      action: "consent.withdrawn", actorType: "USER", actorUserId: session.user.id,
+      afterSummary: { status: "WITHDRAWN", withdrawnAt: withdrawnAt.toISOString() },
+      beforeSummary: { status: existing.status }, correlationId: crypto.randomUUID(),
+      entityId: existing.id, entityType: "CONSENT", reason,
+    } });
   });
   revalidatePath("/yonetim/danisan-profili");
   redirect(closeHref(clientId));
@@ -253,6 +265,7 @@ async function removeGuardian(formData: FormData) {
 export function ClientProfileManagementModals({
   activeModal,
   allGuardians,
+  canManageConsents,
   client,
   consentDocuments,
   consents,
@@ -260,6 +273,7 @@ export function ClientProfileManagementModals({
 }: {
   activeModal: string;
   allGuardians: Guardian[];
+  canManageConsents: boolean;
   client: ClientSummary;
   consentDocuments: ConsentDocument[];
   consents: ConsentSummary[];
@@ -287,7 +301,7 @@ export function ClientProfileManagementModals({
     );
   }
 
-  if (activeModal === "onay-yonetimi") {
+  if (activeModal === "onay-yonetimi" && canManageConsents) {
     const grantedConsents = consents.filter((consent) => consent.status === "GRANTED");
     return (
       <AdminUrlModal closeHref={close} title="KVKK / onay yönetimi">
