@@ -1,6 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
@@ -105,6 +105,16 @@ const planStatusLabels = {
   COMPLETED: "Tamamlandı",
   EXPIRED: "Süresi doldu",
 } as const;
+
+const consentStatusLabels = {
+  EXPIRED: "Süresi doldu",
+  GRANTED: "Onay verildi",
+  WITHDRAWN: "Geri çekildi",
+} as const;
+
+function consentStatusLabel(status: string): string {
+  return consentStatusLabels[status as keyof typeof consentStatusLabels] ?? status;
+}
 
 function singleParam(
   params: Record<string, string | string[] | undefined>,
@@ -363,10 +373,12 @@ export default async function AdminClientProfilePage({
   const clientId = singleParam(params, "clientId").trim();
   const activeModal = singleParam(params, "modal").trim();
   if (!clientId) notFound();
+  if (clientId === "yeni") redirect("/yonetim/danisanlar/yeni");
 
   const environment = getServerEnvironment();
   const database = getDatabase();
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
+  const canManageClients = hasPermission(session.user.roles, "clients:manage");
   const canReadAppointments = hasPermission(
     session.user.roles,
     "appointments:read",
@@ -381,6 +393,16 @@ export default async function AdminClientProfilePage({
           plans: true,
         },
       },
+      consents: {
+        orderBy: [{ capturedAt: "desc" }],
+        select: {
+          capturedAt: true,
+          document: { select: { publicTitle: true, type: true, version: true } },
+          id: true,
+          status: true,
+        },
+        take: 5,
+      },
       guardians: {
         include: {
           guardian: {
@@ -393,7 +415,7 @@ export default async function AdminClientProfilePage({
             },
           },
         },
-        orderBy: [{ isPrimary: "desc" }],
+        orderBy: [{ isPrimary: "desc" }, { guardian: { lastName: "asc" } }],
       },
       plans: {
         orderBy: [{ createdAt: "desc" }],
@@ -561,9 +583,11 @@ export default async function AdminClientProfilePage({
             </Link>
           ) : null}
           {canReadFinance ? <Link href={financePageHref}>Ödeme ekranı</Link> : null}
-          <Link href={noteModalHref} scroll={false}>
-            Not ekle
-          </Link>
+          {canManageClients ? (
+            <Link href={noteModalHref} scroll={false}>
+              Not ekle
+            </Link>
+          ) : null}
           <Link href="/yonetim/danisanlar">Danışan listesi</Link>
         </div>
       </section>
@@ -657,20 +681,75 @@ export default async function AdminClientProfilePage({
             </div>
             <span>{client.email ?? "E-posta yok"}</span>
           </li>
-          <li>
-            <div>
-              <strong>Veli / sorumlu</strong>
-              <span>
-                {primaryGuardian
-                  ? `${primaryGuardian.guardian.firstName} ${primaryGuardian.guardian.lastName}`
-                  : client.type === "CHILD"
-                    ? "Veli bilgisi eksik"
-                    : "Yetişkin danışan"}
-              </span>
-            </div>
-            <span>{primaryGuardian?.guardian.phone ?? "—"}</span>
-          </li>
         </ul>
+      </section>
+
+      <section className="admin-panel" aria-labelledby="veli-bilgileri">
+        <div className="admin-panel-heading">
+          <div>
+            <h2 id="veli-bilgileri">Veli / sorumlu bilgileri</h2>
+            <p>Danışana bağlı birincil ve ek veli ilişkilerinin tamamı.</p>
+          </div>
+          <span className="admin-count">{client.guardians.length} veli</span>
+        </div>
+        {client.guardians.length === 0 ? (
+          <div className="admin-empty-state">
+            <strong>Veli kaydı yok</strong>
+            <span>
+              {client.type === "CHILD"
+                ? "Bu çocuk danışan için veli kaydı bekleniyor."
+                : "Yetişkin danışan için veli bilgisi zorunlu değildir."}
+            </span>
+          </div>
+        ) : (
+          <ul className="admin-service-list">
+            {client.guardians.map((relation) => (
+              <li key={relation.guardian.id}>
+                <div>
+                  <strong>
+                    {relation.guardian.firstName} {relation.guardian.lastName}
+                  </strong>
+                  <span>
+                    {relation.relationship} · {relation.isPrimary ? "Birincil veli" : "Ek veli"}
+                  </span>
+                </div>
+                <span>
+                  {relation.guardian.phone ?? "Telefon yok"} · {relation.guardian.email ?? "E-posta yok"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="admin-panel" aria-labelledby="kvkk-onaylari">
+        <div className="admin-panel-heading">
+          <div>
+            <h2 id="kvkk-onaylari">KVKK / onay geçmişi</h2>
+            <p>Son onay kayıtları ve kullanılan belge versiyonları.</p>
+          </div>
+          <span className="admin-count">{client._count.consents} kayıt</span>
+        </div>
+        {client.consents.length === 0 ? (
+          <div className="admin-empty-state">
+            <strong>Onay kaydı yok</strong>
+            <span>Danışana ait KVKK veya onay kaydı henüz oluşturulmamış.</span>
+          </div>
+        ) : (
+          <ul className="admin-service-list">
+            {client.consents.map((consent) => (
+              <li key={consent.id}>
+                <div>
+                  <strong>{consent.document.publicTitle ?? consent.document.type}</strong>
+                  <span>Belge versiyonu {consent.document.version}</span>
+                </div>
+                <span>
+                  {consentStatusLabel(consent.status)} · {formatDateTime(consent.capturedAt, environment.BUSINESS_TIME_ZONE)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="admin-panel" aria-labelledby="randevular">

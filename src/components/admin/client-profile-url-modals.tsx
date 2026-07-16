@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
@@ -34,7 +35,7 @@ function readNoteSummary(value: unknown): NoteSummary {
 
 async function saveClientNote(formData: FormData) {
   "use server";
-  const session = await requirePermission("clients:read");
+  const session = await requirePermission("clients:manage");
   const clientId = textValue(formData, "clientId");
   const category = textValue(formData, "category") || "ADMIN";
   const note = textValue(formData, "note");
@@ -79,6 +80,9 @@ export async function ClientProfileUrlModals({
   }
 
   if (activeModal === "not-ekle") {
+    const session = await requirePermission("clients:read");
+    if (!hasPermission(session.user.roles, "clients:manage")) return null;
+
     const notes = await getDatabase().auditLog.findMany({
       orderBy: [{ createdAt: "desc" }],
       select: { afterSummary: true, createdAt: true, id: true, reason: true },
