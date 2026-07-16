@@ -279,11 +279,13 @@ export function mapAppointmentToHubRecord(
     contactPhone: row.client.phone ?? "—",
     group: resolveGroup(row.createdAt, now, timeZone),
     id: row.id,
+    kind: "randevu",
     lastAction: latestLog ? statusEventLabels[latestLog.toStatus] : "Talep alındı",
     lastActionAt: formatRelativeStamp(latestLog?.createdAt ?? row.createdAt, now, timeZone),
     name: row.client.preferredName ?? `${row.client.firstName} ${row.client.lastName}`,
     nextSteps: buildNextSteps(row.status),
     plannedAt: formatPlannedStamp(row.startsAt, timeZone),
+    profileHref: null,
     readinessGrade: readiness.grade,
     readinessNotes: readiness.notes,
     rawStatus: row.status,
@@ -292,6 +294,134 @@ export function mapAppointmentToHubRecord(
     service: row.serviceNameSnapshot,
     stage: stageByStatus[row.status],
     status: hubStatusByStatus[row.status],
+    timeline,
+  };
+}
+
+/* ---------- clients ---------- */
+
+export type HubClientStatus = "ACTIVE" | "INACTIVE" | "PROSPECTIVE";
+
+export type HubClientRow = Readonly<{
+  appointments: readonly Readonly<{
+    serviceNameSnapshot: string;
+    startsAt: Date;
+    status: HubAppointmentStatus;
+  }>[];
+  createdAt: Date;
+  email: string | null;
+  firstName: string;
+  guardians: readonly Readonly<{
+    guardian: Readonly<{ firstName: string; lastName: string }>;
+    relationship: string;
+  }>[];
+  id: string;
+  lastName: string;
+  phone: string | null;
+  preferredName: string | null;
+  status: HubClientStatus;
+  type: "ADULT" | "CHILD";
+  updatedAt: Date;
+}>;
+
+const hubStatusByClientStatus: Readonly<Record<HubClientStatus, HubStatus>> = {
+  ACTIVE: "aktif",
+  INACTIVE: "pasif",
+  PROSPECTIVE: "potansiyel",
+};
+
+const clientTypeLabels: Readonly<Record<HubClientRow["type"], string>> = {
+  ADULT: "Yetişkin",
+  CHILD: "Çocuk",
+};
+
+/*
+ * Client readiness = profile completeness: phone 25, e-mail 25, guardian for
+ * a child (adults auto-pass) 25, any appointment history 25.
+ */
+export function scoreClientReadiness(row: HubClientRow): {
+  grade: string;
+  notes: readonly string[];
+  score: number;
+} {
+  const guardianOk = row.type === "ADULT" || row.guardians.length > 0;
+  const checks: readonly { note: string; ok: boolean; weight: number }[] = [
+    { note: "Telefon bilgisi", ok: Boolean(row.phone), weight: 25 },
+    { note: "E-posta bilgisi", ok: Boolean(row.email), weight: 25 },
+    {
+      note: row.type === "CHILD" ? "Veli kaydı" : "Yetişkin kaydı",
+      ok: guardianOk,
+      weight: 25,
+    },
+    { note: "Randevu geçmişi", ok: row.appointments.length > 0, weight: 25 },
+  ];
+
+  const score = checks.reduce((total, check) => total + (check.ok ? check.weight : 0), 0);
+  const grade = score >= 85 ? "A" : score >= 65 ? "B" : "C";
+  const notes = [
+    ...checks.filter((check) => !check.ok).map((check) => `${check.note} eksik`),
+    ...checks.filter((check) => check.ok).map((check) => `${check.note} tamam`),
+  ].slice(0, 4);
+
+  return { grade, notes, score };
+}
+
+function buildClientNextSteps(status: HubClientStatus): readonly NextStep[] {
+  switch (status) {
+    case "PROSPECTIVE":
+      return [
+        step("İlk temas", "Tanışma görüşmesini planla.", "En kısa sürede", "active"),
+        step(
+          "Değerlendirme planı",
+          "İhtiyaca göre değerlendirme öner.",
+          "Temastan sonra",
+          "upcoming",
+        ),
+      ];
+    case "ACTIVE":
+      return [step("Takip randevusu", "Sonraki seansı takvimle.", "Plan dahilinde", "active")];
+    default:
+      return [step("Yeniden temas", "Uygunsa yeniden planlama öner.", "Uygun olduğunda", "active")];
+  }
+}
+
+export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: string): HubRecord {
+  const readiness = scoreClientReadiness(row);
+  const upcoming = row.appointments.find((appointment) => appointment.startsAt > now) ?? null;
+
+  const timeline = [
+    ...row.appointments.map((appointment) => ({
+      at: formatRelativeStamp(appointment.startsAt, now, timeZone),
+      label: `Randevu · ${appointment.serviceNameSnapshot}`,
+    })),
+    { at: formatRelativeStamp(row.createdAt, now, timeZone), label: "Danışan kaydı oluşturuldu" },
+  ].slice(0, 6);
+
+  return {
+    channel: clientTypeLabels[row.type],
+    connections: row.guardians.map((entry) => ({
+      name: `${entry.guardian.firstName} ${entry.guardian.lastName}`,
+      relation: entry.relationship,
+    })),
+    contactEmail: row.email ?? "—",
+    contactPhone: row.phone ?? "—",
+    group: resolveGroup(row.updatedAt, now, timeZone),
+    id: row.id,
+    kind: "danisan",
+    lastAction: "Kayıt güncellendi",
+    lastActionAt: formatRelativeStamp(row.updatedAt, now, timeZone),
+    name: row.preferredName ?? `${row.firstName} ${row.lastName}`,
+    nextSteps: buildClientNextSteps(row.status),
+    plannedAt: upcoming ? formatPlannedStamp(upcoming.startsAt, timeZone) : "—",
+    profileHref: `/yonetim/danisan-profili/${row.id}`,
+    rawStatus: null,
+    readinessGrade: readiness.grade,
+    readinessNotes: readiness.notes,
+    readinessScore: readiness.score,
+    reference: "",
+    service: `${clientTypeLabels[row.type]} danışan kaydı`,
+    stage: "talep",
+    status: hubStatusByClientStatus[row.status],
     timeline,
   };
 }

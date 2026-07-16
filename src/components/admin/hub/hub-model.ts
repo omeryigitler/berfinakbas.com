@@ -14,9 +14,20 @@ export type HubRawStatus =
   | "RESCHEDULE_PROPOSED";
 
 export type HubStatus =
-  "bekliyor" | "gelmedi" | "iptal" | "onaylandi" | "reddedildi" | "tamamlandi" | "yeni";
+  | "aktif"
+  | "bekliyor"
+  | "gelmedi"
+  | "iptal"
+  | "onaylandi"
+  | "pasif"
+  | "potansiyel"
+  | "reddedildi"
+  | "tamamlandi"
+  | "yeni";
 
 export type HubTaskState = "done" | "active" | "upcoming";
+
+export type HubRecordKind = "danisan" | "randevu";
 
 export type HubRecord = Readonly<{
   channel: string;
@@ -25,10 +36,12 @@ export type HubRecord = Readonly<{
   contactPhone: string;
   group: "bugun" | "buHafta" | "dahaEski";
   id: string;
+  kind: HubRecordKind;
   lastAction: string;
   lastActionAt: string;
   name: string;
   plannedAt: string;
+  profileHref: string | null;
   reference: string;
   nextSteps: readonly {
     detail: string;
@@ -38,7 +51,7 @@ export type HubRecord = Readonly<{
   }[];
   readinessGrade: string;
   readinessNotes: readonly string[];
-  rawStatus: HubRawStatus;
+  rawStatus: HubRawStatus | null;
   readinessScore: number;
   service: string;
   stage: HubStage;
@@ -46,7 +59,13 @@ export type HubRecord = Readonly<{
   timeline: readonly { at: string; label: string }[];
 }>;
 
-export type HubNavChild = Readonly<{ badge?: number; id: string; label: string }>;
+export type HubNavChild = Readonly<{
+  badge?: number;
+  href?: string;
+  id: string;
+  label: string;
+  section?: "danisanlar" | "talepler";
+}>;
 
 export type HubNavGroup = Readonly<{
   children: readonly HubNavChild[];
@@ -63,10 +82,13 @@ export const hubStages: readonly { id: HubStage; label: string }[] = [
 ];
 
 export const hubStatusLabels: Readonly<Record<HubStatus, string>> = {
+  aktif: "Aktif",
   bekliyor: "Bekliyor",
   gelmedi: "Gelmedi",
   iptal: "İptal",
   onaylandi: "Onaylandı",
+  pasif: "Pasif",
+  potansiyel: "Ön görüşme",
   reddedildi: "Reddedildi",
   tamamlandi: "Tamamlandı",
   yeni: "Yeni",
@@ -81,8 +103,8 @@ export const hubGroupLabels: Readonly<Record<HubRecord["group"], string>> = {
 export const hubNavGroups: readonly HubNavGroup[] = [
   {
     children: [
-      { id: "kuyruk", label: "Talep kuyruğu" },
-      { id: "gunum", label: "Günüm" },
+      { id: "kuyruk", label: "Talep kuyruğu", section: "talepler" },
+      { href: "/yonetim", id: "klasik", label: "Klasik panel" },
     ],
     icon: "⌂",
     id: "calisma",
@@ -90,9 +112,9 @@ export const hubNavGroups: readonly HubNavGroup[] = [
   },
   {
     children: [
-      { id: "talepler", label: "Talepler" },
-      { id: "takvim", label: "Takvim" },
-      { id: "musaitlik", label: "Müsaitlik" },
+      { id: "talepler", label: "Talepler", section: "talepler" },
+      { href: "/yonetim/randevular", id: "operasyon", label: "Randevu operasyonu" },
+      { href: "/yonetim/musaitlik", id: "musaitlik", label: "Müsaitlik" },
     ],
     icon: "◷",
     id: "randevular",
@@ -100,27 +122,21 @@ export const hubNavGroups: readonly HubNavGroup[] = [
   },
   {
     children: [
-      { id: "danisan-listesi", label: "Danışanlar" },
-      { id: "aile-iletisim", label: "Aile iletişimi" },
+      { id: "danisan-kayitlari", label: "Danışan kayıtları", section: "danisanlar" },
+      { href: "/yonetim/danisanlar", id: "danisan-yonetimi", label: "Danışan yönetimi" },
     ],
     icon: "◌",
     id: "danisanlar",
     label: "Danışanlar",
   },
   {
-    children: [
-      { id: "odemeler", label: "Ödemeler" },
-      { id: "planlar", label: "Seans planları" },
-    ],
+    children: [{ href: "/yonetim/odemeler", id: "odemeler", label: "Ödeme ve planlar" }],
     icon: "₺",
     id: "finans",
     label: "Finans",
   },
   {
-    children: [
-      { id: "saglik", label: "Entegrasyon sağlığı" },
-      { id: "ayarlar", label: "Ayarlar" },
-    ],
+    children: [{ href: "/yonetim/saglik", id: "saglik", label: "Entegrasyon sağlığı" }],
     icon: "◇",
     id: "sistem",
     label: "Sistem",
@@ -142,10 +158,12 @@ export const hubRecords: readonly HubRecord[] = [
     contactPhone: "0500 000 00 01",
     group: "bugun",
     id: "rec-arya",
+    kind: "randevu",
     lastAction: "İlk değerlendirme talebi",
     lastActionAt: "Bugün 09:24",
     name: "Arya Işık",
     plannedAt: "Yarın 10:00",
+    profileHref: null,
     reference: "BA-2026-1001",
     nextSteps: [
       {
@@ -191,10 +209,12 @@ export const hubRecords: readonly HubRecord[] = [
     contactPhone: "0500 000 00 02",
     group: "bugun",
     id: "rec-baran",
+    kind: "randevu",
     lastAction: "Saat önerisi bekleniyor",
     lastActionAt: "Bugün 08:12",
     name: "Baran Toprak",
     plannedAt: "Perşembe 14:30",
+    profileHref: null,
     reference: "BA-2026-1002",
     nextSteps: [
       {
@@ -233,10 +253,12 @@ export const hubRecords: readonly HubRecord[] = [
     contactPhone: "0500 000 00 03",
     group: "buHafta",
     id: "rec-cem",
+    kind: "randevu",
     lastAction: "Randevu onaylandı",
     lastActionAt: "Salı 15:05",
     name: "Cem Yalın",
     plannedAt: "Cuma 11:00",
+    profileHref: null,
     reference: "BA-2026-1003",
     nextSteps: [
       {
@@ -276,10 +298,12 @@ export const hubRecords: readonly HubRecord[] = [
     contactPhone: "0500 000 00 04",
     group: "dahaEski",
     id: "rec-duru",
+    kind: "randevu",
     lastAction: "İlk görüşme tamamlandı",
     lastActionAt: "Geçen hafta",
     name: "Duru Aksu",
     plannedAt: "Geçen hafta 09:30",
+    profileHref: null,
     reference: "BA-2026-1004",
     nextSteps: [
       {

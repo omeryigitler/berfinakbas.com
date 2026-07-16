@@ -199,11 +199,17 @@ panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
   onaylıdır (Eminim/Vazgeç), başarıda `router.refresh()`; eylemler yalnızca
   `appointments:manage` yetkisiyle görünür; kayıt seçimi `?kayit=` URL
   parametresinde yaşar (paylaşılabilir/yenilemeye dayanıklı).
-- **Faz 4:** Danışanlar, Müsaitlik ve Ödemeler sayfalarının hub'ın
-  liste → kayıt akışına taşınması; eski `AdminShell`'in emekliliği.
+- **Faz 4 (tamam):** Hub çok bölümlü: Danışanlar hub'ın liste → kayıt
+  akışına taşındı (`?bolum=danisanlar`, `clients:read` yetkisiyle;
+  profil tamlık skoru, veli bağlantıları, randevu zaman çizelgesi ve
+  "Profili aç" köprüsüyle); menü rayı gerçek navigasyona bağlandı
+  (Müsaitlik, Randevu operasyonu, Ödemeler, Sağlık mevcut sayfalara ↗
+  linkler); klasik `AdminShell` menüsüne "Hub görünümü" girişi eklendi.
 - **Faz 5:** Cila — gerçek Inter fontu, klavye kısayolları, panel geçiş
   animasyonları, dar ekran davranışı (ray ikonlaşır, paneller üst üste
-  kayar).
+  kayar). Ek kapsam (OPEN): Müsaitlik/Ödemeler için hub içi içerik
+  panelleri ve `AdminShell`'in tam emekliliği — ağır düzenleme akışları
+  hub'a taşınmadan emeklilik yapılmaz.
 
 ### Faz 1 kabul ölçütleri
 

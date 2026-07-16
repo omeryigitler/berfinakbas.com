@@ -19,6 +19,22 @@ import {
   type HubRecord,
 } from "./hub-model";
 
+type HubSection = "danisanlar" | "talepler";
+
+const sectionMeta: Readonly<Record<HubSection, { caption: string; empty: string; title: string }>> =
+  {
+    danisanlar: {
+      caption: "son 30 danışan",
+      empty: "Henüz danışan kaydı yok.",
+      title: "Danışan kayıtları",
+    },
+    talepler: {
+      caption: "son 30 talep",
+      empty: "Henüz kayıt yok. Yeni talepler burada listelenir.",
+      title: "Talep kuyruğu",
+    },
+  };
+
 function StatusChip({ status }: { status: HubRecord["status"] }) {
   return (
     <span className={styles.statusChip} data-status={status}>
@@ -52,34 +68,44 @@ function ScoreRing({ grade, score }: { grade: string; score: number }) {
 }
 
 export function DashboardHub({
+  appointments,
   canManage = false,
-  listCaption,
-  records,
+  canReadClients = false,
+  clients = [],
 }: {
+  appointments: readonly HubRecord[];
   canManage?: boolean;
-  listCaption: string;
-  records: readonly HubRecord[];
+  canReadClients?: boolean;
+  clients?: readonly HubRecord[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [openGroup, setOpenGroup] = useState<string>("randevular");
-  const [activeChild, setActiveChild] = useState<string | null>("talepler");
   const [focusMode, setFocusMode] = useState(false);
   const [armedActionId, setArmedActionId] = useState<string | null>(null);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  /* Record selection lives in the URL (?kayit=…) so it survives refreshes
-     and can be shared/bookmarked. */
+  /* Section and record selection live in the URL (?bolum=…&kayit=…) so they
+     survive refreshes, work with back/forward and can be shared. */
+  const sectionParam = searchParams.get("bolum");
+  const section: HubSection =
+    sectionParam === "danisanlar" && canReadClients ? "danisanlar" : "talepler";
   const activeRecordId = searchParams.get("kayit");
-  const selectRecord = useCallback(
-    (id: string | null) => {
+
+  const navigate = useCallback(
+    (nextSection: HubSection | null, recordId: string | null) => {
       const params = new URLSearchParams(searchParams);
-      if (id) {
-        params.set("kayit", id);
+      if (nextSection && nextSection !== "talepler") {
+        params.set("bolum", nextSection);
+      } else if (nextSection) {
+        params.delete("bolum");
+      }
+      if (recordId) {
+        params.set("kayit", recordId);
       } else {
         params.delete("kayit");
       }
@@ -99,13 +125,19 @@ export function DashboardHub({
     setActionNotice(null);
   }
 
+  const records = section === "danisanlar" ? clients : appointments;
+  const meta = sectionMeta[section];
+
   const record = useMemo(
     () => records.find((candidate) => candidate.id === activeRecordId) ?? null,
     [activeRecordId, records],
   );
 
   const actions = useMemo(
-    () => (record ? getHubActions(record.rawStatus, canManage) : []),
+    () =>
+      record && record.kind === "randevu" && record.rawStatus
+        ? getHubActions(record.rawStatus, canManage)
+        : [],
     [canManage, record],
   );
 
@@ -136,26 +168,27 @@ export function DashboardHub({
     },
     [record, router],
   );
+
   const buckets = useMemo(() => groupRecords(records), [records]);
   const openCount = useMemo(
     () =>
-      records.filter((candidate) => candidate.status === "yeni" || candidate.status === "bekliyor")
-        .length,
-    [records],
+      appointments.filter(
+        (candidate) => candidate.status === "yeni" || candidate.status === "bekliyor",
+      ).length,
+    [appointments],
   );
   const navGroups = useMemo(
     () =>
-      hubNavGroups.map((group) => ({
-        ...group,
-        children: group.children.map((child) =>
-          child.id === "talepler" || child.id === "kuyruk"
-            ? { ...child, badge: openCount || undefined }
-            : child,
-        ),
-      })),
-    [openCount],
+      hubNavGroups
+        .filter((group) => group.id !== "danisanlar" || canReadClients)
+        .map((group) => ({
+          ...group,
+          children: group.children.map((child) =>
+            child.section === "talepler" ? { ...child, badge: openCount || undefined } : child,
+          ),
+        })),
+    [canReadClients, openCount],
   );
-  const listOpen = activeChild !== null;
   const stageIndex = record ? getStageIndex(record.stage) : -1;
 
   return (
@@ -198,22 +231,34 @@ export function DashboardHub({
                 </button>
                 {isOpen ? (
                   <div className={styles.railChildren}>
-                    {group.children.map((child) => (
-                      <button
-                        className={styles.railChild}
-                        data-active={activeChild === child.id ? "true" : undefined}
-                        key={child.id}
-                        onClick={() => {
-                          setActiveChild(child.id);
-                          selectRecord(null);
-                          setFocusMode(false);
-                        }}
-                        type="button"
-                      >
-                        <span>{child.label}</span>
-                        {child.badge ? <em>{child.badge}</em> : null}
-                      </button>
-                    ))}
+                    {group.children.map((child) =>
+                      child.href ? (
+                        <Link
+                          className={styles.railChild}
+                          href={child.href as Route}
+                          key={child.id}
+                        >
+                          <span>{child.label}</span>
+                          <em aria-hidden="true" data-kind="link">
+                            ↗
+                          </em>
+                        </Link>
+                      ) : (
+                        <button
+                          className={styles.railChild}
+                          data-active={section === child.section ? "true" : undefined}
+                          key={child.id}
+                          onClick={() => {
+                            if (child.section) navigate(child.section, null);
+                            setFocusMode(false);
+                          }}
+                          type="button"
+                        >
+                          <span>{child.label}</span>
+                          {child.badge ? <em>{child.badge}</em> : null}
+                        </button>
+                      ),
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -226,64 +271,49 @@ export function DashboardHub({
         </Link>
       </aside>
 
-      {listOpen ? (
-        <section
-          className={styles.listPanel}
-          data-collapsed={focusMode ? "true" : undefined}
-          aria-label="Kayıt listesi"
-        >
-          <header className={styles.listHead}>
-            <button
-              aria-label="Listeyi kapat"
-              className={styles.backButton}
-              onClick={() => {
-                setActiveChild(null);
-                selectRecord(null);
-              }}
-              type="button"
-            >
-              ‹
-            </button>
-            <div>
-              <strong>Talep kuyruğu</strong>
-              <small>
-                {records.length} kayıt · {listCaption}
-              </small>
-            </div>
-          </header>
-
-          <div className={styles.listScroll}>
-            {buckets.length === 0 ? (
-              <p className={styles.listEmpty}>Henüz kayıt yok. Yeni talepler burada listelenir.</p>
-            ) : null}
-            {buckets.map((bucket) => (
-              <div key={bucket.group}>
-                <p className={styles.listGroupLabel}>{hubGroupLabels[bucket.group]}</p>
-                {bucket.items.map((item) => (
-                  <button
-                    className={styles.listItem}
-                    data-active={activeRecordId === item.id ? "true" : undefined}
-                    key={item.id}
-                    onClick={() => selectRecord(item.id)}
-                    type="button"
-                  >
-                    <HubAvatar name={item.name} />
-                    <span className={styles.listItemBody}>
-                      <strong>{item.name}</strong>
-                      <small>{item.lastAction}</small>
-                      <span className={styles.listItemMeta}>
-                        <StatusChip status={item.status} />
-                        <time>{item.lastActionAt}</time>
-                      </span>
-                    </span>
-                    <em className={styles.listScore}>{item.readinessScore}</em>
-                  </button>
-                ))}
-              </div>
-            ))}
+      <section
+        className={styles.listPanel}
+        data-collapsed={focusMode ? "true" : undefined}
+        aria-label="Kayıt listesi"
+      >
+        <header className={styles.listHead}>
+          <div>
+            <strong>{meta.title}</strong>
+            <small>
+              {records.length} kayıt · {meta.caption}
+            </small>
           </div>
-        </section>
-      ) : null}
+        </header>
+
+        <div className={styles.listScroll}>
+          {buckets.length === 0 ? <p className={styles.listEmpty}>{meta.empty}</p> : null}
+          {buckets.map((bucket) => (
+            <div key={bucket.group}>
+              <p className={styles.listGroupLabel}>{hubGroupLabels[bucket.group]}</p>
+              {bucket.items.map((item) => (
+                <button
+                  className={styles.listItem}
+                  data-active={activeRecordId === item.id ? "true" : undefined}
+                  key={item.id}
+                  onClick={() => navigate(section, item.id)}
+                  type="button"
+                >
+                  <HubAvatar name={item.name} />
+                  <span className={styles.listItemBody}>
+                    <strong>{item.name}</strong>
+                    <small>{item.lastAction}</small>
+                    <span className={styles.listItemMeta}>
+                      <StatusChip status={item.status} />
+                      <time>{item.lastActionAt}</time>
+                    </span>
+                  </span>
+                  <em className={styles.listScore}>{item.readinessScore}</em>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className={styles.workArea} aria-label="Çalışma alanı">
         {record ? (
@@ -328,6 +358,15 @@ export function DashboardHub({
                     </button>
                   ),
                 )}
+                {record.profileHref ? (
+                  <Link
+                    className={styles.pill}
+                    data-tone="primary"
+                    href={record.profileHref as Route}
+                  >
+                    Profili aç ↗
+                  </Link>
+                ) : null}
                 <button
                   className={styles.pill}
                   disabled={pendingActionId !== null}
@@ -367,23 +406,27 @@ export function DashboardHub({
                   <div className={styles.recordChips}>
                     <StatusChip status={record.status} />
                     <span className={styles.softChip}>{record.channel}</span>
-                    <span className={styles.softChip}>{record.reference}</span>
+                    {record.reference ? (
+                      <span className={styles.softChip}>{record.reference}</span>
+                    ) : null}
                   </div>
                 </div>
               </div>
 
-              <ol className={styles.stageStrip} aria-label="Randevu aşaması">
-                {hubStages.map((stage, index) => (
-                  <li
-                    data-state={
-                      index < stageIndex ? "done" : index === stageIndex ? "active" : "upcoming"
-                    }
-                    key={stage.id}
-                  >
-                    {stage.label}
-                  </li>
-                ))}
-              </ol>
+              {record.kind === "randevu" ? (
+                <ol className={styles.stageStrip} aria-label="Randevu aşaması">
+                  {hubStages.map((stage, index) => (
+                    <li
+                      data-state={
+                        index < stageIndex ? "done" : index === stageIndex ? "active" : "upcoming"
+                      }
+                      key={stage.id}
+                    >
+                      {stage.label}
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
             </header>
 
             <div className={styles.workGrid}>
@@ -400,7 +443,7 @@ export function DashboardHub({
                       <dd>{record.contactEmail}</dd>
                     </div>
                     <div>
-                      <dt>Kanal</dt>
+                      <dt>{record.kind === "randevu" ? "Kanal" : "Danışan tipi"}</dt>
                       <dd>{record.channel}</dd>
                     </div>
                     <div>
@@ -452,20 +495,22 @@ export function DashboardHub({
                   </ul>
                 </article>
 
-                <article className={styles.card}>
-                  <h3>Bağlantılı kayıtlar</h3>
-                  <ul className={styles.connections}>
-                    {record.connections.map((connection) => (
-                      <li key={connection.name}>
-                        <HubAvatar name={connection.name} size={34} />
-                        <div>
-                          <strong>{connection.name}</strong>
-                          <small>{connection.relation}</small>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
+                {record.connections.length > 0 ? (
+                  <article className={styles.card}>
+                    <h3>Bağlantılı kayıtlar</h3>
+                    <ul className={styles.connections}>
+                      {record.connections.map((connection) => (
+                        <li key={connection.name}>
+                          <HubAvatar name={connection.name} size={34} />
+                          <div>
+                            <strong>{connection.name}</strong>
+                            <small>{connection.relation}</small>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                ) : null}
               </section>
             </div>
           </>
@@ -475,11 +520,7 @@ export function DashboardHub({
               ⌘
             </div>
             <h2>Çalışma alanı hazır</h2>
-            <p>
-              {listOpen
-                ? "Soldaki listeden bir kayıt seçin; kayıt özeti ve sıradaki adımlar burada açılır."
-                : "Menüden bir bölüm seçin; kayıtlar kademeli olarak sağa doğru açılır."}
-            </p>
+            <p>Soldaki listeden bir kayıt seçin; özet ve sıradaki adımlar burada açılır.</p>
           </div>
         )}
       </section>

@@ -193,6 +193,14 @@
   font-weight: 750;
 }
 
+/* Children that navigate to a full page get a subtle outward arrow. */
+.railChild em[data-kind="link"] {
+  background: transparent;
+  padding: 0;
+  color: var(--hub-muted);
+  font-size: 0.72rem;
+}
+
 .railChild[data-active="true"] em {
   background: var(--hub-ink);
 }
@@ -419,6 +427,21 @@
   color: #7d5876;
 }
 
+.statusChip[data-status="aktif"] {
+  background: var(--hub-lime-soft);
+  color: #5c6e12;
+}
+
+.statusChip[data-status="potansiyel"] {
+  background: var(--hub-teal-soft);
+  color: var(--hub-teal);
+}
+
+.statusChip[data-status="pasif"] {
+  background: #ece9e4;
+  color: var(--hub-muted);
+}
+
 .softChip {
   border: 1px solid rgb(32 28 25 / 12%);
   border-radius: 999px;
@@ -471,6 +494,9 @@
 }
 
 .pill {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
   border: 1px solid var(--hub-line);
   border-radius: 999px;
   background: #fff;

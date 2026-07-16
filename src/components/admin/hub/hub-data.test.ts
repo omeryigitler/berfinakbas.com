@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import * as hubDataModule from "./hub-data";
 import {
   buildNextSteps,
   formatRelativeStamp,
@@ -195,5 +196,66 @@ describe("mapAppointmentToHubRecord", () => {
     expect(record.name).toBe("Arya");
     expect(record.contactEmail).toBe("—");
     expect(record.contactPhone).toBe("—");
+  });
+});
+
+describe("mapClientToHubRecord", () => {
+  const { mapClientToHubRecord, scoreClientReadiness } = hubDataModule;
+
+  function makeClientRow(overrides = {}) {
+    return {
+      appointments: [
+        {
+          serviceNameSnapshot: "Ses terapisi",
+          startsAt: new Date("2026-07-10T10:00:00+03:00"),
+          status: "CONFIRMED" as const,
+        },
+      ],
+      createdAt: new Date("2026-06-01T10:00:00+03:00"),
+      email: "ornek@eposta.dev",
+      firstName: "Duru",
+      guardians: [{ guardian: { firstName: "Gökçe", lastName: "Aksu" }, relationship: "Annesi" }],
+      id: "client-1",
+      lastName: "Aksu",
+      phone: "05000000004",
+      preferredName: null,
+      status: "ACTIVE" as const,
+      type: "CHILD" as const,
+      updatedAt: new Date("2026-07-06T09:00:00+03:00"),
+      ...overrides,
+    };
+  }
+
+  it("maps a client row into a danisan hub record", () => {
+    const record = mapClientToHubRecord(makeClientRow(), now, timeZone);
+
+    expect(record.kind).toBe("danisan");
+    expect(record.status).toBe("aktif");
+    expect(record.rawStatus).toBeNull();
+    expect(record.profileHref).toBe("/yonetim/danisan-profili/client-1");
+    expect(record.channel).toBe("Çocuk");
+    expect(record.group).toBe("bugun");
+    expect(record.connections).toEqual([{ name: "Gökçe Aksu", relation: "Annesi" }]);
+    expect(record.plannedAt).not.toBe("—");
+    expect(record.timeline.at(-1)?.label).toBe("Danışan kaydı oluşturuldu");
+  });
+
+  it("maps prospective/inactive statuses and empty history", () => {
+    const record = mapClientToHubRecord(
+      makeClientRow({ appointments: [], guardians: [], status: "PROSPECTIVE", type: "ADULT" }),
+      now,
+      timeZone,
+    );
+    expect(record.status).toBe("potansiyel");
+    expect(record.plannedAt).toBe("—");
+    expect(record.connections).toEqual([]);
+  });
+
+  it("scores completeness with 25-point weights", () => {
+    expect(scoreClientReadiness(makeClientRow()).score).toBe(100);
+    expect(
+      scoreClientReadiness(makeClientRow({ appointments: [], email: null, phone: null })).score,
+    ).toBe(25);
+    expect(scoreClientReadiness(makeClientRow({ guardians: [], type: "ADULT" })).score).toBe(100);
   });
 });
