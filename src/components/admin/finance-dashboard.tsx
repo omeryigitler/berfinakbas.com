@@ -384,6 +384,28 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
     <div className="finance-dashboard">
       <div className="finance-toolbar">
         <label>
+          <span>Danışan filtresi</span>
+          <SelectControl
+            name="clientFilter"
+            onValueChange={(nextClientId) => {
+              if (nextClientId === clientId) return;
+              window.location.assign(
+                nextClientId
+                  ? `/yonetim/odemeler?clientId=${encodeURIComponent(nextClientId)}`
+                  : "/yonetim/odemeler",
+              );
+            }}
+            options={[
+              { label: "Tüm danışanlar", value: "" },
+              ...overview.clients.map((client) => ({
+                label: `${client.firstName} ${client.lastName}`,
+                value: client.id,
+              })),
+            ]}
+            value={clientId}
+          />
+        </label>
+        <label>
           <span>Vade filtresi</span>
           <SelectControl
             name="statusFilter"
