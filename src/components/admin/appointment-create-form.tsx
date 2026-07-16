@@ -6,6 +6,8 @@ import { useMemo, useState } from "react";
 import { DateControl } from "./date-control";
 import { SelectControl } from "./select-control";
 
+type DurationSettings = { adultMinutes: number; childMinutes: number; firstMeetingMinutes: number };
+
 type ClientOption = {
   appointmentCount: number;
   email: string | null;
@@ -92,11 +94,13 @@ function durationOptions(defaultDuration: number, contextualDuration: number, co
 
 export function AppointmentCreateForm({
   clients,
+  durationSettings,
   initialClientId,
   practitioners,
   services,
 }: {
   clients: ClientOption[];
+  durationSettings: DurationSettings;
   initialClientId?: string | null;
   practitioners: PractitionerOption[];
   services: ServiceOption[];
@@ -117,7 +121,11 @@ export function AppointmentCreateForm({
 
   const selectedClient = clients.find((client) => client.id === clientId) ?? null;
   const selectedService = services.find((service) => service.id === serviceId) ?? null;
-  const contextualDuration = selectedClient?.appointmentCount === 0 ? 60 : selectedClient?.type === "CHILD" ? 45 : 50;
+  const contextualDuration = selectedClient?.appointmentCount === 0
+    ? durationSettings.firstMeetingMinutes
+    : selectedClient?.type === "CHILD"
+      ? durationSettings.childMinutes
+      : durationSettings.adultMinutes;
   const contextualDurationLabel = selectedClient?.appointmentCount === 0
     ? "İlk görüşme varsayılanı"
     : selectedClient?.type === "CHILD"
@@ -320,7 +328,7 @@ export function AppointmentCreateForm({
           <span>2</span>
           <div>
             <h3 id="appointment-service-section">Hizmet ve terapist</h3>
-            <p>İlk görüşme 60, çocuk görüşmesi 45, yetişkin görüşmesi 50 dakika varsayılanıyla açılır; gerektiğinde hizmet veya özel süre seçilebilir.</p>
+            <p>İlk görüşme, çocuk ve yetişkin süreleri yönetim ayarlarından gelir; gerektiğinde hizmet veya özel süre seçilebilir.</p>
           </div>
         </div>
         <div className="booking-field-grid">
