@@ -385,6 +385,7 @@ export default async function AdminClientProfilePage({
     session.user.roles,
     "appointments:read",
   );
+  const canManageAppointments = hasPermission(session.user.roles, "appointments:manage");
   const client = await database.client.findUnique({
     include: {
       _count: {
@@ -593,7 +594,7 @@ export default async function AdminClientProfilePage({
           <span className="admin-count">Operasyon</span>
         </div>
         <div className="finance-operation-grid finance-operation-grid--buttons">
-          {canReadAppointments ? (
+          {canManageAppointments ? (
             <Link href={appointmentsPageHref} scroll={false}>
               Randevu oluştur
             </Link>
@@ -798,7 +799,7 @@ export default async function AdminClientProfilePage({
             <h2 id="randevular">Randevular</h2>
             <p>Yaklaşan randevular ve geçmiş randevu kayıtları gerçek veriden gelir.</p>
           </div>
-          {canReadAppointments ? (
+          {canManageAppointments ? (
             <Link
               className="primary-button admin-dashboard-clients-cta"
               href={appointmentsPageHref}
@@ -939,8 +940,6 @@ export default async function AdminClientProfilePage({
 
       <ClientProfileUrlModals
         activeModal={activeModal}
-        canReadAppointments={canReadAppointments}
-        canReadFinance={canReadFinance}
         clientId={client.id}
         clientName={clientName}
       />
