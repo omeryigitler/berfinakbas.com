@@ -1,4 +1,5 @@
 import type { Route } from "next";
+import type { Prisma } from "@/generated/prisma/client";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 
@@ -184,7 +185,7 @@ async function updatePublicContactSettings(formData: FormData) {
     });
     await transaction.settingChangeLog.create({ data: {
       actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: publicContactSettingsKey,
-      newValue: value, oldValue: previous?.value ?? null, reason, settingKey: publicContactSettingsKey,
+      newValue: value, oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined, reason, settingKey: publicContactSettingsKey,
     } });
   });
   revalidatePath("/");
@@ -213,7 +214,7 @@ async function updateAppointmentDurationSettings(formData: FormData) {
     });
     await transaction.settingChangeLog.create({ data: {
       actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: appointmentDurationSettingsKey,
-      newValue: value, oldValue: previous?.value ?? null, reason, settingKey: appointmentDurationSettingsKey,
+      newValue: value, oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined, reason, settingKey: appointmentDurationSettingsKey,
     } });
   });
   revalidatePath("/yonetim");
