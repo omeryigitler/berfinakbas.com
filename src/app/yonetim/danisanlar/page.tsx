@@ -100,7 +100,7 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
             <p>Arama ve filtreler yalnızca idari kayıt alanları üzerinden çalışır.</p>
           </div>
           {canManageClients ? (
-            <Link className="primary-button" href="/yonetim/danisanlar/yeni">
+            <Link className="primary-button" href="/yonetim/danisan-olustur">
               Danışan oluştur
             </Link>
           ) : (
