@@ -89,11 +89,12 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const navigationItems = getAdminNavItems(permissions);
+  const homeHref = navigationItems[0]?.href ?? ("/yonetim/baslangic" as Route);
 
   return (
     <main className={styles.shell} data-admin-refresh="shell">
       <aside className={styles.sidebar} data-admin-region="sidebar" aria-label="Yönetim alanı">
-        <Link className={styles.brand} data-admin-region="brand" href="/yonetim">
+        <Link className={styles.brand} data-admin-region="brand" href={homeHref}>
           <span className={styles.brandMark} data-admin-region="brand-mark">
             <Image src="/logo-mark.png" alt="" width={44} height={44} priority />
           </span>
