@@ -1,6 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
@@ -373,6 +373,7 @@ export default async function AdminClientProfilePage({
   const clientId = singleParam(params, "clientId").trim();
   const activeModal = singleParam(params, "modal").trim();
   if (!clientId) notFound();
+  if (clientId === "yeni") redirect("/yonetim/danisanlar/yeni");
 
   const environment = getServerEnvironment();
   const database = getDatabase();
