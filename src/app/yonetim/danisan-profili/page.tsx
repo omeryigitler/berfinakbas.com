@@ -445,6 +445,14 @@ export default async function AdminClientProfilePage({
       })
     : [];
 
+  const consentDocuments = canManageClients
+    ? await database.consentDocument.findMany({
+        orderBy: [{ effectiveFrom: "desc" }],
+        select: { id: true, publicTitle: true, type: true, version: true },
+        where: { effectiveFrom: { lte: new Date() }, retiredAt: null },
+      })
+    : [];
+
   const now = new Date();
   const [upcomingAppointments, appointmentHistory] = canReadAppointments
     ? await Promise.all([
@@ -609,6 +617,14 @@ export default async function AdminClientProfilePage({
               scroll={false}
             >
               Veli yönetimi
+            </Link>
+          ) : null}
+          {canManageClients ? (
+            <Link
+              href={`/yonetim/danisan-profili?clientId=${client.id}&modal=onay-yonetimi` as Route}
+              scroll={false}
+            >
+              KVKK / onay yönetimi
             </Link>
           ) : null}
                     <Link href="/yonetim/danisanlar">Danışan listesi</Link>
@@ -912,6 +928,8 @@ export default async function AdminClientProfilePage({
           activeModal={activeModal}
           allGuardians={allGuardians}
           client={client}
+          consentDocuments={consentDocuments}
+          consents={client.consents}
           relations={client.guardians}
         />
       ) : null}
