@@ -165,6 +165,9 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
     plans: [],
   });
   const [filter, setFilter] = useState<"ALL" | "DUE_7_DAYS" | "OVERDUE">("ALL");
+  const [planStatusFilter, setPlanStatusFilter] = useState("ALL");
+  const [invoiceFilter, setInvoiceFilter] = useState("ALL");
+  const [financeSearch, setFinanceSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -223,6 +226,36 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
       ),
     [overview.plans],
   );
+  const displayedPlans = useMemo(() => {
+    const search = financeSearch.trim().toLocaleLowerCase("tr-TR");
+    return overview.plans.filter((plan) => {
+      if (planStatusFilter !== "ALL" && plan.status !== planStatusFilter) return false;
+      if (invoiceFilter !== "ALL" && plan.invoiceStatus !== invoiceFilter) return false;
+      if (!search) return true;
+      return `${plan.client.firstName} ${plan.client.lastName} ${plan.name}`.toLocaleLowerCase("tr-TR").includes(search);
+    });
+  }, [financeSearch, invoiceFilter, overview.plans, planStatusFilter]);
+  const expectedPayments = useMemo(() => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const sevenDays = new Date(start.getTime() + 7 * 86_400_000);
+    const thirtyDays = new Date(start.getTime() + 30 * 86_400_000);
+    const rows = displayedPlans.flatMap((plan) => plan.installments
+      .filter((installment) => installment.state !== "PAID")
+      .map((installment) => ({
+        currency: plan.currency, dueDate: new Date(`${installment.dueDate}T00:00:00`),
+        remaining: BigInt(installment.amountDueMinor) - BigInt(installment.paidAmountMinor), state: installment.state,
+      })));
+    const summarize = (items: typeof rows) => {
+      const totals = new Map<string, bigint>();
+      items.forEach((item) => totals.set(item.currency, (totals.get(item.currency) ?? 0n) + item.remaining));
+      return { count: items.length, label: [...totals].map(([currency, amount]) => formatMoney(amount.toString(), currency)).join(" + ") || "₺0,00" };
+    };
+    return {
+      overdue: summarize(rows.filter((item) => item.state === "OVERDUE")),
+      sevenDays: summarize(rows.filter((item) => item.dueDate >= start && item.dueDate <= sevenDays)),
+      thirtyDays: summarize(rows.filter((item) => item.dueDate >= start && item.dueDate <= thirtyDays)),
+    };
+  }, [displayedPlans]);
   const paymentPlan = overview.plans.find((plan) => plan.id === paymentPlanId);
   const clientOptions = [
     { label: "Seçin", value: "" },
@@ -442,11 +475,35 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
             value={filter}
           />
         </label>
-        <span>{overview.plans.length} plan</span>
+        <label>
+          <span>Plan durumu</span>
+          <SelectControl name="planStatusFilter" onValueChange={setPlanStatusFilter} options={[
+            { label: "Tümü", value: "ALL" }, { label: "Aktif", value: "ACTIVE" },
+            { label: "Tamamlandı", value: "COMPLETED" }, { label: "İptal", value: "CANCELLED" },
+            { label: "Süresi doldu", value: "EXPIRED" },
+          ]} value={planStatusFilter} />
+        </label>
+        <label>
+          <span>Fatura durumu</span>
+          <SelectControl name="invoiceFilter" onValueChange={setInvoiceFilter} options={[
+            { label: "Tümü", value: "ALL" }, ...invoiceStatusOptions,
+          ]} value={invoiceFilter} />
+        </label>
+        <label>
+          <span>Danışan / plan ara</span>
+          <input onChange={(event) => setFinanceSearch(event.target.value)} placeholder="Ad veya plan adı" type="search" value={financeSearch} />
+        </label>
+        <span>{displayedPlans.length} plan</span>
         {isFilteredByClient ? (
           <strong>{selectedClientLabel(overview.clients, clientId)} filtresi aktif</strong>
         ) : null}
       </div>
+
+      <section aria-label="Beklenen ödeme özeti" className="finance-operation-grid">
+        <article className="finance-operation-card"><small>Gecikmiş</small><h3>{expectedPayments.overdue.label}</h3><p>{expectedPayments.overdue.count} açık taksit</p></article>
+        <article className="finance-operation-card"><small>7 gün içinde beklenen</small><h3>{expectedPayments.sevenDays.label}</h3><p>{expectedPayments.sevenDays.count} açık taksit</p></article>
+        <article className="finance-operation-card"><small>30 gün içinde beklenen</small><h3>{expectedPayments.thirtyDays.label}</h3><p>{expectedPayments.thirtyDays.count} açık taksit</p></article>
+      </section>
 
       {canManage && (
         <div className="finance-operation-grid">
@@ -726,7 +783,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
           </div>
         </div>
       ) : null}
-      {overview.plans.length === 0 ? (
+      {displayedPlans.length === 0 ? (
         <div className="admin-empty-state">
           <strong>{isFilteredByClient ? "Bu danışanda plan yok" : "Bu filtrede plan yok"}</strong>
           <span>
@@ -737,7 +794,7 @@ export function FinanceDashboard({ canManage, clientId = "" }: { canManage: bool
         </div>
       ) : (
         <div className="finance-plan-list">
-          {overview.plans.map((plan) => (
+          {displayedPlans.map((plan) => (
             <article className="finance-plan-card" key={plan.id}>
               <header>
                 <div>
