@@ -524,8 +524,6 @@ export default async function AdminClientProfilePage({
   const appointmentsPageHref =
     `/yonetim/randevular?clientId=${client.id}&modal=randevu-olustur` as Route;
   const financePageHref = `/yonetim/odemeler?clientId=${client.id}` as Route;
-  const planModalHref =
-    `/yonetim/danisan-profili?clientId=${client.id}&modal=odeme-plani` as Route;
   const operationAlert =
     client.type === "CHILD" && !primaryGuardian
       ? "Veli eksik"
