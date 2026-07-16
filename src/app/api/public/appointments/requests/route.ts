@@ -16,6 +16,7 @@ import {
   RequestBodyTooLargeError,
 } from "@/lib/http/public-api";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
+import { checkPublicBotProtection } from "@/lib/security/public-bot-protection";
 
 const MAX_REQUEST_BODY_BYTES = 16 * 1_024;
 
@@ -46,10 +47,30 @@ export async function POST(request: Request) {
     );
   }
 
+  const botProtection = await checkPublicBotProtection();
+  if (botProtection !== "allowed") {
+    return publicJsonResponse(
+      correlationId,
+      botProtection === "blocked"
+        ? {
+            code: "AUTOMATED_REQUEST_REJECTED",
+            error: "Otomatik istek reddedildi.",
+          }
+        : {
+            code: "BOT_PROTECTION_UNAVAILABLE",
+            error: "Randevu koruması geçici olarak kullanılamıyor.",
+          },
+      botProtection === "blocked" ? 403 : 503,
+    );
+  }
+
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return publicJsonResponse(
       correlationId,
-      { code: "UNSUPPORTED_MEDIA_TYPE", error: "İstek gövdesi JSON olmalıdır." },
+      {
+        code: "UNSUPPORTED_MEDIA_TYPE",
+        error: "İstek gövdesi JSON olmalıdır.",
+      },
       415,
     );
   }
@@ -61,7 +82,10 @@ export async function POST(request: Request) {
     if (error instanceof RequestBodyTooLargeError) {
       return publicJsonResponse(
         correlationId,
-        { code: "BODY_TOO_LARGE", error: "İstek gövdesi izin verilen sınırı aşıyor." },
+        {
+          code: "BODY_TOO_LARGE",
+          error: "İstek gövdesi izin verilen sınırı aşıyor.",
+        },
         413,
       );
     }
