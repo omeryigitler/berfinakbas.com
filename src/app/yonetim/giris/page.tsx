@@ -4,7 +4,7 @@ import { isGoogleAuthConfigured, signIn } from "@/auth";
 
 async function signInWithGoogle() {
   "use server";
-  await signIn("google", { redirectTo: "/yonetim" });
+  await signIn("google", { redirectTo: "/yonetim/baslangic" });
 }
 
 export default function AdminSignInPage() {
