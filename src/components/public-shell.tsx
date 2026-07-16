@@ -70,6 +70,10 @@ export function SiteFooter() {
 
       <div className="site-footer-base">
         <span>© 2026 Berfin Akbaş · Tüm hakları saklıdır.</span>
+        <nav className="site-footer-legal" aria-label="Yasal bağlantılar">
+          <Link href="/kvkk">KVKK</Link>
+          <Link href="/gizlilik">Gizlilik ve çerezler</Link>
+        </nav>
         <p className="site-footer-credit">
           Designed &amp; Developed by{" "}
           <a href="https://omeryigitler.com" target="_blank" rel="noreferrer">
@@ -81,15 +85,3 @@ export function SiteFooter() {
   );
 }
 
-export function BerfinPortrait({ page = false }: { page?: boolean }) {
-  return (
-    <div className={`berfin-visual${page ? "berfin-visual-page" : ""}`}>
-      <div aria-label="Berfin Akbaş, beyaz kıyafetli portre" className="berfin-photo" role="img" />
-      <div className="berfin-name-card">
-        <small>Tanışın</small>
-        <strong>Berfin Akbaş</strong>
-        <span>Dil ve Konuşma Terapisti</span>
-      </div>
-    </div>
-  );
-}
