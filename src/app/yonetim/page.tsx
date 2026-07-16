@@ -12,6 +12,11 @@ import {
   clientTypeLabels,
 } from "@/domain/clients/client-management";
 import { requirePermission } from "@/lib/authorization";
+import {
+  appointmentDurationSettingsKey,
+  appointmentDurationSettingsSchema,
+  getAppointmentDurationSettings,
+} from "@/lib/booking/appointment-duration-settings";
 import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -148,6 +153,35 @@ function isValidTimeZone(timeZone: string): boolean {
   } catch {
     return false;
   }
+}
+
+async function updateAppointmentDurationSettings(formData: FormData) {
+  "use server";
+  const session = await requirePermission("services:manage");
+  const value = appointmentDurationSettingsSchema.parse({
+    adultMinutes: Number(textValue(formData, "adultMinutes")),
+    childMinutes: Number(textValue(formData, "childMinutes")),
+    firstMeetingMinutes: Number(textValue(formData, "firstMeetingMinutes")),
+  });
+  const reason = boundedTextValue(formData, "reason", 8, 500);
+  if (!reason) return;
+
+  const database = getDatabase();
+  const durationSettings = await getAppointmentDurationSettings();
+  await database.$transaction(async (transaction) => {
+    const previous = await transaction.operationalSetting.findUnique({ where: { key: appointmentDurationSettingsKey } });
+    await transaction.operationalSetting.upsert({
+      create: { key: appointmentDurationSettingsKey, updatedByUserId: session.user.id, value },
+      update: { updatedByUserId: session.user.id, value },
+      where: { key: appointmentDurationSettingsKey },
+    });
+    await transaction.settingChangeLog.create({ data: {
+      actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: appointmentDurationSettingsKey,
+      newValue: value, oldValue: previous?.value ?? null, reason, settingKey: appointmentDurationSettingsKey,
+    } });
+  });
+  revalidatePath("/yonetim");
+  revalidatePath("/yonetim/randevular");
 }
 
 async function updateServiceSettings(formData: FormData) {
@@ -863,6 +897,26 @@ export default async function AdminHomePage({
             {services.length} hizmet · {practitioners.length} terapist
           </span>
         </div>
+
+        {canManageServices ? (
+          <form action={updateAppointmentDurationSettings} className="admin-config-edit-panel" style={{ marginBottom: "1.5rem" }}>
+            <h3>Görüşme süresi varsayılanları</h3>
+            <p>İlk görüşme, çocuk ve yetişkin randevularında otomatik seçilecek süreler.</p>
+            <div className="admin-config-form-grid">
+              <label>İlk görüşme / dakika<input defaultValue={durationSettings.firstMeetingMinutes} min="5" max="240" name="firstMeetingMinutes" required type="number" /></label>
+              <label>Çocuk görüşmesi / dakika<input defaultValue={durationSettings.childMinutes} min="5" max="240" name="childMinutes" required type="number" /></label>
+              <label>Yetişkin görüşmesi / dakika<input defaultValue={durationSettings.adultMinutes} min="5" max="240" name="adultMinutes" required type="number" /></label>
+            </div>
+            <label>Değişiklik nedeni<textarea minLength={8} maxLength={500} name="reason" required /></label>
+            <button type="submit">Süre ayarlarını kaydet</button>
+          </form>
+        ) : (
+          <div className="admin-config-summary-grid">
+            <article><span>İlk görüşme</span><strong>{durationSettings.firstMeetingMinutes} dk</strong></article>
+            <article><span>Çocuk görüşmesi</span><strong>{durationSettings.childMinutes} dk</strong></article>
+            <article><span>Yetişkin görüşmesi</span><strong>{durationSettings.adultMinutes} dk</strong></article>
+          </div>
+        )}
 
         <div className="admin-config-summary-grid">
           <article>
