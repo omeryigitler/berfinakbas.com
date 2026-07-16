@@ -380,6 +380,7 @@ export default async function AdminClientProfilePage({
   const database = getDatabase();
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
+  const canManageConsents = hasPermission(session.user.roles, "consents:manage");
   const canReadAppointments = hasPermission(
     session.user.roles,
     "appointments:read",
@@ -445,7 +446,7 @@ export default async function AdminClientProfilePage({
       })
     : [];
 
-  const consentDocuments = canManageClients
+  const consentDocuments = canManageConsents
     ? await database.consentDocument.findMany({
         orderBy: [{ effectiveFrom: "desc" }],
         select: { id: true, publicTitle: true, type: true, version: true },
@@ -619,7 +620,7 @@ export default async function AdminClientProfilePage({
               Veli yönetimi
             </Link>
           ) : null}
-          {canManageClients ? (
+          {canManageConsents ? (
             <Link
               href={`/yonetim/danisan-profili?clientId=${client.id}&modal=onay-yonetimi` as Route}
               scroll={false}
@@ -923,10 +924,11 @@ export default async function AdminClientProfilePage({
         )}
       </section>
 
-      {canManageClients ? (
+      {canManageClients || canManageConsents ? (
         <ClientProfileManagementModals
           activeModal={activeModal}
           allGuardians={allGuardians}
+          canManageConsents={canManageConsents}
           client={client}
           consentDocuments={consentDocuments}
           consents={client.consents}
