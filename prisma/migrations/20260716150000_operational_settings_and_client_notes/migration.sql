@@ -34,13 +34,13 @@ ALTER TABLE "client_notes"
 INSERT INTO "client_notes" ("id", "client_id", "category", "note", "created_by_user_id", "created_at")
 SELECT
   gen_random_uuid(),
-  audit."entity_id"::uuid,
+  client."id",
   CASE WHEN audit."after_summary"->>'category' = 'PAYMENT' THEN 'PAYMENT' ELSE 'ADMIN' END,
   LEFT(COALESCE(audit."after_summary"->>'note', audit."reason", 'Operasyon notu'), 500),
   audit."actor_user_id",
   audit."created_at"
 FROM "audit_logs" audit
+JOIN "clients" client ON client."id"::text = audit."entity_id"
 WHERE audit."action" = 'CLIENT_NOTE_CREATED'
   AND audit."entity_type" = 'CLIENT'
-  AND audit."actor_user_id" IS NOT NULL
-  AND EXISTS (SELECT 1 FROM "clients" client WHERE client."id" = audit."entity_id"::uuid);
+  AND audit."actor_user_id" IS NOT NULL;
