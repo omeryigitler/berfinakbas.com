@@ -107,6 +107,7 @@ export function AppointmentQueue({
 }) {
   const [actingAppointmentId, setActingAppointmentId] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<AppointmentQueueItem[]>([]);
+  const [pendingDecision, setPendingDecision] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,13 +136,13 @@ export function AppointmentQueue({
 
   const decideAppointment = useCallback(
     async (appointment: AppointmentQueueItem, decision: AppointmentDecision) => {
-      const confirmed = window.confirm(
-        decision === "confirm"
-          ? `${appointment.publicReference} numaralı talep onaylanacak. Gerekirse daha sonra iptal durumuna alınabilir. Devam edilsin mi?`
-          : `${appointment.publicReference} numaralı talep reddedilecek ve saat tahsisi serbest bırakılacak. Bu işlem geri alınamaz; yeni talep gerekir. Devam edilsin mi?`,
-      );
-      if (!confirmed) return;
-
+      const decisionKey = `${appointment.id}:${decision}`;
+      if (pendingDecision !== decisionKey) {
+        setPendingDecision(decisionKey);
+        setFeedback(`${appointment.publicReference} için ${decision === "confirm" ? "onaylama" : "reddetme"} işlemini tamamlamak üzere aynı butona tekrar basın.`);
+        return;
+      }
+      setPendingDecision(null);
       setActingAppointmentId(appointment.id);
       setError(null);
       setFeedback(null);
@@ -158,7 +159,7 @@ export function AppointmentQueue({
         setActingAppointmentId(null);
       }
     },
-    [],
+    [pendingDecision],
   );
 
   useEffect(() => {
@@ -261,7 +262,7 @@ export function AppointmentQueue({
                         disabled={actingAppointmentId !== null}
                         onClick={() => void decideAppointment(appointment, "confirm")}
                       >
-                        {actingAppointmentId === appointment.id ? "İşleniyor…" : "Onayla"}
+                        {actingAppointmentId === appointment.id ? "İşleniyor…" : pendingDecision === `${appointment.id}:confirm` ? "Onayı tamamla" : "Onayla"}
                       </button>
                       <button
                         className="danger"
@@ -269,7 +270,7 @@ export function AppointmentQueue({
                         disabled={actingAppointmentId !== null}
                         onClick={() => void decideAppointment(appointment, "reject")}
                       >
-                        Reddet
+                        {pendingDecision === `${appointment.id}:reject` ? "Reddi tamamla" : "Reddet"}
                       </button>
                     </div>
                   ) : (
