@@ -1,19 +1,8 @@
-import { NextResponse } from "next/server";
-
 import { BookingResourceUnavailableError } from "@/domain/booking/appointment-hold";
 import { getPublicBookingBootstrap } from "@/lib/booking/public-booking-service";
 import { getServerEnvironment } from "@/lib/env";
+import { publicJsonResponse } from "@/lib/http/public-api";
 import { getSafeCorrelationId } from "@/lib/request-security";
-
-function publicJsonResponse(correlationId: string, body: unknown, status: number): NextResponse {
-  return NextResponse.json(body, {
-    headers: {
-      "Cache-Control": "no-store",
-      "X-Correlation-ID": correlationId,
-    },
-    status,
-  });
-}
 
 export async function GET(request: Request) {
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));

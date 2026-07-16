@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
@@ -7,6 +6,12 @@ import {
 } from "@/domain/booking/appointment-hold";
 import { createAppointmentHold } from "@/lib/booking/appointment-hold-service";
 import { getServerEnvironment } from "@/lib/env";
+import {
+  isJsonContentType,
+  publicJsonResponse,
+  readBoundedJsonBody,
+  RequestBodyTooLargeError,
+} from "@/lib/http/public-api";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
 const MAX_REQUEST_BODY_BYTES = 4 * 1_024;
@@ -18,51 +23,6 @@ const appointmentHoldPayloadSchema = z
     startsAt: z.iso.datetime({ offset: true }).transform((value) => new Date(value)),
   })
   .strict();
-
-class RequestBodyTooLargeError extends Error {}
-
-async function readBoundedJsonBody(request: Request): Promise<unknown> {
-  const declaredLength = request.headers.get("content-length");
-  if (declaredLength && Number(declaredLength) > MAX_REQUEST_BODY_BYTES) {
-    throw new RequestBodyTooLargeError();
-  }
-
-  const reader = request.body?.getReader();
-  if (!reader) return JSON.parse("");
-
-  const decoder = new TextDecoder("utf-8", { fatal: true });
-  let body = "";
-  let receivedBytes = 0;
-
-  while (true) {
-    const chunk = await reader.read();
-    if (chunk.done) break;
-
-    receivedBytes += chunk.value.byteLength;
-    if (receivedBytes > MAX_REQUEST_BODY_BYTES) {
-      await reader.cancel().catch(() => undefined);
-      throw new RequestBodyTooLargeError();
-    }
-    body += decoder.decode(chunk.value, { stream: true });
-  }
-
-  body += decoder.decode();
-  return JSON.parse(body);
-}
-
-function isJsonContentType(value: string | null): boolean {
-  return value?.split(";", 1)[0]?.trim().toLowerCase() === "application/json";
-}
-
-function publicJsonResponse(correlationId: string, body: unknown, status: number): NextResponse {
-  return NextResponse.json(body, {
-    headers: {
-      "Cache-Control": "no-store",
-      "X-Correlation-ID": correlationId,
-    },
-    status,
-  });
-}
 
 export async function POST(request: Request) {
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
@@ -102,7 +62,7 @@ export async function POST(request: Request) {
 
   let body: unknown;
   try {
-    body = await readBoundedJsonBody(request);
+    body = await readBoundedJsonBody(request, MAX_REQUEST_BODY_BYTES);
   } catch (error) {
     if (error instanceof RequestBodyTooLargeError) {
       return publicJsonResponse(

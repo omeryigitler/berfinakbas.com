@@ -19,14 +19,15 @@
     "test": "vitest run",
     "test:integration": "node scripts/run-postgres-integration-tests.mjs",
     "test:watch": "vitest",
-    "quality": "pnpm lint && pnpm typecheck && pnpm test",
+    "quality": "pnpm lint && pnpm typecheck && pnpm test && pnpm format:check",
     "db:validate": "prisma validate",
     "db:format": "prisma format",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:smoke": "node scripts/run-production-smoke-tests.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
