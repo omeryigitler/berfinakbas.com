@@ -129,6 +129,26 @@ export const updateInvoiceStatusPayloadSchema = z
   })
   .strict();
 
+export const updatePlanStatusPayloadSchema = z
+  .object({
+    action: z.literal("UPDATE_PLAN_STATUS"),
+    planId: z.uuid(),
+    reason: z.string().trim().min(8).max(500),
+    status: z.enum(["ACTIVE", "COMPLETED", "CANCELLED", "EXPIRED"]),
+  })
+  .strict();
+
+export const updateInstallmentPayloadSchema = z
+  .object({
+    action: z.literal("UPDATE_INSTALLMENT"),
+    amountMinor: positiveMinorAmountSchema,
+    dueDate: z.iso.date(),
+    idempotencyKey: idempotencyKeySchema,
+    installmentId: z.uuid(),
+    reason: z.string().trim().min(8).max(500),
+  })
+  .strict();
+
 export const reversePaymentPayloadSchema = z
   .object({
     action: z.literal("REVERSE_PAYMENT"),
@@ -143,7 +163,9 @@ export const financeOperationPayloadSchema = z.discriminatedUnion("action", [
   createPaymentMethodPayloadSchema,
   recordPaymentPayloadSchema,
   reversePaymentPayloadSchema,
+  updateInstallmentPayloadSchema,
   updateInvoiceStatusPayloadSchema,
+  updatePlanStatusPayloadSchema,
 ]);
 
 export const financeOverviewQuerySchema = z

@@ -24,6 +24,9 @@ type Relation = {
   relationship: string;
 };
 
+type ConsentDocument = { id: string; publicTitle: string | null; type: string; version: string };
+type ConsentSummary = { id: string; status: string };
+
 type ClientSummary = {
   birthYear: number | null;
   email: string | null;
@@ -47,6 +50,55 @@ function optional(formData: FormData, key: string): string | null {
 
 function closeHref(clientId: string): Route {
   return `/yonetim/danisan-profili?clientId=${clientId}` as Route;
+}
+
+async function grantConsent(formData: FormData) {
+  "use server";
+  const session = await requirePermission("clients:manage");
+  const clientId = text(formData, "clientId");
+  const documentId = text(formData, "documentId");
+  const grantedByGuardianId = optional(formData, "grantedByGuardianId");
+  const reason = text(formData, "reason");
+  if (!clientId || !documentId || reason.length < 8) return;
+
+  const database = getDatabase();
+  const [client, document] = await Promise.all([
+    database.client.findUnique({ include: { guardians: true }, where: { id: clientId } }),
+    database.consentDocument.findFirst({ where: { id: documentId, retiredAt: null } }),
+  ]);
+  if (!client || !document) return;
+  if (client.type === "CHILD" && !grantedByGuardianId) return;
+  if (grantedByGuardianId && !client.guardians.some((item) => item.guardianId === grantedByGuardianId)) return;
+
+  await database.consent.create({
+    data: {
+      actorUserId: session.user.id,
+      captureChannel: "ADMIN",
+      clientId,
+      documentId,
+      evidenceMetadata: { note: reason },
+      grantedByGuardianId,
+      status: "GRANTED",
+    },
+  });
+  revalidatePath("/yonetim/danisan-profili");
+  redirect(closeHref(clientId));
+}
+
+async function withdrawConsent(formData: FormData) {
+  "use server";
+  await requirePermission("clients:manage");
+  const clientId = text(formData, "clientId");
+  const consentId = text(formData, "consentId");
+  const reason = text(formData, "reason");
+  if (!clientId || !consentId || reason.length < 8) return;
+
+  await getDatabase().consent.updateMany({
+    data: { evidenceMetadata: { withdrawalNote: reason }, status: "WITHDRAWN", withdrawnAt: new Date() },
+    where: { clientId, id: consentId, status: "GRANTED" },
+  });
+  revalidatePath("/yonetim/danisan-profili");
+  redirect(closeHref(clientId));
 }
 
 async function updateClient(formData: FormData) {
@@ -202,11 +254,15 @@ export function ClientProfileManagementModals({
   activeModal,
   allGuardians,
   client,
+  consentDocuments,
+  consents,
   relations,
 }: {
   activeModal: string;
   allGuardians: Guardian[];
   client: ClientSummary;
+  consentDocuments: ConsentDocument[];
+  consents: ConsentSummary[];
   relations: Relation[];
 }) {
   const close = closeHref(client.id);
@@ -227,6 +283,33 @@ export function ClientProfileManagementModals({
           </div>
           <button className={modalStyles.modalButton} type="submit">Profili kaydet</button>
         </form>
+      </AdminUrlModal>
+    );
+  }
+
+  if (activeModal === "onay-yonetimi") {
+    const grantedConsents = consents.filter((consent) => consent.status === "GRANTED");
+    return (
+      <AdminUrlModal closeHref={close} title="KVKK / onay yönetimi">
+        <div className={modalStyles.modalStack}>
+          <form action={grantConsent} className={modalStyles.modalStack}>
+            <h3>Yeni onay kaydet</h3>
+            <input name="clientId" type="hidden" value={client.id} />
+            <label className="booking-field">Belge<SelectControl name="documentId" options={consentDocuments.map((document) => ({ label: `${document.publicTitle ?? document.type} · v${document.version}`, value: document.id }))} required /></label>
+            {client.type === "CHILD" ? <label className="booking-field">Onayı veren veli<SelectControl name="grantedByGuardianId" options={relations.map((relation) => ({ label: `${relation.guardian.firstName} ${relation.guardian.lastName}`, value: relation.guardian.id }))} required /></label> : null}
+            <label className="booking-field">Kayıt notu<textarea minLength={8} name="reason" placeholder="Onayın nasıl ve ne zaman alındığını yazın." required /></label>
+            <button className={modalStyles.modalButton} disabled={consentDocuments.length === 0} type="submit">Onayı kaydet</button>
+          </form>
+          {grantedConsents.map((consent) => (
+            <form action={withdrawConsent} className={modalStyles.modalStack} key={consent.id}>
+              <input name="clientId" type="hidden" value={client.id} />
+              <input name="consentId" type="hidden" value={consent.id} />
+              <label className="booking-field">Geri çekme nedeni<textarea minLength={8} name="reason" required /></label>
+              <button className={modalStyles.modalButtonSecondary} type="submit">Onayı geri çek</button>
+            </form>
+          ))}
+          <Link className={modalStyles.modalButtonSecondary} href={close}>Kapat</Link>
+        </div>
       </AdminUrlModal>
     );
   }

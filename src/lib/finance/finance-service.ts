@@ -14,7 +14,9 @@ import {
   recordPaymentPayloadSchema,
   reversePaymentPayloadSchema,
   startOfUtcDay,
+  updateInstallmentPayloadSchema,
   updateInvoiceStatusPayloadSchema,
+  updatePlanStatusPayloadSchema,
 } from "@/domain/finance/finance-operations";
 import { getDatabase } from "@/lib/db";
 
@@ -516,6 +518,60 @@ export async function updateInvoiceStatus(input: unknown, contextInput: FinanceM
   return serializeClientPlan(plan);
 }
 
+export async function updatePlanStatus(input: unknown, contextInput: FinanceMutationContext) {
+  const command = updatePlanStatusPayloadSchema.parse(input);
+  const context = financeContextSchema.parse(contextInput);
+  return withSerializableRetry(async (transaction) => {
+    const existing = await transaction.clientPlan.findUnique({ where: { id: command.planId } });
+    if (!existing) throw new FinanceResourceNotFoundError();
+    if (existing.status === command.status) return serializeClientPlan(existing);
+    if (command.status === "COMPLETED") {
+      const balance = await transaction.financeLedgerEntry.aggregate({ _sum: { amountMinor: true }, where: { planId: existing.id } });
+      if ((balance._sum.amountMinor ?? 0n) !== 0n) {
+        throw new FinancePolicyViolationError("Açık bakiyesi bulunan plan tamamlandı olarak işaretlenemez.");
+      }
+    }
+    const updated = await transaction.clientPlan.update({ data: { status: command.status }, where: { id: existing.id } });
+    await transaction.auditLog.create({ data: {
+      action: "client_plan.status_changed", actorType: "USER", actorUserId: context.actorUserId,
+      afterSummary: { status: updated.status }, beforeSummary: { status: existing.status },
+      correlationId: context.correlationId, entityId: updated.id, entityType: "CLIENT_PLAN", reason: command.reason,
+    } });
+    return serializeClientPlan(updated);
+  });
+}
+
+export async function updateInstallment(input: unknown, contextInput: FinanceMutationContext) {
+  const command = updateInstallmentPayloadSchema.parse(input);
+  const context = financeContextSchema.parse(contextInput);
+  const now = context.now ?? new Date();
+  return withSerializableRetry(async (transaction) => {
+    const existing = await transaction.planInstallment.findUnique({ include: { plan: true }, where: { id: command.installmentId } });
+    if (!existing) throw new FinanceResourceNotFoundError();
+    if (existing.plan.status !== "ACTIVE") throw new FinancePolicyViolationError("Yalnızca aktif planın taksitleri düzenlenebilir.");
+    const paid = await transaction.financeLedgerEntry.aggregate({ _sum: { amountMinor: true }, where: { installmentId: existing.id } });
+    const paidAmount = calculateInstallmentPaidAmount([{ amountMinor: paid._sum.amountMinor ?? 0n }]);
+    if (command.amountMinor < paidAmount) throw new FinancePolicyViolationError("Taksit tutarı ödenmiş tutarın altına indirilemez.");
+    const delta = command.amountMinor - existing.amountDueMinor;
+    const updated = await transaction.planInstallment.update({ data: { amountDueMinor: command.amountMinor, dueDate: dateFromIsoDay(command.dueDate) }, where: { id: existing.id } });
+    if (delta !== 0n) {
+      await transaction.clientPlan.update({ data: { totalAmountMinor: { increment: delta } }, where: { id: existing.planId } });
+      await transaction.financeLedgerEntry.create({ data: {
+        actorUserId: context.actorUserId, amountMinor: delta, clientId: existing.plan.clientId,
+        currency: existing.plan.currency, idempotencyKey: command.idempotencyKey, installmentId: existing.id,
+        note: command.reason, occurredAt: now, planId: existing.planId, type: "ADJUSTMENT",
+      } });
+    }
+    await transaction.auditLog.create({ data: {
+      action: "plan_installment.updated", actorType: "USER", actorUserId: context.actorUserId,
+      afterSummary: { amountDueMinor: updated.amountDueMinor.toString(), dueDate: command.dueDate },
+      beforeSummary: { amountDueMinor: existing.amountDueMinor.toString(), dueDate: existing.dueDate.toISOString().slice(0, 10) },
+      correlationId: context.correlationId, entityId: updated.id, entityType: "PLAN_INSTALLMENT", reason: command.reason,
+    } });
+    return { amountDueMinor: updated.amountDueMinor.toString(), dueDate: command.dueDate, id: updated.id };
+  });
+}
+
 export async function executeFinanceOperation(input: unknown, context: FinanceMutationContext) {
   const command = financeOperationPayloadSchema.parse(input);
   switch (command.action) {
@@ -529,6 +585,10 @@ export async function executeFinanceOperation(input: unknown, context: FinanceMu
       return reversePayment(command, context);
     case "UPDATE_INVOICE_STATUS":
       return updateInvoiceStatus(command, context);
+    case "UPDATE_PLAN_STATUS":
+      return updatePlanStatus(command, context);
+    case "UPDATE_INSTALLMENT":
+      return updateInstallment(command, context);
   }
 }
 
