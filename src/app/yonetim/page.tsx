@@ -1320,7 +1320,6 @@ export default async function AdminHomePage({
         activeModal={activeModal}
         canManageAppointments={canManageAppointments}
         canManageClients={canManageClients}
-        canReadFinance={canReadFinance}
         initialClientId={initialClientId}
       />
     </AdminShell>
