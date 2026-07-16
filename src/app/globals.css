@@ -2971,3 +2971,24 @@ summary:focus-visible {
     }
   }
 }
+
+
+.legal-page {
+  width: min(920px, calc(100% - 40px));
+  margin: 64px auto 96px;
+  padding: clamp(28px, 5vw, 64px);
+  border: 1px solid rgba(64, 51, 42, 0.12);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 70px rgba(89, 66, 48, 0.08);
+}
+
+.legal-page h1 { margin: 8px 0 24px; font-size: clamp(2.2rem, 5vw, 4rem); line-height: 1.05; }
+.legal-page h2 { margin: 36px 0 12px; font-size: clamp(1.25rem, 2.2vw, 1.65rem); }
+.legal-page p, .legal-page li { color: #5f554e; line-height: 1.75; }
+.legal-page ul { display: grid; gap: 10px; padding-left: 22px; }
+.legal-page a { color: #7a5b46; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 640px) {
+  .legal-page { width: min(100% - 24px, 920px); margin-top: 32px; border-radius: 20px; }
+}
