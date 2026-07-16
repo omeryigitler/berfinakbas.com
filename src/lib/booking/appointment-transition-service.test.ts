@@ -37,6 +37,7 @@ function createDatabase(
                 options.allocationStatus === null
                   ? null
                   : { status: options.allocationStatus ?? "ACTIVE" },
+              clientId: "44444444-4444-4444-8444-444444444444",
               id: command.appointmentId,
               status: options.currentStatus ?? "REQUESTED",
             },
@@ -48,6 +49,12 @@ function createDatabase(
     },
     auditLog: { create: vi.fn().mockResolvedValue({}) },
     bookingAllocation: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+    clientPlan: {
+      findMany: vi.fn().mockResolvedValue([
+        { id: "55555555-5555-4555-8555-555555555555", sessionCreditEntries: [{ quantityDelta: 2 }] },
+      ]),
+    },
+    sessionCreditEntry: { create: vi.fn().mockResolvedValue({}) },
     outboxEvent: { create: vi.fn().mockResolvedValue({ id: "outbox-event" }) },
   };
   const database = {
@@ -189,6 +196,25 @@ describe("transitionAppointment", () => {
     expect(transaction.bookingAllocation.updateMany).toHaveBeenCalledWith({
       data: { releasedAt: now, status: "RELEASED" },
       where: { appointmentId: command.appointmentId, status: "ACTIVE" },
+    });
+  });
+
+  it("consumes one available session credit when a confirmed appointment completes", async () => {
+    const { database, transaction } = createDatabase({ currentStatus: "CONFIRMED" });
+    getDatabaseMock.mockReturnValue(database);
+
+    await transitionAppointment({ ...command, reasonCode: "ADMIN_COMPLETED", toStatus: "COMPLETED" });
+
+    expect(transaction.sessionCreditEntry.create).toHaveBeenCalledWith({
+      data: {
+        actorUserId: command.actorUserId,
+        appointmentId: command.appointmentId,
+        idempotencyKey: `appointment:${command.appointmentId}:session-consume`,
+        planId: "55555555-5555-4555-8555-555555555555",
+        quantityDelta: -1,
+        reasonCode: "APPOINTMENT_COMPLETED",
+        type: "CONSUME",
+      },
     });
   });
 
