@@ -373,7 +373,7 @@ export default async function AdminClientProfilePage({
   const clientId = singleParam(params, "clientId").trim();
   const activeModal = singleParam(params, "modal").trim();
   if (!clientId) notFound();
-  if (clientId === "yeni") redirect("/yonetim/danisanlar/yeni");
+  if (clientId === "yeni") redirect("/yonetim/danisan-olustur");
 
   const environment = getServerEnvironment();
   const database = getDatabase();
