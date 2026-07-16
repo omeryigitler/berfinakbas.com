@@ -3,6 +3,7 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 
+import { DateControl } from "./date-control";
 import { SelectControl } from "./select-control";
 
 type ClientOption = {
@@ -33,6 +34,13 @@ type ApiResponse<T> = {
   error?: string;
   issues?: { message?: string; path: string }[];
 };
+
+const appointmentTimeOptions = Array.from({ length: 96 }, (_, index) => {
+  const hours = Math.floor(index / 4);
+  const minutes = (index % 4) * 15;
+  const value = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  return { label: value, value };
+});
 
 const locationOptions = [
   { label: "Hizmet varsayılanı", value: "SERVICE_DEFAULT" },
@@ -101,7 +109,9 @@ export function AppointmentCreateForm({
   const [message, setMessage] = useState("");
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [setupBusy, setSetupBusy] = useState(false);
-  const [startsAt, setStartsAt] = useState(defaultDateTimeLocal);
+  const initialDateTime = useMemo(defaultDateTimeLocal, []);
+  const [appointmentDate, setAppointmentDate] = useState(initialDateTime.slice(0, 10));
+  const [appointmentTime, setAppointmentTime] = useState(initialDateTime.slice(11, 16));
 
   const selectedClient = clients.find((client) => client.id === clientId) ?? null;
   const selectedService = services.find((service) => service.id === serviceId) ?? null;
@@ -187,8 +197,8 @@ export function AppointmentCreateForm({
       setMessage("Süre 5 ile 240 dakika arasında olmalıdır.");
       return;
     }
-    const startsAtDate = new Date(startsAt);
-    if (Number.isNaN(startsAtDate.getTime())) {
+    const startsAtDate = new Date(`${appointmentDate}T${appointmentTime}`);
+    if (!appointmentDate || !appointmentTime || Number.isNaN(startsAtDate.getTime())) {
       setMessage("Geçerli bir tarih ve saat seçmelisiniz.");
       return;
     }
@@ -341,16 +351,27 @@ export function AppointmentCreateForm({
         </div>
         <div className="booking-field-grid appointment-time-grid">
           <label className="booking-field appointment-date-field">
-            Tarih ve saat
-            <input
+            Tarih
+            <DateControl
               disabled={busy}
-              name="startsAt"
-              onChange={(event) => setStartsAt(event.currentTarget.value)}
+              name="appointmentDate"
+              onValueChange={setAppointmentDate}
               required
-              type="datetime-local"
-              value={startsAt}
+              value={appointmentDate}
             />
-            <small>Takvim/saat seçimi yerel tarayıcı kontrolüyle yapılır.</small>
+            <small>Randevu tarihini custom takvimden seçin.</small>
+          </label>
+          <label className="booking-field">
+            Saat
+            <SelectControl
+              disabled={busy}
+              name="appointmentTime"
+              onValueChange={setAppointmentTime}
+              options={appointmentTimeOptions}
+              required
+              value={appointmentTime}
+            />
+            <small>Saatler 15 dakikalık aralıklarla gösterilir.</small>
           </label>
           <label className="booking-field">
             Süre
