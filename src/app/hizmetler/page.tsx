@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/components/public-shell";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/hizmetler" },
   description: "Çocuklar, ergenler, yetişkinler ve aileler için bilgilendirici destek alanları.",
   title: "Hizmetler | Berfin Akbaş",
 };
