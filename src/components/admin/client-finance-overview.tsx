@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 import styles from "@/components/admin/admin-shell.module.css";
@@ -62,9 +63,17 @@ export async function ClientFinanceOverview({ clientId }: { clientId: string }) 
             gösteriliyor.
           </p>
         </div>
-        <Link className="secondary-button" href="/yonetim/odemeler">
-          Tüm finans ekranı
-        </Link>
+        <div className="finance-overview-actions">
+          <Link
+            className="secondary-button"
+            href={`/yonetim/danisan-profili?clientId=${client.id}` as Route}
+          >
+            Danışan profiline dön
+          </Link>
+          <Link className="secondary-button" href="/yonetim/odemeler">
+            Tüm finans ekranı
+          </Link>
+        </div>
       </div>
 
       <div className="finance-toolbar">
