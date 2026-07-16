@@ -1,4 +1,4 @@
-import type { HubRecord, HubStage, HubStatus, HubTaskState } from "./hub-model";
+import type { HubRawStatus, HubRecord, HubStage, HubStatus, HubTaskState } from "./hub-model";
 
 /*
  * Pure mapping layer between real appointment rows and the Hub view model.
@@ -6,16 +6,7 @@ import type { HubRecord, HubStage, HubStatus, HubTaskState } from "./hub-model";
  * these functions stay unit-testable without a database.
  */
 
-export type HubAppointmentStatus =
-  | "CANCELLED_BY_CLIENT"
-  | "CANCELLED_BY_PRACTITIONER"
-  | "COMPLETED"
-  | "CONFIRMED"
-  | "NO_SHOW"
-  | "PENDING_REVIEW"
-  | "REJECTED"
-  | "REQUESTED"
-  | "RESCHEDULE_PROPOSED";
+export type HubAppointmentStatus = HubRawStatus;
 
 export type HubAppointmentRow = Readonly<{
   approvedAt: Date | null;
@@ -295,6 +286,7 @@ export function mapAppointmentToHubRecord(
     plannedAt: formatPlannedStamp(row.startsAt, timeZone),
     readinessGrade: readiness.grade,
     readinessNotes: readiness.notes,
+    rawStatus: row.status,
     readinessScore: readiness.score,
     reference: row.publicReference,
     service: row.serviceNameSnapshot,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { DashboardHub } from "@/components/admin/hub/dashboard-hub";
 import { mapAppointmentToHubRecord } from "@/components/admin/hub/hub-data";
+import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
@@ -14,7 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminHubPage() {
-  await requirePermission("appointments:read");
+  const session = await requirePermission("appointments:read");
+  const canManage = hasPermission(session.user.roles, "appointments:manage");
   const environment = getServerEnvironment();
   const database = getDatabase();
 
@@ -57,5 +59,5 @@ export default async function AdminHubPage() {
     mapAppointmentToHubRecord(row, now, environment.BUSINESS_TIME_ZONE),
   );
 
-  return <DashboardHub listCaption="son 30 talep" records={records} />;
+  return <DashboardHub canManage={canManage} listCaption="son 30 talep" records={records} />;
 }

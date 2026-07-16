@@ -495,6 +495,58 @@
   color: #fff;
 }
 
+.pill:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.pill[data-tone="primary"] {
+  border-color: var(--hub-teal);
+  background: var(--hub-teal);
+  color: #fff;
+}
+
+.pill[data-tone="primary"]:hover:not(:disabled) {
+  background: #0d6f64;
+}
+
+.pill[data-tone="danger"] {
+  border-color: #d8a49a;
+  color: #a5473a;
+}
+
+.pill[data-tone="danger"]:hover:not(:disabled) {
+  border-color: #a5473a;
+  background: #fbeeeb;
+  box-shadow: 0 8px 18px rgb(165 71 58 / 14%);
+}
+
+.confirmGroup {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  border: 1px dashed var(--hub-line);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.ribbonNote {
+  margin: 0;
+  padding: 9px 20px;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.ribbonNote[data-kind="error"] {
+  background: #fbeeeb;
+  color: #a5473a;
+}
+
+.ribbonNote[data-kind="notice"] {
+  background: var(--hub-teal-soft);
+  color: var(--hub-teal);
+}
+
 .recordHead {
   display: flex;
   flex-wrap: wrap;

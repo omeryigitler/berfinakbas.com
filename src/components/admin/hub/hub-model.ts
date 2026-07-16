@@ -1,5 +1,18 @@
 export type HubStage = "talep" | "kontrol" | "onay" | "gorusme";
 
+/* Raw appointment status as stored in the database — kept on the record so
+   the UI can offer only transitions the domain state machine allows. */
+export type HubRawStatus =
+  | "CANCELLED_BY_CLIENT"
+  | "CANCELLED_BY_PRACTITIONER"
+  | "COMPLETED"
+  | "CONFIRMED"
+  | "NO_SHOW"
+  | "PENDING_REVIEW"
+  | "REJECTED"
+  | "REQUESTED"
+  | "RESCHEDULE_PROPOSED";
+
 export type HubStatus =
   "bekliyor" | "gelmedi" | "iptal" | "onaylandi" | "reddedildi" | "tamamlandi" | "yeni";
 
@@ -25,6 +38,7 @@ export type HubRecord = Readonly<{
   }[];
   readinessGrade: string;
   readinessNotes: readonly string[];
+  rawStatus: HubRawStatus;
   readinessScore: number;
   service: string;
   stage: HubStage;
@@ -163,6 +177,7 @@ export const hubRecords: readonly HubRecord[] = [
     readinessScore: 90,
     service: "Çocuk dil ve konuşma değerlendirmesi",
     stage: "kontrol",
+    rawStatus: "REQUESTED",
     status: "yeni",
     timeline: [
       { at: "Bugün 09:24", label: "Web formundan talep alındı" },
@@ -204,6 +219,7 @@ export const hubRecords: readonly HubRecord[] = [
     readinessScore: 74,
     service: "Ergen akıcılık görüşmesi",
     stage: "kontrol",
+    rawStatus: "PENDING_REVIEW",
     status: "bekliyor",
     timeline: [
       { at: "Bugün 08:12", label: "Telefonla ön görüşme yapıldı" },
@@ -245,6 +261,7 @@ export const hubRecords: readonly HubRecord[] = [
     readinessScore: 96,
     service: "Yetişkin ses terapisi",
     stage: "onay",
+    rawStatus: "CONFIRMED",
     status: "onaylandi",
     timeline: [
       { at: "Salı 15:05", label: "Randevu onay mesajı gönderildi" },
@@ -281,6 +298,7 @@ export const hubRecords: readonly HubRecord[] = [
     readinessScore: 88,
     service: "Çocuk artikülasyon takibi",
     stage: "gorusme",
+    rawStatus: "COMPLETED",
     status: "tamamlandi",
     timeline: [
       { at: "Geçen hafta", label: "İlk görüşme yapıldı" },

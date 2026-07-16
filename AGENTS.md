@@ -192,9 +192,13 @@ panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
   practitioner, statusLogs dahil) çeker; `hub-data.ts` saf eşleyicisi durum →
   aşama/çip, zaman grubu, hazırlık skoru (ağırlıklar kodda), sıradaki adımlar
   ve zaman çizelgesini üretir; nav rozetleri açık taleplerden hesaplanır.
-- **Faz 3:** Kayıt çalışma alanı eylemleri: onay/red/tamamlama mevcut
-  server action'lara bağlanır; aşama şeridi gerçek durum makinesini
-  (REQUESTED/CONFIRMED/…) yansıtır; panel durumu URL'e taşınır.
+- **Faz 3 (tamam):** Kayıt eylemleri canlı: `hub-actions.ts` durum başına
+  yalnızca domain durum makinesinin (appointment-status.ts) izin verdiği
+  geçişleri sunar ve mevcut PATCH `/api/admin/appointments/:id/status`
+  sözleşmesini (reasonCode/toStatus) aynen kullanır; eylemler inline
+  onaylıdır (Eminim/Vazgeç), başarıda `router.refresh()`; eylemler yalnızca
+  `appointments:manage` yetkisiyle görünür; kayıt seçimi `?kayit=` URL
+  parametresinde yaşar (paylaşılabilir/yenilemeye dayanıklı).
 - **Faz 4:** Danışanlar, Müsaitlik ve Ödemeler sayfalarının hub'ın
   liste → kayıt akışına taşınması; eski `AdminShell`'in emekliliği.
 - **Faz 5:** Cila — gerçek Inter fontu, klavye kısayolları, panel geçiş

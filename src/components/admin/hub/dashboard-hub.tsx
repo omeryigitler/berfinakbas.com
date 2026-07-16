@@ -1,9 +1,12 @@
 "use client";
 
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 
+import { buildHubStatusUrl, getHubActions, type HubAction } from "./hub-actions";
 import { HubAvatar } from "./hub-avatar";
 import styles from "./hub.module.css";
 import {
@@ -15,8 +18,6 @@ import {
   hubStatusLabels,
   type HubRecord,
 } from "./hub-model";
-
-const ribbonActions = ["Kaydet", "+ Yeni", "Yenile", "PDF", "Süreç"] as const;
 
 function StatusChip({ status }: { status: HubRecord["status"] }) {
   return (
@@ -51,20 +52,89 @@ function ScoreRing({ grade, score }: { grade: string; score: number }) {
 }
 
 export function DashboardHub({
+  canManage = false,
   listCaption,
   records,
 }: {
+  canManage?: boolean;
   listCaption: string;
   records: readonly HubRecord[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [openGroup, setOpenGroup] = useState<string>("randevular");
   const [activeChild, setActiveChild] = useState<string | null>("talepler");
-  const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
   const [focusMode, setFocusMode] = useState(false);
+  const [armedActionId, setArmedActionId] = useState<string | null>(null);
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+
+  /* Record selection lives in the URL (?kayit=…) so it survives refreshes
+     and can be shared/bookmarked. */
+  const activeRecordId = searchParams.get("kayit");
+  const selectRecord = useCallback(
+    (id: string | null) => {
+      const params = new URLSearchParams(searchParams);
+      if (id) {
+        params.set("kayit", id);
+      } else {
+        params.delete("kayit");
+      }
+      const query = params.toString();
+      router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  /* Reset transient action state whenever the selected record changes
+     (including browser back/forward) — adjust-state-during-render pattern. */
+  const [lastRecordId, setLastRecordId] = useState(activeRecordId);
+  if (lastRecordId !== activeRecordId) {
+    setLastRecordId(activeRecordId);
+    setArmedActionId(null);
+    setActionError(null);
+    setActionNotice(null);
+  }
 
   const record = useMemo(
     () => records.find((candidate) => candidate.id === activeRecordId) ?? null,
     [activeRecordId, records],
+  );
+
+  const actions = useMemo(
+    () => (record ? getHubActions(record.rawStatus, canManage) : []),
+    [canManage, record],
+  );
+
+  const runAction = useCallback(
+    async (action: HubAction) => {
+      if (!record) return;
+      setPendingActionId(action.id);
+      setActionError(null);
+      setActionNotice(null);
+      try {
+        const response = await fetch(buildHubStatusUrl(record.id), {
+          body: JSON.stringify({ reasonCode: action.reasonCode, toStatus: action.toStatus }),
+          headers: { accept: "application/json", "content-type": "application/json" },
+          method: "PATCH",
+        });
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Randevu durumu güncellenemedi.");
+        }
+        setActionNotice(`${action.label} işlemi kaydedildi.`);
+        setArmedActionId(null);
+        router.refresh();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Randevu durumu güncellenemedi.");
+      } finally {
+        setPendingActionId(null);
+      }
+    },
+    [record, router],
   );
   const buckets = useMemo(() => groupRecords(records), [records]);
   const openCount = useMemo(
@@ -135,7 +205,7 @@ export function DashboardHub({
                         key={child.id}
                         onClick={() => {
                           setActiveChild(child.id);
-                          setActiveRecordId(null);
+                          selectRecord(null);
                           setFocusMode(false);
                         }}
                         type="button"
@@ -168,7 +238,7 @@ export function DashboardHub({
               className={styles.backButton}
               onClick={() => {
                 setActiveChild(null);
-                setActiveRecordId(null);
+                selectRecord(null);
               }}
               type="button"
             >
@@ -194,7 +264,7 @@ export function DashboardHub({
                     className={styles.listItem}
                     data-active={activeRecordId === item.id ? "true" : undefined}
                     key={item.id}
-                    onClick={() => setActiveRecordId(item.id)}
+                    onClick={() => selectRecord(item.id)}
                     type="button"
                   >
                     <HubAvatar name={item.name} />
@@ -220,11 +290,52 @@ export function DashboardHub({
           <>
             <div className={styles.ribbon}>
               <div className={styles.ribbonActions}>
-                {ribbonActions.map((action) => (
-                  <button className={styles.pill} key={action} type="button">
-                    {action}
-                  </button>
-                ))}
+                {actions.map((action) =>
+                  armedActionId === action.id ? (
+                    <span className={styles.confirmGroup} key={action.id}>
+                      <button
+                        className={styles.pill}
+                        data-tone={action.tone}
+                        disabled={pendingActionId !== null}
+                        onClick={() => void runAction(action)}
+                        type="button"
+                      >
+                        {pendingActionId === action.id ? "İşleniyor…" : `Eminim: ${action.label}`}
+                      </button>
+                      <button
+                        className={styles.pill}
+                        disabled={pendingActionId !== null}
+                        onClick={() => setArmedActionId(null)}
+                        type="button"
+                      >
+                        Vazgeç
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      className={styles.pill}
+                      data-tone={action.tone}
+                      disabled={pendingActionId !== null}
+                      key={action.id}
+                      onClick={() => {
+                        setArmedActionId(action.id);
+                        setActionError(null);
+                        setActionNotice(null);
+                      }}
+                      type="button"
+                    >
+                      {action.label}
+                    </button>
+                  ),
+                )}
+                <button
+                  className={styles.pill}
+                  disabled={pendingActionId !== null}
+                  onClick={() => router.refresh()}
+                  type="button"
+                >
+                  Yenile
+                </button>
               </div>
               <button
                 className={styles.pill}
@@ -235,6 +346,17 @@ export function DashboardHub({
                 {focusMode ? "Panelleri geri aç" : "Genişlet ⤢"}
               </button>
             </div>
+
+            {actionError ? (
+              <p className={styles.ribbonNote} data-kind="error" role="alert">
+                {actionError}
+              </p>
+            ) : null}
+            {actionNotice ? (
+              <p className={styles.ribbonNote} data-kind="notice" role="status">
+                {actionNotice}
+              </p>
+            ) : null}
 
             <header className={styles.recordHead}>
               <div className={styles.recordIdentity}>
