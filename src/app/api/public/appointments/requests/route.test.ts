@@ -1,15 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getServerEnvironmentMock, submitPublicBookingRequestMock } = vi.hoisted(() => ({
-  getServerEnvironmentMock: vi.fn(),
-  submitPublicBookingRequestMock: vi.fn(),
-}));
+const { checkPublicBotProtectionMock, getServerEnvironmentMock, submitPublicBookingRequestMock } =
+  vi.hoisted(() => ({
+    checkPublicBotProtectionMock: vi.fn(),
+    getServerEnvironmentMock: vi.fn(),
+    submitPublicBookingRequestMock: vi.fn(),
+  }));
 
 vi.mock("@/lib/booking/public-booking-service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/booking/public-booking-service")>()),
   submitPublicBookingRequest: submitPublicBookingRequestMock,
 }));
-vi.mock("@/lib/env", () => ({ getServerEnvironment: getServerEnvironmentMock }));
+vi.mock("@/lib/env", () => ({
+  getServerEnvironment: getServerEnvironmentMock,
+}));
+vi.mock("@/lib/security/public-bot-protection", () => ({
+  checkPublicBotProtection: checkPublicBotProtectionMock,
+}));
 
 import { BookingResourceUnavailableError } from "@/domain/booking/appointment-hold";
 import { BookingConsentGateError } from "@/domain/consent/booking-consent";
@@ -55,6 +62,7 @@ function request(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  checkPublicBotProtectionMock.mockResolvedValue("allowed");
   getServerEnvironmentMock.mockReturnValue({
     APP_URL: "https://berfinakbas.com",
     BOOKING_PUBLIC_PRACTITIONER_ID: publicPractitionerId,
@@ -77,7 +85,10 @@ describe("POST /api/public/appointments/requests", () => {
     const response = await POST(request("{", { origin: "https://attacker.example" }));
 
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toMatchObject({ code: "BOOKING_REQUESTS_DISABLED" });
+    await expect(response.json()).resolves.toMatchObject({
+      code: "BOOKING_REQUESTS_DISABLED",
+    });
+    expect(checkPublicBotProtectionMock).not.toHaveBeenCalled();
     expect(submitPublicBookingRequestMock).not.toHaveBeenCalled();
   });
 
@@ -85,8 +96,11 @@ describe("POST /api/public/appointments/requests", () => {
     for (const origin of ["https://attacker.example", ""]) {
       const response = await POST(request("{", { origin }));
       expect(response.status).toBe(403);
-      await expect(response.json()).resolves.toMatchObject({ code: "UNTRUSTED_ORIGIN" });
+      await expect(response.json()).resolves.toMatchObject({
+        code: "UNTRUSTED_ORIGIN",
+      });
     }
+    expect(checkPublicBotProtectionMock).not.toHaveBeenCalled();
     expect(submitPublicBookingRequestMock).not.toHaveBeenCalled();
   });
 
@@ -98,6 +112,19 @@ describe("POST /api/public/appointments/requests", () => {
 
     expect(mediaResponse.status).toBe(415);
     expect(oversizedResponse.status).toBe(413);
+    expect(submitPublicBookingRequestMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["blocked", 403, "AUTOMATED_REQUEST_REJECTED"],
+    ["unavailable", 503, "BOT_PROTECTION_UNAVAILABLE"],
+  ])("fails closed when BotID is %s", async (result, status, code) => {
+    checkPublicBotProtectionMock.mockResolvedValue(result);
+
+    const response = await POST(request("{"));
+
+    expect(response.status).toBe(status);
+    await expect(response.json()).resolves.toMatchObject({ code });
     expect(submitPublicBookingRequestMock).not.toHaveBeenCalled();
   });
 
