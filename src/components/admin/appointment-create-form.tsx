@@ -7,6 +7,7 @@ import { DateControl } from "./date-control";
 import { SelectControl } from "./select-control";
 
 type ClientOption = {
+  appointmentCount: number;
   email: string | null;
   firstName: string;
   guardians: { label: string; value: string }[];
@@ -79,9 +80,10 @@ function defaultDateTimeLocal(): string {
   return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
 }
 
-function durationOptions(defaultDuration: number): { label: string; value: string }[] {
-  const durations = Array.from(new Set([defaultDuration, 15, 30, 45])).sort((a, b) => a - b);
+function durationOptions(defaultDuration: number, contextualDuration: number, contextualLabel: string): { label: string; value: string }[] {
+  const durations = Array.from(new Set([defaultDuration, contextualDuration, 15, 30, 45, 50, 60])).sort((a, b) => a - b);
   return [
+    { label: `${contextualLabel} (${contextualDuration} dk)`, value: "CONTEXT_DEFAULT" },
     { label: `Hizmet varsayılanı (${defaultDuration} dk)`, value: "SERVICE_DEFAULT" },
     ...durations.map((duration) => ({ label: `${duration} dk`, value: String(duration) })),
     { label: "Özel süre", value: "CUSTOM" },
@@ -105,7 +107,7 @@ export function AppointmentCreateForm({
   const [busy, setBusy] = useState(false);
   const [clientId, setClientId] = useState(initialClient);
   const [customDuration, setCustomDuration] = useState("52");
-  const [durationMode, setDurationMode] = useState("SERVICE_DEFAULT");
+  const [durationMode, setDurationMode] = useState("CONTEXT_DEFAULT");
   const [message, setMessage] = useState("");
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [setupBusy, setSetupBusy] = useState(false);
@@ -115,8 +117,16 @@ export function AppointmentCreateForm({
 
   const selectedClient = clients.find((client) => client.id === clientId) ?? null;
   const selectedService = services.find((service) => service.id === serviceId) ?? null;
+  const contextualDuration = selectedClient?.appointmentCount === 0 ? 60 : selectedClient?.type === "CHILD" ? 45 : 50;
+  const contextualDurationLabel = selectedClient?.appointmentCount === 0
+    ? "İlk görüşme varsayılanı"
+    : selectedClient?.type === "CHILD"
+      ? "Çocuk görüşmesi varsayılanı"
+      : "Yetişkin görüşmesi varsayılanı";
   const selectedDuration =
-    durationMode === "SERVICE_DEFAULT"
+    durationMode === "CONTEXT_DEFAULT"
+      ? contextualDuration
+      : durationMode === "SERVICE_DEFAULT"
       ? (selectedService?.defaultDurationMinutes ?? 15)
       : durationMode === "CUSTOM"
         ? Number(customDuration)
@@ -147,8 +157,8 @@ export function AppointmentCreateForm({
     [practitioners],
   );
   const selectedServiceDurationOptions = useMemo(
-    () => durationOptions(selectedService?.defaultDurationMinutes ?? 15),
-    [selectedService?.defaultDurationMinutes],
+    () => durationOptions(selectedService?.defaultDurationMinutes ?? 15, contextualDuration, contextualDurationLabel),
+    [contextualDuration, contextualDurationLabel, selectedService?.defaultDurationMinutes],
   );
 
   async function setupPrerequisites() {
@@ -273,7 +283,7 @@ export function AppointmentCreateForm({
             <SelectControl
               disabled={busy}
               name="clientId"
-              onValueChange={setClientId}
+              onValueChange={(value) => { setClientId(value); setDurationMode("CONTEXT_DEFAULT"); }}
               options={clientOptions}
               placeholder="Danışan seçin"
               required
@@ -310,7 +320,7 @@ export function AppointmentCreateForm({
           <span>2</span>
           <div>
             <h3 id="appointment-service-section">Hizmet ve terapist</h3>
-            <p>Hizmet seçimi süre varsayılanını belirler; terapist seçimi çakışma kontrolünde kullanılır.</p>
+            <p>İlk görüşme 60, çocuk görüşmesi 45, yetişkin görüşmesi 50 dakika varsayılanıyla açılır; gerektiğinde hizmet veya özel süre seçilebilir.</p>
           </div>
         </div>
         <div className="booking-field-grid">
@@ -321,7 +331,7 @@ export function AppointmentCreateForm({
               name="serviceId"
               onValueChange={(value) => {
                 setServiceId(value);
-                setDurationMode("SERVICE_DEFAULT");
+                setDurationMode("CONTEXT_DEFAULT");
               }}
               options={serviceOptions}
               required
