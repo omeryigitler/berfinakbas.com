@@ -95,40 +95,9 @@ export async function ClientFinanceOverview({ clientId }: { clientId: string }) 
         </article>
       </div>
 
-      {overview.plans.length === 0 ? (
-        <div className="admin-empty-state">
-          <strong>Plan yok</strong>
-          <span>Bu danışan için henüz ödeme planı oluşturulmamış.</span>
-        </div>
-      ) : (
-        <div className="finance-plan-list">
-          {overview.plans.map((plan) => (
-            <article className="finance-plan-card" key={plan.id}>
-              <header>
-                <div>
-                  <small>{plan.status}</small>
-                  <h3>{plan.name}</h3>
-                </div>
-                <span>{formatMoney(plan.balanceMinor, plan.currency)}</span>
-              </header>
-              <dl>
-                <div>
-                  <dt>Kalan seans</dt>
-                  <dd>{plan.remainingSessions}</dd>
-                </div>
-                <div>
-                  <dt>Plan toplamı</dt>
-                  <dd>{formatMoney(plan.totalAmountMinor, plan.currency)}</dd>
-                </div>
-                <div>
-                  <dt>Taksit</dt>
-                  <dd>{plan.installments.length}</dd>
-                </div>
-              </dl>
-            </article>
-          ))}
-        </div>
-      )}
+      <p className="finance-overview-note">
+        Plan, taksit ve hareket ayrıntıları aşağıdaki tek operasyon listesinde gösterilir.
+      </p>
     </section>
   );
 }

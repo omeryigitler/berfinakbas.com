@@ -47,26 +47,35 @@
   font-weight: 850;
 }
 
+:global([data-admin-refresh="shell"] .finance-overview-note) {
+  margin: 16px 0 0;
+  border-top: 1px solid rgb(88 62 49 / 9%);
+  padding-top: 14px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 :global([data-admin-refresh="shell"] .finance-operation-grid) {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    "plan"
-    "payment"
-    "method";
-  gap: 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1)) {
-  grid-area: method;
+  order: 3;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2)) {
-  grid-area: plan;
+  order: 1;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3)) {
-  grid-area: payment;
+  order: 2;
+}
+
+:global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card[open]) {
+  grid-column: 1 / -1;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card) {
@@ -394,6 +403,14 @@
 }
 
 @media (max-width: 980px) {
+  :global([data-admin-refresh="shell"] .finance-operation-grid) {
+    grid-template-columns: 1fr;
+  }
+
+  :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card[open]) {
+    grid-column: auto;
+  }
+
   :global([data-admin-refresh="shell"] .finance-plan-card dl),
   :global([data-admin-refresh="shell"] .finance-inline-fields),
   :global([data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form),
