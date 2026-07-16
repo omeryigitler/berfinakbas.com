@@ -18,19 +18,8 @@ type Props = {
   canReadFinance: boolean;
 };
 
-type NoteSummary = { category?: string; note?: string };
-
 function textValue(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
-}
-
-function readNoteSummary(value: unknown): NoteSummary {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  const record = value as Record<string, unknown>;
-  return {
-    category: typeof record.category === "string" ? record.category : undefined,
-    note: typeof record.note === "string" ? record.note : undefined,
-  };
 }
 
 async function saveClientNote(formData: FormData) {
@@ -48,17 +37,16 @@ async function saveClientNote(formData: FormData) {
   });
   if (!client) return;
 
-  await database.auditLog.create({
-    data: {
-      action: "CLIENT_NOTE_CREATED",
-      actorType: "USER",
-      actorUserId: session.user.id,
-      afterSummary: { category, note },
-      correlationId: crypto.randomUUID(),
-      entityId: client.id,
-      entityType: "CLIENT",
-      reason: note.slice(0, 500),
-    },
+  if (!["ADMIN", "PAYMENT"].includes(category)) return;
+  await database.$transaction(async (transaction) => {
+    const created = await transaction.clientNote.create({
+      data: { category, clientId: client.id, createdByUserId: session.user.id, note },
+    });
+    await transaction.auditLog.create({ data: {
+      action: "client_note.created", actorType: "USER", actorUserId: session.user.id,
+      afterSummary: { category }, correlationId: crypto.randomUUID(), entityId: created.id,
+      entityType: "CLIENT_NOTE", reason: "Operasyon notu oluşturuldu.",
+    } });
   });
 
   revalidatePath("/yonetim/danisan-profili");
@@ -83,15 +71,11 @@ export async function ClientProfileUrlModals({
     const session = await requirePermission("clients:read");
     if (!hasPermission(session.user.roles, "clients:manage")) return null;
 
-    const notes = await getDatabase().auditLog.findMany({
+    const notes = await getDatabase().clientNote.findMany({
       orderBy: [{ createdAt: "desc" }],
-      select: { afterSummary: true, createdAt: true, id: true, reason: true },
+      select: { category: true, createdAt: true, id: true, note: true },
       take: 5,
-      where: {
-        action: "CLIENT_NOTE_CREATED",
-        entityId: clientId,
-        entityType: "CLIENT",
-      },
+      where: { clientId },
     });
 
     return (
@@ -118,10 +102,6 @@ export async function ClientProfileUrlModals({
               <span>Admin notu</span>
             </label>
             <label>
-              <input name="category" type="radio" value="SESSION" />
-              <span>Seans notu</span>
-            </label>
-            <label>
               <input name="category" type="radio" value="PAYMENT" />
               <span>Ödeme notu</span>
             </label>
@@ -146,13 +126,12 @@ export async function ClientProfileUrlModals({
         {notes.length > 0 ? (
           <div className={modalStyles.modalStack}>
             {notes.map((note) => {
-              const summary = readNoteSummary(note.afterSummary);
               return (
                 <ModalFieldPreview
                   helper={note.createdAt.toLocaleDateString("tr-TR")}
                   key={note.id}
-                  label={summary.category ?? "NOTE"}
-                  value={summary.note ?? note.reason ?? "Not"}
+                  label={note.category === "PAYMENT" ? "Ödeme notu" : "Admin notu"}
+                  value={note.note}
                 />
               );
             })}
