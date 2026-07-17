@@ -18,6 +18,7 @@ describe("getAdminNavItems", () => {
       "/yonetim/musaitlik",
       "/yonetim/saglik",
     ]);
+    expect(items.some((item) => item.label.includes("Danışan"))).toBe(false);
   });
 
   it("adds client creation inside the client accordion when client access exists", () => {
@@ -33,6 +34,19 @@ describe("getAdminNavItems", () => {
       "/yonetim/danisanlar",
       "/yonetim/danisan-olustur",
     ]);
+  });
+
+  it("keeps finance navigation independent from client access", () => {
+    const items = getAdminNavItems({
+      appointmentsRead: false,
+      clientsRead: false,
+      financeRead: true,
+      servicesRead: false,
+      technicalHealthRead: false,
+    });
+
+    expect(items.map((item) => item.href)).toEqual(["/yonetim/odemeler"]);
+    expect(items.some((item) => item.href === "/yonetim/danisanlar")).toBe(false);
   });
 
   it("hides all links when permissions are missing", () => {
