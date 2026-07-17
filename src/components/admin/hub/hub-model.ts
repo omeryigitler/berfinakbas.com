@@ -25,12 +25,14 @@ export type HubStatus =
 
 export type HubTaskState = "done" | "active" | "upcoming";
 export type HubRecordKind = "danisan" | "randevu";
+export type HubGrade = "A" | "B" | "C";
 
 export type HubRecord = Readonly<{
   channel: string;
   connections: readonly { name: string; relation: string }[];
   contactEmail: string;
   contactPhone: string;
+  grade: HubGrade;
   group: "bugun" | "buHafta" | "dahaEski";
   id: string;
   kind: HubRecordKind;
@@ -41,6 +43,7 @@ export type HubRecord = Readonly<{
   profileHref: string | null;
   readinessNotes: readonly string[];
   reference: string;
+  score: number;
   nextSteps: readonly {
     detail: string;
     due: string;
@@ -87,6 +90,7 @@ const syntheticBase: HubRecord = {
   connections: [],
   contactEmail: "ornek@eposta.dev",
   contactPhone: "0500 000 00 00",
+  grade: "C",
   group: "bugun",
   id: "test-bugun",
   kind: "randevu",
@@ -99,6 +103,7 @@ const syntheticBase: HubRecord = {
   rawStatus: "REQUESTED",
   readinessNotes: [],
   reference: "TEST-1",
+  score: 0,
   service: "Test hizmeti",
   stage: "talep",
   status: "yeni",

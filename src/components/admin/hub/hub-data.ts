@@ -1,4 +1,11 @@
-import type { HubRawStatus, HubRecord, HubStage, HubStatus, HubTaskState } from "./hub-model";
+import type {
+  HubGrade,
+  HubRawStatus,
+  HubRecord,
+  HubStage,
+  HubStatus,
+  HubTaskState,
+} from "./hub-model";
 
 export type { HubFinanceSummary } from "./hub-finance";
 
@@ -133,17 +140,33 @@ export function resolveGroup(activityAt: Date, now: Date, timeZone: string): Hub
   return "dahaEski";
 }
 
-function orderedChecks(checks: readonly Readonly<{ label: string; ok: boolean }>[]): string[] {
+type RecordCheck = Readonly<{ label: string; ok: boolean }>;
+
+function orderedChecks(checks: readonly RecordCheck[]): string[] {
   return [
     ...checks.filter((check) => !check.ok).map((check) => `${check.label} eksik`),
     ...checks.filter((check) => check.ok).map((check) => `${check.label} tamam`),
   ];
 }
 
-export function buildAppointmentRecordChecks(row: HubAppointmentRow): readonly string[] {
+/* A deterministic 0–100 readiness score plus an A/B/C grade, derived from the
+   same yes/no checks that feed the readiness notes. Mirrors the reference
+   "Lead Score" dial. */
+export function scoreChecks(checks: readonly RecordCheck[]): {
+  grade: HubGrade;
+  score: number;
+} {
+  if (checks.length === 0) return { grade: "C", score: 0 };
+  const okCount = checks.filter((check) => check.ok).length;
+  const score = Math.round((okCount / checks.length) * 100);
+  const grade: HubGrade = score >= 85 ? "A" : score >= 55 ? "B" : "C";
+  return { grade, score };
+}
+
+function appointmentChecks(row: HubAppointmentRow): readonly RecordCheck[] {
   const timingDecided =
     row.approvedAt !== null || row.status === "CONFIRMED" || row.status === "COMPLETED";
-  return orderedChecks([
+  return [
     { label: "Telefon bilgisi", ok: Boolean(row.client.phone) },
     { label: "E-posta bilgisi", ok: Boolean(row.client.email) },
     {
@@ -153,7 +176,11 @@ export function buildAppointmentRecordChecks(row: HubAppointmentRow): readonly s
     { label: "Talep notu", ok: Boolean(row.requestNote) },
     { label: "Saat kesinleşmesi", ok: timingDecided },
     { label: "Mükerrer kontrolü", ok: row.duplicateReviewStatus !== "PENDING" },
-  ]);
+  ];
+}
+
+export function buildAppointmentRecordChecks(row: HubAppointmentRow): readonly string[] {
+  return orderedChecks(appointmentChecks(row));
 }
 
 type NextStep = HubRecord["nextSteps"][number];
@@ -262,11 +289,15 @@ export function mapAppointmentToHubRecord(
   }
   connections.push({ name: row.practitioner.displayName, relation: "Uygulayıcı" });
 
+  const checks = appointmentChecks(row);
+  const { grade, score } = scoreChecks(checks);
+
   return {
     channel: channelLabels[row.source],
     connections,
     contactEmail: row.client.email ?? "—",
     contactPhone: row.client.phone ?? "—",
+    grade,
     group: resolveGroup(activityAt, now, timeZone),
     id: row.id,
     kind: "randevu",
@@ -277,8 +308,9 @@ export function mapAppointmentToHubRecord(
     plannedAt: formatPlannedStamp(row.startsAt, timeZone),
     profileHref: null,
     rawStatus: row.status,
-    readinessNotes: buildAppointmentRecordChecks(row),
+    readinessNotes: orderedChecks(checks),
     reference: row.publicReference,
+    score,
     service: row.serviceNameSnapshot,
     stage: stageByStatus[row.status],
     status: hubStatusByStatus[row.status],
@@ -321,8 +353,8 @@ const clientTypeLabels: Readonly<Record<HubClientRow["type"], string>> = {
   CHILD: "Çocuk",
 };
 
-export function buildClientRecordChecks(row: HubClientRow): readonly string[] {
-  return orderedChecks([
+function clientChecks(row: HubClientRow): readonly RecordCheck[] {
+  return [
     { label: "Telefon bilgisi", ok: Boolean(row.phone) },
     { label: "E-posta bilgisi", ok: Boolean(row.email) },
     {
@@ -330,7 +362,11 @@ export function buildClientRecordChecks(row: HubClientRow): readonly string[] {
       ok: row.type === "ADULT" || row.guardians.length > 0,
     },
     { label: "Planlanan randevu", ok: row.appointments.length > 0 },
-  ]);
+  ];
+}
+
+export function buildClientRecordChecks(row: HubClientRow): readonly string[] {
+  return orderedChecks(clientChecks(row));
 }
 
 function buildClientNextSteps(status: HubClientStatus): readonly NextStep[] {
@@ -381,6 +417,9 @@ export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: str
     { at: formatRelativeStamp(row.createdAt, now, timeZone), label: "Danışan kaydı oluşturuldu" },
   ].slice(0, 6);
 
+  const checks = clientChecks(row);
+  const { grade, score } = scoreChecks(checks);
+
   return {
     channel: clientTypeLabels[row.type],
     connections: row.guardians.map((entry) => ({
@@ -389,6 +428,7 @@ export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: str
     })),
     contactEmail: row.email ?? "—",
     contactPhone: row.phone ?? "—",
+    grade,
     group: resolveGroup(row.updatedAt, now, timeZone),
     id: row.id,
     kind: "danisan",
@@ -399,8 +439,9 @@ export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: str
     plannedAt: upcoming ? formatPlannedStamp(upcoming.startsAt, timeZone) : "—",
     profileHref: `/yonetim/danisan-profili?clientId=${encodeURIComponent(row.id)}`,
     rawStatus: null,
-    readinessNotes: buildClientRecordChecks(row),
+    readinessNotes: orderedChecks(checks),
     reference: "",
+    score,
     service: `${clientTypeLabels[row.type]} danışan kaydı`,
     stage: "talep",
     status: hubStatusByClientStatus[row.status],

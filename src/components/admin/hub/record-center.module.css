@@ -8,15 +8,36 @@
   gap: 12px;
 }
 
+.tabRow {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
 .sectionTabs {
   display: flex;
   min-width: 0;
+  flex: 0 1 auto;
   flex-wrap: wrap;
   gap: 7px;
   border: 1px solid var(--admin-line);
   border-radius: 16px;
   background: var(--admin-panel);
   padding: 8px;
+  box-shadow: 0 12px 28px rgb(32 28 25 / 5%);
+}
+
+.toolbar {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  margin-left: auto;
+  border: 1px solid var(--admin-line);
+  border-radius: 16px;
+  background: var(--admin-panel);
+  padding: 7px 9px;
   box-shadow: 0 12px 28px rgb(32 28 25 / 5%);
 }
 
@@ -93,20 +114,50 @@
 
 .checkList {
   display: grid;
-  gap: 8px;
+  gap: 7px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .checkList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   border: 1px solid var(--admin-line);
   border-radius: 11px;
   background: var(--admin-panel-soft);
-  padding: 9px 11px;
+  padding: 8px 11px;
   color: var(--admin-muted);
-  font-size: 0.7rem;
-  line-height: 1.45;
+  font-size: 0.68rem;
+  font-weight: 620;
+  line-height: 1.4;
+}
+
+.checkList li::before {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(176 65 54 / 14%);
+  color: #9b4337;
+  font-size: 0.62rem;
+  font-weight: 800;
+  content: "!";
+}
+
+.checkList li[data-ok="true"] {
+  border-color: rgb(18 137 123 / 18%);
+  background: rgb(18 137 123 / 7%);
+  color: var(--admin-ink);
+}
+
+.checkList li[data-ok="true"]::before {
+  background: var(--admin-teal, #12897b);
+  color: #fff;
+  content: "✓";
 }
 
 :global([data-admin-refresh="shell"][data-admin-focus="true"]) .body[data-list="true"] {
