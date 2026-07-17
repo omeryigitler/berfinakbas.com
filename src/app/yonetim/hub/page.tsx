@@ -48,7 +48,7 @@ export default async function AdminHubPage() {
     financeAggregateRows,
   ] = await Promise.all([
     database.appointment.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: {
         approvedAt: true,
         client: {
@@ -88,7 +88,7 @@ export default async function AdminHubPage() {
             appointments: {
               orderBy: { startsAt: "asc" },
               select: { serviceNameSnapshot: true, startsAt: true, status: true },
-              take: 3,
+              take: 1,
               where: {
                 startsAt: { gt: now },
                 status: { in: [...upcomingClientStatuses] },
