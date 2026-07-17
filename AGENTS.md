@@ -12,7 +12,7 @@ Her çalışma oturumunun başında:
 2. `git fetch --all --prune` ile uzak dalları güncelle.
 3. GitHub’daki açık Draft PR’ları kontrol et. Tam olarak bir Draft PR varsa onun dalına geç ve `git pull --ff-only` uygula.
 4. Birden fazla Draft PR varsa görev seçimini tahmin etme. Draft PR yoksa güncel `main` üzerinden açıkça adlandırılmış `codex/<görev>` dalı oluştur.
-5. Draft PR açıklamasını, `docs/HANDOFF.md`, `docs/MVP_PLAN.md` ve `docs/DECISIONS.md` dosyalarını okuyarak kaldığın bağlamı kur.
+5. Draft PR açıklamasını, `docs/HANDOFF.md`, `docs/MVP_PLAN.md`, `docs/DECISIONS.md` ve aktif tasarım çalışmasında `docs/ADMIN_REDESIGN_PLAN.md` dosyasını okuyarak kaldığın bağlamı kur.
 
 Her çalışma oturumunun sonunda:
 
@@ -35,8 +35,9 @@ GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda 
 
 - Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren, review edilebilir milestone PR’larında toplanır; ilişkisiz kapsamlar aynı PR’a doldurulmaz.
 - PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını, PR #22 admin finans operasyonunu, PR #23 transactional outbox çekirdeğini ve PR #24 read-only entegrasyon/outbox sağlık panelini teslim etti.
-- PR #99 sonrası aktif durum: production sertleştirmeleri, consent/veli doğrulama kapıları, session-credit bütünlüğü, sağlık kontrolü ve güvenlik başlıkları canlıdır. Sıradaki işler Issue #19 roadmap, `docs/HANDOFF.md` ve açık ürün kararlarına göre review edilebilir milestone’lara bölünür. Sağlayıcı, mesaj şablonu, alıcı matrisi, worker hosting veya production politikası netleşmeden gerçek dış gönderim açılmaz.
-- Öncelikli pending başlıklar: kalıcı rate limit/bot koruması, mükerrer public talep incelemesi, bildirim/Calendar provider worker, mesaj şablonu ve alıcı matrisi, backup restore tatbikatı, Google OAuth/MFA doğrulaması ve canlı yayın hukuki kapılarıdır.
+- PR #106 sonrası aktif production durumu: public site cilası ve `/yonetim/hub` kayıt merkezi canlıdır; BotID Basic ve açık mükerrer danışan inceleme akışı da production kapsamındadır.
+- Aktif yönetim tasarımı çalışması Draft PR #107 ve `design/unified-admin-panel` dalıdır. Bu çalışma tamamlanana kadar başka bir admin tasarım dalı açılmaz.
+- Öncelikli ürün/yayın başlıkları: Vercel Firewall rate limit kuralı, bildirim/Calendar provider worker, mesaj şablonu ve alıcı matrisi, backup restore tatbikatı, Google OAuth/MFA doğrulaması ve canlı yayın hukuki kapılarıdır.
 - Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
 - İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tamamlandıktan sonra sonuç tek kez okunur.
 - Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı merge onayı istenmez.
@@ -122,115 +123,51 @@ Her teslimde şunları belirt:
 
 > Bu değişiklik randevu, ödeme, seans hakkı, onay veya danışan verisinde karışıklığa neden olabilir mi?
 
-## Yönetim Paneli "Hub" Yeniden Tasarımı — Uygulama Planı
+## Birleşik Yönetim Paneli — Bağlayıcı Tasarım Kararı
 
-Bu bölüm, yönetim panelinin Dynamics 365 "Sales Hub / Sales Accelerator"
-tarzında kademeli (progressive drill-in) bir dashboard'a dönüştürülmesinin
-bağlayıcı planıdır. Kota/oturum kesilirse çalışmaya buradan devam edilir.
-Çalışma dalı: `claude/hero-woman-animation-tzl5zg`.
+Yönetim paneli artık iki ayrı görsel ürün olarak geliştirilmez. `/yonetim` çalışma alanı ile `/yonetim/hub` kayıt merkezi aynı tasarım sistemi, aynı terminoloji ve aynı etkileşim kurallarını kullanır.
 
-### Hedef deneyim — 4 kademe
+### Bilgi mimarisi
 
-1. **Kademe 1 · Menü rayı (sol):** Gruplu dikey menü (Çalışma Alanım,
-   Danışanlar, Randevular, Finans, Sistem). Grup başlığına tıklanınca alt
-   öğeleri akordeon gibi açılır; öğe seçilince Kademe 2 açılır.
-2. **Kademe 2 · Liste paneli (~300px):** Seçilen bölümün kayıt listesi.
-   Zaman gruplu ("Bugün", "Bu hafta", "Daha eski"), her satırda monogram
-   avatar + isim + son işlem + durum çipi + mini skor. Seçili satır lime
-   vurgulu.
-3. **Kademe 3 · Kayıt paneli:** Satır tıklanınca sağa açılır. Şeftali
-   degrade başlık (isim, hizmet, durum çipleri), aşama şeridi
-   (Talep → Kontrol → Onay → Görüşme; aktif dilim teal), Özet/İletişim
-   sekmeleri.
-4. **Kademe 4 · Geniş çalışma alanı:** "Sıradaki adımlar" sıralı görev
-   kartları (lime), kesikli teal **hazırlık skoru halkası** (referanstaki
-   Lead Score 90 karşılığı), "Bağlantılı kayıtlar" ve zaman çizelgesi.
-   "Genişlet" düğmesi ray + liste panelini daraltıp çalışma alanını tam
-   genişliğe çıkarır (rahat çalışma modu).
+- `/yonetim`: operasyon özeti, hızlı işlemler ve deploy gerektirmeyen hizmet/iletişim ayarları.
+- `/yonetim/hub`: kayıt seçme, inceleme ve izin verilen durum geçişleri için kademeli kayıt merkezi.
+- `/yonetim/danisanlar`: danışan arama, filtre ve kayıt listesi.
+- `/yonetim/danisan-profili?clientId=...`: danışan, veli, consent, randevu ve finans bağlamının ana profil yüzeyi.
+- `/yonetim/randevular`: takvim/liste ve ağır randevu işlemleri.
+- `/yonetim/musaitlik`: haftalık kurallar ve istisnalar.
+- `/yonetim/odemeler`: plan, taksit, ödeme ve hareket yönetimi.
+- `/yonetim/saglik`: read-only entegrasyon ve sistem sağlığı.
 
-Geri yürüme: her panelin başındaki ‹ düğmesi bir kademe kapatır. Faz 1'de
-panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
+Menü öğesi yalnızca ilgili `*:read` yetkisi varsa görünür. Yazma butonunun görünmesi yeterli değildir; sunucu her istekte `*:manage`, oturum, origin ve kapsam doğrulamasını tekrar yapar.
 
-### Görsel dil (referansla birebir)
+### Tek görsel sistem
 
-- Zemin: açık sıcak gri `#e9e7e2`; paneller beyaz/krem `#fbfaf8`,
-  18–26px radius, yumuşak geniş gölgeler.
-- Vurgular: **lime** `#dfec83` (seçili öğe, görev kartı), **teal**
-  `#12897b` (aşama, skor, olumlu durum), **şeftali degrade**
-  (`#fbe3d2 → #f6d0c0`, kayıt başlığı), mürekkep `#201c19`.
-- Pill butonlar: beyaz zemin, 1px `#e3ded7` kenar, 999px radius; kayıt
-  üstünde yatay eylem şeridi (Kaydet, Yeni, Yenile, PDF, Süreç…).
-- Font: Inter benzeri geometrik sans yığını (`"Inter", "SF Pro Text",
-"Segoe UI", system-ui, sans-serif`) — yalnızca hub kapsamında
-  (`--hub-font`); kamu sitesinin serif kimliğine dokunulmaz. Gerçek Inter
-  dosyası Faz 5'te `next/font` ile eklenebilir.
-- **Gerçek fotoğraf yok:** üyelerden görsel alınmaz. Avatar yerine
-  `HubAvatar` monogramı kullanılır: isim baş harfleri + isimden
-  deterministik türetilen sıcak pastel degrade zemin + durum halkası.
+- Zemin `#e9e7e2`, panel `#fbfaf8`, yumuşak panel `#f4f2ec`, çizgi `#e3ded7`, mürekkep `#201c19`.
+- Seçili kayıt ve sıradaki işlem için lime `#dfec83`; olumlu durum ve ana işlem için teal `#12897b`; kayıt/başlık vurgusu için şeftali `#fbe3d2 → #f6d0c0` kullanılır.
+- Admin fontu self-host Inter Variable’dır. Public sitenin serif kimliği admin veri yüzeylerine taşınmaz.
+- Unicode işaretler yalnızca geçici navigasyon ikonu olabilir; yeni ortak bileşenlerde erişilebilir, tutarlı SVG ikon tercih edilir.
+- Gerçek danışan/veli fotoğrafı gösterilmez. Avatarlar yalnızca deterministik monogramdır.
+- Masaüstünde sol navigasyon + çalışma alanı, tablette sarılan navigasyon, mobilde tek sütun uygulanır. `prefers-reduced-motion` korunur.
 
-### Dosya planı
+### Etkileşim kuralları
 
-- `src/components/admin/hub/hub.module.css` — tüm tasarım tokenları ve
-  panel/bileşen stilleri (tek dosya).
-- `src/components/admin/hub/hub-model.ts` — tipler, sentetik örnek veri
-  (gerçek kişi verisi yasak), monogram/grup yardımcıları (saf, test
-  edilebilir).
-- `src/components/admin/hub/hub-model.test.ts` — yardımcıların unit
-  testleri.
-- `src/components/admin/hub/hub-avatar.tsx` — monogram avatar.
-- `src/components/admin/hub/dashboard-hub.tsx` — 4 kademeli shell
-  (client component).
-- `src/app/yonetim/hub/page.tsx` — `requirePermission` arkasında önizleme
-  rotası; mevcut sayfalara dokunmaz.
+- Browser `alert`, `confirm` ve native belirsiz popup kullanılmaz. Kritik işlem inline confirmation veya erişilebilir modal ile onaylanır.
+- Filtre, seçili kayıt, açık modal ve sekme yenilenebilir/paylaşılabilir olması gerekiyorsa URL query’de yaşar.
+- Tarih alanlarında ortak custom takvim; seçenek alanlarında ortak custom dropdown kullanılır. Uzun seçenek listeleri kaydırılabilir olmalıdır.
+- Üst arama mevcut sözleşmede danışan adı, telefon ve e-postaya gider. Gerçek çoklu-entity arama API’si yazılmadan “global arama” iddiası gösterilmez.
+- Dashboard yalnızca veritabanından hesaplanan gerçek metrikleri gösterir. Sahte yüzde trendi, başarı oranı, doğrulanmamış danışan sayısı veya tahminî finans değeri yasaktır.
+- Hub’daki sayı klinik başarı/öncelik skoru değildir. Gösterilecekse adı **Kayıt tamlığı** olmalı ve hangi alanların eksik olduğu açıkça listelenmelidir; ürün kararı olmadan ağırlıklar iş kuralı gibi sunulmaz.
+- Liste yüzeyi minimum veri gösterir. İletişim, consent ve finans ayrıntısı yalnızca izinli kayıt detayında açılır.
 
-### Fazlar
+### Bileşen standardı
 
-- **Faz 0 (tamam):** Bu plan.
-- **Faz 1 (tamam):** Hub kabuğu + sentetik veri + `/yonetim/hub` önizlemesi.
-- **Faz 2 (tamam):** `/yonetim/hub` gerçek verilerle besleniyor: sayfa
-  `appointments:read` yetkisiyle son 30 talebi (client, guardian,
-  practitioner, statusLogs dahil) çeker; `hub-data.ts` saf eşleyicisi durum →
-  aşama/çip, zaman grubu, hazırlık skoru (ağırlıklar kodda), sıradaki adımlar
-  ve zaman çizelgesini üretir; nav rozetleri açık taleplerden hesaplanır.
-- **Faz 3 (tamam):** Kayıt eylemleri canlı: `hub-actions.ts` durum başına
-  yalnızca domain durum makinesinin (appointment-status.ts) izin verdiği
-  geçişleri sunar ve mevcut PATCH `/api/admin/appointments/:id/status`
-  sözleşmesini (reasonCode/toStatus) aynen kullanır; eylemler inline
-  onaylıdır (Eminim/Vazgeç), başarıda `router.refresh()`; eylemler yalnızca
-  `appointments:manage` yetkisiyle görünür; kayıt seçimi `?kayit=` URL
-  parametresinde yaşar (paylaşılabilir/yenilemeye dayanıklı).
-- **Faz 4 (tamam):** Hub çok bölümlü: Danışanlar hub'ın liste → kayıt
-  akışına taşındı (`?bolum=danisanlar`, `clients:read` yetkisiyle;
-  profil tamlık skoru, veli bağlantıları, randevu zaman çizelgesi ve
-  "Profili aç" köprüsüyle); menü rayı gerçek navigasyona bağlandı
-  (Müsaitlik, Randevu operasyonu, Ödemeler, Sağlık mevcut sayfalara ↗
-  linkler); klasik `AdminShell` menüsüne "Hub görünümü" girişi eklendi.
-- **Faz 5 (tamam):** Cila teslim edildi — gerçek Inter Variable fontu
-  (`@fontsource-variable/inter`, self-host, latin-ext ile Türkçe tam);
-  klavye kısayolları (↑/↓ veya j/k liste gezinme, Esc kapat/onay iptal,
-  F genişlet, 1/2 bölüm değiştirme; girdi alanlarında devre dışı);
-  kayıt değişiminde yumuşak giriş animasyonu (`prefers-reduced-motion`
-  korumalı) ve `:focus-visible` halkaları; dar ekranda (≤940px) ray
-  yatay şeride dönüşür, açık grubun alt öğeleri chip olarak sarar,
-  liste yüksekliği sınırlanır ve paneller üst üste yığılır.
-- **Ek kapsam (tamam):** Müsaitlik ve Ödemeler hub içi salt okunur
-  içerik panelleri oldu (`?bolum=musaitlik` `services:read` ile,
-  `?bolum=odemeler` `finance:read` ile; kısayollar 3/4): haftalık
-  müsaitlik önizlemesi (Pazartesi-öncelikli, pasif kurallar üstü çizili)
-  ve ay içi ödeme/plan borcu toplamları + son kayıtlar (BigInt tutarlar
-  sunucuda `buildFinanceSummary` ile metinleştirilir). Düzenleme,
-  panellerdeki ↗ köprülerle ilgili tam sayfalarda yapılır.
-- **Karar — `AdminShell` emekliliği:** Yapılmadı ve bilinçli olarak
-  ertelendi. Ağır düzenleme akışları (danışan formları, müsaitlik
-  kuralları, finans işlemleri) klasik sayfalarda yaşamaya devam eder;
-  Hub gezinme/inceleme/durum-geçişi yüzeyidir ve iki kabuk birbirine
-  bağlıdır. Emeklilik ancak bu akışlar hub'a taşınırsa yeniden
-  değerlendirilir.
+- Navigasyon, üst bar, profil pili, durum çipi, filtre çubuğu, kart, tablo/liste satırı, empty state, hata bandı, toast, modal, custom dropdown ve custom takvim tek ortak tasarım dilinde olmalıdır.
+- Aynı işlev için yeni bir lokal CSS varyantı eklemeden önce mevcut ortak bileşen genişletilir.
+- `admin-dashboard-refresh.module.css` klasik sayfaların Hub tokenlarına geçiş katmanıdır. Yeni kalıcı özellikler mümkün olduğunda ortak token/bileşene taşınmalı; yeni “polish/fix” override dosyası açılmamalıdır.
 
-### Faz 1 kabul ölçütleri
+### Geçiş durumu — PR #107
 
-- `/yonetim/hub` yetkili kullanıcıyla açılır; menü → liste → kayıt →
-  çalışma alanı akışı çalışır; "Genişlet" modu ray+listeyi daraltır.
-- Görsel dil referans paletiyle eşleşir; hiçbir yerde gerçek kişi
-  fotoğrafı yoktur (yalnızca monogram avatar).
-- Mevcut yönetim sayfaları davranış değiştirmez; kalite kapıları yeşildir.
+- Ortak `AdminShell` menüsü çalışma alanı, kayıt merkezi, danışan, randevu, müsaitlik, ödeme ve sistem sağlığı terminolojisine geçirildi.
+- Klasik sayfaların sidebar, topbar, başlık, kart, liste, form ve responsive görünümü Hub tokenlarıyla birleştirildi.
+- Mevcut iş kuralları, API’ler, migration’lar ve veri modeli değiştirilmedi.
+- Sonraki adım: Preview’da tüm yönetim rotalarını yetkili hesapla dolaş; taşma, odak, modal, custom kontrol ve dar ekran regresyonlarını tek turda düzelt. Ardından `pnpm quality`, `pnpm build`, ilgili PostgreSQL kapıları ve tek production merge/deploy.
