@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import { DashboardHub } from "@/components/admin/hub/dashboard-hub";
+import "@/components/admin/hub/embedded-hub-cleanup.module.css";
 import {
   buildFinanceSummary,
   buildWeeklyAvailability,
