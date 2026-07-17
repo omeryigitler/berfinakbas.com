@@ -1,54 +1,55 @@
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 22px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .summaryGrid article,
 .panel,
 .practitionerCard {
-  border: 1px solid rgb(88 62 49 / 10%);
-  background: rgb(255 253 249 / 86%);
-  box-shadow: 0 14px 32px rgb(83 53 35 / 6%);
+  border: 1px solid var(--admin-line);
+  background: var(--admin-panel);
+  box-shadow: 0 14px 32px rgb(32 28 25 / 6%);
 }
 
 .summaryGrid article {
-  border-radius: 22px;
-  padding: 18px;
+  border-radius: 18px;
+  padding: 17px;
 }
 
 .summaryGrid span {
   display: block;
-  color: #45694f;
-  font-size: 0.66rem;
-  font-weight: 900;
+  color: var(--admin-teal);
+  font-size: 0.62rem;
+  font-weight: 780;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .summaryGrid strong {
   display: block;
-  margin-top: 10px;
-  color: #2f2622;
-  font-family: var(--serif);
-  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  margin-top: 9px;
+  color: var(--admin-ink);
+  font-family: inherit;
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  font-weight: 780;
   line-height: 1;
 }
 
 .summaryGrid small {
   display: block;
-  margin-top: 9px;
-  color: #77665c;
-  font-size: 0.72rem;
-  line-height: 1.55;
+  margin-top: 8px;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
 }
 
 .panel {
   display: grid;
-  gap: 18px;
-  border-radius: 28px;
-  padding: 22px;
+  gap: 16px;
+  border-radius: 20px;
+  padding: 20px;
 }
 
 .panelHeader {
@@ -60,46 +61,46 @@
 
 .panelHeader h2 {
   margin: 0;
-  color: #332824;
-  font-family: var(--serif);
-  font-size: clamp(1.45rem, 3vw, 2rem);
-  font-weight: 650;
-  letter-spacing: -0.04em;
+  color: var(--admin-ink);
+  font-family: inherit;
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-weight: 780;
+  letter-spacing: -0.025em;
 }
 
 .panelHeader p {
   max-width: 48rem;
-  margin: 7px 0 0;
-  color: #77665c;
-  font-size: 0.78rem;
-  line-height: 1.7;
+  margin: 6px 0 0;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+  line-height: 1.65;
 }
 
 .panelHeader > span {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 34px;
   align-items: center;
-  border: 1px solid rgb(67 98 75 / 12%);
+  border: 1px solid rgb(18 137 123 / 18%);
   border-radius: 999px;
-  background: rgb(67 98 75 / 7%);
-  padding: 8px 12px;
-  color: #45694f;
-  font-size: 0.7rem;
-  font-weight: 850;
+  background: var(--admin-teal-soft);
+  padding: 7px 11px;
+  color: var(--admin-teal);
+  font-size: 0.68rem;
+  font-weight: 780;
   white-space: nowrap;
 }
 
 .practitionerGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .practitionerCard {
   display: grid;
-  gap: 14px;
-  border-radius: 24px;
-  padding: 18px;
+  gap: 13px;
+  border-radius: 18px;
+  padding: 17px;
 }
 
 .practitionerCard header {
@@ -111,31 +112,32 @@
 
 .practitionerCard header div {
   display: grid;
-  gap: 5px;
+  gap: 4px;
 }
 
 .practitionerCard header strong {
-  color: #2f2622;
-  font-size: 0.96rem;
-  font-weight: 900;
+  color: var(--admin-ink);
+  font-size: 0.92rem;
+  font-weight: 780;
 }
 
 .practitionerCard header span {
-  color: #87766b;
-  font-size: 0.7rem;
+  color: var(--admin-muted);
+  font-size: 0.68rem;
 }
 
 .practitionerCard header em {
   display: inline-flex;
-  min-height: 30px;
+  min-height: 29px;
   align-items: center;
+  border: 1px solid rgb(18 137 123 / 16%);
   border-radius: 999px;
-  background: rgb(67 98 75 / 8%);
-  padding: 7px 10px;
-  color: #45694f;
-  font-size: 0.66rem;
+  background: var(--admin-teal-soft);
+  padding: 6px 9px;
+  color: var(--admin-teal);
+  font-size: 0.64rem;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 780;
 }
 
 .metricGrid {
@@ -146,40 +148,41 @@
 }
 
 .metricGrid div {
-  border-radius: 16px;
-  background: rgb(255 246 238 / 78%);
-  padding: 11px;
+  border: 1px solid var(--admin-line);
+  border-radius: 13px;
+  background: var(--admin-panel-soft);
+  padding: 10px;
 }
 
 .metricGrid dt {
-  color: #8a786e;
-  font-size: 0.6rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  color: var(--admin-muted);
+  font-size: 0.58rem;
+  font-weight: 780;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .metricGrid dd {
   margin: 5px 0 0;
-  color: #3f312c;
-  font-family: var(--serif);
-  font-size: 1.1rem;
-  font-weight: 650;
+  color: var(--admin-ink);
+  font-family: inherit;
+  font-size: 1.04rem;
+  font-weight: 780;
 }
 
 .exceptionList {
   display: grid;
   gap: 8px;
-  border: 1px solid rgb(88 62 49 / 8%);
-  border-radius: 18px;
-  background: rgb(255 250 244 / 62%);
-  padding: 12px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-panel-soft);
+  padding: 11px;
 }
 
 .exceptionList > span,
 .emptyState span {
-  color: #87766b;
-  font-size: 0.72rem;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
 }
 
 .exceptionRow {
@@ -187,9 +190,10 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  border-radius: 15px;
-  background: rgb(255 253 249 / 90%);
-  padding: 11px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
 }
 
 .exceptionRow div {
@@ -198,36 +202,36 @@
 }
 
 .exceptionRow strong {
-  color: #3f312c;
-  font-size: 0.76rem;
-  font-weight: 900;
+  color: var(--admin-ink);
+  font-size: 0.74rem;
+  font-weight: 780;
 }
 
 .exceptionRow span,
 .exceptionRow small {
-  color: #6f8070;
-  font-size: 0.67rem;
+  color: var(--admin-muted);
+  font-size: 0.65rem;
   line-height: 1.5;
 }
 
 .exceptionRow button {
   min-height: 32px;
-  border: 1px solid rgb(185 74 54 / 12%);
+  border: 1px solid rgb(176 65 54 / 18%);
   border-radius: 999px;
-  background: rgb(185 74 54 / 8%);
+  background: rgb(176 65 54 / 8%);
   padding: 7px 10px;
   color: #9b4337;
   font: inherit;
-  font-size: 0.65rem;
-  font-weight: 900;
+  font-size: 0.64rem;
+  font-weight: 780;
   cursor: pointer;
 }
 
 .editPanel {
   overflow: hidden;
-  border: 1px solid rgb(217 111 77 / 14%);
-  border-radius: 18px;
-  background: rgb(255 247 239 / 70%);
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: #fff;
 }
 
 .editPanel summary {
@@ -235,10 +239,10 @@
   min-height: 46px;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  color: var(--coral-dark);
-  font-size: 0.74rem;
-  font-weight: 900;
+  padding: 11px 13px;
+  color: var(--admin-teal);
+  font-size: 0.72rem;
+  font-weight: 780;
   cursor: pointer;
   list-style: none;
 }
@@ -252,8 +256,8 @@
   width: 27px;
   height: 27px;
   place-items: center;
-  border-radius: 999px;
-  background: rgb(217 111 77 / 10%);
+  border-radius: 9px;
+  background: var(--admin-teal-soft);
   content: "+";
 }
 
@@ -263,15 +267,15 @@
 
 .editPanel form {
   display: grid;
-  gap: 14px;
-  border-top: 1px solid rgb(88 62 49 / 8%);
-  padding: 14px;
+  gap: 13px;
+  border-top: 1px solid var(--admin-line);
+  padding: 13px;
 }
 
 .formGrid,
 .formGridTwo {
   display: grid;
-  gap: 12px;
+  gap: 11px;
 }
 
 .formGrid {
@@ -286,33 +290,33 @@
 .formGridTwo label {
   display: grid;
   gap: 7px;
-  color: #665148;
-  font-size: 0.7rem;
-  font-weight: 850;
+  color: var(--admin-ink);
+  font-size: 0.68rem;
+  font-weight: 720;
 }
 
 .formGrid input,
 .formGridTwo input {
   width: 100%;
   min-height: 42px;
-  border: 1px solid rgb(88 62 49 / 14%);
-  border-radius: 14px;
-  background: #fffdf9;
+  border: 1px solid var(--admin-line);
+  border-radius: 11px;
+  background: #fff;
   padding: 10px 12px;
-  color: var(--ink);
+  color: var(--admin-ink);
   font: inherit;
   outline: none;
 }
 
 .formGrid input:focus,
 .formGridTwo input:focus {
-  border-color: rgb(217 111 77 / 44%);
-  box-shadow: 0 0 0 4px rgb(217 111 77 / 10%);
+  border-color: var(--admin-teal);
+  box-shadow: 0 0 0 3px rgb(18 137 123 / 12%);
 }
 
 .formGrid small {
-  color: #88776d;
-  font-size: 0.64rem;
+  color: var(--admin-muted);
+  font-size: 0.62rem;
   line-height: 1.45;
 }
 
@@ -328,9 +332,9 @@
 .radioGroup legend {
   width: 100%;
   margin-bottom: 2px;
-  color: #665148;
-  font-size: 0.68rem;
-  font-weight: 900;
+  color: var(--admin-ink);
+  font-size: 0.66rem;
+  font-weight: 780;
 }
 
 .radioGroup label {
@@ -347,49 +351,49 @@
 
 .radioGroup span {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 35px;
   align-items: center;
-  border: 1px solid rgb(88 62 49 / 10%);
+  border: 1px solid var(--admin-line);
   border-radius: 999px;
-  background: rgb(255 253 249 / 84%);
-  padding: 8px 12px;
-  color: #665148;
-  font-size: 0.7rem;
-  font-weight: 820;
+  background: #fff;
+  padding: 7px 11px;
+  color: var(--admin-muted);
+  font-size: 0.68rem;
+  font-weight: 720;
   cursor: pointer;
 }
 
 .radioGroup input:checked + span {
-  border-color: rgb(217 111 77 / 26%);
-  background: rgb(217 111 77 / 12%);
-  color: var(--coral-dark);
+  border-color: rgb(18 137 123 / 24%);
+  background: var(--admin-teal-soft);
+  color: var(--admin-teal);
 }
 
 .editPanel form > button {
   width: fit-content;
-  min-height: 42px;
-  border: 1px solid rgb(217 111 77 / 20%);
+  min-height: 40px;
+  border: 1px solid var(--admin-teal);
   border-radius: 999px;
-  background: var(--coral-dark);
-  padding: 10px 16px;
-  color: #fffaf4;
+  background: var(--admin-teal);
+  padding: 9px 15px;
+  color: #fff;
   font: inherit;
-  font-size: 0.72rem;
-  font-weight: 900;
+  font-size: 0.7rem;
+  font-weight: 780;
   cursor: pointer;
 }
 
 .emptyState {
   display: grid;
   gap: 7px;
-  border: 1px dashed rgb(88 62 49 / 16%);
-  border-radius: 20px;
-  background: rgb(255 250 244 / 72%);
-  padding: 18px;
+  border: 1px dashed var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-panel-soft);
+  padding: 17px;
 }
 
 .emptyState strong {
-  color: #3f312c;
+  color: var(--admin-ink);
 }
 
 @media (max-width: 1180px) {
