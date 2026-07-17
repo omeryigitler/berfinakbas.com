@@ -1,5 +1,7 @@
 import type { HubRawStatus, HubRecord, HubStage, HubStatus, HubTaskState } from "./hub-model";
 
+export type { HubFinanceSummary } from "./hub-finance";
+
 /* Pure mapping layer between real appointment/client rows and the Hub view
    model. No Prisma import keeps these functions unit-testable. */
 
@@ -164,12 +166,7 @@ export function buildNextSteps(status: HubAppointmentStatus): readonly NextStep[
   switch (status) {
     case "REQUESTED":
       return [
-        step(
-          "İlk inceleme",
-          "Talebi ve iletişim bilgilerini gözden geçir.",
-          "En kısa sürede",
-          "active",
-        ),
+        step("İlk inceleme", "Talebi ve iletişim bilgilerini gözden geçir.", "En kısa sürede", "active"),
         step(
           "Uygunluk kontrolü",
           "Takvim ve çalışma kurallarıyla karşılaştır.",
@@ -199,12 +196,7 @@ export function buildNextSteps(status: HubAppointmentStatus): readonly NextStep[
       ];
     case "CONFIRMED":
       return [
-        step(
-          "Hatırlatma",
-          "Görüşme öncesi hatırlatmayı planla.",
-          "Görüşmeden 1 gün önce",
-          "active",
-        ),
+        step("Hatırlatma", "Görüşme öncesi hatırlatmayı planla.", "Görüşmeden 1 gün önce", "active"),
         step("Görüşme hazırlığı", "Görüşme notu şablonunu hazırla.", "Görüşme günü", "upcoming"),
       ];
     case "COMPLETED":
@@ -241,7 +233,6 @@ export function mapAppointmentToHubRecord(
     })),
     { at: formatRelativeStamp(row.createdAt, now, timeZone), label: "Talep kaydı oluşturuldu" },
   ].slice(0, 6);
-
   const connections: { name: string; relation: string }[] = [];
   if (row.guardian) {
     connections.push({
@@ -400,7 +391,6 @@ const weekdayLabels = [
   "Cuma",
   "Cumartesi",
 ] as const;
-
 const weekdayOrder = [1, 2, 3, 4, 5, 6, 0] as const;
 
 export function buildWeeklyAvailability(
