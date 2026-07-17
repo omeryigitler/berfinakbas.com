@@ -68,7 +68,7 @@ Aktif Draft PR: #107
 
 ## Otomatik kalite durumu
 
-Quality #451 dâhil son kod paketlerinde:
+Final Quality #452:
 
 - Prisma validate: başarılı
 - ESLint: başarılı
