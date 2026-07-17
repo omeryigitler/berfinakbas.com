@@ -4,7 +4,7 @@
 
 :global([data-admin-refresh="shell"] .finance-dashboard) {
   display: grid;
-  gap: 28px;
+  gap: 18px;
 }
 
 :global([data-admin-refresh="shell"] .finance-toolbar) {
@@ -12,78 +12,80 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-top: 24px;
-  border: 1px solid rgb(88 62 49 / 10%);
-  border-radius: 22px;
-  background: linear-gradient(135deg, rgb(255 253 249 / 90%), rgb(255 241 231 / 70%));
-  padding: 14px;
+  gap: 12px;
+  margin-top: 14px;
+  border: 1px solid var(--admin-line);
+  border-radius: 16px;
+  background: var(--admin-panel-soft);
+  padding: 12px;
 }
 
 :global([data-admin-refresh="shell"] .finance-toolbar label) {
   display: grid;
   min-width: min(260px, 100%);
   gap: 7px;
-  color: #6d5a50;
-  font-size: 0.7rem;
-  font-weight: 800;
+  color: var(--admin-ink);
+  font-size: 0.68rem;
+  font-weight: 720;
 }
 
 :global([data-admin-refresh="shell"] .finance-toolbar > span),
 :global([data-admin-refresh="shell"] .finance-toolbar > strong) {
   display: inline-flex;
-  min-height: 38px;
+  min-height: 36px;
   align-items: center;
-  border: 1px solid rgb(88 62 49 / 12%);
+  border: 1px solid var(--admin-line);
   border-radius: 999px;
-  background: #fffaf4;
-  padding: 8px 13px;
-  color: #6b594f;
-  font-size: 0.72rem;
+  background: #fff;
+  padding: 7px 12px;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
 }
 
 :global([data-admin-refresh="shell"] .finance-toolbar > strong) {
-  color: #3f7058;
-  font-weight: 850;
+  border-color: rgb(18 137 123 / 18%);
+  background: var(--admin-teal-soft);
+  color: var(--admin-teal);
+  font-weight: 780;
 }
 
 :global([data-admin-refresh="shell"] .finance-overview-actions) {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
 }
 
 :global([data-admin-refresh="shell"] .finance-overview-note) {
-  margin: 16px 0 0;
-  border-top: 1px solid rgb(88 62 49 / 9%);
-  padding-top: 14px;
-  color: var(--muted);
-  font-size: 0.72rem;
+  margin: 14px 0 0;
+  border-top: 1px solid var(--admin-line);
+  padding-top: 12px;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-grid) {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;
   align-items: start;
 }
 
 :global(
-  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1)
-) {
+    [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1)
+  ) {
   order: 3;
 }
 
 :global(
-  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2)
-) {
+    [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2)
+  ) {
   order: 1;
 }
 
 :global(
-  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3)
-) {
+    [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(3)
+  ) {
   order: 2;
 }
 
@@ -94,40 +96,38 @@
 :global([data-admin-refresh="shell"] .finance-operation-card) {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgb(88 62 49 / 12%);
-  border-radius: 26px;
-  background:
-    radial-gradient(circle at 100% 0%, rgb(243 195 166 / 24%), transparent 10rem),
-    rgb(255 253 249 / 88%);
-  box-shadow: 0 18px 38px rgb(83 53 35 / 7%);
+  border: 1px solid var(--admin-line);
+  border-radius: 17px;
+  background: var(--admin-panel);
+  box-shadow: 0 14px 32px rgb(32 28 25 / 6%);
   transition:
-    border-color 170ms ease,
-    box-shadow 170ms ease,
-    transform 170ms ease;
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card:hover) {
-  transform: translateY(-2px);
-  border-color: rgb(217 111 77 / 18%);
-  box-shadow: 0 24px 48px rgb(83 53 35 / 10%);
+  transform: translateY(-1px);
+  border-color: rgb(18 137 123 / 24%);
+  box-shadow: 0 18px 38px rgb(32 28 25 / 8%);
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card[open]) {
-  border-color: rgb(217 111 77 / 24%);
-  box-shadow: 0 26px 56px rgb(83 53 35 / 12%);
+  border-color: rgb(18 137 123 / 30%);
+  box-shadow: 0 20px 44px rgb(32 28 25 / 9%);
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card summary) {
   display: flex;
-  min-height: 70px;
+  min-height: 64px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 22px 26px;
-  color: #433329;
-  font-family: var(--serif);
-  font-size: 1.22rem;
-  font-weight: 650;
+  gap: 14px;
+  padding: 18px 20px;
+  color: var(--admin-ink);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 780;
   cursor: pointer;
   list-style: none;
 }
@@ -138,15 +138,15 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-card summary::after) {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 999px;
-  background: rgb(217 111 77 / 12%);
-  color: var(--coral-dark);
+  border-radius: 10px;
+  background: var(--admin-teal-soft);
+  color: var(--admin-teal);
   font-family: sans-serif;
-  font-size: 1rem;
+  font-size: 0.95rem;
   content: "+";
 }
 
@@ -156,54 +156,54 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-card form) {
   display: grid;
+  gap: 16px;
+  border-top: 1px solid var(--admin-line);
+  padding: 0 20px 20px;
+}
+
+:global(
+    [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2) form
+  ) {
   gap: 18px;
-  border-top: 1px solid rgb(88 62 49 / 9%);
-  padding: 0 28px 28px;
 }
 
 :global(
-  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(2) form
-) {
-  gap: 20px;
-}
-
-:global(
-  [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form
-) {
+    [data-admin-refresh="shell"] .finance-operation-grid > .finance-operation-card:nth-of-type(1) form
+  ) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: end;
 }
 
 :global(
-  [data-admin-refresh="shell"]
-    .finance-operation-grid
-    > .finance-operation-card:nth-of-type(1)
-    form
-    label:last-of-type
-) {
+    [data-admin-refresh="shell"]
+      .finance-operation-grid
+      > .finance-operation-card:nth-of-type(1)
+      form
+      label:last-of-type
+  ) {
   grid-column: span 3;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card label),
 :global([data-admin-refresh="shell"] .finance-installment-editor legend) {
   display: grid;
-  gap: 8px;
-  color: #665148;
-  font-size: 0.74rem;
-  font-weight: 800;
+  gap: 7px;
+  color: var(--admin-ink);
+  font-size: 0.7rem;
+  font-weight: 720;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card input),
 :global([data-admin-refresh="shell"] .finance-operation-card textarea) {
   width: 100%;
-  min-height: 48px;
-  border: 1px solid rgb(88 62 49 / 18%);
-  border-radius: 15px;
-  background: #fffdf9;
-  padding: 12px 14px;
-  color: var(--ink);
+  min-height: 46px;
+  border: 1px solid var(--admin-line);
+  border-radius: 11px;
+  background: #fff;
+  padding: 11px 13px;
+  color: var(--admin-ink);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   outline: none;
   transition:
     border-color 150ms ease,
@@ -212,40 +212,40 @@
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card textarea) {
-  min-height: 112px;
+  min-height: 108px;
   resize: vertical;
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card input:focus),
 :global([data-admin-refresh="shell"] .finance-operation-card textarea:focus) {
-  border-color: rgb(217 111 77 / 44%);
-  background: #fffaf4;
-  box-shadow: 0 0 0 4px rgb(217 111 77 / 10%);
+  border-color: var(--admin-teal);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(18 137 123 / 12%);
 }
 
 :global([data-admin-refresh="shell"] .finance-inline-fields) {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 15px;
+  gap: 12px;
 }
 
 :global(
-  [data-admin-refresh="shell"]
-    .finance-operation-grid
-    > .finance-operation-card:nth-of-type(3)
-    .finance-inline-fields
-) {
+    [data-admin-refresh="shell"]
+      .finance-operation-grid
+      > .finance-operation-card:nth-of-type(3)
+      .finance-inline-fields
+  ) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 :global([data-admin-refresh="shell"] .finance-installment-editor) {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   margin: 0;
-  border: 1px solid rgb(88 62 49 / 10%);
-  border-radius: 22px;
-  background: rgb(255 250 244 / 72%);
-  padding: 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-panel-soft);
+  padding: 16px;
 }
 
 :global([data-admin-refresh="shell"] .finance-installment-editor .finance-inline-fields) {
@@ -255,15 +255,15 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-card button) {
   width: fit-content;
-  min-height: 44px;
-  border: 1px solid rgb(217 111 77 / 20%);
+  min-height: 42px;
+  border: 1px solid var(--admin-teal);
   border-radius: 999px;
-  background: var(--coral-dark);
-  padding: 11px 17px;
-  color: #fffaf4;
+  background: var(--admin-teal);
+  padding: 10px 16px;
+  color: #fff;
   font: inherit;
-  font-size: 0.76rem;
-  font-weight: 850;
+  font-size: 0.72rem;
+  font-weight: 780;
   cursor: pointer;
   transition:
     transform 150ms ease,
@@ -274,12 +274,14 @@
 
 :global([data-admin-refresh="shell"] .finance-operation-card button:hover:not(:disabled)) {
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgb(217 111 77 / 16%);
+  background: #0d6f64;
+  box-shadow: 0 10px 20px rgb(18 137 123 / 16%);
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card button[type="button"]) {
-  background: #fff7ef;
-  color: var(--coral-dark);
+  border-color: var(--admin-line);
+  background: #fff;
+  color: var(--admin-teal);
 }
 
 :global([data-admin-refresh="shell"] .finance-operation-card button:disabled) {
@@ -289,86 +291,90 @@
 
 :global([data-admin-refresh="shell"] .finance-message) {
   min-height: 1.4em;
-  margin: -8px 0 0;
-  color: #3f7058;
-  font-size: 0.76rem;
-  font-weight: 760;
+  margin: -6px 0 0;
+  color: var(--admin-teal);
+  font-size: 0.72rem;
+  font-weight: 740;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-list) {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   margin-top: 4px;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card) {
-  border: 1px solid rgb(88 62 49 / 11%);
-  border-radius: 24px;
-  background: rgb(255 253 249 / 86%);
-  padding: 22px;
-  box-shadow: 0 18px 40px rgb(83 53 35 / 7%);
+  border: 1px solid var(--admin-line);
+  border-radius: 17px;
+  background: var(--admin-panel);
+  padding: 18px;
+  box-shadow: 0 14px 32px rgb(32 28 25 / 6%);
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card header) {
   display: flex;
   align-items: start;
   justify-content: space-between;
-  gap: 18px;
+  gap: 16px;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card small) {
-  color: var(--muted);
-  font-size: 0.68rem;
+  color: var(--admin-muted);
+  font-size: 0.66rem;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card h3) {
   margin: 5px 0 0;
-  font-family: var(--serif);
-  font-size: 1.35rem;
+  color: var(--admin-ink);
+  font-family: inherit;
+  font-size: 1.08rem;
+  font-weight: 780;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card header > span) {
+  border: 1px solid rgb(18 137 123 / 16%);
   border-radius: 999px;
-  background: rgb(67 98 75 / 9%);
-  padding: 8px 12px;
-  color: #45694f;
-  font-size: 0.7rem;
-  font-weight: 850;
+  background: var(--admin-teal-soft);
+  padding: 7px 11px;
+  color: var(--admin-teal);
+  font-size: 0.68rem;
+  font-weight: 780;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card dl) {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin: 18px 0 0;
+  gap: 8px;
+  margin: 15px 0 0;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card dl div) {
-  border-radius: 17px;
-  background: rgb(255 241 231 / 56%);
-  padding: 14px;
+  border: 1px solid var(--admin-line);
+  border-radius: 13px;
+  background: var(--admin-panel-soft);
+  padding: 12px;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card dt) {
-  color: var(--muted);
-  font-size: 0.64rem;
-  font-weight: 850;
+  color: var(--admin-muted);
+  font-size: 0.62rem;
+  font-weight: 760;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 :global([data-admin-refresh="shell"] .finance-plan-card dd) {
   margin: 6px 0 0;
-  color: #4b3a33;
-  font-family: var(--serif);
-  font-size: 1.05rem;
-  font-weight: 650;
+  color: var(--admin-ink);
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 780;
 }
 
 :global([data-admin-refresh="shell"] .finance-installments) {
   display: grid;
-  gap: 9px;
-  margin-top: 18px;
+  gap: 8px;
+  margin-top: 15px;
 }
 
 :global([data-admin-refresh="shell"] .finance-installments > div),
@@ -377,32 +383,32 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
-  border: 1px solid rgb(88 62 49 / 8%);
-  border-radius: 16px;
-  background: #fffaf4;
-  padding: 12px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 11px;
 }
 
 :global([data-admin-refresh="shell"] .finance-state) {
   border-radius: 999px;
   padding: 5px 9px;
-  font-weight: 850;
+  font-weight: 780;
 }
 
 :global([data-admin-refresh="shell"] .finance-state--paid) {
-  background: rgb(67 98 75 / 10%);
-  color: #45694f;
+  background: var(--admin-teal-soft);
+  color: var(--admin-teal);
 }
 
 :global([data-admin-refresh="shell"] .finance-state--overdue) {
-  background: rgb(185 74 54 / 10%);
+  background: rgb(176 65 54 / 10%);
   color: #9b4337;
 }
 
 :global([data-admin-refresh="shell"] .finance-state--due),
 :global([data-admin-refresh="shell"] .finance-state--partially_paid) {
-  background: rgb(217 111 77 / 10%);
-  color: var(--coral-dark);
+  background: rgb(190 136 52 / 12%);
+  color: #8b6325;
 }
 
 :global([data-admin-refresh="shell"] .finance-history) {
@@ -410,9 +416,9 @@
 }
 
 :global([data-admin-refresh="shell"] .finance-history summary) {
-  color: var(--coral-dark);
-  font-size: 0.76rem;
-  font-weight: 850;
+  color: var(--admin-teal);
+  font-size: 0.72rem;
+  font-weight: 780;
   cursor: pointer;
 }
 
@@ -442,28 +448,28 @@
   :global([data-admin-refresh="shell"] .finance-plan-card dl),
   :global([data-admin-refresh="shell"] .finance-inline-fields),
   :global(
-    [data-admin-refresh="shell"]
-      .finance-operation-grid
-      > .finance-operation-card:nth-of-type(1)
-      form
-  ),
+      [data-admin-refresh="shell"]
+        .finance-operation-grid
+        > .finance-operation-card:nth-of-type(1)
+        form
+    ),
   :global(
-    [data-admin-refresh="shell"]
-      .finance-operation-grid
-      > .finance-operation-card:nth-of-type(3)
-      .finance-inline-fields
-  ),
+      [data-admin-refresh="shell"]
+        .finance-operation-grid
+        > .finance-operation-card:nth-of-type(3)
+        .finance-inline-fields
+    ),
   :global([data-admin-refresh="shell"] .finance-installment-editor .finance-inline-fields) {
     grid-template-columns: 1fr;
   }
 
   :global(
-    [data-admin-refresh="shell"]
-      .finance-operation-grid
-      > .finance-operation-card:nth-of-type(1)
-      form
-      label:last-of-type
-  ) {
+      [data-admin-refresh="shell"]
+        .finance-operation-grid
+        > .finance-operation-card:nth-of-type(1)
+        form
+        label:last-of-type
+    ) {
     grid-column: auto;
   }
 

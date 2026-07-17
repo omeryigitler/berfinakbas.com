@@ -1,0 +1,136 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 11px;
+  background: #fff;
+  padding: 9px 12px;
+  color: var(--admin-ink, #201c19);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.trigger:focus-visible,
+.searchInput:focus-visible {
+  border-color: var(--admin-teal, #12897b);
+  outline: 3px solid rgb(18 137 123 / 12%);
+  outline-offset: 1px;
+}
+
+.chevron {
+  color: var(--admin-teal, #12897b);
+  font-size: 0.84rem;
+  transition: transform 150ms ease;
+}
+
+.trigger[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.popover {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 13px;
+  background: var(--admin-panel, #fbfaf8);
+  box-shadow: 0 20px 44px rgb(32 28 25 / 15%);
+}
+
+.searchWrap {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  border-bottom: 1px solid var(--admin-line, #e3ded7);
+  background: var(--admin-panel, #fbfaf8);
+  padding: 8px;
+}
+
+.searchLabel {
+  color: var(--admin-muted, #78716a);
+  font-size: 0.6rem;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 9px;
+  background: #fff;
+  padding: 8px 10px;
+  color: var(--admin-ink, #201c19);
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.listbox {
+  max-height: 286px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 6px;
+  scrollbar-color: rgb(18 137 123 / 25%) transparent;
+  scrollbar-width: thin;
+}
+
+.option {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  padding: 9px 10px;
+  color: var(--admin-ink, #201c19);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover,
+.option:focus-visible {
+  background: var(--admin-panel-soft, #f4f2ec);
+}
+
+.option[aria-selected="true"] {
+  background: var(--admin-lime, #dfec83);
+  color: var(--admin-ink, #201c19);
+  font-weight: 760;
+}
+
+.noResults {
+  margin: 0;
+  padding: 14px 10px;
+  color: var(--admin-muted, #78716a);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

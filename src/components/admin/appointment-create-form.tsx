@@ -3,6 +3,8 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 
+import { formatDateTimeInputInZone } from "@/lib/time-zone";
+
 import { DateControl } from "./date-control";
 import { SelectControl } from "./select-control";
 
@@ -78,12 +80,10 @@ function issueMessage(payload: ApiResponse<unknown>): string {
   return firstIssue ?? payload.error ?? "Randevu oluşturulamadı.";
 }
 
-function defaultDateTimeLocal(): string {
-  const date = new Date();
-  date.setMinutes(date.getMinutes() + 60);
-  date.setMinutes(Math.ceil(date.getMinutes() / 15) * 15, 0, 0);
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
+function defaultDateTimeLocal(timeZone: string): Readonly<{ date: string; time: string }> {
+  const interval = 15 * 60_000;
+  const rounded = new Date(Math.ceil((Date.now() + 60 * 60_000) / interval) * interval);
+  return formatDateTimeInputInZone(rounded, timeZone);
 }
 
 function durationOptions(
@@ -127,18 +127,24 @@ export function AppointmentCreateForm({
   const initialClient = clients.some((client) => client.id === initialClientId)
     ? (initialClientId ?? "")
     : "";
+  const initialPractitionerId = practitioners[0]?.id ?? "";
+  const initialTimeZone = practitioners[0]?.timeZone ?? "UTC";
+  const initialDateTime = useMemo(() => defaultDateTimeLocal(initialTimeZone), [initialTimeZone]);
+  const [appointmentDate, setAppointmentDate] = useState(initialDateTime.date);
+  const [appointmentTime, setAppointmentTime] = useState(initialDateTime.time);
   const [busy, setBusy] = useState(false);
   const [clientId, setClientId] = useState(initialClient);
   const [customDuration, setCustomDuration] = useState("52");
   const [durationMode, setDurationMode] = useState("CONTEXT_DEFAULT");
+  const [guardianId, setGuardianId] = useState("");
   const [message, setMessage] = useState("");
+  const [practitionerId, setPractitionerId] = useState(initialPractitionerId);
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [setupBusy, setSetupBusy] = useState(false);
-  const initialDateTime = useMemo(() => defaultDateTimeLocal(), []);
-  const [appointmentDate, setAppointmentDate] = useState(initialDateTime.slice(0, 10));
-  const [appointmentTime, setAppointmentTime] = useState(initialDateTime.slice(11, 16));
 
   const selectedClient = clients.find((client) => client.id === clientId) ?? null;
+  const selectedPractitioner =
+    practitioners.find((practitioner) => practitioner.id === practitionerId) ?? null;
   const selectedService = services.find((service) => service.id === serviceId) ?? null;
   const contextualDuration =
     selectedClient?.appointmentCount === 0
@@ -232,7 +238,7 @@ export function AppointmentCreateForm({
       setMessage("Çocuk danışan için önce veli kaydı bağlanmalı.");
       return;
     }
-    if (selectedClient.type === "CHILD" && !readOptional(formData, "guardianId")) {
+    if (selectedClient.type === "CHILD" && !guardianId) {
       setMessage("Çocuk danışan için veli seçmelisiniz.");
       return;
     }
@@ -240,7 +246,7 @@ export function AppointmentCreateForm({
       setMessage("Randevu için hizmet seçmelisiniz.");
       return;
     }
-    if (!readOptional(formData, "practitionerId")) {
+    if (!selectedPractitioner) {
       setMessage("Randevu için terapist seçmelisiniz.");
       return;
     }
@@ -248,8 +254,10 @@ export function AppointmentCreateForm({
       setMessage("Süre 5 ile 240 dakika arasında olmalıdır.");
       return;
     }
-    const startsAtDate = new Date(`${appointmentDate}T${appointmentTime}`);
-    if (!appointmentDate || !appointmentTime || Number.isNaN(startsAtDate.getTime())) {
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate) ||
+      !/^([01]\d|2[0-3]):[0-5]\d$/.test(appointmentTime)
+    ) {
       setMessage("Geçerli bir tarih ve saat seçmelisiniz.");
       return;
     }
@@ -259,18 +267,20 @@ export function AppointmentCreateForm({
     try {
       const response = await fetch("/api/admin/appointments", {
         body: JSON.stringify({
+          appointmentDate,
+          appointmentTime,
           clientId: selectedClient.id,
           durationMinutes: selectedDuration,
-          guardianId: readOptional(formData, "guardianId"),
+          guardianId: selectedClient.type === "CHILD" ? guardianId : null,
           locationType: readOptional(formData, "locationType"),
-          practitionerId: readOptional(formData, "practitionerId"),
+          practitionerId: selectedPractitioner.id,
           requestNote: readOptional(formData, "requestNote"),
           serviceId: selectedService.id,
-          startsAt: startsAtDate.toISOString(),
         }),
         headers: {
           accept: "application/json",
           "content-type": "application/json",
+          "x-correlation-id": crypto.randomUUID(),
         },
         method: "POST",
       });
@@ -337,6 +347,7 @@ export function AppointmentCreateForm({
               onValueChange={(value) => {
                 setClientId(value);
                 setDurationMode("CONTEXT_DEFAULT");
+                setGuardianId("");
               }}
               options={clientOptions}
               placeholder="Danışan seçin"
@@ -350,11 +361,13 @@ export function AppointmentCreateForm({
               <SelectControl
                 disabled={busy || selectedClient.guardians.length === 0}
                 name="guardianId"
+                onValueChange={setGuardianId}
                 options={selectedClient.guardians}
                 placeholder={
                   selectedClient.guardians.length === 0 ? "Veli kaydı yok" : "Veli seçin"
                 }
                 required
+                value={guardianId}
               />
               {selectedClient.guardians.length === 0 ? (
                 <small className="appointment-warning-text">
@@ -402,12 +415,17 @@ export function AppointmentCreateForm({
           <label className="booking-field">
             Terapist
             <SelectControl
-              defaultValue={practitioners[0]?.id ?? ""}
               disabled={busy}
               name="practitionerId"
+              onValueChange={setPractitionerId}
               options={practitionerOptions}
               required
+              value={practitionerId}
             />
+            <small>
+              Seçilen saat {selectedPractitioner?.timeZone ?? "tanımlı saat dilimi"} üzerinden
+              kaydedilir.
+            </small>
           </label>
         </div>
       </section>

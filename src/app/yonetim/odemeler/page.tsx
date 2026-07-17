@@ -49,10 +49,10 @@ export default async function AdminFinancePage({ searchParams }: { searchParams:
             <p>
               {hasClientFilter
                 ? "Bu panel yalnızca seçili danışanın planlarını, taksitlerini ve ödeme hareketlerini gösterir."
-                : "Plan, taksit, ödeme ve ters kayıtlar append-only hareketlerden hesaplanır; bu alan resmi muhasebe sistemi değildir."}
+                : "Plan, taksit, ödeme ve ters kayıtlar değiştirilemeyen hareketlerden hesaplanır; bu alan resmi muhasebe sistemi değildir."}
             </p>
           </div>
-          <span className="admin-count">{hasClientFilter ? "FİLTRELİ" : "FINANCE"}</span>
+          <span className="admin-count">{hasClientFilter ? "Filtreli" : "Finans"}</span>
         </div>
         <FinanceDashboard
           canManage={hasPermission(session.user.roles, "finance:manage")}

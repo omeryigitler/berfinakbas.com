@@ -6,16 +6,23 @@
 .trigger {
   display: flex;
   width: 100% !important;
-  min-height: 48px !important;
+  min-height: 46px !important;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid rgb(88 62 49 / 18%) !important;
-  border-radius: 15px !important;
-  background: #fffdf9 !important;
-  padding: 12px 14px !important;
-  color: var(--ink) !important;
+  border: 1px solid var(--admin-line, #e3ded7) !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  padding: 11px 13px !important;
+  color: var(--admin-ink, #201c19) !important;
   font: inherit;
-  font-size: 0.8rem !important;
+  font-size: 0.78rem !important;
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  border-color: var(--admin-teal, #12897b) !important;
+  outline: 3px solid rgb(18 137 123 / 12%);
+  outline-offset: 1px;
 }
 
 .popover {
@@ -24,11 +31,11 @@
   top: calc(100% + 8px);
   left: 0;
   width: min(330px, 88vw);
-  border: 1px solid rgb(217 111 77 / 24%);
-  border-radius: 20px;
-  background: #fffaf4;
-  padding: 14px;
-  box-shadow: 0 24px 56px rgb(83 53 35 / 18%);
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 15px;
+  background: var(--admin-panel, #fbfaf8);
+  padding: 12px;
+  box-shadow: 0 22px 50px rgb(32 28 25 / 17%);
 }
 
 .header {
@@ -39,6 +46,9 @@
 }
 
 .header strong {
+  color: var(--admin-ink, #201c19);
+  font-size: 0.78rem;
+  font-weight: 780;
   text-align: center;
   text-transform: capitalize;
 }
@@ -51,11 +61,12 @@
   min-height: 34px !important;
   place-items: center;
   border: 0 !important;
-  border-radius: 10px !important;
+  border-radius: 9px !important;
   background: transparent !important;
   padding: 0 !important;
-  color: var(--ink) !important;
+  color: var(--admin-ink, #201c19) !important;
   box-shadow: none !important;
+  cursor: pointer;
 }
 
 .weekdays,
@@ -67,23 +78,25 @@
 }
 
 .weekdays span {
-  color: var(--muted);
-  font-size: 0.65rem;
+  color: var(--admin-muted, #78716a);
+  font-size: 0.63rem;
   text-align: center;
 }
 
 .days button[aria-pressed="true"] {
-  background: var(--coral-dark) !important;
+  background: var(--admin-teal, #12897b) !important;
   color: #fff !important;
 }
 
-.days button:hover {
-  background: #fff1e7 !important;
+.days button:hover,
+.header button:hover {
+  background: var(--admin-teal-soft, #d9ece8) !important;
+  color: var(--admin-teal, #12897b) !important;
 }
 
 .today {
   width: 100% !important;
   margin-top: 10px;
-  color: var(--coral-dark) !important;
-  font-weight: 800;
+  color: var(--admin-teal, #12897b) !important;
+  font-weight: 780;
 }

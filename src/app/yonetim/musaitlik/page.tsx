@@ -2,9 +2,17 @@ import { revalidatePath } from "next/cache";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import { hasPermission } from "@/domain/auth/permissions";
+import {
+  availabilityExceptionValidationMessage,
+  type AvailabilityExceptionType,
+} from "@/domain/availability/availability-exception";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
+import {
+  AvailabilityExceptionForm,
+  type AvailabilityExceptionActionState,
+} from "./availability-exception-form";
 import styles from "./musaitlik.module.css";
 
 export const dynamic = "force-dynamic";
@@ -59,16 +67,6 @@ function enumValue<T extends string>(
   return options.includes(value as T) ? (value as T) : fallback;
 }
 
-function isDateValue(value: string): boolean {
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime())
-  );
-}
-
-function isTimeValue(value: string): boolean {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
-}
-
 function formatLocalDate(date: Date): string {
   return new Intl.DateTimeFormat("tr-TR", {
     day: "2-digit",
@@ -89,35 +87,53 @@ function exceptionTimeLabel(exception: ExceptionView): string {
   return "Saat aralığı yok";
 }
 
-async function createAvailabilityException(formData: FormData) {
+function actionError(message: string): AvailabilityExceptionActionState {
+  return { message, status: "error" };
+}
+
+async function createAvailabilityException(
+  _state: AvailabilityExceptionActionState,
+  formData: FormData,
+): Promise<AvailabilityExceptionActionState> {
   "use server";
   await requirePermission("availability:manage");
 
   const practitionerId = textValue(formData, "practitionerId");
   const localDate = textValue(formData, "localDate");
-  const type = enumValue(formData, "type", exceptionTypeOptions, "CLOSED");
+  const type = enumValue(
+    formData,
+    "type",
+    exceptionTypeOptions,
+    "CLOSED",
+  ) as AvailabilityExceptionType;
   const status = enumValue(formData, "status", exceptionStatusOptions, "ACTIVE");
   const reasonCode = boundedTextValue(formData, "reasonCode", 2, 80) || "ADMIN_EXCEPTION";
   const privateNote = textValue(formData, "privateNote").slice(0, 500) || null;
   const localStartTime = textValue(formData, "localStartTime");
   const localEndTime = textValue(formData, "localEndTime");
 
-  if (!practitionerId || !isDateValue(localDate)) return;
+  const validationMessage = availabilityExceptionValidationMessage({
+    localDate,
+    localEndTime,
+    localStartTime,
+    practitionerId,
+    type,
+  });
+  if (validationMessage) return actionError(validationMessage);
 
-  const shouldRequireTimeRange = type !== "CLOSED";
-  if (
-    shouldRequireTimeRange &&
-    (!isTimeValue(localStartTime) || !isTimeValue(localEndTime) || localStartTime >= localEndTime)
-  ) {
-    return;
-  }
+  const database = getDatabase();
+  const practitioner = await database.practitioner.findUnique({
+    select: { id: true },
+    where: { id: practitionerId },
+  });
+  if (!practitioner) return actionError("Terapist kaydı bulunamadı.");
 
-  await getDatabase().availabilityException.create({
+  await database.availabilityException.create({
     data: {
       localDate: new Date(`${localDate}T00:00:00.000Z`),
       localEndTime: type === "CLOSED" ? null : localEndTime,
       localStartTime: type === "CLOSED" ? null : localStartTime,
-      practitionerId,
+      practitionerId: practitioner.id,
       privateNote,
       reasonCode,
       status,
@@ -126,6 +142,7 @@ async function createAvailabilityException(formData: FormData) {
   });
 
   revalidatePath("/yonetim/musaitlik");
+  return { message: "Müsaitlik istisnası kaydedildi.", status: "success" };
 }
 
 async function deactivateAvailabilityException(formData: FormData) {
@@ -258,7 +275,7 @@ export default async function AvailabilityPage() {
           <div>
             <h2 id="musaitlik-listesi">Terapist müsaitlik istisnaları</h2>
             <p>
-              Kalıcı haftalık kurallar dashboard’da yönetilir. Bu ekran belirli gün veya saat için
+              Kalıcı haftalık kurallar çalışma alanında yönetilir. Bu bölüm belirli gün veya saat için
               istisna oluşturur.
             </p>
           </div>
@@ -315,12 +332,10 @@ export default async function AvailabilityPage() {
                         <div className={styles.exceptionRow} key={exception.id}>
                           <div>
                             <strong>
-                              {formatLocalDate(exception.localDate)} ·{" "}
-                              {exceptionTimeLabel(exception)}
+                              {formatLocalDate(exception.localDate)} · {exceptionTimeLabel(exception)}
                             </strong>
                             <span>
-                              {statusLabel(exception.type, exceptionTypeLabels)} ·{" "}
-                              {exception.reasonCode} ·{" "}
+                              {statusLabel(exception.type, exceptionTypeLabels)} · {exception.reasonCode} ·{" "}
                               {statusLabel(exception.status, exceptionStatusLabels)}
                             </span>
                             {exception.privateNote ? <small>{exception.privateNote}</small> : null}
@@ -339,104 +354,10 @@ export default async function AvailabilityPage() {
                   {canManageAvailability ? (
                     <details className={styles.editPanel}>
                       <summary>Yeni istisna ekle</summary>
-                      <form action={createAvailabilityException}>
-                        <input name="practitionerId" type="hidden" value={practitioner.id} />
-
-                        <fieldset className={styles.radioGroup}>
-                          <legend>İstisna tipi</legend>
-                          {exceptionTypeOptions.map((option) => (
-                            <label key={option}>
-                              <input
-                                defaultChecked={option === "CLOSED"}
-                                name="type"
-                                type="radio"
-                                value={option}
-                              />
-                              <span>{statusLabel(option, exceptionTypeLabels)}</span>
-                            </label>
-                          ))}
-                        </fieldset>
-
-                        <div className={styles.formGrid}>
-                          <label>
-                            Tarih
-                            <input
-                              maxLength={10}
-                              minLength={10}
-                              name="localDate"
-                              pattern="\d{4}-\d{2}-\d{2}"
-                              placeholder="2026-07-15"
-                              required
-                              type="text"
-                            />
-                            <small>YYYY-AA-GG formatı.</small>
-                          </label>
-                          <label>
-                            Başlangıç saati
-                            <input
-                              maxLength={5}
-                              minLength={5}
-                              name="localStartTime"
-                              pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-                              placeholder="09:00"
-                              type="text"
-                            />
-                            <small>Kapalı gün için boş bırakılabilir.</small>
-                          </label>
-                          <label>
-                            Bitiş saati
-                            <input
-                              maxLength={5}
-                              minLength={5}
-                              name="localEndTime"
-                              pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-                              placeholder="17:00"
-                              type="text"
-                            />
-                            <small>Bloke/özel saat için zorunlu.</small>
-                          </label>
-                        </div>
-
-                        <div className={styles.formGridTwo}>
-                          <label>
-                            Sebep kodu
-                            <input
-                              defaultValue="ADMIN_EXCEPTION"
-                              maxLength={80}
-                              minLength={2}
-                              name="reasonCode"
-                              required
-                              type="text"
-                            />
-                          </label>
-                          <label>
-                            Özel not
-                            <input
-                              maxLength={500}
-                              name="privateNote"
-                              placeholder="Örn. eğitim, izin, kurum dışı çalışma"
-                              type="text"
-                            />
-                          </label>
-                        </div>
-
-                        <fieldset className={styles.radioGroup}>
-                          <legend>Durum</legend>
-                          {exceptionStatusOptions.map((option) => (
-                            <label key={option}>
-                              <input
-                                defaultChecked={option === "ACTIVE"}
-                                name="status"
-                                type="radio"
-                                value={option}
-                              />
-                              <span>{statusLabel(option, exceptionStatusLabels)}</span>
-                            </label>
-                          ))}
-                        </fieldset>
-
-                        <button type="submit">İstisna ekle</button>
-                      </form>
+                      <AvailabilityExceptionForm
+                        action={createAvailabilityException}
+                        practitionerId={practitioner.id}
+                      />
                     </details>
                   ) : null}
                 </article>

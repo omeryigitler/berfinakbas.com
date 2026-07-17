@@ -1,7 +1,7 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { OutboxHealthDashboard } from "@/components/admin/outbox-health-dashboard";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
-import { OutboxHealthDashboard } from "@/components/admin/outbox-health-dashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +18,8 @@ export default async function AdminHealthPage() {
         servicesRead: hasPermission(session.user.roles, "services:read"),
         technicalHealthRead: true,
       }}
-      subtitle="Çekirdek işleyişin dış tetikleyicileri ve outbox durumu read-only görünür."
-      title="Entegrasyon sağlığı"
+      subtitle="Entegrasyon tetikleyicileri, gönderim kuyruğu ve teknik durum read-only olarak aynı sistem alanında görünür."
+      title="Sistem sağlığı"
     >
       <OutboxHealthDashboard />
     </AdminShell>

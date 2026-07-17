@@ -1,0 +1,62 @@
+import { describe, expect, it } from "vitest";
+
+import { getAdminNavItems } from "./admin-shell";
+
+describe("getAdminNavItems", () => {
+  it("returns only permitted navigation items for the current session", () => {
+    const items = getAdminNavItems({
+      appointmentsRead: true,
+      financeRead: false,
+      servicesRead: true,
+      technicalHealthRead: true,
+    });
+
+    expect(items.map((item) => item.href)).toEqual([
+      "/yonetim",
+      "/yonetim/hub",
+      "/yonetim/randevular",
+      "/yonetim/musaitlik",
+      "/yonetim/saglik",
+    ]);
+    expect(items.some((item) => item.label.includes("Danışan"))).toBe(false);
+  });
+
+  it("adds client creation inside the client accordion when client access exists", () => {
+    const items = getAdminNavItems({
+      appointmentsRead: false,
+      clientsRead: true,
+      financeRead: false,
+      servicesRead: false,
+      technicalHealthRead: false,
+    });
+
+    expect(items.map((item) => item.href)).toEqual([
+      "/yonetim/danisanlar",
+      "/yonetim/danisan-olustur",
+    ]);
+  });
+
+  it("keeps finance navigation independent from client access", () => {
+    const items = getAdminNavItems({
+      appointmentsRead: false,
+      clientsRead: false,
+      financeRead: true,
+      servicesRead: false,
+      technicalHealthRead: false,
+    });
+
+    expect(items.map((item) => item.href)).toEqual(["/yonetim/odemeler"]);
+    expect(items.some((item) => item.href === "/yonetim/danisanlar")).toBe(false);
+  });
+
+  it("hides all links when permissions are missing", () => {
+    const items = getAdminNavItems({
+      appointmentsRead: false,
+      financeRead: false,
+      servicesRead: false,
+      technicalHealthRead: false,
+    });
+
+    expect(items).toHaveLength(0);
+  });
+});
