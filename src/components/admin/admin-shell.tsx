@@ -48,55 +48,86 @@ const siteWorkspaceSections = new Set([
 ]);
 
 export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem[] {
-  return getAdminNavGroups(permissions)
-    .filter((group) => group.id !== "site")
-    .flatMap((group) => group.items);
+  const items: AdminNavItem[] = [];
+  if (permissions.servicesRead) {
+    items.push({ href: "/yonetim", icon: "⌂", label: "Genel bakış" });
+  }
+  if (permissions.appointmentsRead) {
+    items.push({ href: "/yonetim/hub", icon: "▦", label: "Kayıt merkezi" });
+    items.push({ href: "/yonetim/randevular", icon: "◷", label: "Randevu operasyonu" });
+  }
+  if (permissions.clientsRead === true) {
+    items.push({ href: "/yonetim/danisanlar", icon: "◌", label: "Danışan kayıtları" });
+    items.push({ href: "/yonetim/danisan-olustur", icon: "+", label: "Yeni danışan" });
+  }
+  if (permissions.servicesRead) {
+    items.push({ href: "/yonetim/musaitlik", icon: "▤", label: "Müsaitlik" });
+  }
+  if (permissions.financeRead) {
+    items.push({ href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" });
+  }
+  if (permissions.technicalHealthRead) {
+    items.push({ href: "/yonetim/saglik", icon: "◇", label: "Sistem sağlığı" });
+  }
+  return items;
 }
 
 function getAdminNavGroups(permissions: AdminNavPermissions): AdminNavGroup[] {
   const groups: AdminNavGroup[] = [];
 
-  const workspaceItems: AdminNavItem[] = [];
   if (permissions.servicesRead) {
-    workspaceItems.push({ href: "/yonetim", icon: "⌂", label: "Genel bakış" });
-  }
-  if (permissions.appointmentsRead) {
-    workspaceItems.push({ href: "/yonetim/hub", icon: "▦", label: "Kayıt merkezi" });
-  }
-  if (workspaceItems.length > 0) {
-    groups.push({ id: "calisma", icon: "⌂", items: workspaceItems, label: "Çalışma Alanım" });
+    groups.push({
+      id: "calisma",
+      icon: "⌂",
+      items: [{ href: "/yonetim", icon: "⌂", label: "Genel bakış" }],
+      label: "Çalışma Alanım",
+    });
   }
 
   if (permissions.appointmentsRead || permissions.servicesRead) {
     const items: AdminNavItem[] = [];
     if (permissions.appointmentsRead) {
+      items.push({ href: "/yonetim/hub", icon: "▦", label: "Talep kuyruğu" });
       items.push({ href: "/yonetim/randevular", icon: "◷", label: "Randevu operasyonu" });
     }
     if (permissions.servicesRead) {
-      items.push({ href: "/yonetim/musaitlik", icon: "▤", label: "Müsaitlik" });
+      if (permissions.appointmentsRead) {
+        items.push({
+          href: "/yonetim/hub?bolum=musaitlik" as Route,
+          icon: "◫",
+          label: "Müsaitlik özeti",
+        });
+      }
+      items.push({ href: "/yonetim/musaitlik", icon: "▤", label: "Müsaitlik yönetimi" });
     }
     groups.push({ id: "randevular", icon: "◷", items, label: "Randevular" });
   }
 
   if (permissions.clientsRead === true) {
-    groups.push({
-      id: "danisanlar",
-      icon: "◌",
-      items: [
-        { href: "/yonetim/danisanlar", icon: "◌", label: "Danışan kayıtları" },
-        { href: "/yonetim/danisan-olustur", icon: "+", label: "Yeni danışan" },
-      ],
-      label: "Danışanlar",
-    });
+    const items: AdminNavItem[] = [];
+    if (permissions.appointmentsRead) {
+      items.push({
+        href: "/yonetim/hub?bolum=danisanlar" as Route,
+        icon: "▦",
+        label: "Danışan kayıt merkezi",
+      });
+    }
+    items.push({ href: "/yonetim/danisanlar", icon: "◌", label: "Danışan yönetimi" });
+    items.push({ href: "/yonetim/danisan-olustur", icon: "+", label: "Yeni danışan" });
+    groups.push({ id: "danisanlar", icon: "◌", items, label: "Danışanlar" });
   }
 
   if (permissions.financeRead) {
-    groups.push({
-      id: "finans",
-      icon: "₺",
-      items: [{ href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" }],
-      label: "Finans",
-    });
+    const items: AdminNavItem[] = [];
+    if (permissions.appointmentsRead) {
+      items.push({
+        href: "/yonetim/hub?bolum=odemeler" as Route,
+        icon: "▦",
+        label: "Ödeme özeti",
+      });
+    }
+    items.push({ href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" });
+    groups.push({ id: "finans", icon: "₺", items, label: "Finans" });
   }
 
   if (permissions.servicesRead) {
@@ -131,13 +162,28 @@ function getAdminNavGroups(permissions: AdminNavPermissions): AdminNavGroup[] {
   return groups;
 }
 
-function isActivePath(pathname: string, href: Route, activeSection: string): boolean {
+function isActivePath(
+  pathname: string,
+  href: Route,
+  activeWorkspaceSection: string,
+  activeHubSection: string,
+): boolean {
   const [hrefPath, hrefQuery = ""] = String(href).split("?");
-  const targetSection = new URLSearchParams(hrefQuery).get("alan") ?? "";
+  const targetParams = new URLSearchParams(hrefQuery);
+  const targetWorkspaceSection = targetParams.get("alan") ?? "";
+  const targetHubSection = targetParams.get("bolum") ?? "";
 
-  if (targetSection) return pathname === hrefPath && activeSection === targetSection;
+  if (targetWorkspaceSection) {
+    return pathname === hrefPath && activeWorkspaceSection === targetWorkspaceSection;
+  }
+  if (targetHubSection) {
+    return pathname === hrefPath && activeHubSection === targetHubSection;
+  }
   if (hrefPath === "/yonetim") {
-    return pathname === hrefPath && !siteWorkspaceSections.has(activeSection);
+    return pathname === hrefPath && !siteWorkspaceSections.has(activeWorkspaceSection);
+  }
+  if (hrefPath === "/yonetim/hub") {
+    return pathname === hrefPath && activeHubSection === "";
   }
   if (hrefPath === "/yonetim/danisanlar" && pathname.startsWith("/yonetim/danisan-profili")) {
     return true;
@@ -193,10 +239,13 @@ export function AdminShell({
     [navigationGroups],
   );
   const homeHref = navigationItems[0]?.href ?? ("/yonetim/baslangic" as Route);
-  const activeSection = searchParams.get("alan") ?? "";
+  const activeWorkspaceSection = searchParams.get("alan") ?? "";
+  const activeHubSection = searchParams.get("bolum") ?? "";
   const activeGroupId =
     navigationGroups.find((group) =>
-      group.items.some((item) => isActivePath(pathname, item.href, activeSection)),
+      group.items.some((item) =>
+        isActivePath(pathname, item.href, activeWorkspaceSection, activeHubSection),
+      ),
     )?.id ?? navigationGroups[0]?.id ?? "calisma";
   const [openGroup, setOpenGroup] = useState<string>(activeGroupId);
   const [lastActiveGroupId, setLastActiveGroupId] = useState(activeGroupId);
@@ -366,7 +415,7 @@ export function AdminShell({
             {navigationGroups.map((group) => {
               const isOpen = openGroup === group.id;
               const containsActive = group.items.some((item) =>
-                isActivePath(pathname, item.href, activeSection),
+                isActivePath(pathname, item.href, activeWorkspaceSection, activeHubSection),
               );
               return (
                 <div
@@ -394,7 +443,12 @@ export function AdminShell({
                   {isOpen ? (
                     <div data-admin-region="nav-children">
                       {group.items.map((item) => {
-                        const isActive = isActivePath(pathname, item.href, activeSection);
+                        const isActive = isActivePath(
+                          pathname,
+                          item.href,
+                          activeWorkspaceSection,
+                          activeHubSection,
+                        );
                         const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
                         return (
                           <Link
