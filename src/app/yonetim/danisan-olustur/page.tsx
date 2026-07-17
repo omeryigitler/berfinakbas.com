@@ -42,7 +42,7 @@ export default async function NewAdminClientPage() {
               oluşturur.
             </p>
           </div>
-          <span className="admin-count">CLIENT</span>
+          <span className="admin-count">Yeni kayıt</span>
         </div>
 
         <ClientCreateForm guardians={guardians} />
