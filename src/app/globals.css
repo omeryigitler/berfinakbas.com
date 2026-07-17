@@ -3142,3 +3142,104 @@ summary:focus-visible {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Compact search + pager that lives on the Hub record-center tab row, replacing
+   the old full-width "Kayıtlarda ara" panel. */
+.hub-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hub-search input[type="search"] {
+  width: min(240px, 42vw);
+  min-height: 40px;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 999px;
+  background: var(--admin-panel, #fbfaf8);
+  padding: 0 15px;
+  color: var(--admin-ink, #201c19);
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.hub-search input[type="search"]::placeholder {
+  color: var(--admin-muted, #78716a);
+}
+
+.hub-search input[type="search"]:focus-visible {
+  border-color: var(--admin-teal, #12897b);
+  outline: 2px solid rgb(18 137 123 / 35%);
+  outline-offset: 1px;
+}
+
+.hub-search button {
+  min-height: 40px;
+  border: 1px solid var(--admin-teal, #12897b);
+  border-radius: 999px;
+  background: var(--admin-teal, #12897b);
+  padding: 0 15px;
+  color: #fff;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.hub-search button:hover {
+  background: #0f766a;
+}
+
+.hub-search-clear {
+  padding: 0 6px;
+  color: var(--admin-muted, #78716a);
+  font-size: 0.68rem;
+  text-decoration: none;
+}
+
+.hub-search-clear:hover {
+  color: var(--admin-ink, #201c19);
+}
+
+.hub-search-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 2px;
+  font-size: 0.7rem;
+}
+
+.hub-search-pages a {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 999px;
+  background: var(--admin-panel, #fbfaf8);
+  color: var(--admin-ink, #201c19);
+  text-decoration: none;
+}
+
+.hub-search-pages a[aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.hub-search-pages em {
+  min-width: 30px;
+  color: var(--admin-muted, #78716a);
+  font-style: normal;
+  font-weight: 720;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .hub-search {
+    width: 100%;
+  }
+
+  .hub-search input[type="search"] {
+    width: 100%;
+  }
+}

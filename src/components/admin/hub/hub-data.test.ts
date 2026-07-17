@@ -194,6 +194,41 @@ describe("mapAppointmentToHubRecord", () => {
     expect(record.readinessNotes).toContain("Telefon bilgisi tamam");
     expect(record).not.toHaveProperty("readinessGrade");
     expect(record).not.toHaveProperty("readinessScore");
+    // Five of six checks pass (timing undecided while REQUESTED) → 83 / grade B.
+    expect(record.score).toBe(83);
+    expect(record.grade).toBe("B");
+  });
+
+  it("grades readiness from the proportion of passing checks", () => {
+    const complete = mapAppointmentToHubRecord(
+      makeRow({ approvedAt: new Date(), status: "CONFIRMED" }),
+      now,
+      timeZone,
+    );
+    expect(complete.score).toBe(100);
+    expect(complete.grade).toBe("A");
+
+    const sparse = mapAppointmentToHubRecord(
+      makeRow({
+        approvedAt: null,
+        client: {
+          email: null,
+          firstName: "Arya",
+          lastName: "Işık",
+          phone: null,
+          preferredName: null,
+          type: "CHILD",
+        },
+        duplicateReviewStatus: "PENDING",
+        guardian: null,
+        requestNote: null,
+        status: "REQUESTED",
+      }),
+      now,
+      timeZone,
+    );
+    expect(sparse.score).toBe(0);
+    expect(sparse.grade).toBe("C");
   });
 
   it("groups an old request under today when its latest status action happened today", () => {

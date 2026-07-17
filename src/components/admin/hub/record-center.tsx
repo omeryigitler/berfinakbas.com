@@ -3,7 +3,15 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 import { buildHubStatusUrl, getHubActions, type HubAction } from "./hub-actions";
 import { HubAvatar } from "./hub-avatar";
@@ -16,6 +24,7 @@ import {
   hubGroupLabels,
   hubStages,
   hubStatusLabels,
+  type HubGrade,
   type HubRecord,
 } from "./hub-model";
 import styles from "./record-center.module.css";
@@ -23,6 +32,12 @@ import styles from "./record-center.module.css";
 type RecordCenterSection = "danisanlar" | "musaitlik" | "odemeler" | "talepler";
 type ListSection = "danisanlar" | "talepler";
 type SectionOrNull = RecordCenterSection | null;
+
+const gradeLabels: Readonly<Record<HubGrade, string>> = {
+  A: "Hazır",
+  B: "Eksik var",
+  C: "Tamamlanmalı",
+};
 
 const listMeta: Readonly<Record<ListSection, { empty: string; title: string }>> = {
   danisanlar: {
@@ -50,6 +65,7 @@ export function RecordCenter({
   canReadClients = false,
   clients = [],
   finance = null,
+  toolbar = null,
 }: {
   appointments: readonly HubRecord[];
   availability?: readonly HubAvailabilityDay[] | null;
@@ -57,6 +73,7 @@ export function RecordCenter({
   canReadClients?: boolean;
   clients?: readonly HubRecord[];
   finance?: HubFinanceSummary | null;
+  toolbar?: ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -68,13 +85,11 @@ export function RecordCenter({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  /* Progressive disclosure: nothing is open until the user clicks. Section
-     selection lives in the URL (?bolum=…) so it survives refreshes and
-     works with back/forward. */
+  /* The talep queue is the default surface so the Hub never opens empty; other
+     sections load from the URL (?bolum=…) and survive refresh / back-forward. */
   const sectionParam = searchParams.get("bolum");
-  let section: SectionOrNull = null;
-  if (sectionParam === "talepler") section = "talepler";
-  else if (sectionParam === "danisanlar" && canReadClients) section = "danisanlar";
+  let section: RecordCenterSection = "talepler";
+  if (sectionParam === "danisanlar" && canReadClients) section = "danisanlar";
   else if (sectionParam === "musaitlik" && availability) section = "musaitlik";
   else if (sectionParam === "odemeler" && finance) section = "odemeler";
 
@@ -142,6 +157,20 @@ export function RecordCenter({
     setActionNotice(null);
   }
 
+  /* Open the first record on first mount so a list section never shows an empty
+     work area — mirrors the reference's always-selected layout. Runs once, so
+     Esc can still clear the selection afterwards. */
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (autoSelectedRef.current) return;
+    autoSelectedRef.current = true;
+    if (isListSection && !activeRecordId) {
+      const first = getAdjacentRecordId(records, null, 1);
+      if (first) navigate(section, first);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const runAction = useCallback(
     async (action: HubAction) => {
       if (!record) return;
@@ -194,7 +223,6 @@ export function RecordCenter({
       } else if (event.key === "Escape") {
         if (armedActionId) setArmedActionId(null);
         else if (activeRecordId) navigate(section, null);
-        else if (section) navigate(null, null);
       } else if (event.key === "1") navigate("talepler", null);
       else if (event.key === "2" && canReadClients) navigate("danisanlar", null);
       else if (event.key === "3" && availability) navigate("musaitlik", null);
@@ -218,23 +246,26 @@ export function RecordCenter({
 
   return (
     <div className={styles.center}>
-      <nav className={styles.sectionTabs} aria-label="Kayıt merkezi bölümleri">
-        {sectionOptions.map((option) => (
-          <button
-            className={styles.sectionTab}
-            data-active={section === option.id ? "true" : undefined}
-            key={option.id}
-            onClick={() => navigate(section === option.id ? null : option.id, null)}
-            type="button"
-          >
-            <span>{option.label}</span>
-            {option.count !== null ? <em>{option.count}</em> : null}
-          </button>
-        ))}
-      </nav>
+      <div className={styles.tabRow}>
+        <nav className={styles.sectionTabs} aria-label="Kayıt merkezi bölümleri">
+          {sectionOptions.map((option) => (
+            <button
+              className={styles.sectionTab}
+              data-active={section === option.id ? "true" : undefined}
+              key={option.id}
+              onClick={() => navigate(option.id, null)}
+              type="button"
+            >
+              <span>{option.label}</span>
+              {option.count !== null ? <em>{option.count}</em> : null}
+            </button>
+          ))}
+        </nav>
+        {toolbar && isListSection ? <div className={styles.toolbar}>{toolbar}</div> : null}
+      </div>
 
-      <div className={styles.body} data-list={section && isListSection ? "true" : "false"}>
-        {section && isListSection && meta ? (
+      <div className={styles.body} data-list={isListSection ? "true" : "false"}>
+        {isListSection && meta ? (
           <section className={`${hubStyles.listPanel} ${styles.list}`} aria-label="Kayıt listesi">
             <header className={hubStyles.listHead}>
               <div>
@@ -264,6 +295,13 @@ export function RecordCenter({
                           <time>{item.lastActionAt}</time>
                         </span>
                       </span>
+                      <span
+                        className={hubStyles.scoreDot}
+                        data-grade={item.grade}
+                        title={`Hazırlık ${item.score}/100 · ${item.grade}`}
+                      >
+                        {item.score}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -272,11 +310,9 @@ export function RecordCenter({
           </section>
         ) : null}
 
-        {(section &&
-          ((section === "musaitlik" && availability) ||
-            (section === "odemeler" && finance) ||
-            isListSection)) ||
-        record ? (
+        {isListSection ||
+        (section === "musaitlik" && availability) ||
+        (section === "odemeler" && finance) ? (
           <section className={`${hubStyles.workArea} ${styles.work}`} aria-label="Çalışma alanı">
             {section === "musaitlik" && availability ? (
               <>
@@ -555,10 +591,26 @@ export function RecordCenter({
 
                     <section className={hubStyles.workColumn}>
                       <article className={hubStyles.card}>
-                        <h3>Kayıt kontrolü</h3>
+                        <div className={hubStyles.scoreHead}>
+                          <div
+                            className={hubStyles.scoreDial}
+                            data-grade={record.grade}
+                            style={{ "--score": record.score } as CSSProperties}
+                          >
+                            <span>{record.score}</span>
+                          </div>
+                          <div>
+                            <h3>Hazırlık skoru</h3>
+                            <p className={hubStyles.scoreGrade} data-grade={record.grade}>
+                              {record.grade} · {gradeLabels[record.grade]}
+                            </p>
+                          </div>
+                        </div>
                         <ul className={styles.checkList}>
                           {record.readinessNotes.map((note) => (
-                            <li key={note}>{note}</li>
+                            <li key={note} data-ok={note.endsWith("eksik") ? undefined : "true"}>
+                              {note}
+                            </li>
                           ))}
                         </ul>
                       </article>

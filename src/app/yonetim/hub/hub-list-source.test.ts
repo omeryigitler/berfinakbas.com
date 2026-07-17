@@ -32,7 +32,7 @@ describe("Record Center server list contract", () => {
   it("renders query-preserving page controls", () => {
     expect(source).toContain("currentPage - 1");
     expect(source).toContain("currentPage + 1");
-    expect(source).toContain('aria-label="Kayıt merkezi sayfaları"');
+    expect(source).toContain('className="hub-search-pages"');
     expect(source).toContain("listHref");
   });
 
@@ -40,7 +40,7 @@ describe("Record Center server list contract", () => {
     expect(source).toContain("const isSummarySection");
     expect(source).toContain('requestedSection === "musaitlik" && canReadAvailability');
     expect(source).toContain('requestedSection === "odemeler" && canReadFinance');
-    expect(source).toContain("{!isSummarySection ? (");
+    expect(source).toContain("!isSummarySection ? (");
   });
 
   it("falls back to the request queue when client access is missing", () => {

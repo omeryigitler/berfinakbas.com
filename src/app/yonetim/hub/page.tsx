@@ -266,9 +266,6 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
           timeZone,
         )
       : null;
-  const firstVisible = activeTotal === 0 ? 0 : skip + 1;
-  const lastVisible = Math.min(skip + PAGE_SIZE, activeTotal);
-
   return (
     <AdminShell
       email={session.user.email}
@@ -282,59 +279,6 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
       subtitle="Randevu talepleri, danışan kayıtları, müsaitlik ve finans özetleri tek çalışma alanında açılır."
       title="Kayıt merkezi"
     >
-      {!isSummarySection ? (
-        <section className="admin-panel" aria-labelledby="kayit-merkezi-arama">
-          <div className="admin-panel-heading">
-            <div>
-              <h2 id="kayit-merkezi-arama">Kayıtlarda ara</h2>
-              <p>Danışan adı, telefon, e-posta, hizmet veya randevu referansı ile arayın.</p>
-            </div>
-            <span className="admin-count">{activeTotal} kayıt</span>
-          </div>
-          <form action="/yonetim/hub" className="admin-client-filter-form" method="get">
-            {activeListSection === "danisanlar" ? (
-              <input name="bolum" type="hidden" value="danisanlar" />
-            ) : null}
-            <label>
-              Arama
-              <input
-                defaultValue={query}
-                maxLength={100}
-                name="q"
-                placeholder="Ad, telefon, e-posta veya referans"
-                type="search"
-              />
-            </label>
-            <button type="submit">Ara</button>
-            {query || currentPage > 1 ? (
-              <Link href={listHref({ page: 1, query: "", section: activeListSection })}>
-                Temizle
-              </Link>
-            ) : null}
-          </form>
-          <div className="admin-list-footer">
-            <span>
-              {firstVisible}-{lastVisible} arası · Sayfa {currentPage}/{totalPages}
-            </span>
-            <nav aria-label="Kayıt merkezi sayfaları">
-              {currentPage > 1 ? (
-                <Link href={listHref({ page: currentPage - 1, query, section: activeListSection })}>
-                  ← Önceki
-                </Link>
-              ) : null}
-              {currentPage < totalPages ? (
-                <Link
-                  className="primary-button"
-                  href={listHref({ page: currentPage + 1, query, section: activeListSection })}
-                >
-                  Sonraki →
-                </Link>
-              ) : null}
-            </nav>
-          </div>
-        </section>
-      ) : null}
-
       <RecordCenter
         appointments={appointments}
         availability={availability}
@@ -342,6 +286,59 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
         canReadClients={canReadClients}
         clients={clients}
         finance={finance}
+        toolbar={
+          !isSummarySection ? (
+            <form action="/yonetim/hub" className="hub-search" method="get" role="search">
+              {activeListSection === "danisanlar" ? (
+                <input name="bolum" type="hidden" value="danisanlar" />
+              ) : null}
+              <input
+                aria-label="Kayıtlarda ara"
+                defaultValue={query}
+                maxLength={100}
+                name="q"
+                placeholder="Ad, telefon, referans…"
+                type="search"
+              />
+              <button type="submit">Ara</button>
+              {query ? (
+                <Link
+                  className="hub-search-clear"
+                  href={listHref({ page: 1, query: "", section: activeListSection })}
+                >
+                  Temizle
+                </Link>
+              ) : null}
+              {totalPages > 1 ? (
+                <span className="hub-search-pages">
+                  <Link
+                    aria-disabled={currentPage <= 1}
+                    href={listHref({
+                      page: Math.max(1, currentPage - 1),
+                      query,
+                      section: activeListSection,
+                    })}
+                  >
+                    ←
+                  </Link>
+                  <em>
+                    {currentPage}/{totalPages}
+                  </em>
+                  <Link
+                    aria-disabled={currentPage >= totalPages}
+                    href={listHref({
+                      page: Math.min(totalPages, currentPage + 1),
+                      query,
+                      section: activeListSection,
+                    })}
+                  >
+                    →
+                  </Link>
+                </span>
+              ) : null}
+            </form>
+          ) : null
+        }
       />
     </AdminShell>
   );

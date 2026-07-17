@@ -107,7 +107,7 @@
 .listItem {
   display: grid;
   width: 100%;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   border: 1px solid transparent;
@@ -121,6 +121,40 @@
     border-color 150ms ease,
     background 150ms ease,
     transform 150ms ease;
+}
+
+/* Reference-style readiness badge: a compact circular score on the right of
+   every list row, tinted by grade. */
+.scoreDot {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 820;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreDot[data-grade="A"] {
+  border-color: rgb(18 137 123 / 26%);
+  background: var(--admin-teal-soft, #d9ece8);
+  color: var(--admin-teal, #12897b);
+}
+
+.scoreDot[data-grade="B"] {
+  border-color: rgb(190 136 52 / 30%);
+  background: rgb(190 136 52 / 13%);
+  color: #8a6222;
+}
+
+.scoreDot[data-grade="C"] {
+  border-color: rgb(176 65 54 / 26%);
+  background: rgb(176 65 54 / 11%);
+  color: #9b4337;
 }
 
 .listItem:hover {
@@ -375,6 +409,74 @@
   color: var(--admin-ink, #201c19);
   font-size: 0.82rem;
   font-weight: 800;
+}
+
+/* Reference-style "Lead Score" dial: a conic ring filled to the readiness
+   percentage, grade-tinted, with the numeric score centred. */
+.scoreHead {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 14px;
+}
+
+.scoreHead h3 {
+  margin: 0;
+}
+
+.scoreDial {
+  --dial: var(--admin-teal, #12897b);
+  display: grid;
+  width: 60px;
+  height: 60px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--dial) calc(var(--score, 0) * 1%), var(--admin-line, #e3ded7) 0);
+}
+
+.scoreDial::before {
+  grid-area: 1 / 1;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  content: "";
+}
+
+.scoreDial span {
+  z-index: 1;
+  grid-area: 1 / 1;
+  color: var(--admin-ink, #201c19);
+  font-size: 1rem;
+  font-weight: 840;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreDial[data-grade="B"] {
+  --dial: #c68a2e;
+}
+
+.scoreDial[data-grade="C"] {
+  --dial: #b04136;
+}
+
+.scoreGrade {
+  margin: 3px 0 0;
+  font-size: 0.66rem;
+  font-weight: 760;
+}
+
+.scoreGrade[data-grade="A"] {
+  color: var(--admin-teal, #12897b);
+}
+
+.scoreGrade[data-grade="B"] {
+  color: #8a6222;
+}
+
+.scoreGrade[data-grade="C"] {
+  color: #9b4337;
 }
 
 .statValue {
