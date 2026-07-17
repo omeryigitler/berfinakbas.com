@@ -1,0 +1,4 @@
+/* Therapist-facing admin navigation: technical monitoring is intentionally hidden. */
+[data-admin-refresh="shell"] [data-admin-group="sistem"] {
+  display: none !important;
+}
