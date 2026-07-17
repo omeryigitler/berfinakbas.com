@@ -1,133 +1,211 @@
-# Birleşik Yönetim Paneli Tasarım Planı
+# Hub Tabanlı Tek Yönetim Paneli Dönüşüm Planı
 
 Son güncelleme: 17 Temmuz 2026 · Europe/Malta
 
 Aktif dal: `design/unified-admin-panel`  
 Aktif Draft PR: #107
 
-## Amaç
+## Nihai hedef
 
-`/yonetim` altındaki klasik operasyon sayfaları ile `/yonetim/hub` kayıt merkezini iki ayrı ürün gibi göstermeden tek yönetim sistemi altında birleştirmek.
+`/yonetim` altında yalnızca **tek bir yönetim deneyimi** bulunacaktır. Mevcut `/yonetim/hub` prototipi ayrı bir “görünüm” olmaktan çıkarılıp bütün yönetim sisteminin kalıcı kabuğu olacaktır.
 
-Bu çalışma veri modeli veya iş kurallarını yeniden yazmaz. Mevcut danışan, veli, consent, randevu, müsaitlik, finans ve sağlık işlemlerini aynı görsel sistem ve aynı navigasyon altında toplar.
+Kullanıcı hiçbir işlem sırasında başka bir sidebar, başka bir üst bar, farklı renk sistemi veya “klasik panel” görmeyecektir.
 
-## Neden gerekliydi?
+Eski tasarım, bütün işlevler yeni Hub kabuğunda çalışıp doğrulanmadan kaldırılmayacaktır. Fonksiyon eşitliği sağlandıktan sonra eski kabuk, eski navigasyon, uyumluluk dışındaki gereksiz bağlantılar ve eski tasarım override dosyaları aynı final temizlik aşamasında silinecektir.
 
-- Klasik `AdminShell` mercan/serif/kart ağırlıklı bir dil kullanırken Hub sıcak gri, lime, teal ve Inter kullanıyordu.
-- Aynı kullanıcı bir işlem boyunca iki ayrı sidebar, iki ayrı üst bar ve farklı kart/form davranışları görüyordu.
-- Eski dashboard tasarımı zaman içinde birden fazla CSS override dosyasıyla yamalanmıştı.
-- “Hub görünümü” ayrı bir deneyim gibi adlandırıldığı için panelin hedef mimarisi anlaşılmıyordu.
-- AGENTS, HANDOFF ve roadmap belgeleri PR #106 sonrası güncel değildi.
+## Zorunlu kullanıcı deneyimi
 
-## Hedef bilgi mimarisi
+### 1. Akordeon sol navigasyon
 
-| Rota | Rolü |
-| --- | --- |
-| `/yonetim` | Operasyon özeti, hızlı işlemler ve deploy gerektirmeyen ayarlar |
-| `/yonetim/hub` | Talep/danışan kayıt seçimi, inceleme ve durum geçişleri |
-| `/yonetim/danisanlar` | Arama, filtreleme ve danışan listesi |
-| `/yonetim/danisan-profili?clientId=...` | Danışan, veli, consent, randevu ve finans bağlamı |
-| `/yonetim/randevular` | Randevu operasyonu ve ağır düzenleme akışları |
-| `/yonetim/musaitlik` | Haftalık kurallar ve istisnalar |
-| `/yonetim/odemeler` | Plan, taksit, ödeme ve ledger hareketleri |
-| `/yonetim/saglik` | Read-only entegrasyon ve sistem sağlığı |
+Sol ray sabit kalır. Menü grupları akordeon olarak açılır:
 
-## Tasarım sistemi
+- **Çalışma Alanım**
+  - Genel bakış
+  - Bekleyen işler
+  - Hızlı işlemler
+- **Randevular**
+  - Talep kuyruğu
+  - Randevu operasyonu
+  - Takvim
+  - Müsaitlik
+- **Danışanlar**
+  - Danışan kayıtları
+  - Yeni danışan
+  - Veli bağlantıları
+- **Finans**
+  - Ödeme özeti
+  - Planlar ve seans hakları
+  - Taksitler / beklenen ödemeler
+  - Finans hareketleri
+- **Site Yönetimi**
+  - Hizmetler
+  - Terapist ve çalışma kuralları
+  - Görüşme süreleri
+  - Public iletişim ayarları
+- **Sistem**
+  - Entegrasyon ve outbox sağlığı
+  - Teknik sağlık
 
-### Renkler
+Aktif rotanın grubu otomatik açılır. Masaüstünde aynı anda tek ana grup açık tutulur; kullanıcı isterse grubu kapatabilir. Mobil/tablette gruplar dikey akordeon veya yatay açılır panel davranışıyla çalışır.
 
-- Çalışma zemini: `#e9e7e2`
-- Ana panel: `#fbfaf8`
-- Yumuşak panel: `#f4f2ec`
-- Kenar: `#e3ded7`
-- Mürekkep: `#201c19`
-- Seçili kayıt / görev: `#dfec83`
-- Ana işlem / olumlu durum: `#12897b`
-- Başlık vurgusu: `#fbe3d2 → #f6d0c0`
+### 2. Kademeli çalışma alanı
 
-### Tipografi
+İşin yapısına göre Hub şu seviyeleri kullanır:
 
-- Admin yüzeyinde self-host `Inter Variable`.
-- Public sitenin serif başlık kimliği admin veri tablolarına ve operasyon kartlarına taşınmaz.
-- Başlık hiyerarşisi sıkı; dekoratif dev başlık yerine görev ve veri önceliği kullanılır.
+1. Sol akordeon navigasyon.
+2. Liste gerektiren bölümlerde kayıt listesi paneli.
+3. Seçili kayıt özeti / detay başlığı.
+4. Form, zaman çizelgesi, finans veya operasyon işlerinin yapıldığı ana çalışma alanı.
 
-### Bileşen davranışı
+Danışan, randevu ve finans gibi kayıt merkezlerinde liste → detay → işlem akışı korunur. Ayarlar ve sağlık gibi liste gerektirmeyen alanlar doğrudan geniş çalışma panelinde açılır.
 
-- Sidebar, topbar, profil pili, durum çipi, kart, liste satırı, empty state ve form alanları ortak görünür.
-- Kritik eylemler browser `alert/confirm` yerine inline confirmation veya erişilebilir modal kullanır.
-- Tarih alanları ortak custom takvim; seçenek alanları ortak custom dropdown kullanır.
-- Filtreler, seçili kayıtlar ve modallar gerektiğinde URL query ile korunur.
-- Gerçek danışan/veli fotoğrafı yoktur; monogram avatar kullanılır.
-- Sahte KPI, tahmini trend veya doğrulanmamış başarı oranı gösterilmez.
-- Hub’daki puan klinik veya öncelik skoru değildir; yalnızca açık alan kontrolü olarak “Kayıt tamlığı” şeklinde ele alınabilir.
+### 3. Tam sayfa çalışma modu
 
-## Uygulama fazları
+Her çalışma alanının üst eylem şeridinde **“Tam sayfa çalış”** düğmesi bulunur.
 
-### Faz A — ortak kabuk ve görsel sistem
+Açıldığında:
 
-Durum: **Bu PR kapsamında uygulandı.**
+- sol ray ikon seviyesine daralır,
+- varsa kayıt listesi kapanır,
+- ana çalışma alanı mevcut ekranın tamamını kullanır,
+- üstte “Panelleri geri aç” düğmesi görünür,
+- klavyede `F` kısayolu aynı davranışı sağlar,
+- mümkün olduğunda görünüm `?gorunum=tam` URL parametresiyle korunur.
 
-- `AdminShell` terminolojisi “Çalışma alanı / Kayıt merkezi” olarak güncellendi.
-- Danışan, randevu, müsaitlik, ödeme ve sağlık menüsü sadeleştirildi.
-- Sidebar, topbar, arama, profil alanı ve public site bağlantısı tek sistemde toplandı.
-- Klasik sayfalara Hub tokenları uygulandı.
-- Kart, panel, liste, form, hızlı işlem ve responsive görünüm birleştirildi.
+Bu mod yalnızca Hub ana ekranında değil; danışan profili, randevu operasyonu, müsaitlik, ödeme-plan ve site ayarlarında da çalışacaktır.
 
-### Faz B — preview regresyon turu
+## Rota dönüşüm matrisi
 
-Durum: **CI ve Preview bekleniyor.**
+| Mevcut rota | Yeni Hub içindeki rolü | Taşıma sonrası durum |
+| --- | --- | --- |
+| `/yonetim` | Çalışma Alanım / Genel bakış | Hub ana girişi olacak |
+| `/yonetim/hub` | Eski önizleme yolu | `/yonetim` ile birleştirilecek veya uyumluluk yönlendirmesi olacak |
+| `/yonetim/danisanlar` | Danışanlar / kayıt listesi | Hub liste paneline taşınacak |
+| `/yonetim/danisan-olustur` | Danışanlar / yeni danışan | Hub çalışma alanında form |
+| `/yonetim/danisan-profili?clientId=...` | Danışan detay çalışma alanı | Hub detay ve tam sayfa modu |
+| `/yonetim/randevular` | Randevular / operasyon | Hub liste-detay akışı |
+| `/yonetim/musaitlik` | Randevular / müsaitlik | Hub çalışma alanında tam düzenleme |
+| `/yonetim/odemeler` | Finans / ödeme ve planlar | Hub liste-detay ve tam sayfa işlem |
+| `/yonetim/saglik` | Sistem / sağlık | Hub read-only çalışma alanı |
 
-Kontrol edilecek rotalar:
+Eski URL’ler kırılmayacaktır. Gerekli rotalar aynı URL’de yeni Hub kabuğunu kullanacak; yinelenen rotalar yalnızca uyumluluk yönlendirmesi olarak bırakılacaktır.
 
-1. `/yonetim`
-2. `/yonetim/hub`
-3. `/yonetim/danisanlar`
-4. `/yonetim/danisan-olustur`
-5. `/yonetim/danisan-profili?clientId=...`
-6. `/yonetim/randevular`
-7. `/yonetim/musaitlik`
-8. `/yonetim/odemeler`
-9. `/yonetim/saglik`
+## Uygulama sırası
 
-Her rotada:
+### Aşama 1 — Ortak Hub kabuğu
 
-- masaüstü / tablet / mobil taşma,
-- sticky topbar,
-- sidebar aktif durumları,
-- URL modalları,
-- custom dropdown ve takvim,
-- klavye odağı,
-- salt-okunur rol davranışı,
-- uzun ad/e-posta/tutar metinleri,
-- boş ve hata durumları
+- `AdminHubShell` tek kalıcı kabuk olarak çıkarılır.
+- Akordeon navigasyon, aktif grup, izin bazlı menü ve responsive davranış ortaklaştırılır.
+- Üst eylem şeridi ve tam sayfa çalışma modu tüm sayfalara sunulur.
+- Hub ve eski `AdminShell` içindeki yinelenen sidebar/topbar kodu tek bileşene indirilir.
 
-kontrol edilir.
+**Kabul:** Bütün yönetim rotaları aynı kabuğun içinde açılabilir; henüz eski içerik bileşenleri kullanılsa bile farklı panel görünmez.
 
-### Faz C — teknik temizlik
+### Aşama 2 — Danışan akışının eksiksiz taşınması
 
-Bu PR’ın preview turunda zorunlu bir regresyon görülmezse ayrı deploy üretmemek için sonraki milestone’a bırakılır:
+- Danışan arama ve filtreleme.
+- Yeni yetişkin / çocuk danışan formu.
+- Çocukta zorunlu veli; mevcut veli seçimi veya yeni veli oluşturma.
+- Danışan profilinde genel bilgi, veli, consent, randevu, ödeme-plan ve operasyon zaman çizelgesi.
+- URL tabanlı modal ve custom dropdown/takvim davranışları.
 
-- Eski `*-polish.module.css` ve lokal override dosyalarının ortak bileşenlere kademeli taşınması.
-- Unicode navigasyon ikonlarının ortak SVG ikon setine geçirilmesi.
-- Gerçek çoklu-entity arama API’si ve komut menüsü.
-- Hub listesinin server-side arama/sayfalama ile genişletilmesi.
-- “Kayıt tamlığı” ağırlıklarının kaldırılması veya açık ürün kararına bağlanması.
+**Kabul:** Danışan işlemleri için eski kabuğa veya ayrı tasarıma geçiş yoktur.
 
-## Veri ve güvenlik etkisi
+### Aşama 3 — Randevu ve müsaitlik
 
-- Migration yok.
-- Yeni kişisel veri alanı yok.
-- Yetki kataloğu değişmiyor.
-- API ve durum makinesi değişmiyor.
-- Finans/randevu/consent yazma davranışı değişmiyor.
-- Tasarım yüzeyleri liste görünümünde minimum veri ilkesini korur.
+- Talep kuyruğu, takvim/liste ve seçili randevu detayları.
+- Domain durum makinesinin izin verdiği onay, saat önerisi, iptal, gelmedi ve tamamlandı işlemleri.
+- Haftalık müsaitlik kuralları ve istisnaların Hub içinde tam düzenlenmesi.
+- Süre, buffer ve hizmet snapshot kuralları korunur.
 
-## Teslim kapıları
+**Kabul:** Salt-okunur Hub özeti yerine bütün ağır randevu ve müsaitlik işlemleri aynı çalışma alanında yapılır.
 
-- `pnpm quality`
-- `pnpm build`
-- GitHub Quality workflow
-- Vercel Preview
-- Randevu çekirdeğine dokunulursa PostgreSQL integration; bu PR’ın mevcut kapsamı randevu çekirdeğini değiştirmiyor.
-- Yetkili hesapla yönetim rotalarının manuel smoke kontrolü
-- Tek squash merge ve tek production deploy
+### Aşama 4 — Finans
+
+- Ödeme özeti, danışan planları, seans hakları, taksitler ve beklenen ödemeler.
+- Ödeme alma, plan oluşturma, düzeltme/ters kayıt ve hareket geçmişi.
+- Filtreler ve danışan bağlantısı.
+- Finans izinleri ve append-only ledger davranışı korunur.
+
+**Kabul:** Finans özeti başka sayfaya göndermeden Hub içinde tam işlem yüzeyine dönüşür.
+
+### Aşama 5 — Site yönetimi ve sistem
+
+- Public iletişim ayarları.
+- Hizmet, terapist, görüşme süresi, konum, buffer ve onay modu ayarları.
+- Entegrasyon/outbox ve teknik sağlık panelleri.
+- Read-only roller için güvenli özet davranışı.
+
+**Kabul:** `/yonetim` altında uzun ve karışık ayar formu kalmaz; ilgili akordeon grubundan seçilerek geniş çalışma alanında açılır.
+
+### Aşama 6 — Eski tasarımın tamamen kaldırılması
+
+Bu aşama yalnızca önceki beş aşamanın fonksiyon eşitliği doğrulandıktan sonra uygulanır.
+
+- “Klasik panel”, “Hub görünümü” ve iki sistem varmış izlenimi veren bütün metin/linkler kaldırılır.
+- Eski `AdminShell` bileşeni silinir veya yalnızca yeni `AdminHubShell` için uyumluluk re-export’una çevrilir.
+- Eski `*-polish.module.css`, symmetry/order/icon-placement ve gereksiz global override dosyaları kaldırılır.
+- Mercan/serif eski admin kurallarının artık import edilmediği doğrulanır.
+- Yinelenen navigasyon, topbar, profil ve dashboard kodu silinir.
+- `/yonetim/hub` gerekiyorsa `/yonetim`e yönlendirilir.
+
+**Kabul:** Kod aramasında eski panel metni, eski sidebar varyantı veya ikinci admin tasarım kaynağı kalmaz.
+
+## Tasarım ve etkileşim standardı
+
+- Zemin `#e9e7e2`, panel `#fbfaf8`, yumuşak panel `#f4f2ec`, çizgi `#e3ded7`.
+- Seçili kayıt/görev lime `#dfec83`; ana işlem teal `#12897b`; kayıt başlığı şeftali `#fbe3d2 → #f6d0c0`.
+- Admin fontu Inter Variable.
+- Gerçek danışan/veli fotoğrafı yok; monogram avatar.
+- Browser `alert/confirm` yok; erişilebilir modal veya inline confirmation.
+- Native belirsiz dropdown/tarih davranışı yerine ortak custom dropdown ve custom takvim.
+- Filtre, seçili kayıt, sekme, modal ve tam sayfa görünüm gerekli yerlerde URL’de korunur.
+- Sahte KPI, tahmini trend veya klinik başarı skoru yok.
+- “Hazırlık skoru” ürün kararı olmadığı için **Kayıt tamlığı** kontrol listesine dönüştürülür; keyfî A/B/C notu kaldırılır.
+- Liste görünümünde minimum veri; ayrıntılar izinli detay yüzeyinde.
+
+## Silme öncesi fonksiyon eşitliği kontrol listesi
+
+Eski panel ancak aşağıdakilerin tamamı işaretlendikten sonra kaldırılır:
+
+- [ ] Genel dashboard ve hızlı işlemler
+- [ ] Danışan arama / filtre / oluşturma
+- [ ] Çocuk danışan + veli bağlantısı
+- [ ] Danışan detay ve operasyon geçmişi
+- [ ] Randevu liste/takvim/detay/durum işlemleri
+- [ ] Müsaitlik kuralı ve istisna düzenleme
+- [ ] Ödeme alma, plan, taksit, seans hakkı ve ledger
+- [ ] Hizmet, terapist, süre, buffer ve public iletişim ayarları
+- [ ] Sistem ve entegrasyon sağlığı
+- [ ] URL modal, custom dropdown ve custom takvim
+- [ ] Tam sayfa çalışma modu bütün ana ekranlarda
+- [ ] Rol/yetki ve read-only görünüm testi
+- [ ] Masaüstü, tablet ve mobil smoke turu
+- [ ] Boş, hata, uzun metin ve yüksek kayıt sayısı durumları
+- [ ] Eski tasarım dosyalarının ve metinlerinin kaldırılması
+
+## Deploy planı
+
+Aynı `design/unified-admin-panel` dalı ve Draft PR #107 kullanılacaktır. Yeni branch veya paralel tasarım PR’ı açılmaz.
+
+Bu noktadan itibaren hedef:
+
+1. Ortak kabuk + akordeon + tam sayfa modu için tek toplu push / Preview.
+2. Bütün operasyon ekranlarının migrasyonu için tek toplu push / Preview.
+3. Eski tasarımın silinmesi + final regresyon düzeltmeleri için tek toplu push / Preview.
+4. Kullanıcı onayından sonra tek squash merge / Production deploy.
+
+Kozmetik mikro commit, yalnızca doküman durumu için commit veya gereksiz redeploy yapılmaz.
+
+## Kalite kapıları
+
+- Prisma validate
+- ESLint
+- TypeScript
+- Unit testler
+- Production build ve smoke
+- PostgreSQL integration
+- Yetki testleri
+- Yetkili hesapla bütün yönetim rotalarının manuel smoke turu
+- Eski tasarım kalıntısı için kod araması
+- Tek production deploy öncesi final onay
