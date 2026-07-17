@@ -35,10 +35,10 @@ GitHub Issue #19’daki güncel roadmap Windows ve macOS dâhil tüm cihazlarda 
 
 - Birbiriyle ilişkili işler kullanıcıya anlamlı sonuç veren, review edilebilir milestone PR’larında toplanır; ilişkisiz kapsamlar aynı PR’a doldurulmaz.
 - PR #18 homepage hero/Hakkımda görselini, PR #20 transaction retry sağlamlaştırmasını, PR #21 public booking akışını, PR #22 admin finans operasyonunu, PR #23 transactional outbox çekirdeğini ve PR #24 read-only entegrasyon/outbox sağlık panelini teslim etti.
-- PR #106 sonrası aktif production durumu: public site cilası ve `/yonetim/hub` kayıt merkezi canlıdır; BotID Basic ve açık mükerrer danışan inceleme akışı da production kapsamındadır.
-- Aktif yönetim tasarımı çalışması Draft PR #107 ve `design/unified-admin-panel` dalıdır. Bu çalışma tamamlanana kadar başka bir admin tasarım dalı açılmaz.
+- PR #106 sonrası aktif production durumu: public site cilası ve ilk `/yonetim/hub` teslimi canlıdır; BotID Basic ve açık mükerrer danışan inceleme akışı da production kapsamındadır.
+- Aktif yönetim tasarımı çalışması Draft PR #107 ve `design/unified-admin-panel` dalıdır. Kod migrasyonu tamamlanmıştır; manuel yetkili Preview smoke ve kullanıcı final onayı tamamlanana kadar başka admin tasarım dalı açılmaz ve PR merge edilmez.
 - Öncelikli ürün/yayın başlıkları: Vercel Firewall rate limit kuralı, bildirim/Calendar provider worker, mesaj şablonu ve alıcı matrisi, backup restore tatbikatı, Google OAuth/MFA doğrulaması ve canlı yayın hukuki kapılarıdır.
-- Varsayılan çalışma biçimi tek dal, en fazla iki yerel commit ve testlerden sonra tek push’tur. CI sonucunu kaydetmek veya dokümanı ayrıca güncellemek için yeni push/commit yapılmaz; durum PR açıklamasında güncellenir.
+- Varsayılan çalışma biçimi tek dal, mümkün olan en az commit/push ve testlerden sonra toplu Preview’dır. CI sonucunu kaydetmek için yeni kod commit’i üretilmez; durum PR açıklamasında güncellenir.
 - İlgili hedefli testler bir kez, tam `pnpm quality` ve gerekiyorsa `pnpm build` bir kez çalıştırılır. GitHub CI tamamlandıktan sonra sonuç tek kez okunur.
 - Kullanıcıdan milestone sonunda tek merge onayı istenir; ara adımlar için ayrı merge onayı istenmez.
 - `main` dalına doğrudan commit atılmaz. Her değişiklik branch + PR + yeşil kalite kapıları üzerinden ilerler.
@@ -125,18 +125,18 @@ Her teslimde şunları belirt:
 
 ## Hub Tabanlı Tek Yönetim Paneli — Bağlayıcı Karar
 
-`/yonetim` altında iki ayrı admin deneyimi kalmayacaktır. `/yonetim/hub` ile klasik `AdminShell` yalnızca geçiş süresince birlikte bulunabilir. Nihai sistem, `docs/ADMIN_REDESIGN_PLAN.md` içinde tanımlanan tek `AdminHubShell` kabuğudur.
+`/yonetim` altında tek admin deneyimi vardır. `AdminShell` adı teknik import uyumluluğu için korunur; eski paneli değil, tamamlanmış ortak Hub kabuğunu temsil eder. `/yonetim/hub` ise bu kabuk içindeki kayıt merkezi rotasıdır ve ayrı sidebar/topbar üretmez.
 
 ### Zorunlu davranış
 
 - Sol navigasyon izin bazlı akordeon gruplardır: Çalışma Alanım, Randevular, Danışanlar, Finans, Site Yönetimi ve Sistem.
-- Aktif rotanın grubu otomatik açılır.
+- Aktif rota veya URL bölümü ilgili grubu otomatik açar.
+- Talep kuyruğu, danışan kayıt merkezi, müsaitlik özeti ve ödeme özeti ilgili grubun altından doğrudan açılır.
 - Liste gerektiren alanlar liste → kayıt özeti → çalışma alanı şeklinde kademeli açılır.
+- Uzun tam işlem sayfaları Hub çalışma sekmelerine ayrılır.
 - Her ana ekranda “Tam sayfa çalış / Panelleri geri aç” kontrolü ve `F` kısayolu bulunur.
-- Tam sayfa modunda ray ikon seviyesine daralır, varsa liste paneli kapanır ve ana iş alanı genişler.
-- Danışan, randevu, müsaitlik, finans, site ayarları ve sağlık işlemleri Hub kabuğuna fonksiyon eşitliğiyle taşınır.
-- Eski tasarım bütün fonksiyonlar taşınmadan silinmez; ancak fonksiyon eşitliği sağlandıktan sonra eski kabuk ve CSS kalıntılarının kaldırılması bu PR’ın zorunlu final aşamasıdır.
-- “Klasik panel”, “Hub görünümü” veya kullanıcıya iki sistem olduğu izlenimini veren bağlantı/metin final üründe bulunmaz.
+- Tam sayfa modunda ray ikon seviyesine daralır, varsa kayıt listesi kapanır ve ana iş alanı genişler.
+- “Klasik panel”, “Hub görünümü”, ikinci rail veya kullanıcıya iki sistem olduğu izlenimini veren bağlantı/metin bulunmaz.
 
 ### Tek görsel sistem
 
@@ -146,12 +146,15 @@ Her teslimde şunları belirt:
 - Gerçek danışan/veli fotoğrafı yoktur; monogram avatar kullanılır.
 - Browser `alert/confirm` yoktur; erişilebilir modal veya inline confirmation kullanılır.
 - Tarih ve seçenek alanlarında ortak custom takvim/dropdown kullanılır.
-- Sahte KPI, tahmini trend ve klinik/öncelik puanı yasaktır. Mevcut hazırlık puanı **Kayıt tamlığı** kontrol listesine dönüştürülür.
+- Sahte KPI, tahmini trend ve klinik/öncelik puanı yasaktır. Kullanıcı yüzeyinde yalnızca açık “Kayıt kontrolü” maddeleri gösterilir.
 
-### Geçiş ve silme kapısı
+### Tamamlanmış geçiş durumu
 
-Eski `AdminShell`, eski navigasyon/topbar varyantları ve `*-polish`, symmetry/order/icon-placement override dosyaları ancak `docs/ADMIN_REDESIGN_PLAN.md` içindeki fonksiyon eşitliği listesi tamamen doğrulandıktan sonra kaldırılır. Eski tasarım temizliği sonraki belirsiz milestone’a bırakılamaz; PR #107’nin final kabul kriteridir.
+- Standalone `DashboardHub`, eski Hub rail’i, “Klasik panele dön” bağlantısı ve yerel genişletme state’i silinmiştir.
+- Eski koyu yeşil/mercan/serif görsel katmanları Hub tokenlarına geçirilmiş veya yalnızca yapısal kurallara indirgenmiştir.
+- `*-polish.module.css`, `symmetry` veya `icon-placement` gibi teknik dosya adları kalabilir; bu adlar ikinci tasarım anlamına gelmez. İçerikleri Hub tokenları veya responsive/scroll uyumluluk kurallarıdır.
+- Yeni özellik için ikinci admin tema dosyası veya lokal “fix/polish” katmanı açılmaz; mevcut ortak bileşen/token genişletilir.
 
-### Deploy disiplini
+### Merge kapısı
 
-Aktif dal yalnızca `design/unified-admin-panel`, aktif Draft PR yalnızca #107’dir. Kod değişiklikleri ortak kabuk, bütün ekran migrasyonu ve final temizlik olmak üzere en fazla üç toplu Preview push’unda tamamlanır. Kullanıcı onayından sonra tek squash merge ve tek Production deploy yapılır.
+Kod migrasyonu ve otomatik kalite kapıları tamamlanmıştır. PR #107; yetkili hesapla masaüstü/tablet/mobil smoke, read-only rol kontrolü, uzun/boş/hata veri görünümü ve kullanıcı final onayı tamamlanana kadar Draft kalır. Sonrasında tek squash merge ve tek Production deploy yapılır.

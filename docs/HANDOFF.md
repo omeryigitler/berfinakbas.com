@@ -5,70 +5,96 @@ Son güncelleme: 17 Temmuz 2026, Europe/Malta
 ## Aktif çalışma
 
 - Ana dal: `main`
-- Son production teslimi: PR #106 — ana sayfa cilası + Yönetim Hub
+- Son production teslimi: PR #106 — ana sayfa cilası + ilk Yönetim Hub teslimi
 - Son production commit: `e1d2674659a0d8efc6c7e16fa08bf710d992ed65`
 - Aktif dal: `design/unified-admin-panel`
 - Aktif Draft PR: #107 — Hub tabanlı tek yönetim paneline tam geçiş
-- Public randevu: operasyonel yayın kapıları tamamlanana kadar fail-closed
+- Son doğrulanan kod head’i: `8003c49cd418157b12834df3c67b31bb597ea764`
+- Production’a henüz merge/deploy yapılmadı.
 
-## Bağlayıcı kullanıcı kararı
+## Kullanıcının bağlayıcı kararı
 
-- Amaç yalnızca eski sayfaları Hub renklerine boyamak değildir.
-- Bütün yönetim işlemleri gerçek Hub kabuğunda çalışacaktır.
-- Sol navigasyon akordeon gruplar halinde açılacaktır.
-- Her ana çalışma ekranında “Tam sayfa çalış / Panelleri geri aç” modu bulunacaktır.
-- Danışan, randevu, müsaitlik, finans, site ayarları ve sağlık ekranları yeni kabuğa eksiksiz taşınmadan eski tasarım silinmeyecektir.
-- Fonksiyon eşitliği tamamlandıktan sonra klasik panel, eski sidebar/topbar ve eski polish/override CSS dosyaları kaldırılacaktır.
+- `/yonetim` altında yalnızca tek yönetim deneyimi bulunur.
+- Sol navigasyon izin bazlı akordeondur.
+- Liste gerektiren alanlar liste → kayıt → çalışma alanı biçiminde açılır.
+- Her ana ekranda `Tam sayfa çalış / Panelleri geri aç` ve `F` kısayolu bulunur.
+- Danışan, randevu, müsaitlik, finans, site yönetimi ve sistem sağlığı farklı bir tasarıma geçmeden aynı Hub kabuğunda çalışır.
+- “Klasik panel”, ikinci sidebar veya ayrı Hub görünümü final üründe bulunmaz.
 
-Ayrıntılı rota, aşama, kabul ve silme kontrol listesi `docs/ADMIN_REDESIGN_PLAN.md` içindedir.
+## Tamamlanan kod migrasyonu
 
-## Kullanıcının gördüğü kırmızı deploy
+- Bütün yönetim rotaları ortak Hub kabuğunu kullanıyor:
+  - `/yonetim`
+  - `/yonetim/hub`
+  - `/yonetim/danisanlar`
+  - `/yonetim/danisan-olustur`
+  - `/yonetim/danisan-profili`
+  - `/yonetim/randevular`
+  - `/yonetim/musaitlik`
+  - `/yonetim/odemeler`
+  - `/yonetim/saglik`
+- Sol akordeon grupları: Çalışma Alanım, Randevular, Danışanlar, Finans, Site Yönetimi ve Sistem.
+- Talep kuyruğu, danışan kayıt merkezi, müsaitlik özeti ve ödeme özeti ilgili akordeon grubundan doğrudan URL state ile açılıyor.
+- Uzun yönetim sayfaları çalışma sekmelerine ayrıldı; bütün bloklar aynı anda aşağı doğru yığılmıyor.
+- `?gorunum=tam` ve `F` ile ortak tam sayfa çalışma modu aktif.
+- `/yonetim/hub` içindeki eski standalone `DashboardHub`, ikinci rail, yerel genişletme düğmesi ve “Klasik panele dön” bağlantısı kaldırıldı.
+- Yeni `RecordCenter` yalnızca ortak kabuk içinde çalışıyor.
+- Kullanıcı yüzeyindeki A/B/C ve ağırlıklı hazırlık skoru kaldırıldı; açık alanlar “Kayıt kontrolü” listesiyle gösteriliyor.
+- Eski koyu yeşil/mercan/serif tema üreten override katmanları Hub tokenlarına geçirildi veya yalnızca yapısal kurallara indirildi.
+- URL tabanlı modallar, randevu formu, custom takvim ve custom dropdown Hub tasarım sistemine geçirildi.
+- Müsaitlik istisnası artık serbest metin tarih/saat yerine ortak takvim ve kaydırılabilir saat dropdown’u kullanıyor.
+- Finans plan, taksit, ödeme ve ledger yüzeyleri Hub tokenlarını kullanıyor; finans iş kuralları değiştirilmedi.
+- Sistem sağlığı aynı kabukta read-only çalışıyor.
 
-- Hatalı satır production değildir.
-- Commit `9676b2984a96afe163edbafc9961bf93f7f755b5`, Dependabot’un ayrı development-dependencies preview’udur.
-- TypeScript `6.0.3 → 7.0.2` ve ESLint `9.39.4 → 10.7.0` gibi major güncellemeleri aynı pakette yükselttiği için dependency kurulumu başarısız olmuştur.
-- `main` production satırı PR #106 commitinde Ready durumundadır.
-- Dependabot değişiklikleri tasarım PR’ına alınmayacaktır.
+## Teknik adlandırma notu
 
-## Mevcut durum
+- `AdminShell` bileşen adı import uyumluluğu için korunuyor; artık eski paneli temsil etmiyor. Uygulamadaki tek Hub kabuğunun teknik bileşenidir.
+- `*-polish.module.css`, `symmetry` ve `icon-placement` isimli bazı dosyalar import uyumluluğu nedeniyle kalabilir; içerikleri eski tema değil Hub tokenları veya yapısal yerleşim kurallarıdır.
+- Ayrı bir eski sidebar/topbar bileşeni veya standalone Hub kaynağı kalmadı.
 
-- `/yonetim/hub` gerçek randevu, danışan, müsaitlik ve finans özetleriyle çalışıyor.
-- Hub içinde akordeon rail ve kayıt görünümünde genişletme modu bulunuyor.
-- Ortak yönetim kabuğuna akordeon menü, aktif grubun otomatik açılması, `?gorunum=tam` tam sayfa modu ve `F` kısayolu eklendi.
-- Ortak kabuk için yeni stil katmanı ve izin testi eklendi; son head CI/Preview doğrulaması bekleniyor.
-- Bu ortak kabuk şu anda klasik tam işlem sayfalarını taşımak için geçiş katmanıdır; tam fonksiyon migrasyonu henüz bitmedi.
-- PR #107 merge edilmeyecek; bütün ekran migrasyonu ve eski tasarım temizliği bitene kadar Draft kalacak.
+## Otomatik doğrulama
 
-## Uygulama sırası
+Son doğrulanan Quality run #425 tamamen başarılıdır:
 
-1. Ortak `AdminHubShell`: akordeon navigasyon, izinli menü, üst eylem şeridi, URL destekli tam sayfa çalışma modu. **İlk uygulama tamamlandı; doğrulama bekliyor.**
-2. Danışan liste/oluşturma/profil/veli/consent/randevu/finans akışlarının taşınması.
-3. Randevu talep/list/takvim/durum işlemleri ve müsaitlik düzenlemesinin taşınması.
-4. Ödeme-plan-taksit-seans hakkı-ledger işlemlerinin taşınması.
-5. Hizmet, terapist, süre, buffer, public iletişim ve sistem sağlığı ekranlarının taşınması.
-6. Fonksiyon eşitliği testi.
-7. Eski `AdminShell`, eski Hub/klasik geçiş bağlantıları ve eski CSS override dosyalarının kaldırılması.
-8. Final CI, PostgreSQL, Preview ve manuel rota smoke turu.
-9. Kullanıcı onayından sonra tek squash merge ve production deploy.
+- Prisma schema validation
+- ESLint
+- TypeScript typecheck
+- Unit/integration test paketi
+- Production build
+- Production-build smoke
+- Gerçek PostgreSQL integration
+- Vercel Preview — Ready
 
-## Deploy disiplini
+Migration, yeni secret veya yeni kişisel veri alanı eklenmedi.
 
-- Yalnızca `design/unified-admin-panel` ve Draft PR #107 kullanılacaktır.
-- Kalan kod değişiklikleri mümkün olan en büyük toplu push’larda birleştirilir.
-- Doküman veya CI sonucu için bundan sonra ayrı mikro commit yapılmaz.
-- Production’a yalnızca bir kez çıkılır.
+## Merge öncesi kalan manuel kapılar
 
-## Açık ürün/yayın konuları
+1. Yetkili hesapla Preview’da masaüstü, tablet ve mobil rota turu.
+2. Akordeon açılma, aktif grup, çalışma sekmeleri ve `?gorunum=tam` kontrolü.
+3. Danışan oluşturma, çocuk–veli bağlantısı, profil ve URL modal smoke testi.
+4. Randevu oluşturma/durum işlemleri ve müsaitlik istisnası smoke testi.
+5. Finans read/write izinleri, plan/taksit/ödeme ekranı ve read-only rol görünümü.
+6. Uzun ad, e-posta, tutar, boş veri, hata ve yüksek kayıt sayısı görsel kontrolleri.
+7. Kullanıcının son görünüm onayı.
+8. Tek squash merge ve tek Production deploy.
 
-- Vercel Firewall rate-limit kuralı henüz yayınlanmadı.
-- E-posta/Calendar sağlayıcısı, şablonlar, alıcı matrisi ve worker hosting seçilmedi.
-- Backup restore kanıtı, Google MFA ve canlı rol/yetki tatbikatı tamamlanmadı.
-- Nihai aydınlatma/açık rıza metinleri ve veli yetkisi prosedürü hukukçu onayı bekliyor.
+## Kullanıcının gördüğü eski kırmızı deploy
+
+- Commit `9676b2984a96afe163edbafc9961bf93f7f755b5` production değildir.
+- Dependabot’un TypeScript ve ESLint major sürümlerini birlikte yükselten ayrı Preview denemesidir.
+- Tasarım PR’ına alınmamıştır ve `main` production durumunu etkilemez.
 
 ## Veri ve güvenlik sınırı
 
-- Migration veya iş kuralı değişikliği yalnızca ekran migrasyonu için uydurulmaz.
-- Randevu durum makinesi, consent kapıları, append-only finans ledger’ı ve yetki kontrolleri korunur.
-- Klinik not/sağlık öyküsü alanı eklenmez.
-- Gerçek danışan/veli fotoğrafı gösterilmez.
-- Liste ekranlarında minimum veri ilkesi korunur.
+- Randevu durum makinesi, consent kapıları, yetki kontrolleri ve append-only finans ledger’ı korunur.
+- Klinik not/sağlık öyküsü alanı eklenmedi.
+- Gerçek danışan/veli fotoğrafı gösterilmiyor; monogram avatar kullanılıyor.
+- Liste ekranlarında minimum veri ilkesi korunuyor.
+- Public randevu, operasyonel yayın kapıları tamamlanana kadar fail-closed kalır.
+
+## Deploy disiplini
+
+- Yalnızca `design/unified-admin-panel` ve Draft PR #107 kullanılır.
+- PR manuel smoke tamamlanmadan Ready veya merge yapılmaz.
+- `main` dalına doğrudan commit atılmaz.
+- Kullanıcı onayından sonra yalnızca tek squash merge ve tek Production deploy yapılır.
