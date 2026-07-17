@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "Kayıt Merkezi | Berfin Akbaş",
 };
 
+const openRequestStatuses = ["REQUESTED", "PENDING_REVIEW", "RESCHEDULE_PROPOSED"] as const;
+const upcomingClientStatuses = ["CONFIRMED", "PENDING_REVIEW", "RESCHEDULE_PROPOSED"] as const;
+
 export default async function AdminHubPage() {
   const session = await requirePermission("appointments:read");
   const canManage = hasPermission(session.user.roles, "appointments:manage");
@@ -68,15 +71,20 @@ export default async function AdminHubPage() {
         },
       },
       take: 30,
+      where: { status: { in: [...openRequestStatuses] } },
     }),
     canReadClients
       ? database.client.findMany({
           orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
           select: {
             appointments: {
-              orderBy: { startsAt: "desc" },
+              orderBy: { startsAt: "asc" },
               select: { serviceNameSnapshot: true, startsAt: true, status: true },
               take: 3,
+              where: {
+                startsAt: { gt: now },
+                status: { in: [...upcomingClientStatuses] },
+              },
             },
             createdAt: true,
             email: true,
