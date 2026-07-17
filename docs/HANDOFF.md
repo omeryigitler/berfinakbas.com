@@ -9,7 +9,7 @@ Son güncelleme: 17 Temmuz 2026, Europe/Malta
 - Son production commit: `e1d2674659a0d8efc6c7e16fa08bf710d992ed65`
 - Aktif dal: `design/unified-admin-panel`
 - Aktif Draft PR: #107 — Hub tabanlı tek yönetim paneline tam geçiş
-- Son doğrulanan kod head’i: `8003c49cd418157b12834df3c67b31bb597ea764`
+- Son doğrulanan kod head’i: `78aeca9684c9b0bb42ebc5b3249248b77561dbd7`
 - Production’a henüz merge/deploy yapılmadı.
 
 ## Kullanıcının bağlayıcı kararı
@@ -54,7 +54,7 @@ Son güncelleme: 17 Temmuz 2026, Europe/Malta
 
 ## Otomatik doğrulama
 
-Son doğrulanan Quality run #425 tamamen başarılıdır:
+Final Quality run #426 tamamen başarılıdır:
 
 - Prisma schema validation
 - ESLint
