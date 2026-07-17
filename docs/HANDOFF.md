@@ -8,68 +8,66 @@ Son güncelleme: 17 Temmuz 2026, Europe/Malta
 - Son production teslimi: PR #106 — ana sayfa cilası + Yönetim Hub
 - Son production commit: `e1d2674659a0d8efc6c7e16fa08bf710d992ed65`
 - Aktif dal: `design/unified-admin-panel`
-- Aktif Draft PR: #107 — Yönetim panelini tek yeni tasarım sisteminde birleştir
+- Aktif Draft PR: #107 — Hub tabanlı tek yönetim paneline tam geçiş
 - Public randevu: operasyonel yayın kapıları tamamlanana kadar fail-closed
+
+## Bağlayıcı kullanıcı kararı
+
+- Amaç yalnızca eski sayfaları Hub renklerine boyamak değildir.
+- Bütün yönetim işlemleri gerçek Hub kabuğunda çalışacaktır.
+- Sol navigasyon akordeon gruplar halinde açılacaktır.
+- Her ana çalışma ekranında “Tam sayfa çalış / Panelleri geri aç” modu bulunacaktır.
+- Danışan, randevu, müsaitlik, finans, site ayarları ve sağlık ekranları yeni kabuğa eksiksiz taşınmadan eski tasarım silinmeyecektir.
+- Fonksiyon eşitliği tamamlandıktan sonra klasik panel, eski sidebar/topbar ve eski polish/override CSS dosyaları kaldırılacaktır.
+
+Ayrıntılı rota, aşama, kabul ve silme kontrol listesi `docs/ADMIN_REDESIGN_PLAN.md` içindedir.
 
 ## Kullanıcının gördüğü kırmızı deploy
 
 - Hatalı satır production değildir.
 - Commit `9676b2984a96afe163edbafc9961bf93f7f755b5`, Dependabot’un ayrı development-dependencies preview’udur.
-- Bu deneme TypeScript `6.0.3 → 7.0.2` ve ESLint `9.39.4 → 10.7.0` gibi major güncellemeleri aynı pakette yükselttiği için Vercel Preview başarısız olmuştur.
+- TypeScript `6.0.3 → 7.0.2` ve ESLint `9.39.4 → 10.7.0` gibi major güncellemeleri aynı pakette yükselttiği için dependency kurulumu başarısız olmuştur.
 - `main` production satırı PR #106 commitinde Ready durumundadır.
-- Dependabot değişiklikleri bu tasarım PR’ına alınmayacak; major sürümler ayrı uyumluluk turunda ele alınmalıdır.
+- Dependabot değişiklikleri tasarım PR’ına alınmayacaktır.
 
-## Canlı durum
+## Mevcut durum
 
-- Vercel production deploy başarılı.
-- `/api/health` veritabanını doğrulayarak `200 / ok` dönüyor.
 - `/yonetim/hub` gerçek randevu, danışan, müsaitlik ve finans özetleriyle çalışıyor.
-- Public `/randevu` sayfası erişilebilir; form feature flag ve yayın kapıları kapalıyken kişisel veri kabul etmiyor.
-- BotID Basic public hold ve request POST rotalarında aktif; Deep Analysis kapalıdır.
-- Mükerrer danışan inceleme akışı admin kararı olmadan otomatik birleştirme yapmaz.
+- Hub içinde akordeon rail ve kayıt görünümünde genişletme modu bulunuyor.
+- Klasik `AdminShell` kullanan tam işlem sayfaları yalnızca görsel token seviyesinde Hub’a yaklaştırılmış durumda; bu yeterli kabul edilmiyor.
+- Danışan, randevu, müsaitlik, ödeme ve ayarların ağır işlem yüzeyleri ortak Hub kabuğuna henüz tamamen taşınmadı.
+- PR #107 merge edilmeyecek; tam migrasyon ve eski tasarım temizliği bitene kadar Draft kalacak.
 
-## PR #107 kapsamında tamamlananlar
+## Uygulama sırası
 
-- Ortak admin menüsü “Çalışma alanı / Kayıt merkezi / Danışanlar / Randevular / Müsaitlik / Ödeme ve planlar / Sistem sağlığı” olarak düzenlendi.
-- Klasik admin sayfalarının sidebar, topbar, arama, profil, başlık, kart, liste, form ve responsive görünümü Hub’ın tasarım tokenlarıyla birleştirildi.
-- Sıcak gri zemin, krem panel, lime seçili durum, teal ana işlem ve şeftali başlık sistemi tüm yönetim yüzeylerine taşındı.
-- Public siteye dönüş bağlantısı ve kayıt merkezine hızlı geçiş ortak kabuğa eklendi.
-- `AGENTS.md` tek-panel kararı, route matrisi, bileşen standardı, veri/gizlilik ve sahte metrik yasağıyla güncellendi.
-- `docs/ADMIN_REDESIGN_PLAN.md` aktif tasarım ve regresyon planı olarak tamamlandı.
-- Veri modeli, migration, API, finans ledger’ı, consent ve randevu durum makinesi değiştirilmedi.
+1. Ortak `AdminHubShell`: akordeon navigasyon, izinli menü, üst eylem şeridi, URL destekli tam sayfa çalışma modu.
+2. Danışan liste/oluşturma/profil/veli/consent/randevu/finans akışlarının taşınması.
+3. Randevu talep/list/takvim/durum işlemleri ve müsaitlik düzenlemesinin taşınması.
+4. Ödeme-plan-taksit-seans hakkı-ledger işlemlerinin taşınması.
+5. Hizmet, terapist, süre, buffer, public iletişim ve sistem sağlığı ekranlarının taşınması.
+6. Fonksiyon eşitliği testi.
+7. Eski `AdminShell`, eski Hub/klasik geçiş bağlantıları ve eski CSS override dosyalarının kaldırılması.
+8. Final CI, PostgreSQL, Preview ve manuel rota smoke turu.
+9. Kullanıcı onayından sonra tek squash merge ve production deploy.
 
-## Doğrulama durumu
+## Deploy disiplini
 
-- Draft PR: #107
-- Vercel Preview: son commit için sonuç bekleniyor.
-- GitHub Quality: son commit için sonuç bekleniyor.
-- Randevu çekirdeğine dokunulmadığı için yeni migration/eşzamanlılık kapsamı eklenmedi.
-- Yetkili hesapla manuel rota smoke turu henüz tamamlanmadı.
+- Yalnızca `design/unified-admin-panel` ve Draft PR #107 kullanılacaktır.
+- Bu noktadan itibaren kod değişiklikleri üç toplu push hedefiyle gruplanır: ortak kabuk, tüm ekran migrasyonu, eski tasarım temizliği/final düzeltme.
+- Doküman veya CI sonucu için ayrı mikro commit yapılmaz.
+- Production’a yalnızca bir kez çıkılır.
 
-## Sıradaki güvenli çalışma sırası
+## Açık ürün/yayın konuları
 
-1. PR #107 son head için GitHub Quality ve Vercel Preview sonucunu kontrol et.
-2. Yetkili hesapla `/yonetim`, `/yonetim/hub`, danışan, profil, randevu, müsaitlik, ödeme ve sağlık rotalarını tek turda dolaş.
-3. Masaüstü/tablet/mobil taşma, sticky topbar, URL modalları, custom dropdown/takvim, odak ve uzun metin regresyonlarını kaydet.
-4. Yalnızca gerçek regresyon varsa aynı PR’da tek düzeltme turu yap; kozmetik mikro commit/deploy üretme.
-5. `pnpm quality` ve `pnpm build` yeşil olduğunda PR’ı review’a hazırla.
-6. Kullanıcı onayından sonra tek squash merge ve tek production deploy yap.
-7. Tasarım tesliminden sonra Vercel Firewall rate-limit kuralı, provider worker, backup/MFA ve hukuk yayın kapılarına dön.
-
-## Açık kararlar ve engeller
-
-- Gerçek çoklu-entity global arama API’si henüz yoktur; üst arama yalnızca danışan adı/telefon/e-postaya gider.
-- Hub listesi son kayıtlarla sınırlıdır; server-side arama/sayfalama sonraki milestone’dur.
-- “Kayıt tamlığı” puan ağırlıkları ürün kararı değildir; klinik veya öncelik skoru olarak sunulmamalıdır.
-- Eski lokal polish/override CSS dosyalarının tamamen kaldırılması, preview regresyonu yaratmamak için ayrı teknik temizlik milestone’una bırakılmıştır.
-- Vercel Firewall panelinde rate-limit kuralı henüz yayınlanmadı.
+- Vercel Firewall rate-limit kuralı henüz yayınlanmadı.
 - E-posta/Calendar sağlayıcısı, şablonlar, alıcı matrisi ve worker hosting seçilmedi.
 - Backup restore kanıtı, Google MFA ve canlı rol/yetki tatbikatı tamamlanmadı.
 - Nihai aydınlatma/açık rıza metinleri ve veli yetkisi prosedürü hukukçu onayı bekliyor.
 
-## Çalışma kuralı
+## Veri ve güvenlik sınırı
 
-- `main` dalına doğrudan commit atılmaz.
-- Bu görev boyunca yalnızca `design/unified-admin-panel` ve Draft PR #107 kullanılır.
-- Birbiriyle ilişkili değişiklikler tek review edilebilir PR ve mümkün olan en az Preview/Production deploy ile teslim edilir.
-- CI sonucu veya doküman durumu için ayrı commit üretilmez; PR açıklaması güncellenir.
+- Migration veya iş kuralı değişikliği yalnızca ekran migrasyonu için uydurulmaz.
+- Randevu durum makinesi, consent kapıları, append-only finans ledger’ı ve yetki kontrolleri korunur.
+- Klinik not/sağlık öyküsü alanı eklenmez.
+- Gerçek danışan/veli fotoğrafı gösterilmez.
+- Liste ekranlarında minimum veri ilkesi korunur.
