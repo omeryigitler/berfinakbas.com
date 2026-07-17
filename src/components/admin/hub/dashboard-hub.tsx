@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { buildHubStatusUrl, getHubActions, type HubAction } from "./hub-actions";
+import type { HubAvailabilityDay, HubFinanceSummary } from "./hub-data";
 import { HubAvatar } from "./hub-avatar";
 import styles from "./hub.module.css";
 import {
@@ -20,21 +21,24 @@ import {
   type HubRecord,
 } from "./hub-model";
 
-type HubSection = "danisanlar" | "talepler";
+type HubSection = "danisanlar" | "musaitlik" | "odemeler" | "talepler";
 
-const sectionMeta: Readonly<Record<HubSection, { caption: string; empty: string; title: string }>> =
-  {
-    danisanlar: {
-      caption: "son 30 danışan",
-      empty: "Henüz danışan kaydı yok.",
-      title: "Danışan kayıtları",
-    },
-    talepler: {
-      caption: "son 30 talep",
-      empty: "Henüz kayıt yok. Yeni talepler burada listelenir.",
-      title: "Talep kuyruğu",
-    },
-  };
+type HubListSection = "danisanlar" | "talepler";
+
+const sectionMeta: Readonly<
+  Record<HubListSection, { caption: string; empty: string; title: string }>
+> = {
+  danisanlar: {
+    caption: "son 30 danışan",
+    empty: "Henüz danışan kaydı yok.",
+    title: "Danışan kayıtları",
+  },
+  talepler: {
+    caption: "son 30 talep",
+    empty: "Henüz kayıt yok. Yeni talepler burada listelenir.",
+    title: "Talep kuyruğu",
+  },
+};
 
 function StatusChip({ status }: { status: HubRecord["status"] }) {
   return (
@@ -70,14 +74,18 @@ function ScoreRing({ grade, score }: { grade: string; score: number }) {
 
 export function DashboardHub({
   appointments,
+  availability = null,
   canManage = false,
   canReadClients = false,
   clients = [],
+  finance = null,
 }: {
   appointments: readonly HubRecord[];
+  availability?: readonly HubAvailabilityDay[] | null;
   canManage?: boolean;
   canReadClients?: boolean;
   clients?: readonly HubRecord[];
+  finance?: HubFinanceSummary | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -93,8 +101,11 @@ export function DashboardHub({
   /* Section and record selection live in the URL (?bolum=…&kayit=…) so they
      survive refreshes, work with back/forward and can be shared. */
   const sectionParam = searchParams.get("bolum");
-  const section: HubSection =
-    sectionParam === "danisanlar" && canReadClients ? "danisanlar" : "talepler";
+  let section: HubSection = "talepler";
+  if (sectionParam === "danisanlar" && canReadClients) section = "danisanlar";
+  else if (sectionParam === "musaitlik" && availability) section = "musaitlik";
+  else if (sectionParam === "odemeler" && finance) section = "odemeler";
+  const isListSection = section === "talepler" || section === "danisanlar";
   const activeRecordId = searchParams.get("kayit");
 
   const navigate = useCallback(
@@ -126,8 +137,11 @@ export function DashboardHub({
     setActionNotice(null);
   }
 
-  const records = section === "danisanlar" ? clients : appointments;
-  const meta = sectionMeta[section];
+  const records = useMemo(
+    () => (section === "danisanlar" ? clients : section === "talepler" ? appointments : []),
+    [appointments, clients, section],
+  );
+  const meta = isListSection ? sectionMeta[section as HubListSection] : null;
 
   const record = useMemo(
     () => records.find((candidate) => candidate.id === activeRecordId) ?? null,
@@ -182,13 +196,18 @@ export function DashboardHub({
     () =>
       hubNavGroups
         .filter((group) => group.id !== "danisanlar" || canReadClients)
+        .filter((group) => group.id !== "finans" || finance !== null)
         .map((group) => ({
           ...group,
-          children: group.children.map((child) =>
-            child.section === "talepler" ? { ...child, badge: openCount || undefined } : child,
-          ),
+          children: group.children.map((child) => {
+            if (child.section === "talepler") return { ...child, badge: openCount || undefined };
+            if (child.section === "musaitlik" && !availability) {
+              return { href: "/yonetim/musaitlik", id: child.id, label: child.label };
+            }
+            return child;
+          }),
         })),
-    [canReadClients, openCount],
+    [availability, canReadClients, finance, openCount],
   );
   const stageIndex = record ? getStageIndex(record.stage) : -1;
 
@@ -229,12 +248,25 @@ export function DashboardHub({
         navigate("talepler", null);
       } else if (event.key === "2" && canReadClients) {
         navigate("danisanlar", null);
+      } else if (event.key === "3" && availability) {
+        navigate("musaitlik", null);
+      } else if (event.key === "4" && finance) {
+        navigate("odemeler", null);
       }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeRecordId, armedActionId, canReadClients, navigate, records, section]);
+  }, [
+    activeRecordId,
+    armedActionId,
+    availability,
+    canReadClients,
+    finance,
+    navigate,
+    records,
+    section,
+  ]);
 
   return (
     <div className={styles.hub} data-focus={focusMode ? "true" : undefined}>
@@ -316,52 +348,169 @@ export function DashboardHub({
         </Link>
       </aside>
 
-      <section
-        className={styles.listPanel}
-        data-collapsed={focusMode ? "true" : undefined}
-        aria-label="Kayıt listesi"
-      >
-        <header className={styles.listHead}>
-          <div>
-            <strong>{meta.title}</strong>
-            <small>
-              {records.length} kayıt · {meta.caption}
-            </small>
-          </div>
-        </header>
-
-        <div className={styles.listScroll}>
-          {buckets.length === 0 ? <p className={styles.listEmpty}>{meta.empty}</p> : null}
-          {buckets.map((bucket) => (
-            <div key={bucket.group}>
-              <p className={styles.listGroupLabel}>{hubGroupLabels[bucket.group]}</p>
-              {bucket.items.map((item) => (
-                <button
-                  className={styles.listItem}
-                  data-active={activeRecordId === item.id ? "true" : undefined}
-                  key={item.id}
-                  onClick={() => navigate(section, item.id)}
-                  type="button"
-                >
-                  <HubAvatar name={item.name} />
-                  <span className={styles.listItemBody}>
-                    <strong>{item.name}</strong>
-                    <small>{item.lastAction}</small>
-                    <span className={styles.listItemMeta}>
-                      <StatusChip status={item.status} />
-                      <time>{item.lastActionAt}</time>
-                    </span>
-                  </span>
-                  <em className={styles.listScore}>{item.readinessScore}</em>
-                </button>
-              ))}
+      {isListSection && meta ? (
+        <section
+          className={styles.listPanel}
+          data-collapsed={focusMode ? "true" : undefined}
+          aria-label="Kayıt listesi"
+        >
+          <header className={styles.listHead}>
+            <div>
+              <strong>{meta.title}</strong>
+              <small>
+                {records.length} kayıt · {meta.caption}
+              </small>
             </div>
-          ))}
-        </div>
-      </section>
+          </header>
+
+          <div className={styles.listScroll}>
+            {buckets.length === 0 ? <p className={styles.listEmpty}>{meta.empty}</p> : null}
+            {buckets.map((bucket) => (
+              <div key={bucket.group}>
+                <p className={styles.listGroupLabel}>{hubGroupLabels[bucket.group]}</p>
+                {bucket.items.map((item) => (
+                  <button
+                    className={styles.listItem}
+                    data-active={activeRecordId === item.id ? "true" : undefined}
+                    key={item.id}
+                    onClick={() => navigate(section, item.id)}
+                    type="button"
+                  >
+                    <HubAvatar name={item.name} />
+                    <span className={styles.listItemBody}>
+                      <strong>{item.name}</strong>
+                      <small>{item.lastAction}</small>
+                      <span className={styles.listItemMeta}>
+                        <StatusChip status={item.status} />
+                        <time>{item.lastActionAt}</time>
+                      </span>
+                    </span>
+                    <em className={styles.listScore}>{item.readinessScore}</em>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className={styles.workArea} aria-label="Çalışma alanı">
-        {record ? (
+        {section === "musaitlik" && availability ? (
+          <>
+            <div className={styles.ribbon}>
+              <div className={styles.ribbonActions}>
+                <Link
+                  className={styles.pill}
+                  data-tone="primary"
+                  href={"/yonetim/musaitlik" as Route}
+                >
+                  Müsaitliği düzenle ↗
+                </Link>
+                <button className={styles.pill} onClick={() => router.refresh()} type="button">
+                  Yenile
+                </button>
+              </div>
+              <button
+                className={styles.pill}
+                data-active={focusMode ? "true" : undefined}
+                onClick={() => setFocusMode((value) => !value)}
+                type="button"
+              >
+                {focusMode ? "Panelleri geri aç" : "Genişlet ⤢"}
+              </button>
+            </div>
+            <div className={styles.panelBody}>
+              <h2 className={styles.panelTitle}>Haftalık müsaitlik</h2>
+              <p className={styles.panelNote}>
+                Salt okunur önizleme; düzenleme müsaitlik sayfasında yapılır.
+              </p>
+              <ul className={styles.availList}>
+                {availability.map((day) => (
+                  <li key={day.label}>
+                    <strong>{day.label}</strong>
+                    <span className={styles.availSlots}>
+                      {day.slots.length === 0 ? (
+                        <em className={styles.availClosed}>Kapalı</em>
+                      ) : (
+                        day.slots.map((slot) => (
+                          <em
+                            className={styles.availSlot}
+                            data-inactive={slot.active ? undefined : "true"}
+                            key={slot.range}
+                          >
+                            {slot.range} · {slot.increment} dk
+                          </em>
+                        ))
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        ) : section === "odemeler" && finance ? (
+          <>
+            <div className={styles.ribbon}>
+              <div className={styles.ribbonActions}>
+                <Link
+                  className={styles.pill}
+                  data-tone="primary"
+                  href={"/yonetim/odemeler" as Route}
+                >
+                  Ödeme yönetimi ↗
+                </Link>
+                <button className={styles.pill} onClick={() => router.refresh()} type="button">
+                  Yenile
+                </button>
+              </div>
+              <button
+                className={styles.pill}
+                data-active={focusMode ? "true" : undefined}
+                onClick={() => setFocusMode((value) => !value)}
+                type="button"
+              >
+                {focusMode ? "Panelleri geri aç" : "Genişlet ⤢"}
+              </button>
+            </div>
+            <div className={styles.panelBody}>
+              <h2 className={styles.panelTitle}>Ödeme özeti</h2>
+              <p className={styles.panelNote}>
+                Salt okunur önizleme; kayıt işlemleri ödeme yönetiminde yapılır.
+              </p>
+              <div className={styles.statRow}>
+                <article className={styles.card}>
+                  <h3>Bu ay ödeme</h3>
+                  <strong className={styles.statValue}>{finance.monthPaymentLabel}</strong>
+                </article>
+                <article className={styles.card}>
+                  <h3>Bu ay plan borcu</h3>
+                  <strong className={styles.statValue}>{finance.monthAccrualLabel}</strong>
+                </article>
+              </div>
+              <article className={styles.card}>
+                <h3>Son kayıtlar</h3>
+                {finance.entries.length === 0 ? (
+                  <p className={styles.panelNote}>Bu ay finans kaydı bulunmuyor.</p>
+                ) : (
+                  <ul className={styles.financeList}>
+                    {finance.entries.map((entry) => (
+                      <li key={entry.id}>
+                        <HubAvatar name={entry.clientName} size={32} />
+                        <span className={styles.financeBody}>
+                          <strong>{entry.clientName}</strong>
+                          <small>
+                            {entry.typeLabel} · {entry.at}
+                          </small>
+                        </span>
+                        <em>{entry.amountLabel}</em>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            </div>
+          </>
+        ) : record ? (
           <>
             <div className={styles.ribbon}>
               <div className={styles.ribbonActions}>

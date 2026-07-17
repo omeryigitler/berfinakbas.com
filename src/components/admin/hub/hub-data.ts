@@ -425,3 +425,130 @@ export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: str
     timeline,
   };
 }
+
+/* ---------- availability (read-only weekly preview) ---------- */
+
+export type HubAvailabilityRuleRow = Readonly<{
+  localEndTime: string;
+  localStartTime: string;
+  slotIncrementMinutes: number;
+  status: "ACTIVE" | "INACTIVE";
+  weekday: number;
+}>;
+
+export type HubAvailabilityDay = Readonly<{
+  label: string;
+  slots: readonly Readonly<{ active: boolean; increment: number; range: string }>[];
+}>;
+
+const weekdayLabels = [
+  "Pazar",
+  "Pazartesi",
+  "Salı",
+  "Çarşamba",
+  "Perşembe",
+  "Cuma",
+  "Cumartesi",
+] as const;
+
+/* Monday-first working week; rules arrive Sunday-indexed (0 = Pazar). */
+const weekdayOrder = [1, 2, 3, 4, 5, 6, 0] as const;
+
+export function buildWeeklyAvailability(
+  rules: readonly HubAvailabilityRuleRow[],
+): readonly HubAvailabilityDay[] {
+  return weekdayOrder.map((weekday) => ({
+    label: weekdayLabels[weekday],
+    slots: rules
+      .filter((rule) => rule.weekday === weekday)
+      .map((rule) => ({
+        active: rule.status === "ACTIVE",
+        increment: rule.slotIncrementMinutes,
+        range: `${rule.localStartTime}–${rule.localEndTime}`,
+      })),
+  }));
+}
+
+/* ---------- finance (read-only summary) ---------- */
+
+export type HubFinanceEntryRow = Readonly<{
+  amountMinor: bigint;
+  client: Readonly<{ firstName: string; lastName: string; preferredName: string | null }>;
+  currency: string;
+  occurredAt: Date;
+  type: "ACCRUAL" | "ADJUSTMENT" | "PAYMENT" | "REFUND" | "REVERSAL";
+}>;
+
+export type HubFinanceSummary = Readonly<{
+  entries: readonly Readonly<{
+    amountLabel: string;
+    at: string;
+    clientName: string;
+    id: string;
+    typeLabel: string;
+  }>[];
+  monthAccrualLabel: string;
+  monthPaymentLabel: string;
+}>;
+
+const financeTypeLabels: Readonly<Record<HubFinanceEntryRow["type"], string>> = {
+  ACCRUAL: "Plan borcu",
+  ADJUSTMENT: "Düzeltme",
+  PAYMENT: "Ödeme",
+  REFUND: "İade",
+  REVERSAL: "Dengeleyici kayıt",
+};
+
+function formatMinorAmount(amountMinor: bigint, currency: string): string {
+  return new Intl.NumberFormat("tr-TR", { currency, style: "currency" }).format(
+    Number(amountMinor) / 100,
+  );
+}
+
+function monthKey(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    month: "2-digit",
+    timeZone,
+    year: "numeric",
+  }).format(date);
+}
+
+/*
+ * Server-side builder: converts BigInt money into display strings so the
+ * result is serialisable across the RSC boundary. Month totals are plain
+ * sums of the stored entry amounts for the current business-time-zone month.
+ */
+export function buildFinanceSummary(
+  rows: readonly (HubFinanceEntryRow & { id: string })[],
+  now: Date,
+  timeZone: string,
+): HubFinanceSummary {
+  const currentMonth = monthKey(now, timeZone);
+  const currency = rows[0]?.currency ?? "TRY";
+
+  const sumFor = (type: HubFinanceEntryRow["type"]): { count: number; total: bigint } =>
+    rows
+      .filter((row) => row.type === type && monthKey(row.occurredAt, timeZone) === currentMonth)
+      .reduce(
+        (accumulator, row) => ({
+          count: accumulator.count + 1,
+          total: accumulator.total + row.amountMinor,
+        }),
+        { count: 0, total: 0n },
+      );
+
+  const payments = sumFor("PAYMENT");
+  const accruals = sumFor("ACCRUAL");
+
+  return {
+    entries: rows.slice(0, 8).map((row) => ({
+      amountLabel: formatMinorAmount(row.amountMinor, row.currency),
+      at: formatRelativeStamp(row.occurredAt, now, timeZone),
+      clientName: row.client.preferredName ?? `${row.client.firstName} ${row.client.lastName}`,
+      id: row.id,
+      typeLabel: financeTypeLabels[row.type],
+    })),
+    monthAccrualLabel: `${accruals.count} kayıt · ${formatMinorAmount(accruals.total, currency)}`,
+    monthPaymentLabel: `${payments.count} kayıt · ${formatMinorAmount(payments.total, currency)}`,
+  };
+}

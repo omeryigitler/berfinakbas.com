@@ -64,7 +64,7 @@ export type HubNavChild = Readonly<{
   href?: string;
   id: string;
   label: string;
-  section?: "danisanlar" | "talepler";
+  section?: "danisanlar" | "musaitlik" | "odemeler" | "talepler";
 }>;
 
 export type HubNavGroup = Readonly<{
@@ -114,7 +114,7 @@ export const hubNavGroups: readonly HubNavGroup[] = [
     children: [
       { id: "talepler", label: "Talepler", section: "talepler" },
       { href: "/yonetim/randevular", id: "operasyon", label: "Randevu operasyonu" },
-      { href: "/yonetim/musaitlik", id: "musaitlik", label: "Müsaitlik" },
+      { id: "musaitlik", label: "Müsaitlik", section: "musaitlik" },
     ],
     icon: "◷",
     id: "randevular",
@@ -130,7 +130,10 @@ export const hubNavGroups: readonly HubNavGroup[] = [
     label: "Danışanlar",
   },
   {
-    children: [{ href: "/yonetim/odemeler", id: "odemeler", label: "Ödeme ve planlar" }],
+    children: [
+      { id: "odemeler", label: "Ödeme özeti", section: "odemeler" },
+      { href: "/yonetim/odemeler", id: "odeme-yonetimi", label: "Ödeme yönetimi" },
+    ],
     icon: "₺",
     id: "finans",
     label: "Finans",

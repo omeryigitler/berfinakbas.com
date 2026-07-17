@@ -948,6 +948,129 @@
   line-height: 1.65;
 }
 
+/* ---------- content panels (müsaitlik / ödemeler) ---------- */
+
+.panelBody {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.panelNote {
+  margin: 8px 0 20px;
+  color: var(--hub-muted);
+  font-size: 0.76rem;
+}
+
+.availList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.availList li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  border-top: 1px solid var(--hub-line);
+  padding: 14px 4px;
+}
+
+.availList strong {
+  width: 96px;
+  font-size: 0.82rem;
+}
+
+.availSlots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.availSlot,
+.availClosed {
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 650;
+}
+
+.availSlot {
+  background: var(--hub-teal-soft);
+  color: var(--hub-teal);
+}
+
+.availSlot[data-inactive="true"] {
+  background: #ece9e4;
+  color: var(--hub-muted);
+  text-decoration: line-through;
+}
+
+.availClosed {
+  border: 1px dashed var(--hub-line);
+  color: var(--hub-muted);
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.statValue {
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.financeList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.financeList li {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+}
+
+.financeBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.financeBody strong {
+  display: block;
+  font-size: 0.8rem;
+}
+
+.financeBody small {
+  color: var(--hub-muted);
+  font-size: 0.68rem;
+}
+
+.financeList em {
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 750;
+}
+
 /* ---------- record view transition ---------- */
 
 .recordView {

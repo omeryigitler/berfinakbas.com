@@ -259,3 +259,80 @@ describe("mapClientToHubRecord", () => {
     expect(scoreClientReadiness(makeClientRow({ guardians: [], type: "ADULT" })).score).toBe(100);
   });
 });
+
+describe("buildWeeklyAvailability", () => {
+  const { buildWeeklyAvailability } = hubDataModule;
+
+  it("orders days Monday-first and maps Sunday-indexed rules", () => {
+    const days = buildWeeklyAvailability([
+      {
+        localEndTime: "12:00",
+        localStartTime: "09:00",
+        slotIncrementMinutes: 30,
+        status: "ACTIVE",
+        weekday: 1,
+      },
+      {
+        localEndTime: "18:00",
+        localStartTime: "14:00",
+        slotIncrementMinutes: 45,
+        status: "INACTIVE",
+        weekday: 0,
+      },
+    ]);
+    expect(days).toHaveLength(7);
+    expect(days[0].label).toBe("Pazartesi");
+    expect(days[0].slots).toEqual([{ active: true, increment: 30, range: "09:00–12:00" }]);
+    expect(days[6].label).toBe("Pazar");
+    expect(days[6].slots[0].active).toBe(false);
+    expect(days[1].slots).toHaveLength(0);
+  });
+});
+
+describe("buildFinanceSummary", () => {
+  const { buildFinanceSummary } = hubDataModule;
+
+  it("sums current-month payments/accruals and renders display strings", () => {
+    const summary = buildFinanceSummary(
+      [
+        {
+          amountMinor: 150000n,
+          client: { firstName: "Cem", lastName: "Yalın", preferredName: null },
+          currency: "TRY",
+          id: "fin-1",
+          occurredAt: new Date("2026-07-03T10:00:00+03:00"),
+          type: "PAYMENT",
+        },
+        {
+          amountMinor: 200000n,
+          client: { firstName: "Duru", lastName: "Aksu", preferredName: null },
+          currency: "TRY",
+          id: "fin-2",
+          occurredAt: new Date("2026-07-01T10:00:00+03:00"),
+          type: "ACCRUAL",
+        },
+        {
+          amountMinor: 99900n,
+          client: { firstName: "Eski", lastName: "Kayıt", preferredName: null },
+          currency: "TRY",
+          id: "fin-3",
+          occurredAt: new Date("2026-06-01T10:00:00+03:00"),
+          type: "PAYMENT",
+        },
+      ],
+      now,
+      timeZone,
+    );
+    expect(summary.monthPaymentLabel).toContain("1 kayıt");
+    expect(summary.monthPaymentLabel).toContain("1.500,00");
+    expect(summary.monthAccrualLabel).toContain("2.000,00");
+    expect(summary.entries[0]).toMatchObject({ clientName: "Cem Yalın", typeLabel: "Ödeme" });
+    expect(summary.entries[0].amountLabel).toContain("1.500,00");
+  });
+
+  it("handles an empty ledger", () => {
+    const summary = buildFinanceSummary([], now, timeZone);
+    expect(summary.entries).toHaveLength(0);
+    expect(summary.monthPaymentLabel).toContain("0 kayıt");
+  });
+});

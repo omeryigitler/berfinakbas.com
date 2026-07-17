@@ -3,7 +3,12 @@ import "@fontsource-variable/inter/index.css";
 import type { Metadata } from "next";
 
 import { DashboardHub } from "@/components/admin/hub/dashboard-hub";
-import { mapAppointmentToHubRecord, mapClientToHubRecord } from "@/components/admin/hub/hub-data";
+import {
+  buildFinanceSummary,
+  buildWeeklyAvailability,
+  mapAppointmentToHubRecord,
+  mapClientToHubRecord,
+} from "@/components/admin/hub/hub-data";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
@@ -20,10 +25,16 @@ export default async function AdminHubPage() {
   const session = await requirePermission("appointments:read");
   const canManage = hasPermission(session.user.roles, "appointments:manage");
   const canReadClients = hasPermission(session.user.roles, "clients:read");
+  const canReadAvailability = hasPermission(session.user.roles, "services:read");
+  const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const environment = getServerEnvironment();
   const database = getDatabase();
 
-  const [appointmentRows, clientRows] = await Promise.all([
+  const now = new Date();
+  /* 45 days comfortably covers the current business month for the totals. */
+  const financeWindowStart = new Date(now.getTime() - 45 * 86_400_000);
+
+  const [appointmentRows, clientRows, availabilityRows, financeRows] = await Promise.all([
     database.appointment.findMany({
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: {
@@ -86,19 +97,49 @@ export default async function AdminHubPage() {
           take: 30,
         })
       : Promise.resolve([]),
+    canReadAvailability
+      ? database.availabilityRule.findMany({
+          orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
+          select: {
+            localEndTime: true,
+            localStartTime: true,
+            slotIncrementMinutes: true,
+            status: true,
+            weekday: true,
+          },
+        })
+      : Promise.resolve(null),
+    canReadFinance
+      ? database.financeLedgerEntry.findMany({
+          orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+          select: {
+            amountMinor: true,
+            client: { select: { firstName: true, lastName: true, preferredName: true } },
+            currency: true,
+            id: true,
+            occurredAt: true,
+            type: true,
+          },
+          take: 200,
+          where: { occurredAt: { gte: financeWindowStart } },
+        })
+      : Promise.resolve(null),
   ]);
 
-  const now = new Date();
   const timeZone = environment.BUSINESS_TIME_ZONE;
   const appointments = appointmentRows.map((row) => mapAppointmentToHubRecord(row, now, timeZone));
   const clients = clientRows.map((row) => mapClientToHubRecord(row, now, timeZone));
+  const availability = availabilityRows ? buildWeeklyAvailability(availabilityRows) : null;
+  const finance = financeRows ? buildFinanceSummary(financeRows, now, timeZone) : null;
 
   return (
     <DashboardHub
       appointments={appointments}
+      availability={availability}
       canManage={canManage}
       canReadClients={canReadClients}
       clients={clients}
+      finance={finance}
     />
   );
 }

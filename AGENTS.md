@@ -213,9 +213,19 @@ panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
   korumalı) ve `:focus-visible` halkaları; dar ekranda (≤940px) ray
   yatay şeride dönüşür, açık grubun alt öğeleri chip olarak sarar,
   liste yüksekliği sınırlanır ve paneller üst üste yığılır.
-- **Kalan (OPEN):** Müsaitlik/Ödemeler için hub içi içerik panelleri ve
-  `AdminShell`'in tam emekliliği — ağır düzenleme akışları hub'a
-  taşınmadan emeklilik yapılmaz.
+- **Ek kapsam (tamam):** Müsaitlik ve Ödemeler hub içi salt okunur
+  içerik panelleri oldu (`?bolum=musaitlik` `services:read` ile,
+  `?bolum=odemeler` `finance:read` ile; kısayollar 3/4): haftalık
+  müsaitlik önizlemesi (Pazartesi-öncelikli, pasif kurallar üstü çizili)
+  ve ay içi ödeme/plan borcu toplamları + son kayıtlar (BigInt tutarlar
+  sunucuda `buildFinanceSummary` ile metinleştirilir). Düzenleme,
+  panellerdeki ↗ köprülerle ilgili tam sayfalarda yapılır.
+- **Karar — `AdminShell` emekliliği:** Yapılmadı ve bilinçli olarak
+  ertelendi. Ağır düzenleme akışları (danışan formları, müsaitlik
+  kuralları, finans işlemleri) klasik sayfalarda yaşamaya devam eder;
+  Hub gezinme/inceleme/durum-geçişi yüzeyidir ve iki kabuk birbirine
+  bağlıdır. Emeklilik ancak bu akışlar hub'a taşınırsa yeniden
+  değerlendirilir.
 
 ### Faz 1 kabul ölçütleri
 
