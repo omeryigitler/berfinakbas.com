@@ -47,12 +47,8 @@
   height: 7px;
 }
 
-:global(
-    [data-admin-refresh="shell"] [data-admin-region="sidebar"]::-webkit-scrollbar-thumb
-  ),
-:global(
-    [data-admin-refresh="shell"] [data-admin-region="scroll-area"]::-webkit-scrollbar-thumb
-  ) {
+:global([data-admin-refresh="shell"] [data-admin-region="sidebar"]::-webkit-scrollbar-thumb),
+:global([data-admin-refresh="shell"] [data-admin-region="scroll-area"]::-webkit-scrollbar-thumb) {
   border-radius: 999px;
   background: rgb(18 137 123 / 22%);
 }
@@ -81,10 +77,8 @@
 }
 
 :global(
-    [data-admin-refresh="shell"]
-      article[class*="dashboardCardPrimary"]
-      i[class*="dashboardCardIcon"]
-  ) {
+  [data-admin-refresh="shell"] article[class*="dashboardCardPrimary"] i[class*="dashboardCardIcon"]
+) {
   border-color: rgb(255 255 255 / 22%);
   background: rgb(255 255 255 / 14%);
   color: #fff;

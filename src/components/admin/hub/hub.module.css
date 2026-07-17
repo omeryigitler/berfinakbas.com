@@ -448,7 +448,11 @@
   overflow: hidden;
   border: 1px solid rgb(246 208 192 / 65%);
   border-radius: 18px;
-  background: linear-gradient(120deg, var(--admin-peach, #fbe3d2), var(--admin-peach-deep, #f6d0c0));
+  background: linear-gradient(
+    120deg,
+    var(--admin-peach, #fbe3d2),
+    var(--admin-peach-deep, #f6d0c0)
+  );
   padding: 17px;
 }
 

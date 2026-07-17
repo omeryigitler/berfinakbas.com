@@ -53,9 +53,7 @@ export function buildClientProfileFinanceSummary(
 
   return {
     hasOpenBalance: openBalances.some((row) => row.totalMinor > 0n),
-    openBalanceLabel: formatCurrencyAmounts(
-      openBalances.filter((row) => row.totalMinor > 0n),
-    ),
+    openBalanceLabel: formatCurrencyAmounts(openBalances.filter((row) => row.totalMinor > 0n)),
     paidLabel: formatCurrencyAmounts(paidTotals.filter((row) => row.totalMinor !== 0n)),
     planTotalLabel: formatCurrencyAmounts(planTotals.filter((row) => row.totalMinor !== 0n)),
     remainingSessions,

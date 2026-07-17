@@ -41,9 +41,7 @@ export function normalizeCurrencyAggregates(
 export function formatCurrencyAmounts(rows: readonly CurrencyAggregate[]): string {
   const normalized = normalizeCurrencyAggregates(rows);
   if (normalized.length === 0) return "Kayıt yok";
-  return normalized
-    .map((row) => formatMinorCurrency(row.totalMinor, row.currency))
-    .join(" + ");
+  return normalized.map((row) => formatMinorCurrency(row.totalMinor, row.currency)).join(" + ");
 }
 
 export function formatCurrencyAggregateLabel(rows: readonly CurrencyAggregate[]): string {

@@ -3,10 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-const source = readFileSync(
-  join(process.cwd(), "src/app/yonetim/danisanlar/page.tsx"),
-  "utf8",
-);
+const source = readFileSync(join(process.cwd(), "src/app/yonetim/danisanlar/page.tsx"), "utf8");
 
 describe("admin client list pagination contract", () => {
   it("uses bounded server-side pagination instead of a fixed 100-record list", () => {

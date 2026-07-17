@@ -111,9 +111,7 @@ export function RecordCenter({
       ...(canReadClients
         ? [{ count: clients.length, id: "danisanlar" as const, label: "Danışanlar" }]
         : []),
-      ...(availability
-        ? [{ count: null, id: "musaitlik" as const, label: "Müsaitlik" }]
-        : []),
+      ...(availability ? [{ count: null, id: "musaitlik" as const, label: "Müsaitlik" }] : []),
       ...(finance ? [{ count: null, id: "odemeler" as const, label: "Ödemeler" }] : []),
     ],
     [availability, canReadClients, clients.length, finance, openAppointmentCount],
@@ -274,314 +272,328 @@ export function RecordCenter({
           </section>
         ) : null}
 
-        {(section && (
-          (section === "musaitlik" && availability) ||
-          (section === "odemeler" && finance) ||
-          isListSection
-        )) || record ? (
+        {(section &&
+          ((section === "musaitlik" && availability) ||
+            (section === "odemeler" && finance) ||
+            isListSection)) ||
+        record ? (
           <section className={`${hubStyles.workArea} ${styles.work}`} aria-label="Çalışma alanı">
             {section === "musaitlik" && availability ? (
-            <>
-              <div className={hubStyles.ribbon}>
-                <div className={hubStyles.ribbonActions}>
-                  <Link
-                    className={hubStyles.pill}
-                    data-tone="primary"
-                    href={"/yonetim/musaitlik" as Route}
-                  >
-                    Müsaitliği düzenle
-                  </Link>
-                  <button className={hubStyles.pill} onClick={() => router.refresh()} type="button">
-                    Yenile
-                  </button>
+              <>
+                <div className={hubStyles.ribbon}>
+                  <div className={hubStyles.ribbonActions}>
+                    <Link
+                      className={hubStyles.pill}
+                      data-tone="primary"
+                      href={"/yonetim/musaitlik" as Route}
+                    >
+                      Müsaitliği düzenle
+                    </Link>
+                    <button
+                      className={hubStyles.pill}
+                      onClick={() => router.refresh()}
+                      type="button"
+                    >
+                      Yenile
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className={hubStyles.panelBody}>
-                <h2 className={hubStyles.panelTitle}>Haftalık müsaitlik</h2>
-                <p className={hubStyles.panelNote}>
-                  Haftalık kuralların salt okunur özeti. Düzenleme aynı Hub kabuğundaki müsaitlik
-                  bölümünde yapılır.
-                </p>
-                <ul className={hubStyles.availList}>
-                  {availability.map((day) => (
-                    <li key={day.label}>
-                      <strong>{day.label}</strong>
-                      <span className={hubStyles.availSlots}>
-                        {day.slots.length === 0 ? (
-                          <em className={hubStyles.availClosed}>Kapalı</em>
-                        ) : (
-                          day.slots.map((slot) => (
-                            <em
-                              className={hubStyles.availSlot}
-                              data-inactive={slot.active ? undefined : "true"}
-                              key={`${day.label}-${slot.range}`}
-                            >
-                              {slot.range} · {slot.increment} dk
-                            </em>
-                          ))
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          ) : section === "odemeler" && finance ? (
-            <>
-              <div className={hubStyles.ribbon}>
-                <div className={hubStyles.ribbonActions}>
-                  <Link
-                    className={hubStyles.pill}
-                    data-tone="primary"
-                    href={"/yonetim/odemeler" as Route}
-                  >
-                    Ödeme yönetimi
-                  </Link>
-                  <button className={hubStyles.pill} onClick={() => router.refresh()} type="button">
-                    Yenile
-                  </button>
+                <div className={hubStyles.panelBody}>
+                  <h2 className={hubStyles.panelTitle}>Haftalık müsaitlik</h2>
+                  <p className={hubStyles.panelNote}>
+                    Haftalık kuralların salt okunur özeti. Düzenleme aynı Hub kabuğundaki müsaitlik
+                    bölümünde yapılır.
+                  </p>
+                  <ul className={hubStyles.availList}>
+                    {availability.map((day) => (
+                      <li key={day.label}>
+                        <strong>{day.label}</strong>
+                        <span className={hubStyles.availSlots}>
+                          {day.slots.length === 0 ? (
+                            <em className={hubStyles.availClosed}>Kapalı</em>
+                          ) : (
+                            day.slots.map((slot) => (
+                              <em
+                                className={hubStyles.availSlot}
+                                data-inactive={slot.active ? undefined : "true"}
+                                key={`${day.label}-${slot.range}`}
+                              >
+                                {slot.range} · {slot.increment} dk
+                              </em>
+                            ))
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-              <div className={hubStyles.panelBody}>
-                <h2 className={hubStyles.panelTitle}>Ödeme özeti</h2>
-                <p className={hubStyles.panelNote}>
-                  Gerçek hareketlerin salt okunur özeti. Kayıt işlemleri aynı Hub kabuğundaki ödeme
-                  yönetiminde yapılır.
-                </p>
-                <div className={hubStyles.statRow}>
+              </>
+            ) : section === "odemeler" && finance ? (
+              <>
+                <div className={hubStyles.ribbon}>
+                  <div className={hubStyles.ribbonActions}>
+                    <Link
+                      className={hubStyles.pill}
+                      data-tone="primary"
+                      href={"/yonetim/odemeler" as Route}
+                    >
+                      Ödeme yönetimi
+                    </Link>
+                    <button
+                      className={hubStyles.pill}
+                      onClick={() => router.refresh()}
+                      type="button"
+                    >
+                      Yenile
+                    </button>
+                  </div>
+                </div>
+                <div className={hubStyles.panelBody}>
+                  <h2 className={hubStyles.panelTitle}>Ödeme özeti</h2>
+                  <p className={hubStyles.panelNote}>
+                    Gerçek hareketlerin salt okunur özeti. Kayıt işlemleri aynı Hub kabuğundaki
+                    ödeme yönetiminde yapılır.
+                  </p>
+                  <div className={hubStyles.statRow}>
+                    <article className={hubStyles.card}>
+                      <h3>Bu ay ödeme</h3>
+                      <strong className={hubStyles.statValue}>{finance.monthPaymentLabel}</strong>
+                    </article>
+                    <article className={hubStyles.card}>
+                      <h3>Bu ay plan borcu</h3>
+                      <strong className={hubStyles.statValue}>{finance.monthAccrualLabel}</strong>
+                    </article>
+                  </div>
                   <article className={hubStyles.card}>
-                    <h3>Bu ay ödeme</h3>
-                    <strong className={hubStyles.statValue}>{finance.monthPaymentLabel}</strong>
-                  </article>
-                  <article className={hubStyles.card}>
-                    <h3>Bu ay plan borcu</h3>
-                    <strong className={hubStyles.statValue}>{finance.monthAccrualLabel}</strong>
+                    <h3>Son kayıtlar</h3>
+                    {finance.entries.length === 0 ? (
+                      <p className={hubStyles.panelNote}>Bu ay finans kaydı bulunmuyor.</p>
+                    ) : (
+                      <ul className={hubStyles.financeList}>
+                        {finance.entries.map((entry) => (
+                          <li key={entry.id}>
+                            <HubAvatar name={entry.clientName} size={32} />
+                            <span className={hubStyles.financeBody}>
+                              <strong>{entry.clientName}</strong>
+                              <small>
+                                {entry.typeLabel} · {entry.at}
+                              </small>
+                            </span>
+                            <em>{entry.amountLabel}</em>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </article>
                 </div>
-                <article className={hubStyles.card}>
-                  <h3>Son kayıtlar</h3>
-                  {finance.entries.length === 0 ? (
-                    <p className={hubStyles.panelNote}>Bu ay finans kaydı bulunmuyor.</p>
-                  ) : (
-                    <ul className={hubStyles.financeList}>
-                      {finance.entries.map((entry) => (
-                        <li key={entry.id}>
-                          <HubAvatar name={entry.clientName} size={32} />
-                          <span className={hubStyles.financeBody}>
-                            <strong>{entry.clientName}</strong>
-                            <small>
-                              {entry.typeLabel} · {entry.at}
-                            </small>
-                          </span>
-                          <em>{entry.amountLabel}</em>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </article>
-              </div>
-            </>
-          ) : record ? (
-            <>
-              <div className={hubStyles.ribbon}>
-                <div className={hubStyles.ribbonActions}>
-                  {actions.map((action) =>
-                    armedActionId === action.id ? (
-                      <span className={hubStyles.confirmGroup} key={action.id}>
+              </>
+            ) : record ? (
+              <>
+                <div className={hubStyles.ribbon}>
+                  <div className={hubStyles.ribbonActions}>
+                    {actions.map((action) =>
+                      armedActionId === action.id ? (
+                        <span className={hubStyles.confirmGroup} key={action.id}>
+                          <button
+                            className={hubStyles.pill}
+                            data-tone={action.tone}
+                            disabled={pendingActionId !== null}
+                            onClick={() => void runAction(action)}
+                            type="button"
+                          >
+                            {pendingActionId === action.id
+                              ? "İşleniyor…"
+                              : `Eminim: ${action.label}`}
+                          </button>
+                          <button
+                            className={hubStyles.pill}
+                            disabled={pendingActionId !== null}
+                            onClick={() => setArmedActionId(null)}
+                            type="button"
+                          >
+                            Vazgeç
+                          </button>
+                        </span>
+                      ) : (
                         <button
                           className={hubStyles.pill}
                           data-tone={action.tone}
                           disabled={pendingActionId !== null}
-                          onClick={() => void runAction(action)}
+                          key={action.id}
+                          onClick={() => {
+                            setArmedActionId(action.id);
+                            setActionError(null);
+                            setActionNotice(null);
+                          }}
                           type="button"
                         >
-                          {pendingActionId === action.id ? "İşleniyor…" : `Eminim: ${action.label}`}
+                          {action.label}
                         </button>
-                        <button
-                          className={hubStyles.pill}
-                          disabled={pendingActionId !== null}
-                          onClick={() => setArmedActionId(null)}
-                          type="button"
-                        >
-                          Vazgeç
-                        </button>
-                      </span>
-                    ) : (
-                      <button
+                      ),
+                    )}
+                    {record.profileHref ? (
+                      <Link
                         className={hubStyles.pill}
-                        data-tone={action.tone}
-                        disabled={pendingActionId !== null}
-                        key={action.id}
-                        onClick={() => {
-                          setArmedActionId(action.id);
-                          setActionError(null);
-                          setActionNotice(null);
-                        }}
-                        type="button"
+                        data-tone="primary"
+                        href={record.profileHref as Route}
                       >
-                        {action.label}
-                      </button>
-                    ),
-                  )}
-                  {record.profileHref ? (
-                    <Link
+                        Profili aç
+                      </Link>
+                    ) : null}
+                    <button
                       className={hubStyles.pill}
-                      data-tone="primary"
-                      href={record.profileHref as Route}
+                      disabled={pendingActionId !== null}
+                      onClick={() => router.refresh()}
+                      type="button"
                     >
-                      Profili aç
-                    </Link>
-                  ) : null}
-                  <button
-                    className={hubStyles.pill}
-                    disabled={pendingActionId !== null}
-                    onClick={() => router.refresh()}
-                    type="button"
-                  >
-                    Yenile
-                  </button>
+                      Yenile
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {actionError ? (
-                <p className={hubStyles.ribbonNote} data-kind="error" role="alert">
-                  {actionError}
-                </p>
-              ) : null}
-              {actionNotice ? (
-                <p className={hubStyles.ribbonNote} data-kind="notice" role="status">
-                  {actionNotice}
-                </p>
-              ) : null}
+                {actionError ? (
+                  <p className={hubStyles.ribbonNote} data-kind="error" role="alert">
+                    {actionError}
+                  </p>
+                ) : null}
+                {actionNotice ? (
+                  <p className={hubStyles.ribbonNote} data-kind="notice" role="status">
+                    {actionNotice}
+                  </p>
+                ) : null}
 
-              <div className={hubStyles.recordView} key={record.id}>
-                <header className={hubStyles.recordHead}>
-                  <div className={hubStyles.recordIdentity}>
-                    <HubAvatar name={record.name} size={56} />
-                    <div>
-                      <h2>{record.name}</h2>
-                      <p>{record.service}</p>
-                      <div className={hubStyles.recordChips}>
-                        <StatusChip status={record.status} />
-                        <span className={hubStyles.softChip}>{record.channel}</span>
-                        {record.reference ? (
-                          <span className={hubStyles.softChip}>{record.reference}</span>
-                        ) : null}
+                <div className={hubStyles.recordView} key={record.id}>
+                  <header className={hubStyles.recordHead}>
+                    <div className={hubStyles.recordIdentity}>
+                      <HubAvatar name={record.name} size={56} />
+                      <div>
+                        <h2>{record.name}</h2>
+                        <p>{record.service}</p>
+                        <div className={hubStyles.recordChips}>
+                          <StatusChip status={record.status} />
+                          <span className={hubStyles.softChip}>{record.channel}</span>
+                          {record.reference ? (
+                            <span className={hubStyles.softChip}>{record.reference}</span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {record.kind === "randevu" ? (
-                    <ol className={hubStyles.stageStrip} aria-label="Randevu aşaması">
-                      {hubStages.map((stage, index) => (
-                        <li
-                          data-state={
-                            index < stageIndex ? "done" : index === stageIndex ? "active" : "upcoming"
-                          }
-                          key={stage.id}
-                        >
-                          {stage.label}
-                        </li>
-                      ))}
-                    </ol>
-                  ) : null}
-                </header>
-
-                <div className={hubStyles.workGrid}>
-                  <section className={hubStyles.workColumn}>
-                    <article className={hubStyles.card}>
-                      <h3>İletişim</h3>
-                      <dl className={hubStyles.contactList}>
-                        <div>
-                          <dt>Telefon</dt>
-                          <dd>{record.contactPhone}</dd>
-                        </div>
-                        <div>
-                          <dt>E-posta</dt>
-                          <dd>{record.contactEmail}</dd>
-                        </div>
-                        <div>
-                          <dt>{record.kind === "randevu" ? "Kanal" : "Danışan tipi"}</dt>
-                          <dd>{record.channel}</dd>
-                        </div>
-                        <div>
-                          <dt>Planlanan saat</dt>
-                          <dd>{record.plannedAt}</dd>
-                        </div>
-                      </dl>
-                    </article>
-                    <article className={hubStyles.card}>
-                      <h3>Zaman çizelgesi</h3>
-                      <ol className={hubStyles.timeline}>
-                        {record.timeline.map((entry) => (
-                          <li key={`${entry.at}-${entry.label}`}>
-                            <time>{entry.at}</time>
-                            <span>{entry.label}</span>
+                    {record.kind === "randevu" ? (
+                      <ol className={hubStyles.stageStrip} aria-label="Randevu aşaması">
+                        {hubStages.map((stage, index) => (
+                          <li
+                            data-state={
+                              index < stageIndex
+                                ? "done"
+                                : index === stageIndex
+                                  ? "active"
+                                  : "upcoming"
+                            }
+                            key={stage.id}
+                          >
+                            {stage.label}
                           </li>
                         ))}
                       </ol>
-                    </article>
-                  </section>
+                    ) : null}
+                  </header>
 
-                  <section className={hubStyles.workColumn}>
-                    <article className={`${hubStyles.card} ${hubStyles.nextStepsCard}`}>
-                      <h3>Sıradaki adımlar</h3>
-                      <ol className={hubStyles.nextSteps}>
-                        {record.nextSteps.map((step, index) => (
-                          <li data-state={step.state} key={step.title}>
-                            <span className={hubStyles.stepIndex}>{index + 1}</span>
-                            <div>
-                              <strong>{step.title}</strong>
-                              <p>{step.detail}</p>
-                              <small>{step.due}</small>
-                            </div>
-                          </li>
-                        ))}
-                      </ol>
-                    </article>
-                  </section>
-
-                  <section className={hubStyles.workColumn}>
-                    <article className={hubStyles.card}>
-                      <h3>Kayıt kontrolü</h3>
-                      <ul className={styles.checkList}>
-                        {record.readinessNotes.map((note) => (
-                          <li key={note}>{note}</li>
-                        ))}
-                      </ul>
-                    </article>
-                    {record.connections.length > 0 ? (
+                  <div className={hubStyles.workGrid}>
+                    <section className={hubStyles.workColumn}>
                       <article className={hubStyles.card}>
-                        <h3>Bağlantılı kayıtlar</h3>
-                        <ul className={hubStyles.connections}>
-                          {record.connections.map((connection) => (
-                            <li key={`${connection.name}-${connection.relation}`}>
-                              <HubAvatar name={connection.name} size={34} />
+                        <h3>İletişim</h3>
+                        <dl className={hubStyles.contactList}>
+                          <div>
+                            <dt>Telefon</dt>
+                            <dd>{record.contactPhone}</dd>
+                          </div>
+                          <div>
+                            <dt>E-posta</dt>
+                            <dd>{record.contactEmail}</dd>
+                          </div>
+                          <div>
+                            <dt>{record.kind === "randevu" ? "Kanal" : "Danışan tipi"}</dt>
+                            <dd>{record.channel}</dd>
+                          </div>
+                          <div>
+                            <dt>Planlanan saat</dt>
+                            <dd>{record.plannedAt}</dd>
+                          </div>
+                        </dl>
+                      </article>
+                      <article className={hubStyles.card}>
+                        <h3>Zaman çizelgesi</h3>
+                        <ol className={hubStyles.timeline}>
+                          {record.timeline.map((entry) => (
+                            <li key={`${entry.at}-${entry.label}`}>
+                              <time>{entry.at}</time>
+                              <span>{entry.label}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </article>
+                    </section>
+
+                    <section className={hubStyles.workColumn}>
+                      <article className={`${hubStyles.card} ${hubStyles.nextStepsCard}`}>
+                        <h3>Sıradaki adımlar</h3>
+                        <ol className={hubStyles.nextSteps}>
+                          {record.nextSteps.map((step, index) => (
+                            <li data-state={step.state} key={step.title}>
+                              <span className={hubStyles.stepIndex}>{index + 1}</span>
                               <div>
-                                <strong>{connection.name}</strong>
-                                <small>{connection.relation}</small>
+                                <strong>{step.title}</strong>
+                                <p>{step.detail}</p>
+                                <small>{step.due}</small>
                               </div>
                             </li>
                           ))}
+                        </ol>
+                      </article>
+                    </section>
+
+                    <section className={hubStyles.workColumn}>
+                      <article className={hubStyles.card}>
+                        <h3>Kayıt kontrolü</h3>
+                        <ul className={styles.checkList}>
+                          {record.readinessNotes.map((note) => (
+                            <li key={note}>{note}</li>
+                          ))}
                         </ul>
                       </article>
-                    ) : null}
-                  </section>
+                      {record.connections.length > 0 ? (
+                        <article className={hubStyles.card}>
+                          <h3>Bağlantılı kayıtlar</h3>
+                          <ul className={hubStyles.connections}>
+                            {record.connections.map((connection) => (
+                              <li key={`${connection.name}-${connection.relation}`}>
+                                <HubAvatar name={connection.name} size={34} />
+                                <div>
+                                  <strong>{connection.name}</strong>
+                                  <small>{connection.relation}</small>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </article>
+                      ) : null}
+                    </section>
+                  </div>
                 </div>
+              </>
+            ) : (
+              <div className={hubStyles.emptyState}>
+                <div className={hubStyles.emptyBadge} aria-hidden="true">
+                  ⌘
+                </div>
+                <h2>Çalışma alanı hazır</h2>
+                <p>Listeden bir kayıt seçin; özet, işlemler ve sıradaki adımlar burada açılır.</p>
+                <p className={hubStyles.kbdHint}>
+                  <kbd>↑</kbd>
+                  <kbd>↓</kbd> gezin · <kbd>Esc</kbd> kapat
+                </p>
               </div>
-            </>
-          ) : (
-            <div className={hubStyles.emptyState}>
-              <div className={hubStyles.emptyBadge} aria-hidden="true">
-                ⌘
-              </div>
-              <h2>Çalışma alanı hazır</h2>
-              <p>Listeden bir kayıt seçin; özet, işlemler ve sıradaki adımlar burada açılır.</p>
-              <p className={hubStyles.kbdHint}>
-                <kbd>↑</kbd>
-                <kbd>↓</kbd> gezin · <kbd>Esc</kbd> kapat
-              </p>
-            </div>
             )}
           </section>
         ) : null}
