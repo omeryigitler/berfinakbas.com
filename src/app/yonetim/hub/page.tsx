@@ -32,10 +32,7 @@ const PAGE_SIZE = 30;
 const openRequestStatuses = ["REQUESTED", "PENDING_REVIEW", "RESCHEDULE_PROPOSED"] as const;
 const upcomingClientStatuses = ["CONFIRMED", "PENDING_REVIEW", "RESCHEDULE_PROPOSED"] as const;
 
-function singleParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-): string {
+function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
   const value = params[key];
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
@@ -98,11 +95,7 @@ function buildAppointmentWhere(query: string): Prisma.AppointmentWhereInput {
   return where;
 }
 
-export default async function AdminHubPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function AdminHubPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requirePermission("appointments:read");
   const params = await searchParams;
   const query = singleParam(params, "q").trim().slice(0, 100);
@@ -135,121 +128,116 @@ export default async function AdminHubPage({
   const currentPage = Math.min(requestedPage, totalPages);
   const skip = (currentPage - 1) * PAGE_SIZE;
 
-  const [
-    appointmentRows,
-    clientRows,
-    availabilityRows,
-    recentFinanceRows,
-    financeAggregateRows,
-  ] = await Promise.all([
-    database.appointment.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: {
-        approvedAt: true,
-        client: {
-          select: {
-            email: true,
-            firstName: true,
-            lastName: true,
-            phone: true,
-            preferredName: true,
-            type: true,
+  const [appointmentRows, clientRows, availabilityRows, recentFinanceRows, financeAggregateRows] =
+    await Promise.all([
+      database.appointment.findMany({
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        select: {
+          approvedAt: true,
+          client: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              preferredName: true,
+              type: true,
+            },
+          },
+          createdAt: true,
+          duplicateReviewStatus: true,
+          guardian: { select: { firstName: true, lastName: true } },
+          id: true,
+          practitioner: { select: { displayName: true } },
+          publicReference: true,
+          requestNote: true,
+          serviceNameSnapshot: true,
+          source: true,
+          startsAt: true,
+          status: true,
+          statusLogs: {
+            orderBy: { createdAt: "desc" },
+            select: { createdAt: true, toStatus: true },
+            take: 5,
           },
         },
-        createdAt: true,
-        duplicateReviewStatus: true,
-        guardian: { select: { firstName: true, lastName: true } },
-        id: true,
-        practitioner: { select: { displayName: true } },
-        publicReference: true,
-        requestNote: true,
-        serviceNameSnapshot: true,
-        source: true,
-        startsAt: true,
-        status: true,
-        statusLogs: {
-          orderBy: { createdAt: "desc" },
-          select: { createdAt: true, toStatus: true },
-          take: 5,
-        },
-      },
-      skip,
-      take: PAGE_SIZE,
-      where: appointmentWhere,
-    }),
-    canReadClients
-      ? database.client.findMany({
-          orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-          select: {
-            appointments: {
-              orderBy: { startsAt: "asc" },
-              select: { serviceNameSnapshot: true, startsAt: true, status: true },
-              take: 1,
-              where: {
-                startsAt: { gt: now },
-                status: { in: [...upcomingClientStatuses] },
+        skip,
+        take: PAGE_SIZE,
+        where: appointmentWhere,
+      }),
+      canReadClients
+        ? database.client.findMany({
+            orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+            select: {
+              appointments: {
+                orderBy: { startsAt: "asc" },
+                select: { serviceNameSnapshot: true, startsAt: true, status: true },
+                take: 1,
+                where: {
+                  startsAt: { gt: now },
+                  status: { in: [...upcomingClientStatuses] },
+                },
               },
-            },
-            createdAt: true,
-            email: true,
-            firstName: true,
-            guardians: {
-              select: {
-                guardian: { select: { firstName: true, lastName: true } },
-                relationship: true,
+              createdAt: true,
+              email: true,
+              firstName: true,
+              guardians: {
+                select: {
+                  guardian: { select: { firstName: true, lastName: true } },
+                  relationship: true,
+                },
               },
+              id: true,
+              lastName: true,
+              phone: true,
+              preferredName: true,
+              status: true,
+              type: true,
+              updatedAt: true,
             },
-            id: true,
-            lastName: true,
-            phone: true,
-            preferredName: true,
-            status: true,
-            type: true,
-            updatedAt: true,
-          },
-          skip,
-          take: PAGE_SIZE,
-          where: clientWhere,
-        })
-      : Promise.resolve([]),
-    canReadAvailability
-      ? database.availabilityRule.findMany({
-          orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
-          select: {
-            localEndTime: true,
-            localStartTime: true,
-            slotIncrementMinutes: true,
-            status: true,
-            weekday: true,
-          },
-        })
-      : Promise.resolve(null),
-    canReadFinance
-      ? database.financeLedgerEntry.findMany({
-          orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
-          select: {
-            amountMinor: true,
-            client: { select: { firstName: true, lastName: true, preferredName: true } },
-            currency: true,
-            id: true,
-            occurredAt: true,
-            type: true,
-          },
-          take: 8,
-        })
-      : Promise.resolve(null),
-    canReadFinance
-      ? database.financeLedgerEntry.groupBy({
-          _count: { _all: true },
-          _sum: { amountMinor: true },
-          by: ["type", "currency"],
-          where: {
-            occurredAt: { gte: monthRange.start, lt: monthRange.end },
-            type: { in: ["PAYMENT", "ACCRUAL"] },
-          },
-        })
-      : Promise.resolve(null),
-  ]);
+            skip,
+            take: PAGE_SIZE,
+            where: clientWhere,
+          })
+        : Promise.resolve([]),
+      canReadAvailability
+        ? database.availabilityRule.findMany({
+            orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
+            select: {
+              localEndTime: true,
+              localStartTime: true,
+              slotIncrementMinutes: true,
+              status: true,
+              weekday: true,
+            },
+          })
+        : Promise.resolve(null),
+      canReadFinance
+        ? database.financeLedgerEntry.findMany({
+            orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+            select: {
+              amountMinor: true,
+              client: { select: { firstName: true, lastName: true, preferredName: true } },
+              currency: true,
+              id: true,
+              occurredAt: true,
+              type: true,
+            },
+            take: 8,
+          })
+        : Promise.resolve(null),
+      canReadFinance
+        ? database.financeLedgerEntry.groupBy({
+            _count: { _all: true },
+            _sum: { amountMinor: true },
+            by: ["type", "currency"],
+            where: {
+              occurredAt: { gte: monthRange.start, lt: monthRange.end },
+              type: { in: ["PAYMENT", "ACCRUAL"] },
+            },
+          })
+        : Promise.resolve(null),
+    ]);
 
   const appointments = appointmentRows.map((row) => mapAppointmentToHubRecord(row, now, timeZone));
   const clients = clientRows.map((row) => mapClientToHubRecord(row, now, timeZone));

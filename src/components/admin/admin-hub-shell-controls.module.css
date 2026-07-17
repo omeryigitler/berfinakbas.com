@@ -14,9 +14,9 @@
 }
 
 :global(
-    [data-admin-refresh="shell"]:not(:has([data-admin-group="danisanlar"]))
-      [data-admin-region="search"]
-  ) {
+  [data-admin-refresh="shell"]:not(:has([data-admin-group="danisanlar"]))
+    [data-admin-region="search"]
+) {
   display: none;
 }
 
@@ -41,10 +41,8 @@
 }
 
 :global(
-    [data-admin-refresh="shell"]
-      [data-admin-group-open="true"]
-      [data-admin-region="nav-chevron"]
-  ) {
+  [data-admin-refresh="shell"] [data-admin-group-open="true"] [data-admin-region="nav-chevron"]
+) {
   transform: rotate(90deg);
 }
 
@@ -99,9 +97,7 @@
 }
 
 :global([data-admin-refresh="shell"] [data-admin-region="focus-button"]:hover),
-:global(
-    [data-admin-refresh="shell"] [data-admin-region="focus-button"][data-admin-active="true"]
-  ) {
+:global([data-admin-refresh="shell"] [data-admin-region="focus-button"][data-admin-active="true"]) {
   background: var(--admin-teal);
   color: #fff;
   box-shadow: 0 8px 18px rgb(18 137 123 / 18%);
@@ -177,9 +173,8 @@
 }
 
 :global(
-    [data-admin-refresh="shell"]
-      [data-admin-region="workspace-tab"][data-admin-active="true"]
-  ) {
+  [data-admin-refresh="shell"] [data-admin-region="workspace-tab"][data-admin-active="true"]
+) {
   border-color: rgb(148 158 62 / 24%);
   background: var(--admin-lime);
   color: var(--admin-ink);
@@ -217,9 +212,8 @@
 }
 
 :global(
-    [data-admin-refresh="shell"][data-admin-focus="true"]
-      [data-admin-region="nav-group-button"]
-  ) {
+  [data-admin-refresh="shell"][data-admin-focus="true"] [data-admin-region="nav-group-button"]
+) {
   justify-content: center;
   padding-inline: 0;
 }
@@ -243,9 +237,7 @@
     grid-template-columns: 1fr;
   }
 
-  :global(
-      [data-admin-refresh="shell"][data-admin-focus="true"] [data-admin-region="sidebar"]
-    ) {
+  :global([data-admin-refresh="shell"][data-admin-focus="true"] [data-admin-region="sidebar"]) {
     display: none;
   }
 }

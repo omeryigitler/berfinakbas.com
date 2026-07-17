@@ -125,10 +125,7 @@ const consentStatusLabels: Record<string, string> = {
   WITHDRAWN: "Geri çekildi",
 };
 
-function singleParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-): string {
+function singleParam(params: Record<string, string | string[] | undefined>, key: string): string {
   const value = params[key];
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
@@ -194,9 +191,7 @@ function AppointmentList({
         <li className="admin-client-list-item admin-dashboard-client-card" key={appointment.id}>
           <div className="admin-client-list-main">
             <strong>{appointmentService(appointment)}</strong>
-            <span className="admin-client-contact">
-              {appointmentRange(appointment, timeZone)}
-            </span>
+            <span className="admin-client-contact">{appointmentRange(appointment, timeZone)}</span>
             <span className="admin-client-meta">
               <em>{appointmentStatus(appointment.status)}</em>
               <em>{locationLabels[appointment.locationTypeSnapshot]}</em>
@@ -272,7 +267,13 @@ function FinanceEntryList({ entries }: { entries: readonly ProfileFinanceEntry[]
   );
 }
 
-function OperationFlow({ events, timeZone }: { events: readonly OperationEvent[]; timeZone: string }) {
+function OperationFlow({
+  events,
+  timeZone,
+}: {
+  events: readonly OperationEvent[];
+  timeZone: string;
+}) {
   if (events.length === 0) {
     return (
       <div className="admin-empty-state">
@@ -581,7 +582,11 @@ export default async function AdminClientProfilePage({
         <article className={styles.dashboardCard}>
           <span>Sıradaki randevu</span>
           <strong>
-            {canReadAppointments ? (focusAppointment ? formatDate(focusAppointment.startsAt) : "Yok") : "—"}
+            {canReadAppointments
+              ? focusAppointment
+                ? formatDate(focusAppointment.startsAt)
+                : "Yok"
+              : "—"}
           </strong>
           <small>
             {!canReadAppointments
@@ -594,17 +599,25 @@ export default async function AdminClientProfilePage({
         <article className={styles.dashboardCard}>
           <span>Açık bakiye</span>
           <strong>{canReadFinance ? financeSummary.openBalanceLabel : "—"}</strong>
-          <small>{canReadFinance ? `${financePlans.length} plan üzerinden` : "Finans yetkisi gerekir"}</small>
+          <small>
+            {canReadFinance ? `${financePlans.length} plan üzerinden` : "Finans yetkisi gerekir"}
+          </small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Kalan seans</span>
           <strong>{canReadFinance ? financeSummary.remainingSessions : "—"}</strong>
-          <small>{canReadFinance ? "Tüm para birimlerindeki planlar" : "Finans yetkisi gerekir"}</small>
+          <small>
+            {canReadFinance ? "Tüm para birimlerindeki planlar" : "Finans yetkisi gerekir"}
+          </small>
         </article>
         <article className={styles.dashboardCard}>
           <span>Son ödeme</span>
           <strong>
-            {canReadFinance ? (lastPayment ? positiveMoney(lastPayment.amountMinor, lastPayment.currency) : "Yok") : "—"}
+            {canReadFinance
+              ? lastPayment
+                ? positiveMoney(lastPayment.amountMinor, lastPayment.currency)
+                : "Yok"
+              : "—"}
           </strong>
           <small>
             {canReadFinance
@@ -639,12 +652,19 @@ export default async function AdminClientProfilePage({
           <li>
             <div>
               <strong>{clientName}</strong>
-              <span>{client.preferredName ? `Tercih edilen ad: ${client.preferredName}` : "Tercih edilen ad yok"}</span>
+              <span>
+                {client.preferredName
+                  ? `Tercih edilen ad: ${client.preferredName}`
+                  : "Tercih edilen ad yok"}
+              </span>
             </div>
             <span>{client.birthYear ?? "Doğum yılı yok"}</span>
           </li>
           <li>
-            <div><strong>İletişim</strong><span>{client.phone ?? "Telefon yok"}</span></div>
+            <div>
+              <strong>İletişim</strong>
+              <span>{client.phone ?? "Telefon yok"}</span>
+            </div>
             <span>{client.email ?? "E-posta yok"}</span>
           </li>
         </ul>
@@ -652,23 +672,36 @@ export default async function AdminClientProfilePage({
 
       <section className="admin-panel" aria-labelledby="veli-bilgileri">
         <div className="admin-panel-heading">
-          <div><h2 id="veli-bilgileri">Veli / sorumlu bilgileri</h2><p>Danışana bağlı ilişkiler.</p></div>
+          <div>
+            <h2 id="veli-bilgileri">Veli / sorumlu bilgileri</h2>
+            <p>Danışana bağlı ilişkiler.</p>
+          </div>
           <span className="admin-count">{client.guardians.length} veli</span>
         </div>
         {client.guardians.length === 0 ? (
           <div className="admin-empty-state">
             <strong>Veli kaydı yok</strong>
-            <span>{client.type === "CHILD" ? "Bu çocuk danışan için veli kaydı bekleniyor." : "Yetişkin danışan için zorunlu değildir."}</span>
+            <span>
+              {client.type === "CHILD"
+                ? "Bu çocuk danışan için veli kaydı bekleniyor."
+                : "Yetişkin danışan için zorunlu değildir."}
+            </span>
           </div>
         ) : (
           <ul className="admin-service-list">
             {client.guardians.map((relation) => (
               <li key={relation.guardian.id}>
                 <div>
-                  <strong>{relation.guardian.firstName} {relation.guardian.lastName}</strong>
-                  <span>{relation.relationship} · {relation.isPrimary ? "Birincil veli" : "Ek veli"}</span>
+                  <strong>
+                    {relation.guardian.firstName} {relation.guardian.lastName}
+                  </strong>
+                  <span>
+                    {relation.relationship} · {relation.isPrimary ? "Birincil veli" : "Ek veli"}
+                  </span>
                 </div>
-                <span>{relation.guardian.phone} · {relation.guardian.email ?? "E-posta yok"}</span>
+                <span>
+                  {relation.guardian.phone} · {relation.guardian.email ?? "E-posta yok"}
+                </span>
               </li>
             ))}
           </ul>
@@ -677,74 +710,155 @@ export default async function AdminClientProfilePage({
 
       <section className="admin-panel" aria-labelledby="kvkk-onaylari">
         <div className="admin-panel-heading">
-          <div><h2 id="kvkk-onaylari">KVKK / onay geçmişi</h2><p>Son onay kayıtları.</p></div>
-          <span className="admin-count">{canReadConsents ? `${consentCount} kayıt` : "Yetki gerekli"}</span>
+          <div>
+            <h2 id="kvkk-onaylari">KVKK / onay geçmişi</h2>
+            <p>Son onay kayıtları.</p>
+          </div>
+          <span className="admin-count">
+            {canReadConsents ? `${consentCount} kayıt` : "Yetki gerekli"}
+          </span>
         </div>
         {canReadConsents ? (
           clientConsents.length === 0 ? (
-            <div className="admin-empty-state"><strong>Onay kaydı yok</strong><span>Henüz onay kaydı oluşturulmamış.</span></div>
+            <div className="admin-empty-state">
+              <strong>Onay kaydı yok</strong>
+              <span>Henüz onay kaydı oluşturulmamış.</span>
+            </div>
           ) : (
             <ul className="admin-service-list">
               {clientConsents.map((consent) => (
                 <li key={consent.id}>
-                  <div><strong>{consent.document.publicTitle ?? consent.document.type}</strong><span>Belge versiyonu {consent.document.version}</span></div>
-                  <span>{consentStatusLabels[consent.status] ?? consent.status} · {formatDateTime(consent.capturedAt, timeZone)}</span>
+                  <div>
+                    <strong>{consent.document.publicTitle ?? consent.document.type}</strong>
+                    <span>Belge versiyonu {consent.document.version}</span>
+                  </div>
+                  <span>
+                    {consentStatusLabels[consent.status] ?? consent.status} ·{" "}
+                    {formatDateTime(consent.capturedAt, timeZone)}
+                  </span>
                 </li>
               ))}
             </ul>
           )
         ) : (
-          <div className="admin-empty-state"><strong>Onay kayıtları için yetki gerekli</strong><span>Bu bölüm onay okuma yetkisi ister.</span></div>
+          <div className="admin-empty-state">
+            <strong>Onay kayıtları için yetki gerekli</strong>
+            <span>Bu bölüm onay okuma yetkisi ister.</span>
+          </div>
         )}
       </section>
 
       <section className="admin-panel" aria-labelledby="randevular">
         <div className="admin-panel-heading">
-          <div><h2 id="randevular">Randevular</h2><p>Yaklaşan ve geçmiş kayıtlar.</p></div>
-          {canManageAppointments ? <Link className="primary-button" href={appointmentsPageHref}>Randevu oluştur</Link> : null}
+          <div>
+            <h2 id="randevular">Randevular</h2>
+            <p>Yaklaşan ve geçmiş kayıtlar.</p>
+          </div>
+          {canManageAppointments ? (
+            <Link className="primary-button" href={appointmentsPageHref}>
+              Randevu oluştur
+            </Link>
+          ) : null}
         </div>
         {canReadAppointments ? (
           <div className={styles.dashboardLayout}>
             <section className={styles.compactPanel} aria-labelledby="yaklasan-randevular">
-              <div className={styles.panelHeader}><div><h2 id="yaklasan-randevular">Yaklaşan randevular</h2></div><span className={styles.panelBadge}>{upcomingAppointments.length}</span></div>
-              <AppointmentList appointments={upcomingAppointments} emptyTitle="Yaklaşan randevu yok" timeZone={timeZone} />
+              <div className={styles.panelHeader}>
+                <div>
+                  <h2 id="yaklasan-randevular">Yaklaşan randevular</h2>
+                </div>
+                <span className={styles.panelBadge}>{upcomingAppointments.length}</span>
+              </div>
+              <AppointmentList
+                appointments={upcomingAppointments}
+                emptyTitle="Yaklaşan randevu yok"
+                timeZone={timeZone}
+              />
             </section>
             <section className={styles.compactPanel} aria-labelledby="randevu-gecmisi">
-              <div className={styles.panelHeader}><div><h2 id="randevu-gecmisi">Randevu geçmişi</h2></div><span className={styles.panelBadge}>{appointmentHistory.length}</span></div>
-              <AppointmentList appointments={appointmentHistory} emptyTitle="Randevu geçmişi yok" timeZone={timeZone} />
+              <div className={styles.panelHeader}>
+                <div>
+                  <h2 id="randevu-gecmisi">Randevu geçmişi</h2>
+                </div>
+                <span className={styles.panelBadge}>{appointmentHistory.length}</span>
+              </div>
+              <AppointmentList
+                appointments={appointmentHistory}
+                emptyTitle="Randevu geçmişi yok"
+                timeZone={timeZone}
+              />
             </section>
           </div>
         ) : (
-          <div className="admin-empty-state"><strong>Randevu yetkisi yok</strong><span>Bu kayıtları görmek için randevu okuma yetkisi gerekir.</span></div>
+          <div className="admin-empty-state">
+            <strong>Randevu yetkisi yok</strong>
+            <span>Bu kayıtları görmek için randevu okuma yetkisi gerekir.</span>
+          </div>
         )}
       </section>
 
       <section className="admin-panel" aria-labelledby="finans">
         <div className="admin-panel-heading">
-          <div><h2 id="finans">Ödeme ve planlar</h2><p>Para birimleri birbirine eklenmeden gösterilir.</p></div>
-          {canReadFinance ? <Link className="primary-button" href={financePageHref}>Ödeme ekranını aç</Link> : null}
+          <div>
+            <h2 id="finans">Ödeme ve planlar</h2>
+            <p>Para birimleri birbirine eklenmeden gösterilir.</p>
+          </div>
+          {canReadFinance ? (
+            <Link className="primary-button" href={financePageHref}>
+              Ödeme ekranını aç
+            </Link>
+          ) : null}
         </div>
         {canReadFinance ? (
           <>
             <div className={styles.dashboardGrid}>
-              <article className={styles.dashboardCard}><span>Plan toplamı</span><strong>{financeSummary.planTotalLabel}</strong><small>{financePlans.length} plan</small></article>
-              <article className={styles.dashboardCard}><span>Alınan ödeme</span><strong>{financeSummary.paidLabel}</strong><small>Plan bakiyelerine göre</small></article>
-              <article className={styles.dashboardCard}><span>Açık bakiye</span><strong>{financeSummary.openBalanceLabel}</strong><small>Para birimi bazında</small></article>
-              <article className={styles.dashboardCard}><span>Kalan seans</span><strong>{financeSummary.remainingSessions}</strong><small>Tüm planlar</small></article>
+              <article className={styles.dashboardCard}>
+                <span>Plan toplamı</span>
+                <strong>{financeSummary.planTotalLabel}</strong>
+                <small>{financePlans.length} plan</small>
+              </article>
+              <article className={styles.dashboardCard}>
+                <span>Alınan ödeme</span>
+                <strong>{financeSummary.paidLabel}</strong>
+                <small>Plan bakiyelerine göre</small>
+              </article>
+              <article className={styles.dashboardCard}>
+                <span>Açık bakiye</span>
+                <strong>{financeSummary.openBalanceLabel}</strong>
+                <small>Para birimi bazında</small>
+              </article>
+              <article className={styles.dashboardCard}>
+                <span>Kalan seans</span>
+                <strong>{financeSummary.remainingSessions}</strong>
+                <small>Tüm planlar</small>
+              </article>
             </div>
             <div className={styles.dashboardLayout}>
               <section className={styles.compactPanel} aria-labelledby="danisan-planlari">
-                <div className={styles.panelHeader}><div><h2 id="danisan-planlari">Danışan planları</h2></div><span className={styles.panelBadge}>{financePlans.length}</span></div>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2 id="danisan-planlari">Danışan planları</h2>
+                  </div>
+                  <span className={styles.panelBadge}>{financePlans.length}</span>
+                </div>
                 <FinancePlanList plans={financePlans} />
               </section>
               <section className={styles.compactPanel} aria-labelledby="son-finans-hareketleri">
-                <div className={styles.panelHeader}><div><h2 id="son-finans-hareketleri">Son finans hareketleri</h2></div><span className={styles.panelBadge}>{recentFinanceEntries.length}</span></div>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2 id="son-finans-hareketleri">Son finans hareketleri</h2>
+                  </div>
+                  <span className={styles.panelBadge}>{recentFinanceEntries.length}</span>
+                </div>
                 <FinanceEntryList entries={recentFinanceEntries} />
               </section>
             </div>
           </>
         ) : (
-          <div className="admin-empty-state"><strong>Finans yetkisi yok</strong><span>Ödeme ve plan kayıtları için finans okuma yetkisi gerekir.</span></div>
+          <div className="admin-empty-state">
+            <strong>Finans yetkisi yok</strong>
+            <span>Ödeme ve plan kayıtları için finans okuma yetkisi gerekir.</span>
+          </div>
         )}
       </section>
 
@@ -760,7 +874,11 @@ export default async function AdminClientProfilePage({
           relations={client.guardians}
         />
       ) : null}
-      <ClientProfileUrlModals activeModal={activeModal} clientId={client.id} clientName={clientName} />
+      <ClientProfileUrlModals
+        activeModal={activeModal}
+        clientId={client.id}
+        clientName={clientName}
+      />
     </AdminShell>
   );
 }

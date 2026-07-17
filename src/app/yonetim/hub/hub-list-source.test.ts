@@ -24,9 +24,9 @@ describe("Record Center server list contract", () => {
 
   it("keeps open-request filtering and nearest client appointment selection", () => {
     expect(source).toContain("openRequestStatuses");
-    expect(source).toContain('status: { in: [...openRequestStatuses] }');
+    expect(source).toContain("status: { in: [...openRequestStatuses] }");
     expect(source).toContain("take: 1");
-    expect(source).toContain('startsAt: { gt: now }');
+    expect(source).toContain("startsAt: { gt: now }");
   });
 
   it("renders query-preserving page controls", () => {

@@ -54,17 +54,17 @@ Aktif Draft PR: #107
 
 ## Rota durumu
 
-| Rota | Durum |
-| --- | --- |
-| `/yonetim` | Tamamlandı |
-| `/yonetim/hub` | Tamamlandı |
-| `/yonetim/danisanlar` | Tamamlandı |
+| Rota                       | Durum      |
+| -------------------------- | ---------- |
+| `/yonetim`                 | Tamamlandı |
+| `/yonetim/hub`             | Tamamlandı |
+| `/yonetim/danisanlar`      | Tamamlandı |
 | `/yonetim/danisan-olustur` | Tamamlandı |
 | `/yonetim/danisan-profili` | Tamamlandı |
-| `/yonetim/randevular` | Tamamlandı |
-| `/yonetim/musaitlik` | Tamamlandı |
-| `/yonetim/odemeler` | Tamamlandı |
-| `/yonetim/saglik` | Tamamlandı |
+| `/yonetim/randevular`      | Tamamlandı |
+| `/yonetim/musaitlik`       | Tamamlandı |
+| `/yonetim/odemeler`        | Tamamlandı |
+| `/yonetim/saglik`          | Tamamlandı |
 
 ## Otomatik kalite durumu
 

@@ -42,10 +42,7 @@ type WorkspaceEntry = {
   id: string;
 };
 
-const siteWorkspaceSections = new Set([
-  "hizmet-terapist-ayarlari",
-  "public-iletisim-ayarlari",
-]);
+const siteWorkspaceSections = new Set(["hizmet-terapist-ayarlari", "public-iletisim-ayarlari"]);
 
 export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem[] {
   const items: AdminNavItem[] = [];
@@ -246,7 +243,9 @@ export function AdminShell({
       group.items.some((item) =>
         isActivePath(pathname, item.href, activeWorkspaceSection, activeHubSection),
       ),
-    )?.id ?? navigationGroups[0]?.id ?? "calisma";
+    )?.id ??
+    navigationGroups[0]?.id ??
+    "calisma";
   const [openGroup, setOpenGroup] = useState<string>(activeGroupId);
   const [lastActiveGroupId, setLastActiveGroupId] = useState(activeGroupId);
   const focusMode = searchParams.get("gorunum") === "tam";
@@ -431,7 +430,11 @@ export function AdminShell({
                     onClick={() => setOpenGroup(isOpen ? "" : group.id)}
                     type="button"
                   >
-                    <span className={styles.navIcon} data-admin-region="nav-icon" aria-hidden="true">
+                    <span
+                      className={styles.navIcon}
+                      data-admin-region="nav-icon"
+                      aria-hidden="true"
+                    >
                       {group.icon}
                     </span>
                     <span data-admin-region="nav-label">{group.label}</span>

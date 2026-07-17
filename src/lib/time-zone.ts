@@ -1,8 +1,7 @@
 export type ZonedDateTimeFailureReason = "AMBIGUOUS" | "INVALID" | "NONEXISTENT";
 
 export type ZonedDateTimeResult =
-  | Readonly<{ date: Date; ok: true }>
-  | Readonly<{ ok: false; reason: ZonedDateTimeFailureReason }>;
+  Readonly<{ date: Date; ok: true }> | Readonly<{ ok: false; reason: ZonedDateTimeFailureReason }>;
 
 export type ZonedRange = Readonly<{ end: Date; start: Date }>;
 
@@ -42,14 +41,7 @@ function partsAt(date: Date, timeZone: string): DateTimeParts {
 }
 
 function partsEpoch(parts: DateTimeParts): number {
-  return Date.UTC(
-    parts.year,
-    parts.month - 1,
-    parts.day,
-    parts.hour,
-    parts.minute,
-    parts.second,
-  );
+  return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
 }
 
 function sameMinute(left: DateTimeParts, right: DateTimeParts): boolean {
@@ -98,7 +90,9 @@ function timeKey(parts: Pick<DateTimeParts, "hour" | "minute">): string {
 function calendarShift(date: string, days: number): string {
   const match = datePattern.exec(date);
   if (!match) throw new Error("Takvim tarihi geçersiz.");
-  const shifted = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days));
+  const shifted = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days),
+  );
   return shifted.toISOString().slice(0, 10);
 }
 

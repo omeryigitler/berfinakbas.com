@@ -46,9 +46,7 @@ function storedAdult(overrides: Partial<StoredClientCreateReplay> = {}): StoredC
   };
 }
 
-function childPayload(
-  overrides: Partial<CreateClientPayload> = {},
-): CreateClientPayload {
+function childPayload(overrides: Partial<CreateClientPayload> = {}): CreateClientPayload {
   return {
     ...adultPayload(),
     birthYear: 2018,
@@ -68,9 +66,7 @@ function childPayload(
   };
 }
 
-function storedChild(
-  overrides: Partial<StoredClientCreateReplay> = {},
-): StoredClientCreateReplay {
+function storedChild(overrides: Partial<StoredClientCreateReplay> = {}): StoredClientCreateReplay {
   return {
     birthYear: 2018,
     email: null,
@@ -117,9 +113,9 @@ describe("client creation idempotency", () => {
   });
 
   it("rejects a reused request identity when client data changed", () => {
-    expect(
-      matchesClientCreateReplay(storedAdult(), adultPayload({ lastName: "Değişti" })),
-    ).toBe(false);
+    expect(matchesClientCreateReplay(storedAdult(), adultPayload({ lastName: "Değişti" }))).toBe(
+      false,
+    );
   });
 
   it("matches an existing guardian by id and relationship even with multiple relations", () => {
@@ -140,9 +136,9 @@ describe("client creation idempotency", () => {
     });
 
     expect(matchesClientCreateReplay(stored, childPayload())).toBe(true);
-    expect(
-      matchesClientCreateReplay(stored, childPayload({ relationship: "Bakım veren" })),
-    ).toBe(false);
+    expect(matchesClientCreateReplay(stored, childPayload({ relationship: "Bakım veren" }))).toBe(
+      false,
+    );
   });
 
   it("matches a newly created guardian by persisted fields", () => {

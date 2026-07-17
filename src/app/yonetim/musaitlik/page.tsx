@@ -275,8 +275,8 @@ export default async function AvailabilityPage() {
           <div>
             <h2 id="musaitlik-listesi">Terapist müsaitlik istisnaları</h2>
             <p>
-              Kalıcı haftalık kurallar çalışma alanında yönetilir. Bu bölüm belirli gün veya saat için
-              istisna oluşturur.
+              Kalıcı haftalık kurallar çalışma alanında yönetilir. Bu bölüm belirli gün veya saat
+              için istisna oluşturur.
             </p>
           </div>
           <span>{practitioners.length} terapist</span>
@@ -332,10 +332,12 @@ export default async function AvailabilityPage() {
                         <div className={styles.exceptionRow} key={exception.id}>
                           <div>
                             <strong>
-                              {formatLocalDate(exception.localDate)} · {exceptionTimeLabel(exception)}
+                              {formatLocalDate(exception.localDate)} ·{" "}
+                              {exceptionTimeLabel(exception)}
                             </strong>
                             <span>
-                              {statusLabel(exception.type, exceptionTypeLabels)} · {exception.reasonCode} ·{" "}
+                              {statusLabel(exception.type, exceptionTypeLabels)} ·{" "}
+                              {exception.reasonCode} ·{" "}
                               {statusLabel(exception.status, exceptionStatusLabels)}
                             </span>
                             {exception.privateNote ? <small>{exception.privateNote}</small> : null}
