@@ -4,16 +4,17 @@ import type { Metadata } from "next";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import {
-  buildFinanceSummary,
   buildWeeklyAvailability,
   mapAppointmentToHubRecord,
   mapClientToHubRecord,
 } from "@/components/admin/hub/hub-data";
+import { buildHubFinanceSummary } from "@/components/admin/hub/hub-finance";
 import { RecordCenter } from "@/components/admin/hub/record-center";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
+import { getZonedMonthRange } from "@/lib/time-zone";
 
 export const dynamic = "force-dynamic";
 
@@ -36,9 +37,16 @@ export default async function AdminHubPage() {
   const database = getDatabase();
 
   const now = new Date();
-  const financeWindowStart = new Date(now.getTime() - 45 * 86_400_000);
+  const timeZone = environment.BUSINESS_TIME_ZONE;
+  const monthRange = getZonedMonthRange(now, timeZone);
 
-  const [appointmentRows, clientRows, availabilityRows, financeRows] = await Promise.all([
+  const [
+    appointmentRows,
+    clientRows,
+    availabilityRows,
+    recentFinanceRows,
+    financeAggregateRows,
+  ] = await Promise.all([
     database.appointment.findMany({
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: {
@@ -129,17 +137,49 @@ export default async function AdminHubPage() {
             occurredAt: true,
             type: true,
           },
-          take: 200,
-          where: { occurredAt: { gte: financeWindowStart } },
+          take: 8,
+        })
+      : Promise.resolve(null),
+    canReadFinance
+      ? database.financeLedgerEntry.groupBy({
+          _count: { _all: true },
+          _sum: { amountMinor: true },
+          by: ["type", "currency"],
+          where: {
+            occurredAt: { gte: monthRange.start, lt: monthRange.end },
+            type: { in: ["PAYMENT", "ACCRUAL"] },
+          },
         })
       : Promise.resolve(null),
   ]);
 
-  const timeZone = environment.BUSINESS_TIME_ZONE;
   const appointments = appointmentRows.map((row) => mapAppointmentToHubRecord(row, now, timeZone));
   const clients = clientRows.map((row) => mapClientToHubRecord(row, now, timeZone));
   const availability = availabilityRows ? buildWeeklyAvailability(availabilityRows) : null;
-  const finance = financeRows ? buildFinanceSummary(financeRows, now, timeZone) : null;
+  const finance =
+    recentFinanceRows && financeAggregateRows
+      ? buildHubFinanceSummary(
+          recentFinanceRows,
+          {
+            accruals: financeAggregateRows
+              .filter((row) => row.type === "ACCRUAL")
+              .map((row) => ({
+                count: row._count._all,
+                currency: row.currency,
+                totalMinor: row._sum.amountMinor ?? 0n,
+              })),
+            payments: financeAggregateRows
+              .filter((row) => row.type === "PAYMENT")
+              .map((row) => ({
+                count: row._count._all,
+                currency: row.currency,
+                totalMinor: row._sum.amountMinor ?? 0n,
+              })),
+          },
+          now,
+          timeZone,
+        )
+      : null;
 
   return (
     <AdminShell
