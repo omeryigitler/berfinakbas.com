@@ -53,7 +53,7 @@ Son güncelleme: 17 Temmuz 2026, Europe/Malta
 
 ## Otomatik doğrulama
 
-Final head için aşağıdaki kapıların tamamı yeşil olmalıdır:
+Her final head için aşağıdaki kapıların tamamı yeşil olmalıdır:
 
 - Prisma schema validation
 - ESLint
