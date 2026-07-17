@@ -5,7 +5,10 @@ import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
-import { AvailabilityExceptionForm } from "./availability-exception-form";
+import {
+  AvailabilityExceptionForm,
+  type AvailabilityExceptionActionState,
+} from "./availability-exception-form";
 import styles from "./musaitlik.module.css";
 
 export const dynamic = "force-dynamic";
@@ -61,10 +64,9 @@ function enumValue<T extends string>(
 }
 
 function isDateValue(value: string): boolean {
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime())
-  );
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 function isTimeValue(value: string): boolean {
@@ -91,7 +93,14 @@ function exceptionTimeLabel(exception: ExceptionView): string {
   return "Saat aralığı yok";
 }
 
-async function createAvailabilityException(formData: FormData) {
+function actionError(message: string): AvailabilityExceptionActionState {
+  return { message, status: "error" };
+}
+
+async function createAvailabilityException(
+  _state: AvailabilityExceptionActionState,
+  formData: FormData,
+): Promise<AvailabilityExceptionActionState> {
   "use server";
   await requirePermission("availability:manage");
 
@@ -104,22 +113,33 @@ async function createAvailabilityException(formData: FormData) {
   const localStartTime = textValue(formData, "localStartTime");
   const localEndTime = textValue(formData, "localEndTime");
 
-  if (!practitionerId || !isDateValue(localDate)) return;
+  if (!practitionerId) return actionError("Terapist bilgisi bulunamadı.");
+  if (!isDateValue(localDate)) return actionError("Geçerli bir tarih seçmelisiniz.");
 
   const shouldRequireTimeRange = type !== "CLOSED";
-  if (
-    shouldRequireTimeRange &&
-    (!isTimeValue(localStartTime) || !isTimeValue(localEndTime) || localStartTime >= localEndTime)
-  ) {
-    return;
+  if (shouldRequireTimeRange && !isTimeValue(localStartTime)) {
+    return actionError("Başlangıç saatini seçmelisiniz.");
+  }
+  if (shouldRequireTimeRange && !isTimeValue(localEndTime)) {
+    return actionError("Bitiş saatini seçmelisiniz.");
+  }
+  if (shouldRequireTimeRange && localStartTime >= localEndTime) {
+    return actionError("Bitiş saati başlangıç saatinden sonra olmalıdır.");
   }
 
-  await getDatabase().availabilityException.create({
+  const database = getDatabase();
+  const practitioner = await database.practitioner.findUnique({
+    select: { id: true },
+    where: { id: practitionerId },
+  });
+  if (!practitioner) return actionError("Terapist kaydı bulunamadı.");
+
+  await database.availabilityException.create({
     data: {
       localDate: new Date(`${localDate}T00:00:00.000Z`),
       localEndTime: type === "CLOSED" ? null : localEndTime,
       localStartTime: type === "CLOSED" ? null : localStartTime,
-      practitionerId,
+      practitionerId: practitioner.id,
       privateNote,
       reasonCode,
       status,
@@ -128,6 +148,7 @@ async function createAvailabilityException(formData: FormData) {
   });
 
   revalidatePath("/yonetim/musaitlik");
+  return { message: "Müsaitlik istisnası kaydedildi.", status: "success" };
 }
 
 async function deactivateAvailabilityException(formData: FormData) {
