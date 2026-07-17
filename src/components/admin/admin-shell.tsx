@@ -144,11 +144,13 @@ export function AdminShell({
     navigationGroups.find((group) => group.items.some((item) => isActivePath(pathname, item.href)))
       ?.id ?? navigationGroups[0]?.id ?? "calisma";
   const [openGroup, setOpenGroup] = useState<string>(activeGroupId);
+  const [lastActiveGroupId, setLastActiveGroupId] = useState(activeGroupId);
   const focusMode = searchParams.get("gorunum") === "tam";
 
-  useEffect(() => {
+  if (lastActiveGroupId !== activeGroupId) {
+    setLastActiveGroupId(activeGroupId);
     setOpenGroup(activeGroupId);
-  }, [activeGroupId]);
+  }
 
   const setFocusMode = useCallback(
     (enabled: boolean) => {
