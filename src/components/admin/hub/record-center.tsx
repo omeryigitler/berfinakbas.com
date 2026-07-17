@@ -65,6 +65,9 @@ export function RecordCenter({
   canReadClients = false,
   clients = [],
   finance = null,
+  preferredSection = "talepler",
+  sampleAppointments = [],
+  sampleClients = [],
   toolbar = null,
 }: {
   appointments: readonly HubRecord[];
@@ -73,6 +76,9 @@ export function RecordCenter({
   canReadClients?: boolean;
   clients?: readonly HubRecord[];
   finance?: HubFinanceSummary | null;
+  preferredSection?: "danisanlar" | "talepler";
+  sampleAppointments?: readonly HubRecord[];
+  sampleClients?: readonly HubRecord[];
   toolbar?: ReactNode;
 }) {
   const router = useRouter();
@@ -85,19 +91,29 @@ export function RecordCenter({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  /* The talep queue is the default surface so the Hub never opens empty; other
-     sections load from the URL (?bolum=…) and survive refresh / back-forward. */
+  /* Open the section that actually has records (preferredSection) so the Hub
+     never lands on an empty tab; the URL (?bolum=…) still overrides and survives
+     refresh / back-forward. */
   const sectionParam = searchParams.get("bolum");
-  let section: RecordCenterSection = "talepler";
-  if (sectionParam === "danisanlar" && canReadClients) section = "danisanlar";
+  let section: RecordCenterSection = preferredSection;
+  if (sectionParam === "talepler") section = "talepler";
+  else if (sectionParam === "danisanlar" && canReadClients) section = "danisanlar";
   else if (sectionParam === "musaitlik" && availability) section = "musaitlik";
   else if (sectionParam === "odemeler" && finance) section = "odemeler";
 
   const isListSection = section === "talepler" || section === "danisanlar";
   const activeRecordId = searchParams.get("kayit");
-  const records = useMemo(
+  /* When a list section has no real records, fall back to read-only sample
+     records so the layout stays reference-shaped instead of collapsing. */
+  const realRecords = useMemo(
     () => (section === "danisanlar" ? clients : section === "talepler" ? appointments : []),
     [appointments, clients, section],
+  );
+  const isSample = isListSection && realRecords.length === 0;
+  const records = useMemo(
+    () =>
+      isSample ? (section === "danisanlar" ? sampleClients : sampleAppointments) : realRecords,
+    [isSample, realRecords, sampleAppointments, sampleClients, section],
   );
   const record = useMemo(
     () => records.find((candidate) => candidate.id === activeRecordId) ?? null,
@@ -107,10 +123,10 @@ export function RecordCenter({
   const stageIndex = record ? getStageIndex(record.stage) : -1;
   const actions = useMemo(
     () =>
-      record && record.kind === "randevu" && record.rawStatus
+      !isSample && record && record.kind === "randevu" && record.rawStatus
         ? getHubActions(record.rawStatus, canManage)
         : [],
-    [canManage, record],
+    [canManage, isSample, record],
   );
   const openAppointmentCount = useMemo(
     () =>
@@ -266,12 +282,21 @@ export function RecordCenter({
 
       <div className={styles.body} data-list={isListSection ? "true" : "false"}>
         {isListSection && meta ? (
-          <section className={`${hubStyles.listPanel} ${styles.list}`} aria-label="Kayıt listesi">
+          <section
+            className={`${hubStyles.listPanel} ${styles.list}`}
+            aria-label="Kayıt listesi"
+            data-sample={isSample ? "true" : undefined}
+          >
             <header className={hubStyles.listHead}>
               <div>
                 <strong>{meta.title}</strong>
-                <small>{records.length} kayıt · son 30 kayıt</small>
+                <small>
+                  {isSample
+                    ? "Önizleme · örnek kayıtlar"
+                    : `${records.length} kayıt · son 30 kayıt`}
+                </small>
               </div>
+              {isSample ? <span className={hubStyles.sampleTag}>Önizleme</span> : null}
             </header>
             <div className={hubStyles.listScroll}>
               {buckets.length === 0 ? <p className={hubStyles.listEmpty}>{meta.empty}</p> : null}

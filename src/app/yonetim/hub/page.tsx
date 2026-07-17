@@ -10,6 +10,7 @@ import {
   mapClientToHubRecord,
 } from "@/components/admin/hub/hub-data";
 import { buildHubFinanceSummary } from "@/components/admin/hub/hub-finance";
+import { buildSampleAppointments, buildSampleClients } from "@/components/admin/hub/hub-samples";
 import { RecordCenter } from "@/components/admin/hub/record-center";
 import { hasPermission } from "@/domain/auth/permissions";
 import type { Prisma } from "@/generated/prisma/client";
@@ -124,6 +125,10 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
     canReadClients ? database.client.count({ where: clientWhere }) : Promise.resolve(0),
   ]);
   const activeTotal = activeListSection === "danisanlar" ? clientTotal : appointmentTotal;
+  /* Land on the section that actually has records so the Hub never opens empty:
+     fall back to clients only when there are no open requests. */
+  const preferredSection: ListSection =
+    appointmentTotal === 0 && canReadClients && clientTotal > 0 ? "danisanlar" : "talepler";
   const totalPages = Math.max(1, Math.ceil(activeTotal / PAGE_SIZE));
   const currentPage = Math.min(requestedPage, totalPages);
   const skip = (currentPage - 1) * PAGE_SIZE;
@@ -286,6 +291,9 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
         canReadClients={canReadClients}
         clients={clients}
         finance={finance}
+        preferredSection={preferredSection}
+        sampleAppointments={buildSampleAppointments(now, timeZone)}
+        sampleClients={buildSampleClients(now, timeZone)}
         toolbar={
           !isSummarySection ? (
             <form action="/yonetim/hub" className="hub-search" method="get" role="search">
