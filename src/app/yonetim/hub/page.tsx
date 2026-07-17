@@ -3,14 +3,13 @@ import "@fontsource-variable/inter/index.css";
 import type { Metadata } from "next";
 
 import { AdminShell } from "@/components/admin/admin-shell";
-import { DashboardHub } from "@/components/admin/hub/dashboard-hub";
-import "@/components/admin/hub/embedded-hub-cleanup.module.css";
 import {
   buildFinanceSummary,
   buildWeeklyAvailability,
   mapAppointmentToHubRecord,
   mapClientToHubRecord,
 } from "@/components/admin/hub/hub-data";
+import { RecordCenter } from "@/components/admin/hub/record-center";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
@@ -34,7 +33,6 @@ export default async function AdminHubPage() {
   const database = getDatabase();
 
   const now = new Date();
-  /* 45 days comfortably covers the current business month for the totals. */
   const financeWindowStart = new Date(now.getTime() - 45 * 86_400_000);
 
   const [appointmentRows, clientRows, availabilityRows, financeRows] = await Promise.all([
@@ -145,19 +143,17 @@ export default async function AdminHubPage() {
         servicesRead: canReadAvailability,
         technicalHealthRead: canReadTechnicalHealth,
       }}
-      subtitle="Randevu talepleri, danışan kayıtları, müsaitlik ve finans özetleri aynı Hub çalışma alanında açılır."
+      subtitle="Randevu talepleri, danışan kayıtları, müsaitlik ve finans özetleri tek çalışma alanında açılır."
       title="Kayıt merkezi"
     >
-      <div data-admin-embedded-hub>
-        <DashboardHub
-          appointments={appointments}
-          availability={availability}
-          canManage={canManage}
-          canReadClients={canReadClients}
-          clients={clients}
-          finance={finance}
-        />
-      </div>
+      <RecordCenter
+        appointments={appointments}
+        availability={availability}
+        canManage={canManage}
+        canReadClients={canReadClients}
+        clients={clients}
+        finance={finance}
+      />
     </AdminShell>
   );
 }
