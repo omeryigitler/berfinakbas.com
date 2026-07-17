@@ -109,6 +109,14 @@
   line-height: 1.45;
 }
 
+:global([data-admin-refresh="shell"][data-admin-focus="true"]) .body[data-list="true"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:global([data-admin-refresh="shell"][data-admin-focus="true"]) .list {
+  display: none;
+}
+
 @media (max-width: 980px) {
   .body {
     grid-template-columns: 1fr;
