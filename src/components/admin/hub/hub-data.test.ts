@@ -96,7 +96,7 @@ describe("formatRelativeStamp", () => {
 });
 
 describe("resolveGroup", () => {
-  it("buckets by day difference in the business time zone", () => {
+  it("buckets by activity day difference in the business time zone", () => {
     expect(resolveGroup(new Date("2026-07-06T00:10:00+03:00"), now, timeZone)).toBe("bugun");
     expect(resolveGroup(new Date("2026-07-01T10:00:00+03:00"), now, timeZone)).toBe("buHafta");
     expect(resolveGroup(new Date("2026-06-29T10:00:00+03:00"), now, timeZone)).toBe("dahaEski");
@@ -142,18 +142,34 @@ describe("record checks", () => {
 });
 
 describe("buildNextSteps", () => {
-  it("starts requested records at first review with three steps", () => {
+  it("starts requested records at first review with three panel-backed steps", () => {
     const steps = buildNextSteps("REQUESTED");
     expect(steps).toHaveLength(3);
     expect(steps[0].state).toBe("active");
     expect(steps.slice(1).every((candidate) => candidate.state === "upcoming")).toBe(true);
+    expect(steps.at(-1)?.detail).toContain("Panelden");
   });
 
-  it("gives terminal statuses a single closing step", () => {
-    for (const status of ["REJECTED", "CANCELLED_BY_CLIENT", "NO_SHOW"] as const) {
+  it("gives confirmed appointments only a supported status-tracking step", () => {
+    const steps = buildNextSteps("CONFIRMED");
+    expect(steps).toEqual([
+      {
+        detail: "Görüşme sonrasında panelden tamamlandı, gelmedi veya iptal durumunu seç.",
+        due: "Görüşme sonrasında",
+        state: "active",
+        title: "Görüşme durumunu takip et",
+      },
+    ]);
+    expect(JSON.stringify(steps)).not.toContain("notu şablonu");
+    expect(JSON.stringify(steps)).not.toContain("özeti paylaş");
+  });
+
+  it("marks terminal statuses as closed instead of inventing follow-up work", () => {
+    for (const status of ["REJECTED", "CANCELLED_BY_CLIENT", "NO_SHOW", "COMPLETED"] as const) {
       const steps = buildNextSteps(status);
       expect(steps).toHaveLength(1);
-      expect(steps[0].state).toBe("active");
+      expect(steps[0].state).toBe("done");
+      expect(steps[0].due).toBe("Kapalı kayıt");
     }
   });
 });
@@ -178,6 +194,31 @@ describe("mapAppointmentToHubRecord", () => {
     expect(record.readinessNotes).toContain("Telefon bilgisi tamam");
     expect(record).not.toHaveProperty("readinessGrade");
     expect(record).not.toHaveProperty("readinessScore");
+  });
+
+  it("groups an old request under today when its latest status action happened today", () => {
+    const record = mapAppointmentToHubRecord(
+      makeRow({
+        createdAt: new Date("2026-06-10T09:00:00+03:00"),
+        status: "PENDING_REVIEW",
+        statusLogs: [
+          {
+            createdAt: new Date("2026-07-06T10:30:00+03:00"),
+            toStatus: "PENDING_REVIEW",
+          },
+          {
+            createdAt: new Date("2026-06-10T09:00:00+03:00"),
+            toStatus: "REQUESTED",
+          },
+        ],
+      }),
+      now,
+      timeZone,
+    );
+
+    expect(record.group).toBe("bugun");
+    expect(record.lastAction).toBe("Talep incelemeye alındı");
+    expect(record.lastActionAt).toBe("Bugün 10:30");
   });
 
   it("maps every appointment status to a stage, chip and next step", () => {
@@ -267,6 +308,22 @@ describe("mapClientToHubRecord", () => {
     expect(record.status).toBe("potansiyel");
     expect(record.plannedAt).toBe("—");
     expect(record.connections).toEqual([]);
+  });
+
+  it("does not invent work for inactive clients", () => {
+    const record = mapClientToHubRecord(
+      makeClientRow({ appointments: [], status: "INACTIVE" }),
+      now,
+      timeZone,
+    );
+    expect(record.nextSteps).toEqual([
+      {
+        detail: "Danışan kaydı pasif; yeniden etkinleştirilmedikçe işlem gerekmiyor.",
+        due: "Kapalı kayıt",
+        state: "done",
+        title: "Açık işlem yok",
+      },
+    ]);
   });
 });
 
