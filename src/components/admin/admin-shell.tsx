@@ -5,9 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import "./admin-dashboard-refresh.module.css";
+import "./admin-hub-shell-controls.module.css";
 import "./dashboard-action-order.module.css";
 import "./service-practitioner-symmetry.module.css";
 import "./dashboard-config-summary-polish.module.css";
@@ -29,7 +30,7 @@ export type AdminNavItem = {
 };
 
 type AdminNavGroup = {
-  id: "calisma" | "danisanlar" | "finans" | "randevular" | "sistem" | "site";
+  id: "calisma" | "danisanlar" | "finans" | "randevular" | "sistem";
   icon: string;
   items: AdminNavItem[];
   label: string;
@@ -82,15 +83,6 @@ function getAdminNavGroups(permissions: AdminNavPermissions): AdminNavGroup[] {
       icon: "₺",
       items: [{ href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" }],
       label: "Finans",
-    });
-  }
-
-  if (permissions.servicesRead) {
-    groups.push({
-      id: "site",
-      icon: "◇",
-      items: [{ href: "/yonetim", icon: "⚙", label: "Hizmet ve site ayarları" }],
-      label: "Site Yönetimi",
     });
   }
 
@@ -151,20 +143,23 @@ export function AdminShell({
   const activeGroupId =
     navigationGroups.find((group) => group.items.some((item) => isActivePath(pathname, item.href)))
       ?.id ?? navigationGroups[0]?.id ?? "calisma";
-  const [openGroup, setOpenGroup] = useState(activeGroupId);
+  const [openGroup, setOpenGroup] = useState<string>(activeGroupId);
   const focusMode = searchParams.get("gorunum") === "tam";
 
   useEffect(() => {
     setOpenGroup(activeGroupId);
   }, [activeGroupId]);
 
-  function setFocusMode(enabled: boolean) {
-    const params = new URLSearchParams(searchParams);
-    if (enabled) params.set("gorunum", "tam");
-    else params.delete("gorunum");
-    const query = params.toString();
-    router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
-  }
+  const setFocusMode = useCallback(
+    (enabled: boolean) => {
+      const params = new URLSearchParams(searchParams);
+      if (enabled) params.set("gorunum", "tam");
+      else params.delete("gorunum");
+      const query = params.toString();
+      router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -184,7 +179,7 @@ export function AdminShell({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  });
+  }, [focusMode, setFocusMode]);
 
   return (
     <main
