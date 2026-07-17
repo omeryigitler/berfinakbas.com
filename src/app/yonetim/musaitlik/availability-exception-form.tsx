@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 import { DateControl } from "@/components/admin/date-control";
 import { SelectControl } from "@/components/admin/select-control";
@@ -50,7 +50,6 @@ export function AvailabilityExceptionForm({
   action: ServerAction;
   practitionerId: string;
 }) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [actionState, formAction, pending] = useActionState(action, initialActionState);
   const [type, setType] = useState<AvailabilityExceptionType>("CLOSED");
   const [status, setStatus] = useState<AvailabilityExceptionStatus>("ACTIVE");
@@ -63,23 +62,14 @@ export function AvailabilityExceptionForm({
     [startTime],
   );
 
-  useEffect(() => {
-    if (timeFieldsDisabled || endTime > startTime) return;
-    setEndTime(availableEndTimes[0]?.value ?? "");
-  }, [availableEndTimes, endTime, startTime, timeFieldsDisabled]);
-
-  useEffect(() => {
-    if (actionState.status !== "success") return;
-    formRef.current?.reset();
-    setType("CLOSED");
-    setStatus("ACTIVE");
-    setLocalDate("");
-    setStartTime("09:00");
-    setEndTime("17:00");
-  }, [actionState.status]);
+  function changeStartTime(value: string) {
+    const nextEndTimes = filterEndTimeOptions(timeOptions, value);
+    setStartTime(value);
+    setEndTime((current) => (current > value ? current : (nextEndTimes[0]?.value ?? "")));
+  }
 
   return (
-    <form action={formAction} ref={formRef}>
+    <form action={formAction}>
       <input name="practitionerId" type="hidden" value={practitionerId} />
 
       <div className={styles.formGrid}>
@@ -124,7 +114,7 @@ export function AvailabilityExceptionForm({
           <SelectControl
             disabled={pending || timeFieldsDisabled}
             name="localStartTime"
-            onValueChange={setStartTime}
+            onValueChange={changeStartTime}
             options={timeOptions}
             placeholder="Başlangıç seçin"
             required={!timeFieldsDisabled}
@@ -178,8 +168,7 @@ export function AvailabilityExceptionForm({
       {actionState.message ? (
         <p
           aria-live="polite"
-          className={styles.formFeedback}
-          data-status={actionState.status}
+          className={actionState.status === "error" ? "admin-inline-error" : undefined}
           role={actionState.status === "error" ? "alert" : "status"}
         >
           {actionState.message}
