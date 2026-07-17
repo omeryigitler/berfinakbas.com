@@ -188,6 +188,48 @@
   display: none !important;
 }
 
+:global([data-admin-refresh="shell"] [data-admin-embedded-hub]) {
+  min-width: 0;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-embedded-hub] > div) {
+  min-height: 0;
+  gap: 14px;
+  background: transparent;
+  padding: 0;
+}
+
+:global(
+    [data-admin-refresh="shell"]
+      [data-admin-embedded-hub]
+      > div
+      > aside[aria-label="Yönetim menüsü"]
+  ) {
+  display: none;
+}
+
+:global(
+    [data-admin-refresh="shell"]
+      [data-admin-embedded-hub]
+      [class*="ribbon"]
+      > button[data-active]
+  ) {
+  display: none;
+}
+
+:global(
+    [data-admin-refresh="shell"][data-admin-focus="true"]
+      [data-admin-embedded-hub]
+      > div
+      > section[aria-label="Kayıt listesi"]
+  ) {
+  display: none;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-embedded-hub] [class*="workArea"]) {
+  min-height: 640px;
+}
+
 :global([data-admin-refresh="shell"][data-admin-focus="true"]) {
   grid-template-columns: 72px minmax(0, 1fr);
 }
@@ -252,6 +294,20 @@
   :global([data-admin-refresh="shell"] [data-admin-region="workspace-tabs"]) {
     position: static;
     top: auto;
+  }
+
+  :global([data-admin-refresh="shell"] [data-admin-embedded-hub] > div) {
+    flex-direction: column;
+  }
+
+  :global(
+      [data-admin-refresh="shell"]
+        [data-admin-embedded-hub]
+        > div
+        > section[aria-label="Kayıt listesi"]
+    ) {
+    width: 100%;
+    max-height: 430px;
   }
 }
 
