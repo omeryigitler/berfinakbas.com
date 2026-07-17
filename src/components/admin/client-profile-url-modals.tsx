@@ -92,14 +92,14 @@ export async function ClientProfileUrlModals({
       >
         <input name="clientId" type="hidden" value={clientId} />
         <ModalFieldPreview
-          helper="Not bu profile kalıcı olarak bağlanır. Klinik değerlendirme detayı yerine operasyon takibi için kullanın."
+          helper="Not bu danışana kalıcı olarak bağlanır. Klinik değerlendirme detayı yerine yalnızca operasyon takibi için kullanın."
           label="Danışan"
           value={clientName}
         />
         <div className="booking-subject-type">
           <label>
             <input defaultChecked name="category" type="radio" value="ADMIN" />
-            <span>Admin notu</span>
+            <span>Yönetim notu</span>
           </label>
           <label>
             <input name="category" type="radio" value="PAYMENT" />
@@ -117,7 +117,7 @@ export async function ClientProfileUrlModals({
             required
           />
           <small>
-            En fazla 500 karakter. Kaydedildikten sonra profil geçmişinde görünür.
+            En fazla 500 karakter. Son kaydedilen notlar bu pencerenin altında listelenir.
           </small>
         </label>
         <button className={modalStyles.modalButton} type="submit">
@@ -131,7 +131,7 @@ export async function ClientProfileUrlModals({
             <ModalFieldPreview
               helper={note.createdAt.toLocaleDateString("tr-TR")}
               key={note.id}
-              label={note.category === "PAYMENT" ? "Ödeme notu" : "Admin notu"}
+              label={note.category === "PAYMENT" ? "Ödeme notu" : "Yönetim notu"}
               value={note.note}
             />
           ))}
