@@ -35,12 +35,13 @@ Ayrıntılı rota, aşama, kabul ve silme kontrol listesi `docs/ADMIN_REDESIGN_P
 - `/yonetim/hub` gerçek randevu, danışan, müsaitlik ve finans özetleriyle çalışıyor.
 - Hub içinde akordeon rail ve kayıt görünümünde genişletme modu bulunuyor.
 - Ortak yönetim kabuğuna akordeon menü, aktif grubun otomatik açılması, `?gorunum=tam` tam sayfa modu ve `F` kısayolu eklendi.
+- Ortak kabuk için yeni stil katmanı ve izin testi eklendi; son head CI/Preview doğrulaması bekleniyor.
 - Bu ortak kabuk şu anda klasik tam işlem sayfalarını taşımak için geçiş katmanıdır; tam fonksiyon migrasyonu henüz bitmedi.
 - PR #107 merge edilmeyecek; bütün ekran migrasyonu ve eski tasarım temizliği bitene kadar Draft kalacak.
 
 ## Uygulama sırası
 
-1. Ortak `AdminHubShell`: akordeon navigasyon, izinli menü, üst eylem şeridi, URL destekli tam sayfa çalışma modu. **Başladı.**
+1. Ortak `AdminHubShell`: akordeon navigasyon, izinli menü, üst eylem şeridi, URL destekli tam sayfa çalışma modu. **İlk uygulama tamamlandı; doğrulama bekliyor.**
 2. Danışan liste/oluşturma/profil/veli/consent/randevu/finans akışlarının taşınması.
 3. Randevu talep/list/takvim/durum işlemleri ve müsaitlik düzenlemesinin taşınması.
 4. Ödeme-plan-taksit-seans hakkı-ledger işlemlerinin taşınması.
