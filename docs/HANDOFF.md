@@ -34,13 +34,13 @@ Ayrıntılı rota, aşama, kabul ve silme kontrol listesi `docs/ADMIN_REDESIGN_P
 
 - `/yonetim/hub` gerçek randevu, danışan, müsaitlik ve finans özetleriyle çalışıyor.
 - Hub içinde akordeon rail ve kayıt görünümünde genişletme modu bulunuyor.
-- Klasik `AdminShell` kullanan tam işlem sayfaları yalnızca görsel token seviyesinde Hub’a yaklaştırılmış durumda; bu yeterli kabul edilmiyor.
-- Danışan, randevu, müsaitlik, ödeme ve ayarların ağır işlem yüzeyleri ortak Hub kabuğuna henüz tamamen taşınmadı.
-- PR #107 merge edilmeyecek; tam migrasyon ve eski tasarım temizliği bitene kadar Draft kalacak.
+- Ortak yönetim kabuğuna akordeon menü, aktif grubun otomatik açılması, `?gorunum=tam` tam sayfa modu ve `F` kısayolu eklendi.
+- Bu ortak kabuk şu anda klasik tam işlem sayfalarını taşımak için geçiş katmanıdır; tam fonksiyon migrasyonu henüz bitmedi.
+- PR #107 merge edilmeyecek; bütün ekran migrasyonu ve eski tasarım temizliği bitene kadar Draft kalacak.
 
 ## Uygulama sırası
 
-1. Ortak `AdminHubShell`: akordeon navigasyon, izinli menü, üst eylem şeridi, URL destekli tam sayfa çalışma modu.
+1. Ortak `AdminHubShell`: akordeon navigasyon, izinli menü, üst eylem şeridi, URL destekli tam sayfa çalışma modu. **Başladı.**
 2. Danışan liste/oluşturma/profil/veli/consent/randevu/finans akışlarının taşınması.
 3. Randevu talep/list/takvim/durum işlemleri ve müsaitlik düzenlemesinin taşınması.
 4. Ödeme-plan-taksit-seans hakkı-ledger işlemlerinin taşınması.
@@ -53,8 +53,8 @@ Ayrıntılı rota, aşama, kabul ve silme kontrol listesi `docs/ADMIN_REDESIGN_P
 ## Deploy disiplini
 
 - Yalnızca `design/unified-admin-panel` ve Draft PR #107 kullanılacaktır.
-- Bu noktadan itibaren kod değişiklikleri üç toplu push hedefiyle gruplanır: ortak kabuk, tüm ekran migrasyonu, eski tasarım temizliği/final düzeltme.
-- Doküman veya CI sonucu için ayrı mikro commit yapılmaz.
+- Kalan kod değişiklikleri mümkün olan en büyük toplu push’larda birleştirilir.
+- Doküman veya CI sonucu için bundan sonra ayrı mikro commit yapılmaz.
 - Production’a yalnızca bir kez çıkılır.
 
 ## Açık ürün/yayın konuları
