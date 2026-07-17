@@ -72,6 +72,7 @@ export const createClientPayloadSchema = z
     phone: nullableTrimmedString(40),
     preferredName: nullableTrimmedString(120),
     relationship: nullableTrimmedString(80),
+    requestId: z.uuid(),
     status: z.enum(["PROSPECTIVE", "ACTIVE", "INACTIVE"]).default("PROSPECTIVE"),
     type: z.enum(["ADULT", "CHILD"]),
   })
