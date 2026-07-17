@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateTimeInputInZone, resolveZonedDateTime } from "./time-zone";
+import {
+  formatDateTimeInputInZone,
+  getZonedDayRange,
+  getZonedMonthRange,
+  getZonedWeekRange,
+  resolveZonedDateTime,
+} from "./time-zone";
 
 describe("resolveZonedDateTime", () => {
   it("keeps the practitioner local clock when converting to UTC", () => {
@@ -49,5 +55,37 @@ describe("resolveZonedDateTime", () => {
     expect(
       resolveZonedDateTime({ date: "2026-07-20", time: "10:00", timeZone: "Invalid/Zone" }),
     ).toEqual({ ok: false, reason: "INVALID" });
+  });
+});
+
+describe("business-zone calendar ranges", () => {
+  const reference = new Date("2026-07-17T22:30:00.000Z");
+
+  it("builds a day boundary from the business zone rather than the server zone", () => {
+    expect(getZonedDayRange(reference, "Europe/Istanbul")).toEqual({
+      end: new Date("2026-07-18T21:00:00.000Z"),
+      start: new Date("2026-07-17T21:00:00.000Z"),
+    });
+  });
+
+  it("builds Monday-first week boundaries in the business zone", () => {
+    expect(getZonedWeekRange(reference, "Europe/Istanbul")).toEqual({
+      end: new Date("2026-07-19T21:00:00.000Z"),
+      start: new Date("2026-07-12T21:00:00.000Z"),
+    });
+  });
+
+  it("builds month boundaries in the business zone", () => {
+    expect(getZonedMonthRange(reference, "Europe/Istanbul")).toEqual({
+      end: new Date("2026-07-31T21:00:00.000Z"),
+      start: new Date("2026-06-30T21:00:00.000Z"),
+    });
+  });
+
+  it("uses the correct offset on both sides of a DST transition", () => {
+    expect(getZonedMonthRange(new Date("2026-03-15T12:00:00Z"), "America/New_York")).toEqual({
+      end: new Date("2026-04-01T04:00:00.000Z"),
+      start: new Date("2026-03-01T05:00:00.000Z"),
+    });
   });
 });
