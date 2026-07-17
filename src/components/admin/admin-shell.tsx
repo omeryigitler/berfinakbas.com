@@ -48,7 +48,9 @@ const siteWorkspaceSections = new Set([
 ]);
 
 export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem[] {
-  return getAdminNavGroups(permissions).flatMap((group) => group.items);
+  return getAdminNavGroups(permissions)
+    .filter((group) => group.id !== "site")
+    .flatMap((group) => group.items);
 }
 
 function getAdminNavGroups(permissions: AdminNavPermissions): AdminNavGroup[] {
