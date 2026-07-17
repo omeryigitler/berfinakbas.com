@@ -108,12 +108,16 @@ export default async function AdminHubPage({
   const query = singleParam(params, "q").trim().slice(0, 100);
   const requestedPage = pageNumber(singleParam(params, "sayfa"));
   const requestedSection = singleParam(params, "bolum");
-  const activeListSection: ListSection = requestedSection === "danisanlar" ? "danisanlar" : "talepler";
   const canManage = hasPermission(session.user.roles, "appointments:manage");
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canReadAvailability = hasPermission(session.user.roles, "services:read");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
+  const isSummarySection =
+    (requestedSection === "musaitlik" && canReadAvailability) ||
+    (requestedSection === "odemeler" && canReadFinance);
+  const activeListSection: ListSection =
+    requestedSection === "danisanlar" && canReadClients ? "danisanlar" : "talepler";
   const environment = getServerEnvironment();
   const database = getDatabase();
   const now = new Date();
@@ -290,37 +294,58 @@ export default async function AdminHubPage({
       subtitle="Randevu talepleri, danışan kayıtları, müsaitlik ve finans özetleri tek çalışma alanında açılır."
       title="Kayıt merkezi"
     >
-      <section className="admin-panel" aria-labelledby="kayit-merkezi-arama">
-        <div className="admin-panel-heading">
-          <div>
-            <h2 id="kayit-merkezi-arama">Kayıtlarda ara</h2>
-            <p>Danışan adı, telefon, e-posta, hizmet veya randevu referansı ile arayın.</p>
+      {!isSummarySection ? (
+        <section className="admin-panel" aria-labelledby="kayit-merkezi-arama">
+          <div className="admin-panel-heading">
+            <div>
+              <h2 id="kayit-merkezi-arama">Kayıtlarda ara</h2>
+              <p>Danışan adı, telefon, e-posta, hizmet veya randevu referansı ile arayın.</p>
+            </div>
+            <span className="admin-count">{activeTotal} kayıt</span>
           </div>
-          <span className="admin-count">{activeTotal} kayıt</span>
-        </div>
-        <form action="/yonetim/hub" className="admin-client-filter-form" method="get">
-          {activeListSection === "danisanlar" ? <input name="bolum" type="hidden" value="danisanlar" /> : null}
-          <label>
-            Arama
-            <input defaultValue={query} maxLength={100} name="q" placeholder="Ad, telefon, e-posta veya referans" type="search" />
-          </label>
-          <button type="submit">Ara</button>
-          {query || currentPage > 1 ? (
-            <Link href={listHref({ page: 1, query: "", section: activeListSection })}>Temizle</Link>
-          ) : null}
-        </form>
-        <div className="admin-list-footer">
-          <span>{firstVisible}-{lastVisible} arası · Sayfa {currentPage}/{totalPages}</span>
-          <nav aria-label="Kayıt merkezi sayfaları">
-            {currentPage > 1 ? (
-              <Link href={listHref({ page: currentPage - 1, query, section: activeListSection })}>← Önceki</Link>
+          <form action="/yonetim/hub" className="admin-client-filter-form" method="get">
+            {activeListSection === "danisanlar" ? (
+              <input name="bolum" type="hidden" value="danisanlar" />
             ) : null}
-            {currentPage < totalPages ? (
-              <Link className="primary-button" href={listHref({ page: currentPage + 1, query, section: activeListSection })}>Sonraki →</Link>
+            <label>
+              Arama
+              <input
+                defaultValue={query}
+                maxLength={100}
+                name="q"
+                placeholder="Ad, telefon, e-posta veya referans"
+                type="search"
+              />
+            </label>
+            <button type="submit">Ara</button>
+            {query || currentPage > 1 ? (
+              <Link href={listHref({ page: 1, query: "", section: activeListSection })}>
+                Temizle
+              </Link>
             ) : null}
-          </nav>
-        </div>
-      </section>
+          </form>
+          <div className="admin-list-footer">
+            <span>
+              {firstVisible}-{lastVisible} arası · Sayfa {currentPage}/{totalPages}
+            </span>
+            <nav aria-label="Kayıt merkezi sayfaları">
+              {currentPage > 1 ? (
+                <Link href={listHref({ page: currentPage - 1, query, section: activeListSection })}>
+                  ← Önceki
+                </Link>
+              ) : null}
+              {currentPage < totalPages ? (
+                <Link
+                  className="primary-button"
+                  href={listHref({ page: currentPage + 1, query, section: activeListSection })}
+                >
+                  Sonraki →
+                </Link>
+              ) : null}
+            </nav>
+          </div>
+        </section>
+      ) : null}
 
       <RecordCenter
         appointments={appointments}
