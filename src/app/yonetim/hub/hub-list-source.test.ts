@@ -35,4 +35,17 @@ describe("Record Center server list contract", () => {
     expect(source).toContain('aria-label="Kayıt merkezi sayfaları"');
     expect(source).toContain("listHref");
   });
+
+  it("hides list controls on availability and finance summary sections", () => {
+    expect(source).toContain("const isSummarySection");
+    expect(source).toContain('requestedSection === "musaitlik" && canReadAvailability');
+    expect(source).toContain('requestedSection === "odemeler" && canReadFinance');
+    expect(source).toContain("{!isSummarySection ? (");
+  });
+
+  it("falls back to the request queue when client access is missing", () => {
+    expect(source).toContain(
+      'requestedSection === "danisanlar" && canReadClients ? "danisanlar" : "talepler"',
+    );
+  });
 });
