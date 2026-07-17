@@ -137,13 +137,15 @@ export default function Home() {
           <p className="section-kicker">Randevu</p>
           <h2 id="booking-title">Sizin için uygun zamanı birlikte planlayalım.</h2>
           <p className="booking-lead">
-            Kontrollü randevu talep sistemi hazırlanıyor. Açıldığında ilk adımı buradan, yalnızca
-            birkaç dakikada oluşturabileceksiniz.
+            Kontrollü randevu talebi ile ilk adımı buradan, yalnızca birkaç dakikada
+            oluşturabilirsiniz. Saatiniz uygunluk kontrolü ve onay sonrasında kesinleşir.
           </p>
           <div className="booking-actions">
-            <span className="booking-status">Yakında açılacak</span>
+            <Link className="primary-button" href="/randevu">
+              Randevu talebi oluştur
+            </Link>
             <Link className="booking-contact" href="/iletisim">
-              Bu sırada iletişime geçin
+              Ya da iletişime geçin
               <span aria-hidden="true">→</span>
             </Link>
           </div>
