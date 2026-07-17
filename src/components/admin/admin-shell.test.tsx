@@ -16,6 +16,8 @@ describe("getAdminNavItems", () => {
       "/yonetim/hub",
       "/yonetim/randevular",
       "/yonetim/musaitlik",
+      "/yonetim?alan=public-iletisim-ayarlari",
+      "/yonetim?alan=hizmet-terapist-ayarlari",
       "/yonetim/saglik",
     ]);
   });
