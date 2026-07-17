@@ -2,6 +2,10 @@ import { revalidatePath } from "next/cache";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import { hasPermission } from "@/domain/auth/permissions";
+import {
+  availabilityExceptionValidationMessage,
+  type AvailabilityExceptionType,
+} from "@/domain/availability/availability-exception";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 
@@ -63,16 +67,6 @@ function enumValue<T extends string>(
   return options.includes(value as T) ? (value as T) : fallback;
 }
 
-function isDateValue(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const parsed = new Date(`${value}T00:00:00.000Z`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-}
-
-function isTimeValue(value: string): boolean {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
-}
-
 function formatLocalDate(date: Date): string {
   return new Intl.DateTimeFormat("tr-TR", {
     day: "2-digit",
@@ -106,26 +100,26 @@ async function createAvailabilityException(
 
   const practitionerId = textValue(formData, "practitionerId");
   const localDate = textValue(formData, "localDate");
-  const type = enumValue(formData, "type", exceptionTypeOptions, "CLOSED");
+  const type = enumValue(
+    formData,
+    "type",
+    exceptionTypeOptions,
+    "CLOSED",
+  ) as AvailabilityExceptionType;
   const status = enumValue(formData, "status", exceptionStatusOptions, "ACTIVE");
   const reasonCode = boundedTextValue(formData, "reasonCode", 2, 80) || "ADMIN_EXCEPTION";
   const privateNote = textValue(formData, "privateNote").slice(0, 500) || null;
   const localStartTime = textValue(formData, "localStartTime");
   const localEndTime = textValue(formData, "localEndTime");
 
-  if (!practitionerId) return actionError("Terapist bilgisi bulunamadı.");
-  if (!isDateValue(localDate)) return actionError("Geçerli bir tarih seçmelisiniz.");
-
-  const shouldRequireTimeRange = type !== "CLOSED";
-  if (shouldRequireTimeRange && !isTimeValue(localStartTime)) {
-    return actionError("Başlangıç saatini seçmelisiniz.");
-  }
-  if (shouldRequireTimeRange && !isTimeValue(localEndTime)) {
-    return actionError("Bitiş saatini seçmelisiniz.");
-  }
-  if (shouldRequireTimeRange && localStartTime >= localEndTime) {
-    return actionError("Bitiş saati başlangıç saatinden sonra olmalıdır.");
-  }
+  const validationMessage = availabilityExceptionValidationMessage({
+    localDate,
+    localEndTime,
+    localStartTime,
+    practitionerId,
+    type,
+  });
+  if (validationMessage) return actionError(validationMessage);
 
   const database = getDatabase();
   const practitioner = await database.practitioner.findUnique({
