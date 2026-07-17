@@ -123,7 +123,7 @@ Eski URL sözleşmeleri kırılmamıştır.
 
 ## Otomatik kalite durumu
 
-Quality run #425:
+Final Quality run #426:
 
 - Prisma validate: başarılı
 - ESLint: başarılı
@@ -147,10 +147,9 @@ Quality run #425:
 
 ## Merge ve deploy kapısı
 
-1. Son dokümantasyon commitinin CI ve Preview sonucunu doğrula.
-2. Yetkili hesapla tüm rotalarda tek manuel smoke turu yap.
-3. Görsel regresyon varsa aynı Draft PR’da tek toplu düzeltme uygula.
-4. Kullanıcıdan tek final merge onayı al.
-5. Tek squash merge ve tek Production deploy yap.
+1. Yetkili hesapla tüm rotalarda tek manuel smoke turu yap.
+2. Görsel regresyon varsa aynı Draft PR’da tek toplu düzeltme uygula.
+3. Kullanıcıdan tek final merge onayı al.
+4. Tek squash merge ve tek Production deploy yap.
 
 PR #107 bu adımlar tamamlanana kadar Draft kalır.
