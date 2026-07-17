@@ -4,10 +4,13 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 
 import { DateControl } from "@/components/admin/date-control";
 import { SelectControl } from "@/components/admin/select-control";
+import {
+  filterEndTimeOptions,
+  type AvailabilityExceptionType,
+} from "@/domain/availability/availability-exception";
 
 import styles from "./musaitlik.module.css";
 
-type AvailabilityExceptionType = "BLOCKED" | "CLOSED" | "CUSTOM_HOURS";
 type AvailabilityExceptionStatus = "ACTIVE" | "INACTIVE";
 
 export type AvailabilityExceptionActionState = Readonly<{
@@ -56,7 +59,7 @@ export function AvailabilityExceptionForm({
   const [endTime, setEndTime] = useState("17:00");
   const timeFieldsDisabled = type === "CLOSED";
   const availableEndTimes = useMemo(
-    () => timeOptions.filter((option) => option.value > startTime),
+    () => filterEndTimeOptions(timeOptions, startTime),
     [startTime],
   );
 
