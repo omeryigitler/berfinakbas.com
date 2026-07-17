@@ -2,6 +2,7 @@ import "@fontsource-variable/inter/index.css";
 
 import type { Metadata } from "next";
 
+import { AdminShell } from "@/components/admin/admin-shell";
 import { DashboardHub } from "@/components/admin/hub/dashboard-hub";
 import {
   buildFinanceSummary,
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false, noarchive: true, nosnippet: true },
-  title: "Yönetim Hub | Berfin Akbaş",
+  title: "Kayıt Merkezi | Berfin Akbaş",
 };
 
 export default async function AdminHubPage() {
@@ -27,6 +28,7 @@ export default async function AdminHubPage() {
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canReadAvailability = hasPermission(session.user.roles, "services:read");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
+  const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
   const environment = getServerEnvironment();
   const database = getDatabase();
 
@@ -133,13 +135,28 @@ export default async function AdminHubPage() {
   const finance = financeRows ? buildFinanceSummary(financeRows, now, timeZone) : null;
 
   return (
-    <DashboardHub
-      appointments={appointments}
-      availability={availability}
-      canManage={canManage}
-      canReadClients={canReadClients}
-      clients={clients}
-      finance={finance}
-    />
+    <AdminShell
+      email={session.user.email}
+      permissions={{
+        appointmentsRead: true,
+        clientsRead: canReadClients,
+        financeRead: canReadFinance,
+        servicesRead: canReadAvailability,
+        technicalHealthRead: canReadTechnicalHealth,
+      }}
+      subtitle="Randevu talepleri, danışan kayıtları, müsaitlik ve finans özetleri aynı Hub çalışma alanında açılır."
+      title="Kayıt merkezi"
+    >
+      <div data-admin-embedded-hub>
+        <DashboardHub
+          appointments={appointments}
+          availability={availability}
+          canManage={canManage}
+          canReadClients={canReadClients}
+          clients={clients}
+          finance={finance}
+        />
+      </div>
+    </AdminShell>
   );
 }
