@@ -2,18 +2,14 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
+import {
+  filterSelectOptions,
+  isSearchableSelect,
+  type SelectControlOption,
+} from "./select-control-options";
 import styles from "./select-control.module.css";
 
-export type SelectControlOption = {
-  label: string;
-  value: string;
-};
-
-const SEARCH_THRESHOLD = 12;
-
-function normalizedSearch(value: string): string {
-  return value.trim().toLocaleLowerCase("tr-TR");
-}
+export type { SelectControlOption } from "./select-control-options";
 
 export function SelectControl({
   defaultValue = "",
@@ -46,12 +42,8 @@ export function SelectControl({
   const [activeIndex, setActiveIndex] = useState(0);
   const selectedValue = value ?? internalValue;
   const selectedOption = options.find((option) => option.value === selectedValue);
-  const searchable = options.length > SEARCH_THRESHOLD;
-  const filteredOptions = useMemo(() => {
-    const normalizedQuery = normalizedSearch(query);
-    if (!normalizedQuery) return options;
-    return options.filter((option) => normalizedSearch(option.label).includes(normalizedQuery));
-  }, [options, query]);
+  const searchable = isSearchableSelect(options);
+  const filteredOptions = useMemo(() => filterSelectOptions(options, query), [options, query]);
 
   useEffect(() => {
     if (!open) return;
@@ -113,7 +105,12 @@ export function SelectControl({
   }
 
   function onTriggerKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Home" || event.key === "End") {
+    if (
+      event.key === "ArrowDown" ||
+      event.key === "ArrowUp" ||
+      event.key === "Home" ||
+      event.key === "End"
+    ) {
       event.preventDefault();
       if (!open) openList();
       return;
@@ -169,7 +166,13 @@ export function SelectControl({
     } else if (event.key === "Tab") {
       setOpen(false);
       setQuery("");
-    } else if (searchable && event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
+    } else if (
+      searchable &&
+      event.key.length === 1 &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey
+    ) {
       event.preventDefault();
       searchRef.current?.focus();
       setQuery(event.key);
