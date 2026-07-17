@@ -7,23 +7,33 @@ import styles from "@/components/admin/admin-shell.module.css";
 import { DashboardUrlModals } from "@/components/admin/dashboard-url-modals";
 import "@/components/admin/service-practitioner-overview.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
-import type { Prisma } from "@/generated/prisma/client";
 import {
   clientStatusLabels,
   clientTypeLabels,
 } from "@/domain/clients/client-management";
+import type { Prisma } from "@/generated/prisma/client";
 import { requirePermission } from "@/lib/authorization";
 import {
   appointmentDurationSettingsKey,
   appointmentDurationSettingsSchema,
   getAppointmentDurationSettings,
 } from "@/lib/booking/appointment-duration-settings";
+import { getDatabase } from "@/lib/db";
+import { getServerEnvironment } from "@/lib/env";
+import {
+  formatCurrencyAmounts,
+  type CurrencyAggregate,
+} from "@/lib/finance/currency-summary";
 import {
   getPublicContactSettings,
   publicContactSettingsKey,
   publicContactSettingsSchema,
 } from "@/lib/public-contact-settings";
-import { getDatabase } from "@/lib/db";
+import {
+  getZonedDayRange,
+  getZonedMonthRange,
+  getZonedWeekRange,
+} from "@/lib/time-zone";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +64,6 @@ const approvalModeLabels: Record<string, string> = {
   AUTOMATIC: "Otomatik onay",
   MANUAL: "Manuel onay",
 };
-
 const approvalModeOptions = ["MANUAL", "AUTOMATIC"] as const;
 
 const availabilityRuleStatusLabels: Record<string, string> = {
@@ -62,21 +71,17 @@ const availabilityRuleStatusLabels: Record<string, string> = {
   INACTIVE: "Pasif",
 };
 
-const availabilityRuleStatusOptions = ["ACTIVE", "INACTIVE"] as const;
-
 const locationTypeLabels: Record<string, string> = {
   HYBRID: "Yüz yüze / çevrim içi",
   IN_PERSON: "Yüz yüze",
   ONLINE: "Çevrim içi",
 };
-
 const locationTypeOptions = ["IN_PERSON", "ONLINE", "HYBRID"] as const;
 
 const practitionerStatusLabels: Record<string, string> = {
   ACTIVE: "Aktif",
   INACTIVE: "Pasif",
 };
-
 const practitionerStatusOptions = ["ACTIVE", "INACTIVE"] as const;
 
 const serviceStatusLabels: Record<string, string> = {
@@ -84,8 +89,8 @@ const serviceStatusLabels: Record<string, string> = {
   DRAFT: "Taslak",
   INACTIVE: "Pasif",
 };
-
 const serviceStatusOptions = ["DRAFT", "ACTIVE", "INACTIVE"] as const;
+
 const weekdayLabels = [
   "Pazar",
   "Pazartesi",
@@ -94,7 +99,7 @@ const weekdayLabels = [
   "Perşembe",
   "Cuma",
   "Cumartesi",
-];
+] as const;
 
 function singleParam(
   params: Record<string, string | string[] | undefined>,
@@ -121,8 +126,7 @@ function boundedTextValue(
 
 function integerValue(formData: FormData, key: string, fallback: number): number {
   const value = Number(textValue(formData, key));
-  if (!Number.isInteger(value)) return fallback;
-  return value;
+  return Number.isInteger(value) ? value : fallback;
 }
 
 function boundedIntegerValue(
@@ -133,9 +137,7 @@ function boundedIntegerValue(
   max: number,
 ): number {
   const value = integerValue(formData, key, fallback);
-  if (value < min) return min;
-  if (value > max) return max;
-  return value;
+  return Math.min(max, Math.max(min, value));
 }
 
 function enumValue<T extends string>(
@@ -146,10 +148,6 @@ function enumValue<T extends string>(
 ): T {
   const value = textValue(formData, key);
   return options.includes(value as T) ? (value as T) : fallback;
-}
-
-function isTimeValue(value: string): boolean {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
 function isValidTimeZone(timeZone: string): boolean {
@@ -177,16 +175,25 @@ async function updatePublicContactSettings(formData: FormData) {
 
   const database = getDatabase();
   await database.$transaction(async (transaction) => {
-    const previous = await transaction.operationalSetting.findUnique({ where: { key: publicContactSettingsKey } });
+    const previous = await transaction.operationalSetting.findUnique({
+      where: { key: publicContactSettingsKey },
+    });
     await transaction.operationalSetting.upsert({
       create: { key: publicContactSettingsKey, updatedByUserId: session.user.id, value },
       update: { updatedByUserId: session.user.id, value },
       where: { key: publicContactSettingsKey },
     });
-    await transaction.settingChangeLog.create({ data: {
-      actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: publicContactSettingsKey,
-      newValue: value, oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined, reason, settingKey: publicContactSettingsKey,
-    } });
+    await transaction.settingChangeLog.create({
+      data: {
+        actorUserId: session.user.id,
+        entityId: publicContactSettingsKey,
+        entityType: "OPERATIONAL_SETTING",
+        newValue: value,
+        oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined,
+        reason,
+        settingKey: publicContactSettingsKey,
+      },
+    });
   });
   revalidatePath("/");
   revalidatePath("/iletisim");
@@ -206,16 +213,25 @@ async function updateAppointmentDurationSettings(formData: FormData) {
 
   const database = getDatabase();
   await database.$transaction(async (transaction) => {
-    const previous = await transaction.operationalSetting.findUnique({ where: { key: appointmentDurationSettingsKey } });
+    const previous = await transaction.operationalSetting.findUnique({
+      where: { key: appointmentDurationSettingsKey },
+    });
     await transaction.operationalSetting.upsert({
       create: { key: appointmentDurationSettingsKey, updatedByUserId: session.user.id, value },
       update: { updatedByUserId: session.user.id, value },
       where: { key: appointmentDurationSettingsKey },
     });
-    await transaction.settingChangeLog.create({ data: {
-      actorUserId: session.user.id, entityType: "OPERATIONAL_SETTING", entityId: appointmentDurationSettingsKey,
-      newValue: value, oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined, reason, settingKey: appointmentDurationSettingsKey,
-    } });
+    await transaction.settingChangeLog.create({
+      data: {
+        actorUserId: session.user.id,
+        entityId: appointmentDurationSettingsKey,
+        entityType: "OPERATIONAL_SETTING",
+        newValue: value,
+        oldValue: previous ? (previous.value as Prisma.InputJsonValue) : undefined,
+        reason,
+        settingKey: appointmentDurationSettingsKey,
+      },
+    });
   });
   revalidatePath("/yonetim");
   revalidatePath("/yonetim/randevular");
@@ -224,180 +240,85 @@ async function updateAppointmentDurationSettings(formData: FormData) {
 async function updateServiceSettings(formData: FormData) {
   "use server";
   await requirePermission("services:manage");
-
   const serviceId = textValue(formData, "serviceId");
   if (!serviceId) return;
 
-  const defaultDurationMinutes = boundedIntegerValue(
-    formData,
-    "defaultDurationMinutes",
-    15,
-    5,
-    240,
-  );
-  const defaultBufferBeforeMinutes = boundedIntegerValue(
-    formData,
-    "defaultBufferBeforeMinutes",
-    0,
-    0,
-    120,
-  );
-  const defaultBufferAfterMinutes = boundedIntegerValue(
-    formData,
-    "defaultBufferAfterMinutes",
-    0,
-    0,
-    120,
-  );
-  const status = enumValue(formData, "status", serviceStatusOptions, "DRAFT");
-  const approvalMode = enumValue(
-    formData,
-    "approvalMode",
-    approvalModeOptions,
-    "MANUAL",
-  );
-  const locationType = enumValue(
-    formData,
-    "locationType",
-    locationTypeOptions,
-    "IN_PERSON",
-  );
-
   await getDatabase().service.update({
     data: {
-      approvalMode,
-      defaultBufferAfterMinutes,
-      defaultBufferBeforeMinutes,
-      defaultDurationMinutes,
-      locationType,
+      approvalMode: enumValue(formData, "approvalMode", approvalModeOptions, "MANUAL"),
+      defaultBufferAfterMinutes: boundedIntegerValue(
+        formData,
+        "defaultBufferAfterMinutes",
+        0,
+        0,
+        120,
+      ),
+      defaultBufferBeforeMinutes: boundedIntegerValue(
+        formData,
+        "defaultBufferBeforeMinutes",
+        0,
+        0,
+        120,
+      ),
+      defaultDurationMinutes: boundedIntegerValue(
+        formData,
+        "defaultDurationMinutes",
+        15,
+        5,
+        240,
+      ),
+      locationType: enumValue(formData, "locationType", locationTypeOptions, "IN_PERSON"),
       publicVisible: formData.get("publicVisible") === "on",
-      status,
+      status: enumValue(formData, "status", serviceStatusOptions, "DRAFT"),
     },
     where: { id: serviceId },
   });
-
   revalidatePath("/yonetim");
 }
 
 async function updatePractitionerSettings(formData: FormData) {
   "use server";
   await requirePermission("availability:manage");
-
   const practitionerId = textValue(formData, "practitionerId");
   const displayName = boundedTextValue(formData, "displayName", 2, 90);
   const timeZone = boundedTextValue(formData, "timeZone", 3, 80);
   if (!practitionerId || !displayName || !isValidTimeZone(timeZone)) return;
 
-  const status = enumValue(
-    formData,
-    "status",
-    practitionerStatusOptions,
-    "ACTIVE",
-  );
-
   await getDatabase().practitioner.update({
     data: {
       displayName,
-      status,
+      status: enumValue(formData, "status", practitionerStatusOptions, "ACTIVE"),
       timeZone,
     },
     where: { id: practitionerId },
   });
-
-  revalidatePath("/yonetim");
-}
-
-async function createAvailabilityRule(formData: FormData) {
-  "use server";
-  await requirePermission("availability:manage");
-
-  const practitionerId = textValue(formData, "practitionerId");
-  const localStartTime = textValue(formData, "localStartTime");
-  const localEndTime = textValue(formData, "localEndTime");
-  if (
-    !practitionerId ||
-    !isTimeValue(localStartTime) ||
-    !isTimeValue(localEndTime) ||
-    localStartTime >= localEndTime
-  ) {
-    return;
-  }
-
-  const weekday = boundedIntegerValue(formData, "weekday", 1, 0, 6);
-  const slotIncrementMinutes = boundedIntegerValue(
-    formData,
-    "slotIncrementMinutes",
-    15,
-    5,
-    120,
-  );
-  const status = enumValue(
-    formData,
-    "status",
-    availabilityRuleStatusOptions,
-    "ACTIVE",
-  );
-
-  await getDatabase().availabilityRule.create({
-    data: {
-      localEndTime,
-      localStartTime,
-      practitionerId,
-      slotIncrementMinutes,
-      status,
-      weekday,
-    },
-  });
-
   revalidatePath("/yonetim");
 }
 
 async function deactivateAvailabilityRule(formData: FormData) {
   "use server";
   await requirePermission("availability:manage");
-
   const ruleId = textValue(formData, "ruleId");
   if (!ruleId) return;
-
   await getDatabase().availabilityRule.update({
     data: { status: "INACTIVE" },
     where: { id: ruleId },
   });
-
   revalidatePath("/yonetim");
+  revalidatePath("/yonetim/musaitlik");
 }
 
-function formatMoney(amountMinor: bigint | number, currency = "TRY"): string {
-  return new Intl.NumberFormat("tr-TR", {
-    currency,
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-    style: "currency",
-  }).format(Number(amountMinor) / 100);
-}
-
-function formatTime(date: Date): string {
+function formatTime(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("tr-TR", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone,
   }).format(date);
 }
 
 function barHeight(value: number, maxValue: number): string {
   if (value <= 0) return "18%";
   return `${Math.max(24, Math.round((value / maxValue) * 100))}%`;
-}
-
-function getWeekRange(todayStart: Date): { weekEnd: Date; weekStart: Date } {
-  const weekStart = new Date(todayStart);
-  const day = weekStart.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  weekStart.setDate(weekStart.getDate() + diffToMonday);
-
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 7);
-
-  return { weekEnd, weekStart };
 }
 
 function statusLabel(value: string, labels: Record<string, string>): string {
@@ -430,7 +351,23 @@ function formatRuleSummary(rules: AvailabilityRuleView[]): string {
 }
 
 function ruleLabel(rule: AvailabilityRuleView): string {
-  return `${weekdayLabels[rule.weekday] ?? "Gün"} · ${rule.localStartTime}-${rule.localEndTime} · ${rule.slotIncrementMinutes} dk slot`;
+  return `${weekdayLabels[rule.weekday] ?? "Gün"} · ${rule.localStartTime}-${rule.localEndTime} · ${rule.slotIncrementMinutes} dk aralık`;
+}
+
+function paymentAggregates(
+  rows: readonly Readonly<{
+    _count: { _all: number };
+    _sum: { amountMinor: bigint | null };
+    currency: string;
+  }>[],
+): CurrencyAggregate[] {
+  return rows.map((row) => ({
+    count: row._count._all,
+    currency: row.currency,
+    totalMinor: row._sum.amountMinor && row._sum.amountMinor < 0n
+      ? -row._sum.amountMinor
+      : (row._sum.amountMinor ?? 0n),
+  }));
 }
 
 export default async function AdminHomePage({
@@ -442,176 +379,175 @@ export default async function AdminHomePage({
   const params = await searchParams;
   const activeModal = singleParam(params, "modal");
   const initialClientId = singleParam(params, "clientId");
-  const canReadAppointments = hasPermission(
-    session.user.roles,
-    "appointments:read",
-  );
-  const canManageAppointments = hasPermission(
-    session.user.roles,
-    "appointments:manage",
-  );
+  const canReadAppointments = hasPermission(session.user.roles, "appointments:read");
+  const canManageAppointments = hasPermission(session.user.roles, "appointments:manage");
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const canManageServices = hasPermission(session.user.roles, "services:manage");
-  const canManageAvailability = hasPermission(
-    session.user.roles,
-    "availability:manage",
-  );
-  const canReadTechnicalHealth = hasPermission(
-    session.user.roles,
-    "technical-health:read",
-  );
-  const db = getDatabase();
-  const [durationSettings, contactSettings] = await Promise.all([
+  const canManageAvailability = hasPermission(session.user.roles, "availability:manage");
+  const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
+  const database = getDatabase();
+  const environment = getServerEnvironment();
+  const timeZone = environment.BUSINESS_TIME_ZONE;
+  const now = new Date();
+  const dayRange = getZonedDayRange(now, timeZone);
+  const weekRange = getZonedWeekRange(now, timeZone);
+  const monthRange = getZonedMonthRange(now, timeZone);
+
+  const [durationSettings, contactSettings, services, practitioners] = await Promise.all([
     getAppointmentDurationSettings(),
     getPublicContactSettings(),
+    database.service.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        _count: { select: { appointments: true } },
+        approvalMode: true,
+        defaultBufferAfterMinutes: true,
+        defaultBufferBeforeMinutes: true,
+        defaultDurationMinutes: true,
+        id: true,
+        locationType: true,
+        name: true,
+        policies: {
+          orderBy: [{ effectiveFrom: "desc" }],
+          select: {
+            bookingMaxAdvanceDays: true,
+            bookingMinNoticeMinutes: true,
+            cancellationWindowMinutes: true,
+            maxDailyAppointments: true,
+            rescheduleWindowMinutes: true,
+          },
+          take: 1,
+        },
+        publicVisible: true,
+        slug: true,
+        status: true,
+      },
+    }),
+    database.practitioner.findMany({
+      orderBy: [{ displayName: "asc" }],
+      select: {
+        _count: {
+          select: {
+            appointments: true,
+            availabilityExceptions: true,
+            availabilityRules: true,
+          },
+        },
+        availabilityRules: {
+          orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
+          select: {
+            id: true,
+            localEndTime: true,
+            localStartTime: true,
+            slotIncrementMinutes: true,
+            status: true,
+            weekday: true,
+          },
+          take: 14,
+        },
+        displayName: true,
+        id: true,
+        status: true,
+        timeZone: true,
+      },
+    }),
   ]);
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(todayStart);
-  todayEnd.setDate(todayEnd.getDate() + 1);
-  const monthStart = new Date(
-    todayStart.getFullYear(),
-    todayStart.getMonth(),
-    1,
-  );
-  const { weekEnd, weekStart } = getWeekRange(todayStart);
+  const [
+    totalClients,
+    activeClients,
+    childClients,
+    newClientsThisMonth,
+    latestClients,
+    pendingAppointments,
+    todaysAppointments,
+    upcomingAppointments,
+    weeklyAppointments,
+    activePlans,
+    monthlyPaymentRows,
+  ] = await Promise.all([
+    canReadClients ? database.client.count() : Promise.resolve(0),
+    canReadClients
+      ? database.client.count({ where: { status: "ACTIVE" } })
+      : Promise.resolve(0),
+    canReadClients
+      ? database.client.count({ where: { type: "CHILD" } })
+      : Promise.resolve(0),
+    canReadClients
+      ? database.client.count({
+          where: { createdAt: { gte: monthRange.start, lt: monthRange.end } },
+        })
+      : Promise.resolve(0),
+    canReadClients
+      ? database.client.findMany({
+          orderBy: [{ createdAt: "desc" }],
+          select: {
+            email: true,
+            firstName: true,
+            id: true,
+            lastName: true,
+            phone: true,
+            preferredName: true,
+            status: true,
+            type: true,
+          },
+          take: 5,
+        })
+      : Promise.resolve([]),
+    canReadAppointments
+      ? database.appointment.count({
+          where: { status: { in: ["REQUESTED", "PENDING_REVIEW"] } },
+        })
+      : Promise.resolve(0),
+    canReadAppointments
+      ? database.appointment.findMany({
+          orderBy: [{ startsAt: "asc" }],
+          select: {
+            client: { select: { firstName: true, lastName: true } },
+            id: true,
+            service: { select: { name: true } },
+            startsAt: true,
+            status: true,
+          },
+          take: 5,
+          where: { startsAt: { gte: dayRange.start, lt: dayRange.end } },
+        })
+      : Promise.resolve([]),
+    canReadAppointments
+      ? database.appointment.count({ where: { startsAt: { gte: now } } })
+      : Promise.resolve(0),
+    canReadAppointments
+      ? database.appointment.count({
+          where: { startsAt: { gte: weekRange.start, lt: weekRange.end } },
+        })
+      : Promise.resolve(0),
+    canReadFinance
+      ? database.clientPlan.count({ where: { status: "ACTIVE" } })
+      : Promise.resolve(0),
+    canReadFinance
+      ? database.financeLedgerEntry.groupBy({
+          _count: { _all: true },
+          _sum: { amountMinor: true },
+          by: ["currency"],
+          where: {
+            occurredAt: { gte: monthRange.start, lt: monthRange.end },
+            type: "PAYMENT",
+          },
+        })
+      : Promise.resolve([]),
+  ]);
 
-  const services = await db.service.findMany({
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: {
-      _count: { select: { appointments: true } },
-      approvalMode: true,
-      defaultBufferAfterMinutes: true,
-      defaultBufferBeforeMinutes: true,
-      defaultDurationMinutes: true,
-      id: true,
-      locationType: true,
-      name: true,
-      policies: {
-        orderBy: [{ effectiveFrom: "desc" }],
-        select: {
-          bookingMaxAdvanceDays: true,
-          bookingMinNoticeMinutes: true,
-          cancellationWindowMinutes: true,
-          maxDailyAppointments: true,
-          rescheduleWindowMinutes: true,
-        },
-        take: 1,
-      },
-      publicVisible: true,
-      slug: true,
-      status: true,
-    },
-  });
-  const practitioners = await db.practitioner.findMany({
-    orderBy: [{ displayName: "asc" }],
-    select: {
-      _count: {
-        select: {
-          appointments: true,
-          availabilityExceptions: true,
-          availabilityRules: true,
-        },
-      },
-      availabilityRules: {
-        orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
-        select: {
-          id: true,
-          localEndTime: true,
-          localStartTime: true,
-          slotIncrementMinutes: true,
-          status: true,
-          weekday: true,
-        },
-        take: 14,
-      },
-      displayName: true,
-      id: true,
-      status: true,
-      timeZone: true,
-    },
-  });
-
-  const activeServiceCount = services.filter(
-    (service) => service.status === "ACTIVE",
-  ).length;
-  const publicServiceCount = services.filter(
-    (service) => service.publicVisible,
-  ).length;
+  const activeServiceCount = services.filter((service) => service.status === "ACTIVE").length;
+  const publicServiceCount = services.filter((service) => service.publicVisible).length;
   const activePractitionerCount = practitioners.filter(
     (practitioner) => practitioner.status === "ACTIVE",
   ).length;
   const configuredAvailabilityCount = practitioners.filter((practitioner) =>
     practitioner.availabilityRules.some((rule) => rule.status === "ACTIVE"),
   ).length;
-
-  const totalClients = canReadClients ? await db.client.count() : 0;
-  const activeClients = canReadClients
-    ? await db.client.count({ where: { status: "ACTIVE" } })
-    : 0;
-  const childClients = canReadClients
-    ? await db.client.count({ where: { type: "CHILD" } })
-    : 0;
-  const newClientsThisMonth = canReadClients
-    ? await db.client.count({ where: { createdAt: { gte: monthStart } } })
-    : 0;
-  const latestClients = canReadClients
-    ? await db.client.findMany({
-        orderBy: [{ createdAt: "desc" }],
-        select: {
-          email: true,
-          firstName: true,
-          id: true,
-          lastName: true,
-          phone: true,
-          preferredName: true,
-          status: true,
-          type: true,
-        },
-        take: 5,
-      })
-    : [];
-
-  const pendingAppointments = canReadAppointments
-    ? await db.appointment.count({ where: { status: "PENDING_REVIEW" } })
-    : 0;
-  const todaysAppointments = canReadAppointments
-    ? await db.appointment.findMany({
-        orderBy: [{ startsAt: "asc" }],
-        select: {
-          client: { select: { firstName: true, lastName: true } },
-          id: true,
-          service: { select: { name: true } },
-          startsAt: true,
-          status: true,
-        },
-        take: 5,
-        where: { startsAt: { gte: todayStart, lt: todayEnd } },
-      })
-    : [];
-  const upcomingAppointments = canReadAppointments
-    ? await db.appointment.count({ where: { startsAt: { gte: todayStart } } })
-    : 0;
-  const weeklyAppointments = canReadAppointments
-    ? await db.appointment.count({
-        where: { startsAt: { gte: weekStart, lt: weekEnd } },
-      })
-    : 0;
-
-  const activePlans = canReadFinance
-    ? await db.clientPlan.count({ where: { status: "ACTIVE" } })
-    : 0;
-  const paymentsThisMonth = canReadFinance
-    ? await db.financeLedgerEntry.aggregate({
-        _sum: { amountMinor: true },
-        where: { occurredAt: { gte: monthStart }, type: "PAYMENT" },
-      })
-    : null;
-  const paymentTotal = paymentsThisMonth?._sum.amountMinor ?? BigInt(0);
-  const formattedPaymentTotal = formatMoney(paymentTotal);
+  const formattedPaymentTotal = formatCurrencyAmounts(paymentAggregates(monthlyPaymentRows));
   const maxAnalyticsValue = Math.max(
     totalClients,
     activeClients,
@@ -635,18 +571,10 @@ export default async function AdminHomePage({
   ];
   const actionItems = [
     canManageClients
-      ? {
-          href: "/yonetim?modal=danisan-ekle" as Route,
-          kicker: "+",
-          title: "Danışan ekle",
-        }
+      ? { href: "/yonetim?modal=danisan-ekle" as Route, kicker: "+", title: "Danışan ekle" }
       : null,
     canReadClients
-      ? {
-          href: "/yonetim/danisanlar" as Route,
-          kicker: "✎",
-          title: "Danışan notu",
-        }
+      ? { href: "/yonetim/danisanlar" as Route, kicker: "◌", title: "Danışan yönetimi" }
       : null,
     canManageAppointments
       ? {
@@ -656,15 +584,10 @@ export default async function AdminHomePage({
         }
       : null,
     canReadFinance
-      ? {
-          href: "/yonetim/odemeler" as Route,
-          kicker: "₺",
-          title: "Ödeme planı",
-        }
+      ? { href: "/yonetim/odemeler" as Route, kicker: "₺", title: "Ödeme ve planlar" }
       : null,
   ].filter(
-    (item): item is { href: Route; kicker: string; title: string } =>
-      item !== null,
+    (item): item is { href: Route; kicker: string; title: string } => item !== null,
   );
 
   return (
@@ -677,55 +600,43 @@ export default async function AdminHomePage({
         servicesRead: true,
         technicalHealthRead: canReadTechnicalHealth,
       }}
-      subtitle="Danışan, randevu, ödeme ve hizmet akışını tek bakışta gösteren operasyon paneli. Hızlı işlemler URL tabanlı modal olarak açılır."
-      title="Dashboard"
+      subtitle="Danışan, randevu, ödeme ve hizmet akışını işletme saat diliminde tek bakışta gösterir."
+      title="Genel bakış"
     >
       <div className={styles.dashboardGrid}>
-        <article
-          className={`${styles.dashboardCard} ${styles.dashboardCardPrimary}`}
-        >
+        <article className={`${styles.dashboardCard} ${styles.dashboardCardPrimary}`}>
           <span>Toplam aktif danışan</span>
           <strong>{canReadClients ? activeClients : "—"}</strong>
-          <small>
-            {totalClients} toplam kayıt · {childClients} çocuk danışan
-          </small>
+          <small>{totalClients} toplam kayıt · {childClients} çocuk danışan</small>
           <i className={styles.dashboardCardIcon}>↗</i>
         </article>
         <article className={styles.dashboardCard}>
           <span>Yeni kayıt / bu ay</span>
           <strong>{canReadClients ? newClientsThisMonth : "—"}</strong>
-          <small>Bu ay açılan danışan dosyası</small>
+          <small>İşletme ayı içinde açılan danışan dosyası</small>
           <i className={styles.dashboardCardIcon}>◌</i>
         </article>
         <article className={styles.dashboardCard}>
           <span>Bugünkü randevu</span>
-          <strong>
-            {canReadAppointments ? todaysAppointments.length : "—"}
-          </strong>
-          <small>{pendingAppointments} onay bekleyen talep var</small>
+          <strong>{canReadAppointments ? todaysAppointments.length : "—"}</strong>
+          <small>{pendingAppointments} açık talep veya inceleme var</small>
           <i className={styles.dashboardCardIcon}>◷</i>
         </article>
         <article className={styles.dashboardCard}>
           <span>Aktif ödeme planı</span>
           <strong>{canReadFinance ? activePlans : "—"}</strong>
-          <small>Bu ay alınan ödeme: {formattedPaymentTotal}</small>
+          <small>Bu ay alınan ödeme: {canReadFinance ? formattedPaymentTotal : "—"}</small>
           <i className={styles.dashboardCardIcon}>₺</i>
         </article>
       </div>
 
       <div className={styles.dashboardLayout}>
         <div className={styles.mainStack}>
-          <section
-            className={styles.overviewPanel}
-            aria-labelledby="operasyon-analitigi"
-          >
+          <section className={styles.overviewPanel} aria-labelledby="operasyon-analitigi">
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="operasyon-analitigi">Operasyon analitiği</h2>
-                <p>
-                  Danışan, randevu, ödeme planı ve hizmet yoğunluğunu sade bir
-                  grafikle gösterir.
-                </p>
+                <p>Danışan, randevu, ödeme planı ve hizmet yoğunluğunu sade bir grafikle gösterir.</p>
               </div>
               <span className={styles.panelBadge}>Canlı veri</span>
             </div>
@@ -735,9 +646,7 @@ export default async function AdminHomePage({
                   <div className={styles.barTrack}>
                     <span
                       className={styles.barFill}
-                      style={{
-                        height: barHeight(item.value, maxAnalyticsValue),
-                      }}
+                      style={{ height: barHeight(item.value, maxAnalyticsValue) }}
                     />
                   </div>
                   <strong>{item.label}</strong>
@@ -747,42 +656,33 @@ export default async function AdminHomePage({
             </div>
           </section>
 
-          <section
-            className={styles.compactPanel}
-            aria-labelledby="son-danisanlar"
-          >
+          <section className={styles.compactPanel} aria-labelledby="son-danisanlar">
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="son-danisanlar">Son danışan kayıtları</h2>
                 <p>Yeni açılan kayıtlar ve hızlı profil geçişleri.</p>
               </div>
               {canReadClients ? (
-                <Link
-                  className="primary-button admin-dashboard-clients-cta"
-                  href="/yonetim/danisanlar"
-                >
+                <Link className="primary-button admin-dashboard-clients-cta" href="/yonetim/danisanlar">
                   Tümünü aç
                 </Link>
               ) : null}
             </div>
             {latestClients.length === 0 ? (
               <div className={styles.emptyNote}>
-                <strong>Henüz danışan görünmüyor</strong>
+                <strong>{canReadClients ? "Henüz danışan görünmüyor" : "Danışan yetkisi gerekli"}</strong>
                 <span>
-                  Danışan oluşturulduğunda bu alanda son kayıtlar listelenecek.
+                  {canReadClients
+                    ? "Danışan oluşturulduğunda bu alanda son kayıtlar listelenecek."
+                    : "Bu alan danışan okuma yetkisi olan rollere açılır."}
                 </span>
               </div>
             ) : (
               <ul className="admin-client-list admin-dashboard-client-list">
                 {latestClients.map((client) => (
-                  <li
-                    className="admin-client-list-item admin-dashboard-client-card"
-                    key={client.id}
-                  >
+                  <li className="admin-client-list-item admin-dashboard-client-card" key={client.id}>
                     <div className="admin-client-list-main">
-                      <strong>
-                        {client.firstName} {client.lastName}
-                      </strong>
+                      <strong>{client.firstName} {client.lastName}</strong>
                       <span className="admin-client-contact">
                         {client.preferredName ? `${client.preferredName} · ` : ""}
                         {client.phone ?? "Telefon yok"} · {client.email ?? "E-posta yok"}
@@ -794,9 +694,7 @@ export default async function AdminHomePage({
                     </div>
                     <Link
                       className="admin-client-profile-link admin-dashboard-client-action"
-                      href={
-                        `/yonetim/danisan-profili?clientId=${client.id}` as Route
-                      }
+                      href={`/yonetim/danisan-profili?clientId=${client.id}` as Route}
                     >
                       Profili aç
                     </Link>
@@ -808,27 +706,16 @@ export default async function AdminHomePage({
         </div>
 
         <aside className={styles.asideStack}>
-          <section
-            className={styles.actionPanel}
-            aria-labelledby="hizli-islemler"
-          >
+          <section className={styles.actionPanel} aria-labelledby="hizli-islemler">
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="hizli-islemler">Hızlı işlemler</h2>
-                <p>
-                  En çok kullanılan BO işlemleri; sayfa değişmeden URL modalı
-                  açılır.
-                </p>
+                <p>Sık kullanılan yönetim işlemleri aynı çalışma alanında açılır.</p>
               </div>
             </div>
             <div className={styles.actionGrid}>
               {actionItems.map((item) => (
-                <Link
-                  className={styles.actionCard}
-                  href={item.href}
-                  key={item.href}
-                  scroll={false}
-                >
+                <Link className={styles.actionCard} href={item.href} key={item.href} scroll={false}>
                   <span>{item.kicker}</span>
                   <strong>{item.title}</strong>
                 </Link>
@@ -836,59 +723,39 @@ export default async function AdminHomePage({
             </div>
           </section>
 
-          <section
-            className={styles.compactPanel}
-            aria-labelledby="haftalik-ozet"
-          >
+          <section className={styles.compactPanel} aria-labelledby="haftalik-ozet">
             <div className={styles.panelHeader}>
               <div>
                 <h2 id="haftalik-ozet">Haftalık özet</h2>
-                <p>Bu haftaki operasyon yoğunluğu.</p>
+                <p>İşletme saat dilimine göre bu haftaki operasyon yoğunluğu.</p>
               </div>
               <span className={styles.panelBadge}>{weeklyAppointments} randevu</span>
             </div>
             <ul className={styles.dataList}>
               <li>
-                <div>
-                  <strong>Randevu akışı</strong>
-                  <span>{upcomingAppointments} yaklaşan randevu takibi</span>
-                </div>
+                <div><strong>Randevu akışı</strong><span>{upcomingAppointments} yaklaşan randevu</span></div>
                 <small>{weeklyAppointments}</small>
               </li>
               <li>
-                <div>
-                  <strong>Yeni danışan</strong>
-                  <span>Bu ay açılan danışan dosyası</span>
-                </div>
+                <div><strong>Yeni danışan</strong><span>Bu ay açılan danışan dosyası</span></div>
                 <small>{newClientsThisMonth}</small>
               </li>
               <li>
-                <div>
-                  <strong>Bekleyen karar</strong>
-                  <span>Onay bekleyen randevu talebi</span>
-                </div>
+                <div><strong>Bekleyen karar</strong><span>Açık randevu talebi veya inceleme</span></div>
                 <small>{pendingAppointments}</small>
               </li>
             </ul>
           </section>
 
-          <section
-            className={styles.compactPanel}
-            aria-labelledby="bugun-takip"
-          >
+          <section className={styles.compactPanel} aria-labelledby="bugun-takip">
             <div className={styles.panelHeader}>
-              <div>
-                <h2 id="bugun-takip">Bugünkü takip</h2>
-                <p>Günün randevu akışı.</p>
-              </div>
-              <span className={styles.panelBadge}>
-                {todaysAppointments.length} kayıt
-              </span>
+              <div><h2 id="bugun-takip">Bugünkü takip</h2><p>Günün randevu akışı.</p></div>
+              <span className={styles.panelBadge}>{todaysAppointments.length} kayıt</span>
             </div>
             {todaysAppointments.length === 0 ? (
               <div className={styles.emptyNote}>
                 <strong>Bugün randevu yok</strong>
-                <span>Yeni randevu talebi gelirse burada görünecek.</span>
+                <span>Yeni randevu oluştuğunda burada görünecek.</span>
               </div>
             ) : (
               <ul className={styles.dataList}>
@@ -896,38 +763,32 @@ export default async function AdminHomePage({
                   <li key={appointment.id}>
                     <div>
                       <strong>
-                        {formatTime(appointment.startsAt)} ·{" "}
-                        {appointment.client.firstName}{" "}
+                        {formatTime(appointment.startsAt, timeZone)} · {appointment.client.firstName}{" "}
                         {appointment.client.lastName}
                       </strong>
                       <span>{appointment.service.name}</span>
                     </div>
-                    <small>
-                      {appointmentStatusLabels[appointment.status] ??
-                        appointment.status}
-                    </small>
+                    <small>{appointmentStatusLabels[appointment.status] ?? appointment.status}</small>
                   </li>
                 ))}
               </ul>
             )}
           </section>
 
-          <section
-            className={styles.financeHighlight}
-            aria-labelledby="odeme-ozeti"
-          >
+          <section className={styles.financeHighlight} aria-labelledby="odeme-ozeti">
             <span id="odeme-ozeti">Bu ay alınan ödeme</span>
             <strong>{canReadFinance ? formattedPaymentTotal : "—"}</strong>
-            <small>
-              {activePlans} aktif plan üzerinden ön muhasebe takibi.
-            </small>
+            <small>{activePlans} aktif plan üzerinden ön muhasebe takibi.</small>
           </section>
         </aside>
       </div>
 
-      <section className="admin-panel" aria-labelledby="public-iletisim-ayarlari">
+      <section className="admin-panel" aria-labelledby="site-iletisim-ayarlari">
         <div className="admin-panel-heading">
-          <div><h2 id="public-iletisim-ayarlari">Public iletişim ayarları</h2><p>İletişim sayfasındaki bilgiler deploy gerekmeden buradan yönetilir.</p></div>
+          <div>
+            <h2 id="site-iletisim-ayarlari">Site iletişim ayarları</h2>
+            <p>İletişim sayfasındaki bilgiler yeni deploy gerekmeden buradan yönetilir.</p>
+          </div>
           <span className="admin-count">{contactSettings.address}</span>
         </div>
         {canManageServices ? (
@@ -942,21 +803,21 @@ export default async function AdminHomePage({
             <label>Değişiklik nedeni<textarea minLength={8} maxLength={500} name="reason" required /></label>
             <button type="submit">İletişim bilgilerini kaydet</button>
           </form>
-        ) : null}
+        ) : (
+          <div className="admin-empty-state">
+            <strong>Salt okunur görünüm</strong>
+            <span>İletişim bilgilerini değiştirmek için hizmet yönetimi yetkisi gerekir.</span>
+          </div>
+        )}
       </section>
 
       <section className="admin-panel" aria-labelledby="hizmet-terapist-ayarlari">
         <div className="admin-panel-heading">
           <div>
             <h2 id="hizmet-terapist-ayarlari">Hizmet ve terapist ayarları</h2>
-            <p>
-              Randevu oluşturma formunu besleyen hizmet, süre, konum, terapist ve müsaitlik
-              ayarları.
-            </p>
+            <p>Randevu formunu besleyen süre, konum, terapist ve çalışma kuralları.</p>
           </div>
-          <span className="admin-count">
-            {services.length} hizmet · {practitioners.length} terapist
-          </span>
+          <span className="admin-count">{services.length} hizmet · {practitioners.length} terapist</span>
         </div>
 
         {canManageServices ? (
@@ -980,76 +841,36 @@ export default async function AdminHomePage({
         )}
 
         <div className="admin-config-summary-grid">
-          <article>
-            <span>Aktif hizmet</span>
-            <strong>{activeServiceCount}</strong>
-            <small>{publicServiceCount} public görünür</small>
-          </article>
-          <article>
-            <span>Aktif terapist</span>
-            <strong>{activePractitionerCount}</strong>
-            <small>{configuredAvailabilityCount} terapistte müsaitlik var</small>
-          </article>
-          <article>
-            <span>Randevu altyapısı</span>
-            <strong>
-              {activeServiceCount > 0 && activePractitionerCount > 0 ? "Hazır" : "Eksik"}
-            </strong>
-            <small>Randevu için aktif hizmet + aktif terapist gerekir</small>
-          </article>
+          <article><span>Aktif hizmet</span><strong>{activeServiceCount}</strong><small>{publicServiceCount} sitede görünür</small></article>
+          <article><span>Aktif terapist</span><strong>{activePractitionerCount}</strong><small>{configuredAvailabilityCount} terapistte müsaitlik var</small></article>
+          <article><span>Randevu altyapısı</span><strong>{activeServiceCount > 0 && activePractitionerCount > 0 ? "Hazır" : "Eksik"}</strong><small>Aktif hizmet ve terapist gerektirir</small></article>
         </div>
 
         <div className="admin-config-layout">
           <section aria-labelledby="hizmet-listesi">
             <div className="admin-config-subheading">
-              <div>
-                <h3 id="hizmet-listesi">Hizmet yapılandırmaları</h3>
-                <p>Süre ve politika değişiklikleri geçmiş randevu kayıtlarını değiştirmez.</p>
-              </div>
+              <div><h3 id="hizmet-listesi">Hizmet yapılandırmaları</h3><p>Değişiklikler geçmiş randevu snapshot’larını etkilemez.</p></div>
               <span>{services.length} kayıt</span>
             </div>
-
             {services.length === 0 ? (
-              <div className="admin-empty-state">
-                <strong>Henüz hizmet yok</strong>
-                <span>
-                  Sentetik başlangıç verisi çalıştırıldığında taslak hizmet burada görünür.
-                </span>
-              </div>
+              <div className="admin-empty-state"><strong>Henüz hizmet yok</strong><span>Randevu oluşturmak için aktif hizmet gerekir.</span></div>
             ) : (
               <ul className="admin-config-card-list">
                 {services.map((service) => {
                   const latestPolicy = service.policies[0];
                   return (
                     <li className="admin-config-card" key={service.id}>
-                      <div className="admin-config-card-main">
-                        <strong>{service.name}</strong>
-                        <span>{service.slug}</span>
-                      </div>
+                      <div className="admin-config-card-main"><strong>{service.name}</strong><span>{service.slug}</span></div>
                       <div className="admin-config-chip-row">
                         <em>{statusLabel(service.status, serviceStatusLabels)}</em>
-                        <em>{service.publicVisible ? "Public" : "Panel içi"}</em>
+                        <em>{service.publicVisible ? "Sitede görünür" : "Panel içi"}</em>
                         <em>{statusLabel(service.approvalMode, approvalModeLabels)}</em>
                       </div>
                       <dl className="admin-config-metrics">
-                        <div>
-                          <dt>Süre</dt>
-                          <dd>{service.defaultDurationMinutes} dk</dd>
-                        </div>
-                        <div>
-                          <dt>Buffer</dt>
-                          <dd>
-                            {service.defaultBufferBeforeMinutes}+{service.defaultBufferAfterMinutes} dk
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>Görüşme</dt>
-                          <dd>{statusLabel(service.locationType, locationTypeLabels)}</dd>
-                        </div>
-                        <div>
-                          <dt>Randevu</dt>
-                          <dd>{service._count.appointments}</dd>
-                        </div>
+                        <div><dt>Süre</dt><dd>{service.defaultDurationMinutes} dk</dd></div>
+                        <div><dt>Hazırlık</dt><dd>{service.defaultBufferBeforeMinutes}+{service.defaultBufferAfterMinutes} dk</dd></div>
+                        <div><dt>Görüşme</dt><dd>{statusLabel(service.locationType, locationTypeLabels)}</dd></div>
+                        <div><dt>Randevu</dt><dd>{service._count.appointments}</dd></div>
                       </dl>
                       <p className="admin-config-note">{formatPolicySummary(latestPolicy)}</p>
                       {canManageServices ? (
@@ -1058,98 +879,14 @@ export default async function AdminHomePage({
                           <form action={updateServiceSettings}>
                             <input name="serviceId" type="hidden" value={service.id} />
                             <div className="admin-config-form-grid">
-                              <label>
-                                Varsayılan süre / dakika
-                                <input
-                                  defaultValue={service.defaultDurationMinutes}
-                                  inputMode="numeric"
-                                  max="240"
-                                  min="5"
-                                  name="defaultDurationMinutes"
-                                  required
-                                  type="number"
-                                />
-                              </label>
-                              <label>
-                                Ön buffer / dakika
-                                <input
-                                  defaultValue={service.defaultBufferBeforeMinutes}
-                                  inputMode="numeric"
-                                  max="120"
-                                  min="0"
-                                  name="defaultBufferBeforeMinutes"
-                                  required
-                                  type="number"
-                                />
-                              </label>
-                              <label>
-                                Son buffer / dakika
-                                <input
-                                  defaultValue={service.defaultBufferAfterMinutes}
-                                  inputMode="numeric"
-                                  max="120"
-                                  min="0"
-                                  name="defaultBufferAfterMinutes"
-                                  required
-                                  type="number"
-                                />
-                              </label>
+                              <label>Varsayılan süre / dakika<input defaultValue={service.defaultDurationMinutes} max="240" min="5" name="defaultDurationMinutes" required type="number" /></label>
+                              <label>Ön hazırlık / dakika<input defaultValue={service.defaultBufferBeforeMinutes} max="120" min="0" name="defaultBufferBeforeMinutes" required type="number" /></label>
+                              <label>Son hazırlık / dakika<input defaultValue={service.defaultBufferAfterMinutes} max="120" min="0" name="defaultBufferAfterMinutes" required type="number" /></label>
                             </div>
-
-                            <fieldset className="admin-config-radio-group">
-                              <legend>Durum</legend>
-                              {serviceStatusOptions.map((option) => (
-                                <label key={option}>
-                                  <input
-                                    defaultChecked={service.status === option}
-                                    name="status"
-                                    type="radio"
-                                    value={option}
-                                  />
-                                  <span>{statusLabel(option, serviceStatusLabels)}</span>
-                                </label>
-                              ))}
-                            </fieldset>
-
-                            <fieldset className="admin-config-radio-group">
-                              <legend>Görüşme tipi</legend>
-                              {locationTypeOptions.map((option) => (
-                                <label key={option}>
-                                  <input
-                                    defaultChecked={service.locationType === option}
-                                    name="locationType"
-                                    type="radio"
-                                    value={option}
-                                  />
-                                  <span>{statusLabel(option, locationTypeLabels)}</span>
-                                </label>
-                              ))}
-                            </fieldset>
-
-                            <fieldset className="admin-config-radio-group">
-                              <legend>Onay modu</legend>
-                              {approvalModeOptions.map((option) => (
-                                <label key={option}>
-                                  <input
-                                    defaultChecked={service.approvalMode === option}
-                                    name="approvalMode"
-                                    type="radio"
-                                    value={option}
-                                  />
-                                  <span>{statusLabel(option, approvalModeLabels)}</span>
-                                </label>
-                              ))}
-                            </fieldset>
-
-                            <label className="admin-config-check-row">
-                              <input
-                                defaultChecked={service.publicVisible}
-                                name="publicVisible"
-                                type="checkbox"
-                              />
-                              <span>Public sitede görünür olsun</span>
-                            </label>
-
+                            <fieldset className="admin-config-radio-group"><legend>Durum</legend>{serviceStatusOptions.map((option) => <label key={option}><input defaultChecked={service.status === option} name="status" type="radio" value={option} /><span>{statusLabel(option, serviceStatusLabels)}</span></label>)}</fieldset>
+                            <fieldset className="admin-config-radio-group"><legend>Görüşme tipi</legend>{locationTypeOptions.map((option) => <label key={option}><input defaultChecked={service.locationType === option} name="locationType" type="radio" value={option} /><span>{statusLabel(option, locationTypeLabels)}</span></label>)}</fieldset>
+                            <fieldset className="admin-config-radio-group"><legend>Onay modu</legend>{approvalModeOptions.map((option) => <label key={option}><input defaultChecked={service.approvalMode === option} name="approvalMode" type="radio" value={option} /><span>{statusLabel(option, approvalModeLabels)}</span></label>)}</fieldset>
+                            <label className="admin-config-check-row"><input defaultChecked={service.publicVisible} name="publicVisible" type="checkbox" /><span>Sitede görünür olsun</span></label>
                             <button type="submit">Hizmeti güncelle</button>
                           </form>
                         </details>
@@ -1163,208 +900,50 @@ export default async function AdminHomePage({
 
           <section aria-labelledby="terapist-listesi">
             <div className="admin-config-subheading">
-              <div>
-                <h3 id="terapist-listesi">Terapist yapılandırmaları</h3>
-                <p>Müsaitlik kuralları randevu saatlerinin temelini oluşturur.</p>
-              </div>
-              <span>{practitioners.length} kayıt</span>
+              <div><h3 id="terapist-listesi">Terapist yapılandırmaları</h3><p>Müsaitlik kuralları randevu saatlerinin temelidir.</p></div>
+              <Link className="primary-button" href="/yonetim/musaitlik">Müsaitliği aç</Link>
             </div>
-
             {practitioners.length === 0 ? (
-              <div className="admin-empty-state">
-                <strong>Henüz terapist yok</strong>
-                <span>Aktif terapist olmadan randevu oluşturma hazır sayılmaz.</span>
-              </div>
+              <div className="admin-empty-state"><strong>Henüz terapist yok</strong><span>Aktif terapist olmadan randevu oluşturulamaz.</span></div>
             ) : (
               <ul className="admin-config-card-list">
                 {practitioners.map((practitioner) => {
-                  const activeRules = practitioner.availabilityRules.filter(
-                    (rule) => rule.status === "ACTIVE",
-                  );
-
+                  const activeRules = practitioner.availabilityRules.filter((rule) => rule.status === "ACTIVE");
                   return (
                     <li className="admin-config-card" key={practitioner.id}>
-                      <div className="admin-config-card-main">
-                        <strong>{practitioner.displayName}</strong>
-                        <span>{practitioner.timeZone}</span>
-                      </div>
+                      <div className="admin-config-card-main"><strong>{practitioner.displayName}</strong><span>{practitioner.timeZone}</span></div>
                       <div className="admin-config-chip-row">
                         <em>{statusLabel(practitioner.status, practitionerStatusLabels)}</em>
                         <em>{activeRules.length} aktif kural</em>
                         <em>{practitioner._count.availabilityExceptions} istisna</em>
                       </div>
                       <dl className="admin-config-metrics">
-                        <div>
-                          <dt>Randevu</dt>
-                          <dd>{practitioner._count.appointments}</dd>
-                        </div>
-                        <div>
-                          <dt>Müsaitlik</dt>
-                          <dd>{activeRules.length}</dd>
-                        </div>
-                        <div>
-                          <dt>Slot</dt>
-                          <dd>{activeRules[0]?.slotIncrementMinutes ?? "—"} dk</dd>
-                        </div>
+                        <div><dt>Randevu</dt><dd>{practitioner._count.appointments}</dd></div>
+                        <div><dt>Müsaitlik</dt><dd>{activeRules.length}</dd></div>
+                        <div><dt>Aralık</dt><dd>{activeRules[0]?.slotIncrementMinutes ?? "—"} dk</dd></div>
                       </dl>
-                      <p className="admin-config-note">
-                        {formatRuleSummary(practitioner.availabilityRules)}
-                      </p>
-
+                      <p className="admin-config-note">{formatRuleSummary(practitioner.availabilityRules)}</p>
                       <div className="admin-availability-rule-list">
-                        {practitioner.availabilityRules.length === 0 ? (
-                          <span>Henüz müsaitlik kuralı yok.</span>
-                        ) : (
-                          practitioner.availabilityRules.map((rule) => (
-                            <div className="admin-availability-rule-row" key={rule.id}>
-                              <div>
-                                <strong>{ruleLabel(rule)}</strong>
-                                <span>
-                                  {statusLabel(rule.status, availabilityRuleStatusLabels)}
-                                </span>
-                              </div>
-                              {canManageAvailability && rule.status === "ACTIVE" ? (
-                                <form action={deactivateAvailabilityRule}>
-                                  <input name="ruleId" type="hidden" value={rule.id} />
-                                  <button type="submit">Pasife al</button>
-                                </form>
-                              ) : null}
-                            </div>
-                          ))
-                        )}
+                        {practitioner.availabilityRules.length === 0 ? <span>Henüz müsaitlik kuralı yok.</span> : practitioner.availabilityRules.map((rule) => (
+                          <div className="admin-availability-rule-row" key={rule.id}>
+                            <div><strong>{ruleLabel(rule)}</strong><span>{statusLabel(rule.status, availabilityRuleStatusLabels)}</span></div>
+                            {canManageAvailability && rule.status === "ACTIVE" ? (
+                              <form action={deactivateAvailabilityRule}><input name="ruleId" type="hidden" value={rule.id} /><button type="submit">Pasife al</button></form>
+                            ) : null}
+                          </div>
+                        ))}
                       </div>
-
                       {canManageAvailability ? (
                         <details className="admin-config-edit-panel">
-                          <summary>Düzenle / kural ekle</summary>
+                          <summary>Terapisti düzenle</summary>
                           <form action={updatePractitionerSettings}>
-                            <input
-                              name="practitionerId"
-                              type="hidden"
-                              value={practitioner.id}
-                            />
+                            <input name="practitionerId" type="hidden" value={practitioner.id} />
                             <div className="admin-config-form-grid admin-config-form-grid--two">
-                              <label>
-                                Terapist adı
-                                <input
-                                  defaultValue={practitioner.displayName}
-                                  maxLength={90}
-                                  minLength={2}
-                                  name="displayName"
-                                  required
-                                  type="text"
-                                />
-                              </label>
-                              <label>
-                                Saat dilimi
-                                <input
-                                  defaultValue={practitioner.timeZone}
-                                  maxLength={80}
-                                  minLength={3}
-                                  name="timeZone"
-                                  placeholder="Europe/Istanbul"
-                                  required
-                                  type="text"
-                                />
-                              </label>
+                              <label>Terapist adı<input defaultValue={practitioner.displayName} maxLength={90} minLength={2} name="displayName" required /></label>
+                              <label>Saat dilimi<input defaultValue={practitioner.timeZone} maxLength={80} minLength={3} name="timeZone" placeholder="Europe/Istanbul" required /></label>
                             </div>
-
-                            <fieldset className="admin-config-radio-group">
-                              <legend>Terapist durumu</legend>
-                              {practitionerStatusOptions.map((option) => (
-                                <label key={option}>
-                                  <input
-                                    defaultChecked={practitioner.status === option}
-                                    name="status"
-                                    type="radio"
-                                    value={option}
-                                  />
-                                  <span>{statusLabel(option, practitionerStatusLabels)}</span>
-                                </label>
-                              ))}
-                            </fieldset>
-
+                            <fieldset className="admin-config-radio-group"><legend>Terapist durumu</legend>{practitionerStatusOptions.map((option) => <label key={option}><input defaultChecked={practitioner.status === option} name="status" type="radio" value={option} /><span>{statusLabel(option, practitionerStatusLabels)}</span></label>)}</fieldset>
                             <button type="submit">Terapisti güncelle</button>
-                          </form>
-
-                          <form action={createAvailabilityRule}>
-                            <input
-                              name="practitionerId"
-                              type="hidden"
-                              value={practitioner.id}
-                            />
-                            <fieldset className="admin-config-radio-group admin-config-radio-group--weekdays">
-                              <legend>Gün</legend>
-                              {weekdayLabels.map((label, index) => (
-                                <label key={label}>
-                                  <input
-                                    defaultChecked={index === 1}
-                                    name="weekday"
-                                    type="radio"
-                                    value={index}
-                                  />
-                                  <span>{label}</span>
-                                </label>
-                              ))}
-                            </fieldset>
-
-                            <div className="admin-config-form-grid">
-                              <label>
-                                Başlangıç saati
-                                <input
-                                  defaultValue="09:00"
-                                  maxLength={5}
-                                  minLength={5}
-                                  name="localStartTime"
-                                  pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-                                  placeholder="09:00"
-                                  required
-                                  type="text"
-                                />
-                              </label>
-                              <label>
-                                Bitiş saati
-                                <input
-                                  defaultValue="17:00"
-                                  maxLength={5}
-                                  minLength={5}
-                                  name="localEndTime"
-                                  pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-                                  placeholder="17:00"
-                                  required
-                                  type="text"
-                                />
-                              </label>
-                              <label>
-                                Slot aralığı / dakika
-                                <input
-                                  defaultValue="15"
-                                  inputMode="numeric"
-                                  max="120"
-                                  min="5"
-                                  name="slotIncrementMinutes"
-                                  required
-                                  type="number"
-                                />
-                              </label>
-                            </div>
-
-                            <fieldset className="admin-config-radio-group">
-                              <legend>Kural durumu</legend>
-                              {availabilityRuleStatusOptions.map((option) => (
-                                <label key={option}>
-                                  <input
-                                    defaultChecked={option === "ACTIVE"}
-                                    name="status"
-                                    type="radio"
-                                    value={option}
-                                  />
-                                  <span>{statusLabel(option, availabilityRuleStatusLabels)}</span>
-                                </label>
-                              ))}
-                            </fieldset>
-
-                            <button type="submit">Müsaitlik kuralı ekle</button>
                           </form>
                         </details>
                       ) : null}
