@@ -1,0 +1,91 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 11px;
+  background: #fff;
+  padding: 9px 12px;
+  color: var(--admin-ink, #201c19);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.trigger:focus-visible {
+  border-color: var(--admin-teal, #12897b);
+  outline: 3px solid rgb(18 137 123 / 12%);
+  outline-offset: 1px;
+}
+
+.chevron {
+  color: var(--admin-teal, #12897b);
+  font-size: 0.84rem;
+  transition: transform 150ms ease;
+}
+
+.trigger[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.listbox {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  max-height: 286px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 13px;
+  background: var(--admin-panel, #fbfaf8);
+  padding: 6px;
+  box-shadow: 0 20px 44px rgb(32 28 25 / 15%);
+  scrollbar-color: rgb(18 137 123 / 25%) transparent;
+  scrollbar-width: thin;
+}
+
+.option {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  padding: 9px 10px;
+  color: var(--admin-ink, #201c19);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--admin-panel-soft, #f4f2ec);
+}
+
+.option[aria-selected="true"] {
+  background: var(--admin-lime, #dfec83);
+  color: var(--admin-ink, #201c19);
+  font-weight: 760;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

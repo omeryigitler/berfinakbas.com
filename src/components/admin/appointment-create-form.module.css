@@ -4,81 +4,80 @@
 
 :global([data-admin-refresh="shell"] .appointment-create-form) {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 :global([data-admin-refresh="shell"] .appointment-form-section) {
   display: grid;
-  gap: 16px;
-  border: 1px solid rgb(88 62 49 / 11%);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 100% 0%, rgb(243 195 166 / 18%), transparent 12rem),
-    rgb(255 253 249 / 78%);
-  padding: 20px;
-  box-shadow: 0 14px 30px rgb(83 53 35 / 5%);
+  gap: 15px;
+  border: 1px solid var(--admin-line);
+  border-radius: 16px;
+  background: var(--admin-panel-soft);
+  padding: 18px;
+  box-shadow: none;
 }
 
 :global([data-admin-refresh="shell"] .appointment-form-section-header) {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: start;
-  gap: 13px;
+  gap: 12px;
 }
 
 :global([data-admin-refresh="shell"] .appointment-form-section-header > span) {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   place-items: center;
-  border-radius: 16px;
-  background: rgb(217 111 77 / 12%);
-  color: var(--coral-dark);
-  font-size: 0.78rem;
-  font-weight: 900;
+  border: 1px solid rgb(18 137 123 / 16%);
+  border-radius: 11px;
+  background: var(--admin-teal-soft);
+  color: var(--admin-teal);
+  font-size: 0.76rem;
+  font-weight: 780;
 }
 
 :global([data-admin-refresh="shell"] .appointment-form-section-header h3) {
   margin: 0;
-  color: #332824;
-  font-family: var(--serif);
-  font-size: 1.2rem;
-  font-weight: 650;
-  letter-spacing: -0.03em;
+  color: var(--admin-ink);
+  font-family: inherit;
+  font-size: 1.04rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
 }
 
 :global([data-admin-refresh="shell"] .appointment-form-section-header p) {
   margin: 5px 0 0;
-  color: #76665d;
-  font-size: 0.73rem;
-  line-height: 1.6;
+  color: var(--admin-muted);
+  font-size: 0.71rem;
+  line-height: 1.55;
 }
 
 :global([data-admin-refresh="shell"] .appointment-create-form .booking-field-grid) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 :global([data-admin-refresh="shell"] .appointment-create-form .booking-field) {
   display: grid;
-  gap: 8px;
-  color: #5f4e45;
-  font-size: 0.74rem;
-  font-weight: 850;
+  gap: 7px;
+  color: var(--admin-ink);
+  font-size: 0.72rem;
+  font-weight: 720;
 }
 
 :global([data-admin-refresh="shell"] .appointment-create-form input),
 :global([data-admin-refresh="shell"] .appointment-create-form textarea) {
   width: 100%;
-  min-height: 48px;
-  border: 1px solid rgb(88 62 49 / 16%);
-  border-radius: 15px;
-  background: #fffdf9;
-  padding: 12px 14px;
-  color: var(--ink);
+  min-height: 46px;
+  border: 1px solid var(--admin-line);
+  border-radius: 11px;
+  background: #fff;
+  padding: 11px 13px;
+  color: var(--admin-ink);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   outline: none;
   transition:
     border-color 150ms ease,
@@ -88,48 +87,48 @@
 
 :global([data-admin-refresh="shell"] .appointment-create-form input:focus),
 :global([data-admin-refresh="shell"] .appointment-create-form textarea:focus) {
-  border-color: rgb(217 111 77 / 44%);
-  background: #fffaf4;
-  box-shadow: 0 0 0 4px rgb(217 111 77 / 10%);
+  border-color: var(--admin-teal);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(18 137 123 / 12%);
 }
 
 :global([data-admin-refresh="shell"] .appointment-create-form textarea) {
-  min-height: 150px;
-  line-height: 1.65;
+  min-height: 142px;
+  line-height: 1.6;
   resize: vertical;
 }
 
 :global([data-admin-refresh="shell"] .appointment-create-form small) {
-  color: #83746b;
-  font-size: 0.68rem;
-  line-height: 1.55;
+  color: var(--admin-muted);
+  font-size: 0.66rem;
+  line-height: 1.5;
 }
 
 :global([data-admin-refresh="shell"] .appointment-inline-note) {
   display: grid;
   gap: 5px;
   align-content: center;
-  min-height: 76px;
-  border: 1px dashed rgb(67 98 75 / 22%);
-  border-radius: 18px;
-  background: rgb(67 98 75 / 6%);
-  padding: 14px;
-  color: #45694f;
+  min-height: 72px;
+  border: 1px dashed rgb(18 137 123 / 28%);
+  border-radius: 13px;
+  background: var(--admin-teal-soft);
+  padding: 13px;
+  color: var(--admin-teal);
 }
 
 :global([data-admin-refresh="shell"] .appointment-inline-note strong) {
-  color: #365a40;
-  font-size: 0.82rem;
+  color: var(--admin-teal);
+  font-size: 0.8rem;
 }
 
 :global([data-admin-refresh="shell"] .appointment-inline-note span) {
-  color: #637968;
-  font-size: 0.7rem;
+  color: var(--admin-muted);
+  font-size: 0.68rem;
 }
 
 :global([data-admin-refresh="shell"] .appointment-warning-text) {
-  color: #b95336 !important;
-  font-weight: 850;
+  color: #9b4337 !important;
+  font-weight: 780;
 }
 
 :global([data-admin-refresh="shell"] .appointment-time-grid) {
@@ -150,16 +149,16 @@
 
 :global([data-admin-refresh="shell"] .appointment-form-actions) {
   display: grid;
-  gap: 10px;
-  border: 1px solid rgb(88 62 49 / 8%);
-  border-radius: 22px;
-  background: rgb(255 250 244 / 72%);
-  padding: 16px;
+  gap: 9px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-panel-soft);
+  padding: 14px;
 }
 
 :global([data-admin-refresh="shell"] .appointment-form-actions .booking-button) {
   width: 100%;
-  min-height: 50px;
+  min-height: 48px;
 }
 
 @media (max-width: 860px) {
@@ -170,6 +169,6 @@
   }
 
   :global([data-admin-refresh="shell"] .appointment-form-section) {
-    padding: 17px;
+    padding: 16px;
   }
 }

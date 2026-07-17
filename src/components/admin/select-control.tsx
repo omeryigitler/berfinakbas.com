@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
+
+import styles from "./select-control.module.css";
 
 export type SelectControlOption = {
   label: string;
@@ -26,6 +28,7 @@ export function SelectControl({
   required?: boolean;
   value?: string;
 }) {
+  const listboxId = useId();
   const [open, setOpen] = useState(false);
   const [internalValue, setInternalValue] = useState(defaultValue);
   const selectedValue = value ?? internalValue;
@@ -38,76 +41,31 @@ export function SelectControl({
   }
 
   return (
-    <div style={{ position: "relative", width: "100%" }}>
+    <div className={styles.root}>
       <input hidden name={name} readOnly required={required} type="text" value={selectedValue} />
       <button
+        aria-controls={listboxId}
         aria-expanded={open}
         aria-haspopup="listbox"
+        className={styles.trigger}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
-        style={{
-          alignItems: "center",
-          background: "#fffdf9",
-          border: "1px solid rgb(88 62 49 / 20%)",
-          borderRadius: 11,
-          color: "var(--ink)",
-          cursor: disabled ? "not-allowed" : "pointer",
-          display: "flex",
-          font: "inherit",
-          fontSize: "0.72rem",
-          gap: 12,
-          justifyContent: "space-between",
-          minHeight: 42,
-          opacity: disabled ? 0.58 : 1,
-          padding: "9px 12px",
-          textAlign: "left",
-          width: "100%",
-        }}
         type="button"
       >
         <span>{selectedOption?.label ?? placeholder}</span>
-        <span aria-hidden="true" style={{ color: "var(--coral-dark)", fontSize: "0.85rem" }}>
+        <span aria-hidden="true" className={styles.chevron}>
           ▾
         </span>
       </button>
       {open ? (
-        <div
-          role="listbox"
-          style={{
-            background: "#fffaf4",
-            border: "1px solid rgb(217 111 77 / 25%)",
-            borderRadius: 14,
-            boxShadow: "0 22px 44px rgb(83 53 35 / 14%)",
-            left: 0,
-            maxHeight: 286,
-            overflowX: "hidden",
-            overflowY: "auto",
-            padding: 6,
-            position: "absolute",
-            right: 0,
-            top: "calc(100% + 7px)",
-            zIndex: 60,
-          }}
-        >
+        <div className={styles.listbox} id={listboxId} role="listbox">
           {options.map((option) => (
             <button
               aria-selected={selectedValue === option.value}
+              className={styles.option}
               key={`${name}-${option.value}`}
               onClick={() => selectValue(option.value)}
               role="option"
-              style={{
-                background: selectedValue === option.value ? "#fff1e7" : "transparent",
-                border: 0,
-                borderRadius: 10,
-                color: selectedValue === option.value ? "var(--coral-dark)" : "var(--ink)",
-                cursor: "pointer",
-                display: "block",
-                font: "inherit",
-                fontSize: "0.72rem",
-                padding: "10px 11px",
-                textAlign: "left",
-                width: "100%",
-              }}
               type="button"
             >
               {option.label}
