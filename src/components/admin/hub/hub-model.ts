@@ -1,7 +1,5 @@
 export type HubStage = "talep" | "kontrol" | "onay" | "gorusme";
 
-/* Raw appointment status as stored in the database — kept on the record so
-   the UI can offer only transitions the domain state machine allows. */
 export type HubRawStatus =
   | "CANCELLED_BY_CLIENT"
   | "CANCELLED_BY_PRACTITIONER"
@@ -26,7 +24,6 @@ export type HubStatus =
   | "yeni";
 
 export type HubTaskState = "done" | "active" | "upcoming";
-
 export type HubRecordKind = "danisan" | "randevu";
 
 export type HubRecord = Readonly<{
@@ -59,21 +56,6 @@ export type HubRecord = Readonly<{
   timeline: readonly { at: string; label: string }[];
 }>;
 
-export type HubNavChild = Readonly<{
-  badge?: number;
-  href?: string;
-  id: string;
-  label: string;
-  section?: "danisanlar" | "musaitlik" | "odemeler" | "talepler";
-}>;
-
-export type HubNavGroup = Readonly<{
-  children: readonly HubNavChild[];
-  icon: string;
-  id: string;
-  label: string;
-}>;
-
 export const hubStages: readonly { id: HubStage; label: string }[] = [
   { id: "talep", label: "Talep" },
   { id: "kontrol", label: "Kontrol" },
@@ -100,237 +82,48 @@ export const hubGroupLabels: Readonly<Record<HubRecord["group"], string>> = {
   dahaEski: "Daha eski",
 };
 
-export const hubNavGroups: readonly HubNavGroup[] = [
-  {
-    children: [
-      { id: "kuyruk", label: "Talep kuyruğu", section: "talepler" },
-      { href: "/yonetim", id: "klasik", label: "Klasik panel" },
-    ],
-    icon: "⌂",
-    id: "calisma",
-    label: "Çalışma Alanım",
-  },
-  {
-    children: [
-      { id: "talepler", label: "Talepler", section: "talepler" },
-      { href: "/yonetim/randevular", id: "operasyon", label: "Randevu operasyonu" },
-      { id: "musaitlik", label: "Müsaitlik", section: "musaitlik" },
-    ],
-    icon: "◷",
-    id: "randevular",
-    label: "Randevular",
-  },
-  {
-    children: [
-      { id: "danisan-kayitlari", label: "Danışan kayıtları", section: "danisanlar" },
-      { href: "/yonetim/danisanlar", id: "danisan-yonetimi", label: "Danışan yönetimi" },
-    ],
-    icon: "◌",
-    id: "danisanlar",
-    label: "Danışanlar",
-  },
-  {
-    children: [
-      { id: "odemeler", label: "Ödeme özeti", section: "odemeler" },
-      { href: "/yonetim/odemeler", id: "odeme-yonetimi", label: "Ödeme yönetimi" },
-    ],
-    icon: "₺",
-    id: "finans",
-    label: "Finans",
-  },
-  {
-    children: [{ href: "/yonetim/saglik", id: "saglik", label: "Entegrasyon sağlığı" }],
-    icon: "◇",
-    id: "sistem",
-    label: "Sistem",
-  },
-];
+/* Minimal synthetic records are retained only for pure helper tests. They are
+   never rendered by the production record center and contain no real data. */
+const syntheticBase: HubRecord = {
+  channel: "Test",
+  connections: [],
+  contactEmail: "ornek@eposta.dev",
+  contactPhone: "0500 000 00 00",
+  group: "bugun",
+  id: "test-bugun",
+  kind: "randevu",
+  lastAction: "Test kaydı",
+  lastActionAt: "Bugün",
+  name: "Örnek Kayıt",
+  nextSteps: [],
+  plannedAt: "—",
+  profileHref: null,
+  rawStatus: "REQUESTED",
+  readinessGrade: "",
+  readinessNotes: [],
+  readinessScore: 0,
+  reference: "TEST-1",
+  service: "Test hizmeti",
+  stage: "talep",
+  status: "yeni",
+  timeline: [],
+};
 
-/*
- * Synthetic preview data only — AGENTS.md forbids real personal data in
- * seeds/examples, so every name, phone and address here is invented.
- */
 export const hubRecords: readonly HubRecord[] = [
+  syntheticBase,
   {
-    channel: "Web formu",
-    connections: [
-      { name: "Deniz Işık", relation: "Velisi" },
-      { name: "Papatya Anaokulu", relation: "Yönlendiren kurum" },
-    ],
-    contactEmail: "ornek.veli@eposta.dev",
-    contactPhone: "0500 000 00 01",
-    group: "bugun",
-    id: "rec-arya",
-    kind: "randevu",
-    lastAction: "İlk değerlendirme talebi",
-    lastActionAt: "Bugün 09:24",
-    name: "Arya Işık",
-    plannedAt: "Yarın 10:00",
-    profileHref: null,
-    reference: "BA-2026-1001",
-    nextSteps: [
-      {
-        detail: "Veli ile kısa tanışma araması planla.",
-        due: "Bugün 16:30'a kadar",
-        state: "active",
-        title: "Tanışma araması",
-      },
-      {
-        detail: "Uygun saat için takvim önerisi gönder.",
-        due: "Aramadan sonra",
-        state: "upcoming",
-        title: "Saat önerisi",
-      },
-      {
-        detail: "Onay mesajıyla randevuyu kesinleştir.",
-        due: "Saat netleşince",
-        state: "upcoming",
-        title: "Onay mesajı",
-      },
-    ],
-    readinessGrade: "A",
-    readinessNotes: [
-      "İletişim bilgileri doğrulandı",
-      "Veli onayı formda alındı",
-      "Tercih edilen saat aralığı belirtildi",
-      "Önceki kayıt bulunmuyor",
-    ],
-    readinessScore: 90,
-    service: "Çocuk dil ve konuşma değerlendirmesi",
-    stage: "kontrol",
-    rawStatus: "REQUESTED",
-    status: "yeni",
-    timeline: [
-      { at: "Bugün 09:24", label: "Web formundan talep alındı" },
-      { at: "Bugün 09:25", label: "Otomatik bilgilendirme e-postası gönderildi" },
-    ],
-  },
-  {
-    channel: "Telefon",
-    connections: [{ name: "Kardelen Koleji", relation: "Yönlendiren kurum" }],
-    contactEmail: "ornek.danisan@eposta.dev",
-    contactPhone: "0500 000 00 02",
-    group: "bugun",
-    id: "rec-baran",
-    kind: "randevu",
-    lastAction: "Saat önerisi bekleniyor",
-    lastActionAt: "Bugün 08:12",
-    name: "Baran Toprak",
-    plannedAt: "Perşembe 14:30",
-    profileHref: null,
-    reference: "BA-2026-1002",
-    nextSteps: [
-      {
-        detail: "İki uygun saat seçeneği ilet.",
-        due: "Bugün 12:00'a kadar",
-        state: "active",
-        title: "Saat önerisi",
-      },
-      {
-        detail: "Seçilen saati onay mesajıyla kesinleştir.",
-        due: "Yanıt gelince",
-        state: "upcoming",
-        title: "Onay mesajı",
-      },
-    ],
-    readinessGrade: "B",
-    readinessNotes: [
-      "İletişim bilgileri doğrulandı",
-      "Görüşme biçimi tercih edildi",
-      "Saat tercihi henüz netleşmedi",
-    ],
-    readinessScore: 74,
-    service: "Ergen akıcılık görüşmesi",
-    stage: "kontrol",
-    rawStatus: "PENDING_REVIEW",
-    status: "bekliyor",
-    timeline: [
-      { at: "Bugün 08:12", label: "Telefonla ön görüşme yapıldı" },
-      { at: "Dün 17:40", label: "Talep kaydı oluşturuldu" },
-    ],
-  },
-  {
-    channel: "Web formu",
-    connections: [{ name: "Derya Yalın", relation: "Eşi" }],
-    contactEmail: "ornek.kisi@eposta.dev",
-    contactPhone: "0500 000 00 03",
+    ...syntheticBase,
     group: "buHafta",
-    id: "rec-cem",
-    kind: "randevu",
-    lastAction: "Randevu onaylandı",
-    lastActionAt: "Salı 15:05",
-    name: "Cem Yalın",
-    plannedAt: "Cuma 11:00",
-    profileHref: null,
-    reference: "BA-2026-1003",
-    nextSteps: [
-      {
-        detail: "Görüşme öncesi hatırlatma mesajı planla.",
-        due: "Görüşmeden 1 gün önce",
-        state: "active",
-        title: "Hatırlatma",
-      },
-      {
-        detail: "İlk görüşme notu için şablon hazırla.",
-        due: "Görüşme günü",
-        state: "upcoming",
-        title: "Görüşme hazırlığı",
-      },
-    ],
-    readinessGrade: "A",
-    readinessNotes: [
-      "Randevu saati kesinleşti",
-      "Ön bilgilendirme tamamlandı",
-      "Çevrim içi bağlantı paylaşıldı",
-    ],
-    readinessScore: 96,
-    service: "Yetişkin ses terapisi",
-    stage: "onay",
-    rawStatus: "CONFIRMED",
-    status: "onaylandi",
-    timeline: [
-      { at: "Salı 15:05", label: "Randevu onay mesajı gönderildi" },
-      { at: "Salı 14:50", label: "Uygunluk kontrolü tamamlandı" },
-      { at: "Pazartesi 11:20", label: "Web formundan talep alındı" },
-    ],
+    id: "test-hafta",
+    name: "Haftalık Örnek",
+    reference: "TEST-2",
   },
   {
-    channel: "Yönlendirme",
-    connections: [{ name: "Gökçe Aksu", relation: "Annesi" }],
-    contactEmail: "ornek.aile@eposta.dev",
-    contactPhone: "0500 000 00 04",
+    ...syntheticBase,
     group: "dahaEski",
-    id: "rec-duru",
-    kind: "randevu",
-    lastAction: "İlk görüşme tamamlandı",
-    lastActionAt: "Geçen hafta",
-    name: "Duru Aksu",
-    plannedAt: "Geçen hafta 09:30",
-    profileHref: null,
-    reference: "BA-2026-1004",
-    nextSteps: [
-      {
-        detail: "Aileye özet ve öneri planını ilet.",
-        due: "Bu hafta içinde",
-        state: "active",
-        title: "Özet paylaşımı",
-      },
-    ],
-    readinessGrade: "A",
-    readinessNotes: [
-      "İlk görüşme tamamlandı",
-      "Devam planı taslağı hazır",
-      "Aile bilgilendirme bekliyor",
-    ],
-    readinessScore: 88,
-    service: "Çocuk artikülasyon takibi",
-    stage: "gorusme",
-    rawStatus: "COMPLETED",
-    status: "tamamlandi",
-    timeline: [
-      { at: "Geçen hafta", label: "İlk görüşme yapıldı" },
-      { at: "2 hafta önce", label: "Randevu onaylandı" },
-    ],
+    id: "test-eski",
+    name: "Eski Örnek",
+    reference: "TEST-3",
   },
 ];
 
@@ -372,11 +165,6 @@ export function getStageIndex(stage: HubStage): number {
   return hubStages.findIndex((candidate) => candidate.id === stage);
 }
 
-/*
- * Keyboard navigation: records are traversed in the same order the list
- * renders them (grouped bugun -> buHafta -> dahaEski). With no selection,
- * "next" starts at the first record and "previous" at the last.
- */
 export function getAdjacentRecordId(
   records: readonly HubRecord[],
   currentId: string | null,
