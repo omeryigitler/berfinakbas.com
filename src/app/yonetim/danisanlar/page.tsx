@@ -15,6 +15,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 type ClientStatus = (typeof clientStatuses)[number];
 type ClientType = (typeof clientTypes)[number];
 
+const PAGE_SIZE = 50;
 const clientStatuses = ["PROSPECTIVE", "ACTIVE", "INACTIVE"] as const;
 const clientTypes = ["ADULT", "CHILD"] as const;
 const statusOptions = [
@@ -40,12 +41,38 @@ function isClientType(value: string): value is ClientType {
   return clientTypes.some((type) => type === value);
 }
 
+function pageNumber(value: string): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function pageHref({
+  page,
+  query,
+  status,
+  type,
+}: {
+  page: number;
+  query: string;
+  status: string;
+  type: string;
+}): Route {
+  const search = new URLSearchParams();
+  if (query) search.set("q", query);
+  if (isClientStatus(status)) search.set("status", status);
+  if (isClientType(type)) search.set("type", type);
+  if (page > 1) search.set("page", String(page));
+  const suffix = search.toString();
+  return `/yonetim/danisanlar${suffix ? `?${suffix}` : ""}` as Route;
+}
+
 export default async function AdminClientsPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requirePermission("clients:read");
   const params = await searchParams;
   const query = singleParam(params, "q").trim();
   const status = singleParam(params, "status");
   const type = singleParam(params, "type");
+  const requestedPage = pageNumber(singleParam(params, "page"));
   const where: Prisma.ClientWhereInput = {};
 
   if (query) {
@@ -64,24 +91,28 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
   if (isClientStatus(status)) where.status = status;
   if (isClientType(type)) where.type = type;
 
-  const [clients, totalCount] = await Promise.all([
-    getDatabase().client.findMany({
-      orderBy: [{ createdAt: "desc" }],
-      select: {
-        email: true,
-        firstName: true,
-        id: true,
-        lastName: true,
-        phone: true,
-        preferredName: true,
-        status: true,
-        type: true,
-      },
-      take: 100,
-      where,
-    }),
-    getDatabase().client.count({ where }),
-  ]);
+  const database = getDatabase();
+  const totalCount = await database.client.count({ where });
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const clients = await database.client.findMany({
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: {
+      email: true,
+      firstName: true,
+      id: true,
+      lastName: true,
+      phone: true,
+      preferredName: true,
+      status: true,
+      type: true,
+    },
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    where,
+  });
+  const firstVisible = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const lastVisible = Math.min(currentPage * PAGE_SIZE, totalCount);
   const canManageClients = hasPermission(session.user.roles, "clients:manage");
 
   return (
@@ -94,7 +125,7 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
         servicesRead: hasPermission(session.user.roles, "services:read"),
         technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
       }}
-      subtitle="Danışan kayıtları ve filtreleme ekranı."
+      subtitle="Danışan kayıtları, arama, filtre ve sayfalama ekranı."
       title="Danışanlar"
     >
       <section className="admin-panel" aria-labelledby="danisan-listesi">
@@ -155,8 +186,29 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
 
         <div className="admin-list-footer admin-client-list-footer">
           <span>
-            {clients.length} kayıt gösteriliyor · Toplam {totalCount}
+            {firstVisible}-{lastVisible} arası gösteriliyor · Toplam {totalCount} · Sayfa {currentPage}/
+            {totalPages}
           </span>
+          {totalPages > 1 ? (
+            <nav aria-label="Danışan listesi sayfaları">
+              {currentPage > 1 ? (
+                <Link
+                  className="admin-back-link"
+                  href={pageHref({ page: currentPage - 1, query, status, type })}
+                >
+                  ← Önceki
+                </Link>
+              ) : null}
+              {currentPage < totalPages ? (
+                <Link
+                  className="primary-button"
+                  href={pageHref({ page: currentPage + 1, query, status, type })}
+                >
+                  Sonraki →
+                </Link>
+              ) : null}
+            </nav>
+          ) : null}
         </div>
       </section>
     </AdminShell>
