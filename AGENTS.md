@@ -121,3 +121,116 @@ Her teslimde şunları belirt:
 Şu soru cevaplanmadan kritik özellik tamamlanmış sayılmaz:
 
 > Bu değişiklik randevu, ödeme, seans hakkı, onay veya danışan verisinde karışıklığa neden olabilir mi?
+
+## Yönetim Paneli "Hub" Yeniden Tasarımı — Uygulama Planı
+
+Bu bölüm, yönetim panelinin Dynamics 365 "Sales Hub / Sales Accelerator"
+tarzında kademeli (progressive drill-in) bir dashboard'a dönüştürülmesinin
+bağlayıcı planıdır. Kota/oturum kesilirse çalışmaya buradan devam edilir.
+Çalışma dalı: `claude/hero-woman-animation-tzl5zg`.
+
+### Hedef deneyim — 4 kademe
+
+1. **Kademe 1 · Menü rayı (sol):** Gruplu dikey menü (Çalışma Alanım,
+   Danışanlar, Randevular, Finans, Sistem). Grup başlığına tıklanınca alt
+   öğeleri akordeon gibi açılır; öğe seçilince Kademe 2 açılır.
+2. **Kademe 2 · Liste paneli (~300px):** Seçilen bölümün kayıt listesi.
+   Zaman gruplu ("Bugün", "Bu hafta", "Daha eski"), her satırda monogram
+   avatar + isim + son işlem + durum çipi + mini skor. Seçili satır lime
+   vurgulu.
+3. **Kademe 3 · Kayıt paneli:** Satır tıklanınca sağa açılır. Şeftali
+   degrade başlık (isim, hizmet, durum çipleri), aşama şeridi
+   (Talep → Kontrol → Onay → Görüşme; aktif dilim teal), Özet/İletişim
+   sekmeleri.
+4. **Kademe 4 · Geniş çalışma alanı:** "Sıradaki adımlar" sıralı görev
+   kartları (lime), kesikli teal **hazırlık skoru halkası** (referanstaki
+   Lead Score 90 karşılığı), "Bağlantılı kayıtlar" ve zaman çizelgesi.
+   "Genişlet" düğmesi ray + liste panelini daraltıp çalışma alanını tam
+   genişliğe çıkarır (rahat çalışma modu).
+
+Geri yürüme: her panelin başındaki ‹ düğmesi bir kademe kapatır. Faz 1'de
+panel durumu yerel state'tir; Faz 3'te URL query'ye (`?kayit=`) taşınır.
+
+### Görsel dil (referansla birebir)
+
+- Zemin: açık sıcak gri `#e9e7e2`; paneller beyaz/krem `#fbfaf8`,
+  18–26px radius, yumuşak geniş gölgeler.
+- Vurgular: **lime** `#dfec83` (seçili öğe, görev kartı), **teal**
+  `#12897b` (aşama, skor, olumlu durum), **şeftali degrade**
+  (`#fbe3d2 → #f6d0c0`, kayıt başlığı), mürekkep `#201c19`.
+- Pill butonlar: beyaz zemin, 1px `#e3ded7` kenar, 999px radius; kayıt
+  üstünde yatay eylem şeridi (Kaydet, Yeni, Yenile, PDF, Süreç…).
+- Font: Inter benzeri geometrik sans yığını (`"Inter", "SF Pro Text",
+"Segoe UI", system-ui, sans-serif`) — yalnızca hub kapsamında
+  (`--hub-font`); kamu sitesinin serif kimliğine dokunulmaz. Gerçek Inter
+  dosyası Faz 5'te `next/font` ile eklenebilir.
+- **Gerçek fotoğraf yok:** üyelerden görsel alınmaz. Avatar yerine
+  `HubAvatar` monogramı kullanılır: isim baş harfleri + isimden
+  deterministik türetilen sıcak pastel degrade zemin + durum halkası.
+
+### Dosya planı
+
+- `src/components/admin/hub/hub.module.css` — tüm tasarım tokenları ve
+  panel/bileşen stilleri (tek dosya).
+- `src/components/admin/hub/hub-model.ts` — tipler, sentetik örnek veri
+  (gerçek kişi verisi yasak), monogram/grup yardımcıları (saf, test
+  edilebilir).
+- `src/components/admin/hub/hub-model.test.ts` — yardımcıların unit
+  testleri.
+- `src/components/admin/hub/hub-avatar.tsx` — monogram avatar.
+- `src/components/admin/hub/dashboard-hub.tsx` — 4 kademeli shell
+  (client component).
+- `src/app/yonetim/hub/page.tsx` — `requirePermission` arkasında önizleme
+  rotası; mevcut sayfalara dokunmaz.
+
+### Fazlar
+
+- **Faz 0 (tamam):** Bu plan.
+- **Faz 1 (tamam):** Hub kabuğu + sentetik veri + `/yonetim/hub` önizlemesi.
+- **Faz 2 (tamam):** `/yonetim/hub` gerçek verilerle besleniyor: sayfa
+  `appointments:read` yetkisiyle son 30 talebi (client, guardian,
+  practitioner, statusLogs dahil) çeker; `hub-data.ts` saf eşleyicisi durum →
+  aşama/çip, zaman grubu, hazırlık skoru (ağırlıklar kodda), sıradaki adımlar
+  ve zaman çizelgesini üretir; nav rozetleri açık taleplerden hesaplanır.
+- **Faz 3 (tamam):** Kayıt eylemleri canlı: `hub-actions.ts` durum başına
+  yalnızca domain durum makinesinin (appointment-status.ts) izin verdiği
+  geçişleri sunar ve mevcut PATCH `/api/admin/appointments/:id/status`
+  sözleşmesini (reasonCode/toStatus) aynen kullanır; eylemler inline
+  onaylıdır (Eminim/Vazgeç), başarıda `router.refresh()`; eylemler yalnızca
+  `appointments:manage` yetkisiyle görünür; kayıt seçimi `?kayit=` URL
+  parametresinde yaşar (paylaşılabilir/yenilemeye dayanıklı).
+- **Faz 4 (tamam):** Hub çok bölümlü: Danışanlar hub'ın liste → kayıt
+  akışına taşındı (`?bolum=danisanlar`, `clients:read` yetkisiyle;
+  profil tamlık skoru, veli bağlantıları, randevu zaman çizelgesi ve
+  "Profili aç" köprüsüyle); menü rayı gerçek navigasyona bağlandı
+  (Müsaitlik, Randevu operasyonu, Ödemeler, Sağlık mevcut sayfalara ↗
+  linkler); klasik `AdminShell` menüsüne "Hub görünümü" girişi eklendi.
+- **Faz 5 (tamam):** Cila teslim edildi — gerçek Inter Variable fontu
+  (`@fontsource-variable/inter`, self-host, latin-ext ile Türkçe tam);
+  klavye kısayolları (↑/↓ veya j/k liste gezinme, Esc kapat/onay iptal,
+  F genişlet, 1/2 bölüm değiştirme; girdi alanlarında devre dışı);
+  kayıt değişiminde yumuşak giriş animasyonu (`prefers-reduced-motion`
+  korumalı) ve `:focus-visible` halkaları; dar ekranda (≤940px) ray
+  yatay şeride dönüşür, açık grubun alt öğeleri chip olarak sarar,
+  liste yüksekliği sınırlanır ve paneller üst üste yığılır.
+- **Ek kapsam (tamam):** Müsaitlik ve Ödemeler hub içi salt okunur
+  içerik panelleri oldu (`?bolum=musaitlik` `services:read` ile,
+  `?bolum=odemeler` `finance:read` ile; kısayollar 3/4): haftalık
+  müsaitlik önizlemesi (Pazartesi-öncelikli, pasif kurallar üstü çizili)
+  ve ay içi ödeme/plan borcu toplamları + son kayıtlar (BigInt tutarlar
+  sunucuda `buildFinanceSummary` ile metinleştirilir). Düzenleme,
+  panellerdeki ↗ köprülerle ilgili tam sayfalarda yapılır.
+- **Karar — `AdminShell` emekliliği:** Yapılmadı ve bilinçli olarak
+  ertelendi. Ağır düzenleme akışları (danışan formları, müsaitlik
+  kuralları, finans işlemleri) klasik sayfalarda yaşamaya devam eder;
+  Hub gezinme/inceleme/durum-geçişi yüzeyidir ve iki kabuk birbirine
+  bağlıdır. Emeklilik ancak bu akışlar hub'a taşınırsa yeniden
+  değerlendirilir.
+
+### Faz 1 kabul ölçütleri
+
+- `/yonetim/hub` yetkili kullanıcıyla açılır; menü → liste → kayıt →
+  çalışma alanı akışı çalışır; "Genişlet" modu ray+listeyi daraltır.
+- Görsel dil referans paletiyle eşleşir; hiçbir yerde gerçek kişi
+  fotoğrafı yoktur (yalnızca monogram avatar).
+- Mevcut yönetim sayfaları davranış değiştirmez; kalite kapıları yeşildir.

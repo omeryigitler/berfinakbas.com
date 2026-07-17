@@ -1,0 +1,145 @@
+import "@fontsource-variable/inter/index.css";
+
+import type { Metadata } from "next";
+
+import { DashboardHub } from "@/components/admin/hub/dashboard-hub";
+import {
+  buildFinanceSummary,
+  buildWeeklyAvailability,
+  mapAppointmentToHubRecord,
+  mapClientToHubRecord,
+} from "@/components/admin/hub/hub-data";
+import { hasPermission } from "@/domain/auth/permissions";
+import { requirePermission } from "@/lib/authorization";
+import { getDatabase } from "@/lib/db";
+import { getServerEnvironment } from "@/lib/env";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  robots: { follow: false, index: false, noarchive: true, nosnippet: true },
+  title: "Yönetim Hub | Berfin Akbaş",
+};
+
+export default async function AdminHubPage() {
+  const session = await requirePermission("appointments:read");
+  const canManage = hasPermission(session.user.roles, "appointments:manage");
+  const canReadClients = hasPermission(session.user.roles, "clients:read");
+  const canReadAvailability = hasPermission(session.user.roles, "services:read");
+  const canReadFinance = hasPermission(session.user.roles, "finance:read");
+  const environment = getServerEnvironment();
+  const database = getDatabase();
+
+  const now = new Date();
+  /* 45 days comfortably covers the current business month for the totals. */
+  const financeWindowStart = new Date(now.getTime() - 45 * 86_400_000);
+
+  const [appointmentRows, clientRows, availabilityRows, financeRows] = await Promise.all([
+    database.appointment.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        approvedAt: true,
+        client: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            preferredName: true,
+            type: true,
+          },
+        },
+        createdAt: true,
+        duplicateReviewStatus: true,
+        guardian: { select: { firstName: true, lastName: true } },
+        id: true,
+        practitioner: { select: { displayName: true } },
+        publicReference: true,
+        requestNote: true,
+        serviceNameSnapshot: true,
+        source: true,
+        startsAt: true,
+        status: true,
+        statusLogs: {
+          orderBy: { createdAt: "desc" },
+          select: { createdAt: true, toStatus: true },
+          take: 5,
+        },
+      },
+      take: 30,
+    }),
+    canReadClients
+      ? database.client.findMany({
+          orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+          select: {
+            appointments: {
+              orderBy: { startsAt: "desc" },
+              select: { serviceNameSnapshot: true, startsAt: true, status: true },
+              take: 3,
+            },
+            createdAt: true,
+            email: true,
+            firstName: true,
+            guardians: {
+              select: {
+                guardian: { select: { firstName: true, lastName: true } },
+                relationship: true,
+              },
+            },
+            id: true,
+            lastName: true,
+            phone: true,
+            preferredName: true,
+            status: true,
+            type: true,
+            updatedAt: true,
+          },
+          take: 30,
+        })
+      : Promise.resolve([]),
+    canReadAvailability
+      ? database.availabilityRule.findMany({
+          orderBy: [{ weekday: "asc" }, { localStartTime: "asc" }],
+          select: {
+            localEndTime: true,
+            localStartTime: true,
+            slotIncrementMinutes: true,
+            status: true,
+            weekday: true,
+          },
+        })
+      : Promise.resolve(null),
+    canReadFinance
+      ? database.financeLedgerEntry.findMany({
+          orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+          select: {
+            amountMinor: true,
+            client: { select: { firstName: true, lastName: true, preferredName: true } },
+            currency: true,
+            id: true,
+            occurredAt: true,
+            type: true,
+          },
+          take: 200,
+          where: { occurredAt: { gte: financeWindowStart } },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  const timeZone = environment.BUSINESS_TIME_ZONE;
+  const appointments = appointmentRows.map((row) => mapAppointmentToHubRecord(row, now, timeZone));
+  const clients = clientRows.map((row) => mapClientToHubRecord(row, now, timeZone));
+  const availability = availabilityRows ? buildWeeklyAvailability(availabilityRows) : null;
+  const finance = financeRows ? buildFinanceSummary(financeRows, now, timeZone) : null;
+
+  return (
+    <DashboardHub
+      appointments={appointments}
+      availability={availability}
+      canManage={canManage}
+      canReadClients={canReadClients}
+      clients={clients}
+      finance={finance}
+    />
+  );
+}

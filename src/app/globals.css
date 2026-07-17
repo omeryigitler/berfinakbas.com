@@ -1541,6 +1541,7 @@ summary:focus-visible {
 }
 
 .content-card-grid article {
+  position: relative;
   border: 1px solid var(--line);
   border-radius: 22px;
   background: rgb(255 255 255 / 64%);
@@ -1552,8 +1553,8 @@ summary:focus-visible {
   background: rgb(255 255 255 / 5%);
 }
 
-.content-card-grid article > span,
-.service-page-grid article > span {
+/* Non-numbered contact cards keep their eyebrow label. */
+.contact-grid article > span {
   color: var(--coral);
   font-size: 0.64rem;
   font-weight: 850;
@@ -1561,8 +1562,63 @@ summary:focus-visible {
   text-transform: uppercase;
 }
 
-.inner-band .content-card-grid article > span {
-  color: #efad8e;
+/* Numbered cards share the value-card logic: a corner index that stays faint
+   at rest and pops (fills in, grows, gains a glow) when the card is hovered. */
+.content-card-grid-three article,
+.service-page-grid article {
+  overflow: hidden;
+  padding-right: 46px;
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.content-card-grid-three article:hover,
+.service-page-grid article:hover {
+  transform: translateY(-6px);
+  border-color: rgb(217 111 77 / 32%);
+  box-shadow: 0 26px 54px rgb(102 68 47 / 14%);
+}
+
+.content-card-grid-three article > span,
+.service-page-grid article > span {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  color: rgb(217 111 77 / 42%);
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  transition:
+    color 0.3s ease,
+    font-size 0.3s ease,
+    text-shadow 0.3s ease;
+}
+
+.content-card-grid-three article:hover > span,
+.service-page-grid article:hover > span {
+  color: var(--coral);
+  font-size: 1.85rem;
+  text-shadow: 0 8px 18px rgb(217 111 77 / 30%);
+}
+
+/* Dark inner-band variant (Hakkımda çalışma prensipleri) uses warm peach tones. */
+.inner-band .content-card-grid-three article > span {
+  color: rgb(239 173 142 / 52%);
+}
+
+.inner-band .content-card-grid-three article:hover {
+  border-color: rgb(239 173 142 / 45%);
+  box-shadow: 0 26px 54px rgb(18 11 7 / 34%);
+}
+
+.inner-band .content-card-grid-three article:hover > span {
+  color: #f6c9ac;
+  text-shadow: 0 8px 20px rgb(239 173 142 / 32%);
 }
 
 .content-card-grid h2,
@@ -1662,13 +1718,30 @@ summary:focus-visible {
   grid-template-columns: 110px 1fr;
   gap: 40px;
   border-top: 1px solid var(--line);
-  padding: 38px 0;
+  padding: 34px 0;
+  transition: background 0.28s ease;
 }
 
+.vertical-process-list li:hover {
+  background: rgb(217 111 77 / 4%);
+}
+
+/* Same number logic as the cards: faint at rest, pops on the row's hover. */
 .vertical-process-list li > span {
-  color: var(--coral);
+  color: rgb(217 111 77 / 42%);
   font-family: var(--serif);
   font-size: 2rem;
+  transform-origin: left center;
+  transition:
+    color 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    text-shadow 0.3s ease;
+}
+
+.vertical-process-list li:hover > span {
+  color: var(--coral);
+  transform: scale(1.14);
+  text-shadow: 0 10px 22px rgb(217 111 77 / 30%);
 }
 
 .vertical-process-list h2 {
@@ -1765,21 +1838,39 @@ summary:focus-visible {
   gap: 17px;
   border-bottom: 1px solid var(--line);
   padding: 23px 0;
+  transition: background 0.28s ease;
 }
 
 .booking-preview-steps li:last-child {
   border-bottom: 0;
 }
 
+.booking-preview-steps li:hover {
+  background: rgb(217 111 77 / 5%);
+}
+
+/* Same number logic as the rest of the site: soft at rest, pops on row hover. */
 .booking-preview-steps li > span {
   display: grid;
   width: 36px;
   height: 36px;
   place-items: center;
   border-radius: 50%;
+  background: rgb(247 221 205 / 55%);
+  color: rgb(185 83 54 / 62%);
+  font-family: var(--serif);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease;
+}
+
+.booking-preview-steps li:hover > span {
   background: #f7ddcd;
   color: var(--coral-dark);
-  font-family: var(--serif);
+  transform: scale(1.14);
+  box-shadow: 0 10px 22px rgb(217 111 77 / 26%);
 }
 
 .booking-preview-steps strong,

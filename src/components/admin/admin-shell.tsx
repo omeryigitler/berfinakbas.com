@@ -34,6 +34,10 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
     items.push({ href: "/yonetim", icon: "⌘", label: "Dashboard" });
   }
 
+  if (permissions.appointmentsRead) {
+    items.push({ href: "/yonetim/hub", icon: "⬒", label: "Hub görünümü" });
+  }
+
   if (permissions.clientsRead === true) {
     items.push({ href: "/yonetim/danisanlar", icon: "◌", label: "Danışanlar" });
   }
