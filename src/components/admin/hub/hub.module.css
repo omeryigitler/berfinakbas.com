@@ -87,6 +87,25 @@
   font-size: 0.64rem;
 }
 
+.sampleTag {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(190 136 52 / 30%);
+  border-radius: 999px;
+  background: rgb(190 136 52 / 12%);
+  padding: 4px 9px;
+  color: #8a6222;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.listPanel[data-sample="true"] .listItem,
+.listPanel[data-sample="true"] .listGroupLabel {
+  opacity: 0.72;
+}
+
 .listScroll {
   min-height: 0;
   overflow-y: auto;
@@ -427,18 +446,19 @@
 .scoreDial {
   --dial: var(--admin-teal, #12897b);
   display: grid;
-  width: 60px;
-  height: 60px;
+  width: 82px;
+  height: 82px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
   background: conic-gradient(var(--dial) calc(var(--score, 0) * 1%), var(--admin-line, #e3ded7) 0);
+  box-shadow: 0 8px 20px rgb(32 28 25 / 8%);
 }
 
 .scoreDial::before {
   grid-area: 1 / 1;
-  width: 46px;
-  height: 46px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   background: #fff;
   content: "";
@@ -448,8 +468,9 @@
   z-index: 1;
   grid-area: 1 / 1;
   color: var(--admin-ink, #201c19);
-  font-size: 1rem;
-  font-weight: 840;
+  font-size: 1.5rem;
+  font-weight: 850;
+  letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -595,10 +616,12 @@
   color: rgb(32 28 25 / 70%);
 }
 
+/* Reference "Opportunity Sales Process" style: a connected chevron flow where
+   completed steps are lime-tinted and the active step is a filled green pill. */
 .stageStrip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 5px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -606,25 +629,39 @@
 
 .stageStrip li {
   display: grid;
-  min-height: 34px;
+  min-height: 44px;
   place-items: center;
-  border: 1px solid rgb(32 28 25 / 8%);
-  border-radius: 10px;
-  background: rgb(255 255 255 / 42%);
-  color: rgb(32 28 25 / 52%);
-  font-size: 0.62rem;
-  font-weight: 720;
+  margin-right: -9px;
+  padding-left: 9px;
+  background: rgb(32 28 25 / 4%);
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%, 11px 50%);
+  color: rgb(32 28 25 / 50%);
+  font-size: 0.66rem;
+  font-weight: 760;
+}
+
+.stageStrip li:first-child {
+  padding-left: 0;
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%);
+  border-radius: 12px 0 0 12px;
+}
+
+.stageStrip li:last-child {
+  margin-right: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 11px 50%);
+  border-radius: 0 12px 12px 0;
 }
 
 .stageStrip li[data-state="done"] {
-  background: var(--admin-teal-soft, #d9ece8);
+  background: linear-gradient(135deg, var(--admin-lime, #dfec83), var(--admin-teal-soft, #d9ece8));
   color: var(--admin-teal, #12897b);
+  font-weight: 780;
 }
 
 .stageStrip li[data-state="active"] {
-  border-color: var(--admin-teal, #12897b);
-  background: var(--admin-teal, #12897b);
+  background: linear-gradient(135deg, #17a08f, var(--admin-teal, #12897b));
   color: #fff;
+  font-weight: 840;
 }
 
 .workGrid {
