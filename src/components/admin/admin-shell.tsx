@@ -31,11 +31,11 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
   const items: AdminNavItem[] = [];
 
   if (permissions.servicesRead) {
-    items.push({ href: "/yonetim", icon: "⌘", label: "Dashboard" });
+    items.push({ href: "/yonetim", icon: "⌂", label: "Çalışma alanı" });
   }
 
   if (permissions.appointmentsRead) {
-    items.push({ href: "/yonetim/hub", icon: "⬒", label: "Hub görünümü" });
+    items.push({ href: "/yonetim/hub", icon: "▦", label: "Kayıt merkezi" });
   }
 
   if (permissions.clientsRead === true) {
@@ -47,7 +47,7 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
   }
 
   if (permissions.servicesRead) {
-    items.push({ href: "/yonetim/musaitlik", icon: "□", label: "Müsaitlik" });
+    items.push({ href: "/yonetim/musaitlik", icon: "▤", label: "Müsaitlik" });
   }
 
   if (permissions.financeRead) {
@@ -62,7 +62,7 @@ export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem
     items.push({
       href: "/yonetim/saglik",
       icon: "◇",
-      label: "Entegrasyon sağlığı",
+      label: "Sistem sağlığı",
     });
   }
 
@@ -115,14 +115,14 @@ export function AdminShell({
           </span>
           <span>
             <strong>Berfin Akbaş</strong>
-            <small>Yönetim paneli</small>
+            <small>Yönetim sistemi</small>
           </span>
         </Link>
 
         {navigationItems.length > 0 ? (
           <nav className={styles.nav} data-admin-region="nav" aria-label="Yönetim menüsü">
             <span className={styles.navSection} data-admin-region="nav-section">
-              MENÜ
+              YÖNETİM
             </span>
             {navigationItems.map((item) => {
               const isActive = isActivePath(pathname, item.href);
@@ -135,7 +135,7 @@ export function AdminShell({
                   href={item.href}
                   key={item.href}
                 >
-                  <span className={styles.navIcon} data-admin-region="nav-icon">
+                  <span className={styles.navIcon} data-admin-region="nav-icon" aria-hidden="true">
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
@@ -144,6 +144,14 @@ export function AdminShell({
             })}
           </nav>
         ) : null}
+
+        <div className={styles.sidebarNote} data-admin-region="sidebar-note">
+          <strong>Operasyon merkezi</strong>
+          <span>Danışan, randevu, ödeme ve sistem durumunu tek panelden yönetin.</span>
+          <Link href="/" target="_blank">
+            Siteyi aç ↗
+          </Link>
+        </div>
       </aside>
 
       <section className={styles.workspace} data-admin-region="workspace">
@@ -159,6 +167,11 @@ export function AdminShell({
           </form>
 
           <div className={styles.headerMeta} data-admin-region="header-meta">
+            {permissions.appointmentsRead ? (
+              <Link className={styles.iconButton} data-admin-region="icon-button" href="/yonetim/hub">
+                Kayıt merkezi
+              </Link>
+            ) : null}
             <div className={styles.profilePill} data-admin-region="profile-pill">
               <span>{getInitials(email)}</span>
               <div>
