@@ -62,7 +62,7 @@ Her final head için aşağıdaki kapıların tamamı yeşil olmalıdır:
 - Production build
 - Production-build smoke
 - Gerçek PostgreSQL integration
-- Vercel Preview — Ready
+- Vercel Preview — Ready veya platform kota engelinin açıkça doğrulanması
 
 Migration, yeni secret veya yeni kişisel veri alanı eklenmedi.
 
