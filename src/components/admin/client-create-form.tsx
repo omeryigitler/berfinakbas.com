@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { SelectControl } from "./select-control";
 
@@ -41,6 +41,7 @@ function issueMessage(payload: ApiResponse<unknown>): string {
 }
 
 export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] }) {
+  const requestIdRef = useRef<string | null>(null);
   const [clientType, setClientType] = useState<ClientType>("ADULT");
   const [guardianMode, setGuardianMode] = useState<GuardianMode>("EXISTING");
   const [busy, setBusy] = useState(false);
@@ -82,6 +83,8 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
       }
     }
 
+    const requestId = requestIdRef.current ?? crypto.randomUUID();
+    requestIdRef.current = requestId;
     setBusy(true);
     setMessage("");
     try {
@@ -100,10 +103,14 @@ export function ClientCreateForm({ guardians }: { guardians: GuardianOption[] })
           phone: optionalValue(formData, "phone"),
           preferredName: optionalValue(formData, "preferredName"),
           relationship: optionalValue(formData, "relationship"),
+          requestId,
           status: optionalValue(formData, "status") ?? "PROSPECTIVE",
           type: clientType,
         }),
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-correlation-id": requestId,
+        },
         method: "POST",
       });
       const payload = await readResponse<{ id: string }>(response);
