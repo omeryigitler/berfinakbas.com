@@ -4,12 +4,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/auth";
+import { findPotentialDuplicateClients } from "@/lib/clients/client-duplicate-review";
 import { getAppointmentAccessWhere } from "@/lib/booking/appointment-api-access";
 import { databaseAppointmentStatuses } from "@/lib/booking/appointment-transition-service";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
-import { findPotentialDuplicateClients } from "@/lib/clients/client-duplicate-review";
+import { resolveZonedDateTime } from "@/lib/time-zone";
 
 const appointmentStatusListSchema = z
   .string()
@@ -26,6 +27,11 @@ const appointmentListQuerySchema = z
 
 const appointmentCreateSchema = z
   .object({
+    appointmentDate: z.iso.date(),
+    appointmentTime: z
+      .string()
+      .trim()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/),
     clientId: z.uuid(),
     durationMinutes: z.coerce.number().int().min(5).max(240),
     guardianId: z.uuid().nullable().optional(),
@@ -36,7 +42,6 @@ const appointmentCreateSchema = z
     practitionerId: z.uuid(),
     requestNote: z.string().trim().max(500).nullable().optional(),
     serviceId: z.uuid(),
-    startsAt: z.string().trim().min(1),
   })
   .strict();
 
@@ -182,16 +187,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const startsAt = new Date(parsed.data.startsAt);
-  if (Number.isNaN(startsAt.getTime())) {
-    return NextResponse.json({ error: "Randevu başlangıç tarihi geçersiz." }, { status: 400 });
-  }
-
   const now = new Date();
-  if (startsAt < now) {
-    return NextResponse.json({ error: "Geçmiş tarihli randevu oluşturulamaz." }, { status: 400 });
-  }
-
   const database = getDatabase();
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
 
@@ -209,7 +205,7 @@ export async function POST(request: Request) {
           where: { id: parsed.data.clientId },
         }),
         transaction.practitioner.findFirst({
-          select: { id: true },
+          select: { id: true, timeZone: true },
           where: {
             id: parsed.data.practitionerId,
             status: "ACTIVE",
@@ -231,10 +227,30 @@ export async function POST(request: Request) {
       ]);
 
       if (!client) throw new AppointmentCreateError("Danışan bulunamadı.", 404);
-      if (!practitioner)
+      if (!practitioner) {
         throw new AppointmentCreateError("Terapist bulunamadı veya yetkiniz yok.", 403);
+      }
       if (!service || service.status !== "ACTIVE") {
         throw new AppointmentCreateError("Aktif hizmet bulunamadı.", 404);
+      }
+
+      const resolvedStart = resolveZonedDateTime({
+        date: parsed.data.appointmentDate,
+        time: parsed.data.appointmentTime,
+        timeZone: practitioner.timeZone,
+      });
+      if (!resolvedStart.ok) {
+        const message =
+          resolvedStart.reason === "AMBIGUOUS"
+            ? "Seçilen saat terapistin saat diliminde iki farklı ana denk geliyor. Başka bir saat seçin."
+            : resolvedStart.reason === "NONEXISTENT"
+              ? "Seçilen saat terapistin saat diliminde mevcut değil. Başka bir saat seçin."
+              : "Randevu başlangıç tarihi veya saat dilimi geçersiz.";
+        throw new AppointmentCreateError(message);
+      }
+      const startsAt = resolvedStart.date;
+      if (startsAt < now) {
+        throw new AppointmentCreateError("Geçmiş tarihli randevu oluşturulamaz.");
       }
 
       const guardianId = parsed.data.guardianId ?? null;
