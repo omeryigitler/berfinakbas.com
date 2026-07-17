@@ -1,0 +1,23 @@
+.root {
+  display: contents;
+}
+
+/* The record center is rendered inside the shared Admin Hub shell. Its legacy
+   standalone rail and local expansion control must never create a second UI. */
+:global([data-admin-embedded-hub] > div > aside[aria-label="Yönetim menüsü"]),
+:global([data-admin-embedded-hub] [class*="ribbon"] > button[data-active]) {
+  display: none;
+}
+
+/* The old weighted readiness number and A/B/C grade were reference-design
+   placeholders, not approved product rules. Keep the factual checklist data
+   available to the domain layer, but do not present an invented score. */
+:global([data-admin-embedded-hub] [class*="listScore"]),
+:global(
+    [data-admin-embedded-hub]
+      [class*="workGrid"]
+      > [class*="workColumn"]:nth-child(3)
+      > [class*="card"]:first-child
+  ) {
+  display: none;
+}
