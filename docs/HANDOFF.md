@@ -42,7 +42,7 @@ Son güncelleme: 17 Temmuz 2026 · Europe/Malta
 
 ## Otomatik doğrulama
 
-Quality #451 dâhil son kod paketlerinde şu kapılar yeşildir:
+Final Quality #452 tamamen yeşildir:
 
 - Prisma validation
 - ESLint
@@ -58,11 +58,10 @@ Migration, yeni secret veya yeni kişisel veri alanı eklenmedi.
 
 ## Kalan yayın kapısı
 
-1. Final head için kalite kontrolleri yeşil olmalı.
-2. Kullanıcı tek Production yayınına açık onay vermeli.
-3. Tek squash merge ve tek Production deploy yapılmalı.
-4. Kullanıcı Production üzerinde masaüstü, tablet ve mobil turu yapmalı.
-5. Regresyon bulunursa tek toplu hotfix hazırlanmalı.
+1. Kullanıcı tek Production yayınına açık onay vermeli.
+2. Tek squash merge ve tek Production deploy yapılmalı.
+3. Kullanıcı Production üzerinde masaüstü, tablet ve mobil turu yapmalı.
+4. Regresyon bulunursa tek toplu hotfix hazırlanmalı.
 
 ## Güvenlik sınırı
 
