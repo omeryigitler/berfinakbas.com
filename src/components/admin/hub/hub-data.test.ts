@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import * as hubDataModule from "./hub-data";
 import {
+  buildAppointmentRecordChecks,
+  buildClientRecordChecks,
   buildNextSteps,
+  buildWeeklyAvailability,
   formatRelativeStamp,
   mapAppointmentToHubRecord,
+  mapClientToHubRecord,
   resolveGroup,
-  scoreReadiness,
   type HubAppointmentRow,
   type HubAppointmentStatus,
+  type HubClientRow,
 } from "./hub-data";
 
 const timeZone = "Europe/Istanbul";
@@ -41,22 +44,51 @@ function makeRow(overrides: Partial<HubAppointmentRow> = {}): HubAppointmentRow 
   };
 }
 
+function makeClientRow(overrides: Partial<HubClientRow> = {}): HubClientRow {
+  return {
+    appointments: [
+      {
+        serviceNameSnapshot: "Ses terapisi",
+        startsAt: new Date("2026-07-10T10:00:00+03:00"),
+        status: "CONFIRMED",
+      },
+    ],
+    createdAt: new Date("2026-06-01T10:00:00+03:00"),
+    email: "ornek@eposta.dev",
+    firstName: "Duru",
+    guardians: [{ guardian: { firstName: "Gökçe", lastName: "Aksu" }, relationship: "Annesi" }],
+    id: "client-1",
+    lastName: "Aksu",
+    phone: "05000000004",
+    preferredName: null,
+    status: "ACTIVE",
+    type: "CHILD",
+    updatedAt: new Date("2026-07-06T09:00:00+03:00"),
+    ...overrides,
+  };
+}
+
 describe("formatRelativeStamp", () => {
-  it("labels same-day, yesterday, this-week and older dates", () => {
+  it("labels today, yesterday, tomorrow, nearby weekdays and older dates", () => {
     expect(formatRelativeStamp(new Date("2026-07-06T09:24:00+03:00"), now, timeZone)).toBe(
       "Bugün 09:24",
     );
     expect(formatRelativeStamp(new Date("2026-07-05T23:30:00+03:00"), now, timeZone)).toBe(
       "Dün 23:30",
     );
+    expect(formatRelativeStamp(new Date("2026-07-07T10:00:00+03:00"), now, timeZone)).toBe(
+      "Yarın 10:00",
+    );
     expect(formatRelativeStamp(new Date("2026-07-01T15:05:00+03:00"), now, timeZone)).toMatch(
       /^Çar 15:05$/,
+    );
+    expect(formatRelativeStamp(new Date("2026-07-09T10:00:00+03:00"), now, timeZone)).toMatch(
+      /^Per 10:00$/,
     );
     expect(formatRelativeStamp(new Date("2026-06-01T10:00:00+03:00"), now, timeZone)).toBe("1 Haz");
   });
 
   it("respects the business time zone at day boundaries", () => {
-    // 23:30 UTC on the 5th is already 02:30 on the 6th in Istanbul.
     expect(formatRelativeStamp(new Date("2026-07-05T23:30:00Z"), now, timeZone)).toBe(
       "Bugün 02:30",
     );
@@ -71,17 +103,9 @@ describe("resolveGroup", () => {
   });
 });
 
-describe("scoreReadiness", () => {
-  it("scores a complete confirmed child request as grade A", () => {
-    const { grade, score } = scoreReadiness(
-      makeRow({ approvedAt: new Date(), status: "CONFIRMED" }),
-    );
-    expect(score).toBe(100);
-    expect(grade).toBe("A");
-  });
-
-  it("penalises missing contact, note and unresolved duplicate review", () => {
-    const { grade, notes, score } = scoreReadiness(
+describe("record checks", () => {
+  it("lists missing appointment fields before completed fields without a score", () => {
+    const checks = buildAppointmentRecordChecks(
       makeRow({
         client: {
           email: null,
@@ -92,29 +116,28 @@ describe("scoreReadiness", () => {
           type: "CHILD",
         },
         duplicateReviewStatus: "PENDING",
+        guardian: null,
         requestNote: null,
       }),
     );
-    expect(score).toBe(25);
-    expect(grade).toBe("C");
-    expect(notes[0]).toContain("eksik");
+
+    expect(checks.slice(0, 4)).toEqual([
+      "Telefon bilgisi eksik",
+      "E-posta bilgisi eksik",
+      "Veli kaydı eksik",
+      "Talep notu eksik",
+    ]);
+    expect(checks).toContain("Saat kesinleşmesi eksik");
+    expect(checks).toContain("Mükerrer kontrolü eksik");
+    expect(checks.some((check) => /^[ABC]$/.test(check))).toBe(false);
   });
 
-  it("auto-passes the guardian check for adults", () => {
-    const { score } = scoreReadiness(
-      makeRow({
-        client: {
-          email: "a@b.dev",
-          firstName: "Cem",
-          lastName: "Yalın",
-          phone: "05000000003",
-          preferredName: null,
-          type: "ADULT",
-        },
-        guardian: null,
-      }),
+  it("marks adult guardian and client appointment checks explicitly", () => {
+    const checks = buildClientRecordChecks(
+      makeClientRow({ appointments: [], guardians: [], type: "ADULT" }),
     );
-    expect(score).toBe(80);
+    expect(checks).toContain("Yetişkin kaydı tamam");
+    expect(checks).toContain("Planlanan randevu eksik");
   });
 });
 
@@ -136,7 +159,7 @@ describe("buildNextSteps", () => {
 });
 
 describe("mapAppointmentToHubRecord", () => {
-  it("maps a full row into the hub view model", () => {
+  it("maps a full row into the Hub view model", () => {
     const record = mapAppointmentToHubRecord(makeRow(), now, timeZone);
 
     expect(record.id).toBe("apt-1");
@@ -152,13 +175,12 @@ describe("mapAppointmentToHubRecord", () => {
       { name: "Deniz Işık", relation: "Veli" },
       { name: "Berfin Akbaş", relation: "Uygulayıcı" },
     ]);
-    expect(record.timeline.at(-1)).toEqual({
-      at: "Bugün 09:24",
-      label: "Talep kaydı oluşturuldu",
-    });
+    expect(record.readinessNotes).toContain("Telefon bilgisi tamam");
+    expect(record).not.toHaveProperty("readinessGrade");
+    expect(record).not.toHaveProperty("readinessScore");
   });
 
-  it("maps every appointment status to a stage and chip", () => {
+  it("maps every appointment status to a stage, chip and next step", () => {
     const statuses: readonly HubAppointmentStatus[] = [
       "REQUESTED",
       "PENDING_REVIEW",
@@ -200,47 +222,43 @@ describe("mapAppointmentToHubRecord", () => {
 });
 
 describe("mapClientToHubRecord", () => {
-  const { mapClientToHubRecord, scoreClientReadiness } = hubDataModule;
-
-  function makeClientRow(overrides = {}) {
-    return {
-      appointments: [
-        {
-          serviceNameSnapshot: "Ses terapisi",
-          startsAt: new Date("2026-07-10T10:00:00+03:00"),
-          status: "CONFIRMED" as const,
-        },
-      ],
-      createdAt: new Date("2026-06-01T10:00:00+03:00"),
-      email: "ornek@eposta.dev",
-      firstName: "Duru",
-      guardians: [{ guardian: { firstName: "Gökçe", lastName: "Aksu" }, relationship: "Annesi" }],
-      id: "client-1",
-      lastName: "Aksu",
-      phone: "05000000004",
-      preferredName: null,
-      status: "ACTIVE" as const,
-      type: "CHILD" as const,
-      updatedAt: new Date("2026-07-06T09:00:00+03:00"),
-      ...overrides,
-    };
-  }
-
-  it("maps a client row into a danisan hub record", () => {
+  it("maps the client to the existing query-param profile route", () => {
     const record = mapClientToHubRecord(makeClientRow(), now, timeZone);
 
     expect(record.kind).toBe("danisan");
     expect(record.status).toBe("aktif");
     expect(record.rawStatus).toBeNull();
-    expect(record.profileHref).toBe("/yonetim/danisan-profili/client-1");
+    expect(record.profileHref).toBe("/yonetim/danisan-profili?clientId=client-1");
     expect(record.channel).toBe("Çocuk");
     expect(record.group).toBe("bugun");
     expect(record.connections).toEqual([{ name: "Gökçe Aksu", relation: "Annesi" }]);
     expect(record.plannedAt).not.toBe("—");
-    expect(record.timeline.at(-1)?.label).toBe("Danışan kaydı oluşturuldu");
+    expect(record.timeline[0]?.at).toMatch(/^(Cum|10 Tem)/);
   });
 
-  it("maps prospective/inactive statuses and empty history", () => {
+  it("uses the first ascending future appointment as the planned item", () => {
+    const record = mapClientToHubRecord(
+      makeClientRow({
+        appointments: [
+          {
+            serviceNameSnapshot: "Yakın randevu",
+            startsAt: new Date("2026-07-07T10:00:00+03:00"),
+            status: "CONFIRMED",
+          },
+          {
+            serviceNameSnapshot: "Uzak randevu",
+            startsAt: new Date("2026-08-01T10:00:00+03:00"),
+            status: "CONFIRMED",
+          },
+        ],
+      }),
+      now,
+      timeZone,
+    );
+    expect(record.plannedAt).toContain("7 Tem");
+  });
+
+  it("maps prospective adults and empty appointment lists", () => {
     const record = mapClientToHubRecord(
       makeClientRow({ appointments: [], guardians: [], status: "PROSPECTIVE", type: "ADULT" }),
       now,
@@ -250,19 +268,9 @@ describe("mapClientToHubRecord", () => {
     expect(record.plannedAt).toBe("—");
     expect(record.connections).toEqual([]);
   });
-
-  it("scores completeness with 25-point weights", () => {
-    expect(scoreClientReadiness(makeClientRow()).score).toBe(100);
-    expect(
-      scoreClientReadiness(makeClientRow({ appointments: [], email: null, phone: null })).score,
-    ).toBe(25);
-    expect(scoreClientReadiness(makeClientRow({ guardians: [], type: "ADULT" })).score).toBe(100);
-  });
 });
 
 describe("buildWeeklyAvailability", () => {
-  const { buildWeeklyAvailability } = hubDataModule;
-
   it("orders days Monday-first and maps Sunday-indexed rules", () => {
     const days = buildWeeklyAvailability([
       {
@@ -286,53 +294,5 @@ describe("buildWeeklyAvailability", () => {
     expect(days[6].label).toBe("Pazar");
     expect(days[6].slots[0].active).toBe(false);
     expect(days[1].slots).toHaveLength(0);
-  });
-});
-
-describe("buildFinanceSummary", () => {
-  const { buildFinanceSummary } = hubDataModule;
-
-  it("sums current-month payments/accruals and renders display strings", () => {
-    const summary = buildFinanceSummary(
-      [
-        {
-          amountMinor: 150000n,
-          client: { firstName: "Cem", lastName: "Yalın", preferredName: null },
-          currency: "TRY",
-          id: "fin-1",
-          occurredAt: new Date("2026-07-03T10:00:00+03:00"),
-          type: "PAYMENT",
-        },
-        {
-          amountMinor: 200000n,
-          client: { firstName: "Duru", lastName: "Aksu", preferredName: null },
-          currency: "TRY",
-          id: "fin-2",
-          occurredAt: new Date("2026-07-01T10:00:00+03:00"),
-          type: "ACCRUAL",
-        },
-        {
-          amountMinor: 99900n,
-          client: { firstName: "Eski", lastName: "Kayıt", preferredName: null },
-          currency: "TRY",
-          id: "fin-3",
-          occurredAt: new Date("2026-06-01T10:00:00+03:00"),
-          type: "PAYMENT",
-        },
-      ],
-      now,
-      timeZone,
-    );
-    expect(summary.monthPaymentLabel).toContain("1 kayıt");
-    expect(summary.monthPaymentLabel).toContain("1.500,00");
-    expect(summary.monthAccrualLabel).toContain("2.000,00");
-    expect(summary.entries[0]).toMatchObject({ clientName: "Cem Yalın", typeLabel: "Ödeme" });
-    expect(summary.entries[0].amountLabel).toContain("1.500,00");
-  });
-
-  it("handles an empty ledger", () => {
-    const summary = buildFinanceSummary([], now, timeZone);
-    expect(summary.entries).toHaveLength(0);
-    expect(summary.monthPaymentLabel).toContain("0 kayıt");
   });
 });
