@@ -10,7 +10,7 @@ describe("admin home Hub contract", () => {
     expect(source).toContain("getZonedDayRange");
     expect(source).toContain("getZonedWeekRange");
     expect(source).toContain("getZonedMonthRange");
-    expect(source).toContain("timeZone: environment.BUSINESS_TIME_ZONE");
+    expect(source).toContain("const timeZone = environment.BUSINESS_TIME_ZONE");
   });
 
   it("groups monthly payment totals by currency", () => {
