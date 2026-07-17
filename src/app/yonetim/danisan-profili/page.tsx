@@ -1,1 +1,5 @@
-export { dynamic, default } from "./profile-page";
+import AdminClientProfilePage from "./profile-page";
+
+export const dynamic = "force-dynamic";
+
+export default AdminClientProfilePage;
