@@ -123,51 +123,35 @@ Her teslimde şunları belirt:
 
 > Bu değişiklik randevu, ödeme, seans hakkı, onay veya danışan verisinde karışıklığa neden olabilir mi?
 
-## Birleşik Yönetim Paneli — Bağlayıcı Tasarım Kararı
+## Hub Tabanlı Tek Yönetim Paneli — Bağlayıcı Karar
 
-Yönetim paneli artık iki ayrı görsel ürün olarak geliştirilmez. `/yonetim` çalışma alanı ile `/yonetim/hub` kayıt merkezi aynı tasarım sistemi, aynı terminoloji ve aynı etkileşim kurallarını kullanır.
+`/yonetim` altında iki ayrı admin deneyimi kalmayacaktır. `/yonetim/hub` ile klasik `AdminShell` yalnızca geçiş süresince birlikte bulunabilir. Nihai sistem, `docs/ADMIN_REDESIGN_PLAN.md` içinde tanımlanan tek `AdminHubShell` kabuğudur.
 
-### Bilgi mimarisi
+### Zorunlu davranış
 
-- `/yonetim`: operasyon özeti, hızlı işlemler ve deploy gerektirmeyen hizmet/iletişim ayarları.
-- `/yonetim/hub`: kayıt seçme, inceleme ve izin verilen durum geçişleri için kademeli kayıt merkezi.
-- `/yonetim/danisanlar`: danışan arama, filtre ve kayıt listesi.
-- `/yonetim/danisan-profili?clientId=...`: danışan, veli, consent, randevu ve finans bağlamının ana profil yüzeyi.
-- `/yonetim/randevular`: takvim/liste ve ağır randevu işlemleri.
-- `/yonetim/musaitlik`: haftalık kurallar ve istisnalar.
-- `/yonetim/odemeler`: plan, taksit, ödeme ve hareket yönetimi.
-- `/yonetim/saglik`: read-only entegrasyon ve sistem sağlığı.
-
-Menü öğesi yalnızca ilgili `*:read` yetkisi varsa görünür. Yazma butonunun görünmesi yeterli değildir; sunucu her istekte `*:manage`, oturum, origin ve kapsam doğrulamasını tekrar yapar.
+- Sol navigasyon izin bazlı akordeon gruplardır: Çalışma Alanım, Randevular, Danışanlar, Finans, Site Yönetimi ve Sistem.
+- Aktif rotanın grubu otomatik açılır.
+- Liste gerektiren alanlar liste → kayıt özeti → çalışma alanı şeklinde kademeli açılır.
+- Her ana ekranda “Tam sayfa çalış / Panelleri geri aç” kontrolü ve `F` kısayolu bulunur.
+- Tam sayfa modunda ray ikon seviyesine daralır, varsa liste paneli kapanır ve ana iş alanı genişler.
+- Danışan, randevu, müsaitlik, finans, site ayarları ve sağlık işlemleri Hub kabuğuna fonksiyon eşitliğiyle taşınır.
+- Eski tasarım bütün fonksiyonlar taşınmadan silinmez; ancak fonksiyon eşitliği sağlandıktan sonra eski kabuk ve CSS kalıntılarının kaldırılması bu PR’ın zorunlu final aşamasıdır.
+- “Klasik panel”, “Hub görünümü” veya kullanıcıya iki sistem olduğu izlenimini veren bağlantı/metin final üründe bulunmaz.
 
 ### Tek görsel sistem
 
 - Zemin `#e9e7e2`, panel `#fbfaf8`, yumuşak panel `#f4f2ec`, çizgi `#e3ded7`, mürekkep `#201c19`.
-- Seçili kayıt ve sıradaki işlem için lime `#dfec83`; olumlu durum ve ana işlem için teal `#12897b`; kayıt/başlık vurgusu için şeftali `#fbe3d2 → #f6d0c0` kullanılır.
-- Admin fontu self-host Inter Variable’dır. Public sitenin serif kimliği admin veri yüzeylerine taşınmaz.
-- Unicode işaretler yalnızca geçici navigasyon ikonu olabilir; yeni ortak bileşenlerde erişilebilir, tutarlı SVG ikon tercih edilir.
-- Gerçek danışan/veli fotoğrafı gösterilmez. Avatarlar yalnızca deterministik monogramdır.
-- Masaüstünde sol navigasyon + çalışma alanı, tablette sarılan navigasyon, mobilde tek sütun uygulanır. `prefers-reduced-motion` korunur.
+- Seçili kayıt/görev lime `#dfec83`; ana işlem teal `#12897b`; kayıt başlığı şeftali `#fbe3d2 → #f6d0c0`.
+- Admin fontu self-host Inter Variable’dır; public serif kimlik admin veri yüzeylerine taşınmaz.
+- Gerçek danışan/veli fotoğrafı yoktur; monogram avatar kullanılır.
+- Browser `alert/confirm` yoktur; erişilebilir modal veya inline confirmation kullanılır.
+- Tarih ve seçenek alanlarında ortak custom takvim/dropdown kullanılır.
+- Sahte KPI, tahmini trend ve klinik/öncelik puanı yasaktır. Mevcut hazırlık puanı **Kayıt tamlığı** kontrol listesine dönüştürülür.
 
-### Etkileşim kuralları
+### Geçiş ve silme kapısı
 
-- Browser `alert`, `confirm` ve native belirsiz popup kullanılmaz. Kritik işlem inline confirmation veya erişilebilir modal ile onaylanır.
-- Filtre, seçili kayıt, açık modal ve sekme yenilenebilir/paylaşılabilir olması gerekiyorsa URL query’de yaşar.
-- Tarih alanlarında ortak custom takvim; seçenek alanlarında ortak custom dropdown kullanılır. Uzun seçenek listeleri kaydırılabilir olmalıdır.
-- Üst arama mevcut sözleşmede danışan adı, telefon ve e-postaya gider. Gerçek çoklu-entity arama API’si yazılmadan “global arama” iddiası gösterilmez.
-- Dashboard yalnızca veritabanından hesaplanan gerçek metrikleri gösterir. Sahte yüzde trendi, başarı oranı, doğrulanmamış danışan sayısı veya tahminî finans değeri yasaktır.
-- Hub’daki sayı klinik başarı/öncelik skoru değildir. Gösterilecekse adı **Kayıt tamlığı** olmalı ve hangi alanların eksik olduğu açıkça listelenmelidir; ürün kararı olmadan ağırlıklar iş kuralı gibi sunulmaz.
-- Liste yüzeyi minimum veri gösterir. İletişim, consent ve finans ayrıntısı yalnızca izinli kayıt detayında açılır.
+Eski `AdminShell`, eski navigasyon/topbar varyantları ve `*-polish`, symmetry/order/icon-placement override dosyaları ancak `docs/ADMIN_REDESIGN_PLAN.md` içindeki fonksiyon eşitliği listesi tamamen doğrulandıktan sonra kaldırılır. Eski tasarım temizliği sonraki belirsiz milestone’a bırakılamaz; PR #107’nin final kabul kriteridir.
 
-### Bileşen standardı
+### Deploy disiplini
 
-- Navigasyon, üst bar, profil pili, durum çipi, filtre çubuğu, kart, tablo/liste satırı, empty state, hata bandı, toast, modal, custom dropdown ve custom takvim tek ortak tasarım dilinde olmalıdır.
-- Aynı işlev için yeni bir lokal CSS varyantı eklemeden önce mevcut ortak bileşen genişletilir.
-- `admin-dashboard-refresh.module.css` klasik sayfaların Hub tokenlarına geçiş katmanıdır. Yeni kalıcı özellikler mümkün olduğunda ortak token/bileşene taşınmalı; yeni “polish/fix” override dosyası açılmamalıdır.
-
-### Geçiş durumu — PR #107
-
-- Ortak `AdminShell` menüsü çalışma alanı, kayıt merkezi, danışan, randevu, müsaitlik, ödeme ve sistem sağlığı terminolojisine geçirildi.
-- Klasik sayfaların sidebar, topbar, başlık, kart, liste, form ve responsive görünümü Hub tokenlarıyla birleştirildi.
-- Mevcut iş kuralları, API’ler, migration’lar ve veri modeli değiştirilmedi.
-- Sonraki adım: Preview’da tüm yönetim rotalarını yetkili hesapla dolaş; taşma, odak, modal, custom kontrol ve dar ekran regresyonlarını tek turda düzelt. Ardından `pnpm quality`, `pnpm build`, ilgili PostgreSQL kapıları ve tek production merge/deploy.
+Aktif dal yalnızca `design/unified-admin-panel`, aktif Draft PR yalnızca #107’dir. Kod değişiklikleri ortak kabuk, bütün ekran migrasyonu ve final temizlik olmak üzere en fazla üç toplu Preview push’unda tamamlanır. Kullanıcı onayından sonra tek squash merge ve tek Production deploy yapılır.
