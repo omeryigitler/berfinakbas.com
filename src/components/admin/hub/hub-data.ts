@@ -126,8 +126,8 @@ export function formatPlannedStamp(date: Date, timeZone: string): string {
   }).format(date);
 }
 
-export function resolveGroup(createdAt: Date, now: Date, timeZone: string): HubRecord["group"] {
-  const diff = dayDifference(createdAt, now, timeZone);
+export function resolveGroup(activityAt: Date, now: Date, timeZone: string): HubRecord["group"] {
+  const diff = dayDifference(activityAt, now, timeZone);
   if (diff <= 0) return "bugun";
   if (diff < 7) return "buHafta";
   return "dahaEski";
@@ -166,14 +166,24 @@ export function buildNextSteps(status: HubAppointmentStatus): readonly NextStep[
   switch (status) {
     case "REQUESTED":
       return [
-        step("İlk inceleme", "Talebi ve iletişim bilgilerini gözden geçir.", "En kısa sürede", "active"),
+        step(
+          "İlk inceleme",
+          "Talebi ve iletişim bilgilerini gözden geçir.",
+          "En kısa sürede",
+          "active",
+        ),
         step(
           "Uygunluk kontrolü",
           "Takvim ve çalışma kurallarıyla karşılaştır.",
           "İncelemeden sonra",
           "upcoming",
         ),
-        step("Onay mesajı", "Saati onay mesajıyla kesinleştir.", "Kontrol bitince", "upcoming"),
+        step(
+          "Durum kararı",
+          "Panelden talebi onayla, yeni saat öner veya reddet.",
+          "Kontrol bitince",
+          "upcoming",
+        ),
       ];
     case "PENDING_REVIEW":
       return [
@@ -183,38 +193,47 @@ export function buildNextSteps(status: HubAppointmentStatus): readonly NextStep[
           "Bugün içinde",
           "active",
         ),
-        step("Onay mesajı", "Saati onay mesajıyla kesinleştir.", "Kontrol bitince", "upcoming"),
+        step(
+          "Durum kararı",
+          "Panelden talebi onayla, yeni saat öner veya reddet.",
+          "Kontrol bitince",
+          "upcoming",
+        ),
       ];
     case "RESCHEDULE_PROPOSED":
       return [
         step(
           "Yanıt takibi",
-          "Önerilen yeni saat için danışan yanıtını takip et.",
+          "Yanıt geldiğinde panelden randevuyu onayla veya yeni saat öner.",
           "Yanıt gelince",
           "active",
         ),
       ];
     case "CONFIRMED":
       return [
-        step("Hatırlatma", "Görüşme öncesi hatırlatmayı planla.", "Görüşmeden 1 gün önce", "active"),
-        step("Görüşme hazırlığı", "Görüşme notu şablonunu hazırla.", "Görüşme günü", "upcoming"),
+        step(
+          "Görüşme durumunu takip et",
+          "Görüşme sonrasında panelden tamamlandı, gelmedi veya iptal durumunu seç.",
+          "Görüşme sonrasında",
+          "active",
+        ),
       ];
     case "COMPLETED":
       return [
         step(
-          "Kapanış ve sonraki adım",
-          "Özeti paylaş, devam planını netleştir.",
-          "Bu hafta içinde",
-          "active",
+          "Açık işlem yok",
+          "Görüşme tamamlandı; durum ve işlem geçmişi korunuyor.",
+          "Kapalı kayıt",
+          "done",
         ),
       ];
     default:
       return [
         step(
-          "Kapanış notu",
-          "Kaydı kapat; gerekiyorsa yeniden planlama öner.",
-          "Uygun olduğunda",
-          "active",
+          "Kayıt kapalı",
+          "Durum geçmişi korunuyor; yeni bir talep oluşmadıkça işlem gerekmiyor.",
+          "Kapalı kayıt",
+          "done",
         ),
       ];
   }
@@ -226,6 +245,7 @@ export function mapAppointmentToHubRecord(
   timeZone: string,
 ): HubRecord {
   const latestLog = row.statusLogs[0] ?? null;
+  const activityAt = latestLog?.createdAt ?? row.createdAt;
   const timeline = [
     ...row.statusLogs.map((log) => ({
       at: formatRelativeStamp(log.createdAt, now, timeZone),
@@ -247,11 +267,11 @@ export function mapAppointmentToHubRecord(
     connections,
     contactEmail: row.client.email ?? "—",
     contactPhone: row.client.phone ?? "—",
-    group: resolveGroup(row.createdAt, now, timeZone),
+    group: resolveGroup(activityAt, now, timeZone),
     id: row.id,
     kind: "randevu",
     lastAction: latestLog ? statusEventLabels[latestLog.toStatus] : "Talep alındı",
-    lastActionAt: formatRelativeStamp(latestLog?.createdAt ?? row.createdAt, now, timeZone),
+    lastActionAt: formatRelativeStamp(activityAt, now, timeZone),
     name: row.client.preferredName ?? `${row.client.firstName} ${row.client.lastName}`,
     nextSteps: buildNextSteps(row.status),
     plannedAt: formatPlannedStamp(row.startsAt, timeZone),
@@ -317,18 +337,37 @@ function buildClientNextSteps(status: HubClientStatus): readonly NextStep[] {
   switch (status) {
     case "PROSPECTIVE":
       return [
-        step("İlk temas", "Tanışma görüşmesini planla.", "En kısa sürede", "active"),
         step(
-          "Değerlendirme planı",
-          "İhtiyaca göre değerlendirme öner.",
-          "Temastan sonra",
+          "İlk randevuyu oluştur",
+          "Randevu oluşturma işlemini panelden başlat.",
+          "En kısa sürede",
+          "active",
+        ),
+        step(
+          "Kayıt durumunu güncelle",
+          "İlk temas tamamlandığında danışan durumunu panelden güncelle.",
+          "İlk temastan sonra",
           "upcoming",
         ),
       ];
     case "ACTIVE":
-      return [step("Takip randevusu", "Sonraki seansı takvimle.", "Plan dahilinde", "active")];
+      return [
+        step(
+          "Randevu planını kontrol et",
+          "Yaklaşan randevu yoksa panelden yeni randevu oluştur.",
+          "Plan dahilinde",
+          "active",
+        ),
+      ];
     default:
-      return [step("Yeniden temas", "Uygunsa yeniden planlama öner.", "Uygun olduğunda", "active")];
+      return [
+        step(
+          "Açık işlem yok",
+          "Danışan kaydı pasif; yeniden etkinleştirilmedikçe işlem gerekmiyor.",
+          "Kapalı kayıt",
+          "done",
+        ),
+      ];
   }
 }
 
