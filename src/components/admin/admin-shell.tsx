@@ -30,17 +30,22 @@ export type AdminNavItem = {
 };
 
 type AdminNavGroup = {
-  id: "calisma" | "danisanlar" | "finans" | "randevular" | "sistem";
+  id: "calisma" | "danisanlar" | "finans" | "randevular" | "sistem" | "site";
   icon: string;
   items: AdminNavItem[];
   label: string;
 };
 
-type WorkspacePanel = {
+type WorkspaceEntry = {
   button: HTMLButtonElement;
+  elements: HTMLElement[];
   id: string;
-  panel: HTMLElement;
 };
+
+const siteWorkspaceSections = new Set([
+  "hizmet-terapist-ayarlari",
+  "public-iletisim-ayarlari",
+]);
 
 export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem[] {
   return getAdminNavGroups(permissions).flatMap((group) => group.items);
@@ -92,6 +97,26 @@ function getAdminNavGroups(permissions: AdminNavPermissions): AdminNavGroup[] {
     });
   }
 
+  if (permissions.servicesRead) {
+    groups.push({
+      id: "site",
+      icon: "⚙",
+      items: [
+        {
+          href: "/yonetim?alan=public-iletisim-ayarlari" as Route,
+          icon: "⌁",
+          label: "İletişim ayarları",
+        },
+        {
+          href: "/yonetim?alan=hizmet-terapist-ayarlari" as Route,
+          icon: "⚙",
+          label: "Hizmet ve terapist",
+        },
+      ],
+      label: "Site Yönetimi",
+    });
+  }
+
   if (permissions.technicalHealthRead) {
     groups.push({
       id: "sistem",
@@ -104,11 +129,18 @@ function getAdminNavGroups(permissions: AdminNavPermissions): AdminNavGroup[] {
   return groups;
 }
 
-function isActivePath(pathname: string, href: Route): boolean {
-  if (href === "/yonetim") return pathname === href;
-  if (href === "/yonetim/danisanlar" && pathname.startsWith("/yonetim/danisan-profili"))
+function isActivePath(pathname: string, href: Route, activeSection: string): boolean {
+  const [hrefPath, hrefQuery = ""] = String(href).split("?");
+  const targetSection = new URLSearchParams(hrefQuery).get("alan") ?? "";
+
+  if (targetSection) return pathname === hrefPath && activeSection === targetSection;
+  if (hrefPath === "/yonetim") {
+    return pathname === hrefPath && !siteWorkspaceSections.has(activeSection);
+  }
+  if (hrefPath === "/yonetim/danisanlar" && pathname.startsWith("/yonetim/danisan-profili")) {
     return true;
-  return pathname === href || pathname.startsWith(`${href}/`);
+  }
+  return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
 }
 
 function getInitials(email?: string | null): string {
@@ -159,9 +191,11 @@ export function AdminShell({
     [navigationGroups],
   );
   const homeHref = navigationItems[0]?.href ?? ("/yonetim/baslangic" as Route);
+  const activeSection = searchParams.get("alan") ?? "";
   const activeGroupId =
-    navigationGroups.find((group) => group.items.some((item) => isActivePath(pathname, item.href)))
-      ?.id ?? navigationGroups[0]?.id ?? "calisma";
+    navigationGroups.find((group) =>
+      group.items.some((item) => isActivePath(pathname, item.href, activeSection)),
+    )?.id ?? navigationGroups[0]?.id ?? "calisma";
   const [openGroup, setOpenGroup] = useState<string>(activeGroupId);
   const [lastActiveGroupId, setLastActiveGroupId] = useState(activeGroupId);
   const focusMode = searchParams.get("gorunum") === "tam";
@@ -208,15 +242,16 @@ export function AdminShell({
     const navigation = workspaceNavRef.current;
     if (!content || !navigation) return;
 
+    const directChildren = Array.from(content.children).filter(
+      (element): element is HTMLElement => element instanceof HTMLElement,
+    );
     const panels = getWorkspacePanels(content);
     navigation.replaceChildren();
     navigation.hidden = true;
-    panels.forEach((panel) => {
-      panel.hidden = false;
-      panel.removeAttribute("data-admin-workspace-panel");
+    directChildren.forEach((element) => {
+      element.hidden = false;
+      element.removeAttribute("data-admin-workspace-panel");
     });
-
-    if (panels.length < 2) return;
 
     const requestedSection = new URLSearchParams(searchKey).get("alan") ?? "";
     const tabList = document.createElement("div");
@@ -224,7 +259,20 @@ export function AdminShell({
     const label = document.createElement("span");
     label.dataset.adminRegion = "workspace-tab-label";
     label.textContent = "Çalışma bölümü";
-    const entries: WorkspacePanel[] = [];
+    const entries: WorkspaceEntry[] = [];
+
+    if (pathname === "/yonetim") {
+      const overviewElements = directChildren.filter((element) => !panels.includes(element));
+      if (overviewElements.length > 0) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.adminRegion = "workspace-tab";
+        button.textContent = "Genel bakış";
+        button.setAttribute("aria-pressed", "false");
+        tabList.append(button);
+        entries.push({ button, elements: overviewElements, id: "genel-bakis" });
+      }
+    }
 
     panels.forEach((panel, index) => {
       const heading = getPanelHeading(panel);
@@ -244,21 +292,26 @@ export function AdminShell({
       button.setAttribute("aria-controls", panelId);
       button.setAttribute("aria-pressed", "false");
       tabList.append(button);
-      entries.push({ button, id: sectionId, panel });
+      entries.push({ button, elements: [panel], id: sectionId });
     });
+
+    if (entries.length < 2) return;
 
     function activate(sectionId: string, updateUrl: boolean) {
       const selected = entries.find((entry) => entry.id === sectionId) ?? entries[0];
       entries.forEach((entry) => {
         const isActive = entry === selected;
-        entry.panel.hidden = !isActive;
+        entry.elements.forEach((element) => {
+          element.hidden = !isActive;
+        });
         entry.button.dataset.adminActive = isActive ? "true" : "false";
         entry.button.setAttribute("aria-pressed", isActive ? "true" : "false");
       });
 
       if (!updateUrl || !selected) return;
       const params = new URLSearchParams(window.location.search);
-      params.set("alan", selected.id);
+      if (selected.id === "genel-bakis") params.delete("alan");
+      else params.set("alan", selected.id);
       const query = params.toString();
       router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
     }
@@ -269,17 +322,20 @@ export function AdminShell({
 
     navigation.append(label, tabList);
     navigation.hidden = false;
+    const defaultSection = pathname === "/yonetim" ? "genel-bakis" : entries[0]?.id;
     activate(
-      entries.some((entry) => entry.id === requestedSection) ? requestedSection : entries[0].id,
+      entries.some((entry) => entry.id === requestedSection)
+        ? requestedSection
+        : (defaultSection ?? entries[0]?.id ?? ""),
       false,
     );
 
     return () => {
-      panels.forEach((panel) => {
-        panel.hidden = false;
-        panel.removeAttribute("data-admin-workspace-panel");
-        panel.removeAttribute("role");
-        panel.removeAttribute("aria-labelledby");
+      directChildren.forEach((element) => {
+        element.hidden = false;
+        element.removeAttribute("data-admin-workspace-panel");
+        element.removeAttribute("role");
+        element.removeAttribute("aria-labelledby");
       });
       navigation.replaceChildren();
       navigation.hidden = true;
@@ -307,7 +363,9 @@ export function AdminShell({
           <nav className={styles.nav} data-admin-region="nav" aria-label="Yönetim menüsü">
             {navigationGroups.map((group) => {
               const isOpen = openGroup === group.id;
-              const containsActive = group.items.some((item) => isActivePath(pathname, item.href));
+              const containsActive = group.items.some((item) =>
+                isActivePath(pathname, item.href, activeSection),
+              );
               return (
                 <div
                   data-admin-group={group.id}
@@ -334,7 +392,7 @@ export function AdminShell({
                   {isOpen ? (
                     <div data-admin-region="nav-children">
                       {group.items.map((item) => {
-                        const isActive = isActivePath(pathname, item.href);
+                        const isActive = isActivePath(pathname, item.href, activeSection);
                         const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
                         return (
                           <Link
