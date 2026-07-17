@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./admin-dashboard-refresh.module.css";
 import "./admin-hub-shell-controls.module.css";
@@ -34,6 +34,12 @@ type AdminNavGroup = {
   icon: string;
   items: AdminNavItem[];
   label: string;
+};
+
+type WorkspacePanel = {
+  button: HTMLButtonElement;
+  id: string;
+  panel: HTMLElement;
 };
 
 export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem[] {
@@ -118,6 +124,17 @@ function getInitials(email?: string | null): string {
   );
 }
 
+function getWorkspacePanels(content: HTMLElement): HTMLElement[] {
+  return Array.from(content.children).filter(
+    (element): element is HTMLElement =>
+      element instanceof HTMLElement && element.classList.contains("admin-panel"),
+  );
+}
+
+function getPanelHeading(panel: HTMLElement): HTMLElement | null {
+  return panel.querySelector<HTMLElement>(".admin-panel-heading h2, h2[id], h2");
+}
+
 export function AdminShell({
   children,
   email,
@@ -134,6 +151,8 @@ export function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const contentRef = useRef<HTMLElement>(null);
+  const workspaceNavRef = useRef<HTMLElement>(null);
   const navigationGroups = useMemo(() => getAdminNavGroups(permissions), [permissions]);
   const navigationItems = useMemo(
     () => navigationGroups.flatMap((group) => group.items),
@@ -146,6 +165,7 @@ export function AdminShell({
   const [openGroup, setOpenGroup] = useState<string>(activeGroupId);
   const [lastActiveGroupId, setLastActiveGroupId] = useState(activeGroupId);
   const focusMode = searchParams.get("gorunum") === "tam";
+  const searchKey = searchParams.toString();
 
   if (lastActiveGroupId !== activeGroupId) {
     setLastActiveGroupId(activeGroupId);
@@ -154,13 +174,13 @@ export function AdminShell({
 
   const setFocusMode = useCallback(
     (enabled: boolean) => {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(searchKey);
       if (enabled) params.set("gorunum", "tam");
       else params.delete("gorunum");
       const query = params.toString();
       router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchKey],
   );
 
   useEffect(() => {
@@ -182,6 +202,89 @@ export function AdminShell({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [focusMode, setFocusMode]);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    const navigation = workspaceNavRef.current;
+    if (!content || !navigation) return;
+
+    const panels = getWorkspacePanels(content);
+    navigation.replaceChildren();
+    navigation.hidden = true;
+    panels.forEach((panel) => {
+      panel.hidden = false;
+      panel.removeAttribute("data-admin-workspace-panel");
+    });
+
+    if (panels.length < 2) return;
+
+    const requestedSection = new URLSearchParams(searchKey).get("alan") ?? "";
+    const tabList = document.createElement("div");
+    tabList.dataset.adminRegion = "workspace-tab-list";
+    const label = document.createElement("span");
+    label.dataset.adminRegion = "workspace-tab-label";
+    label.textContent = "Çalışma bölümü";
+    const entries: WorkspacePanel[] = [];
+
+    panels.forEach((panel, index) => {
+      const heading = getPanelHeading(panel);
+      const sectionId = heading?.id || `bolum-${index + 1}`;
+      const panelId = panel.id || `calisma-paneli-${sectionId}`;
+      const button = document.createElement("button");
+
+      if (heading && !heading.id) heading.id = sectionId;
+      panel.id = panelId;
+      panel.dataset.adminWorkspacePanel = sectionId;
+      panel.setAttribute("role", "region");
+      if (heading?.id) panel.setAttribute("aria-labelledby", heading.id);
+
+      button.type = "button";
+      button.dataset.adminRegion = "workspace-tab";
+      button.textContent = heading?.textContent?.trim() || `Bölüm ${index + 1}`;
+      button.setAttribute("aria-controls", panelId);
+      button.setAttribute("aria-pressed", "false");
+      tabList.append(button);
+      entries.push({ button, id: sectionId, panel });
+    });
+
+    function activate(sectionId: string, updateUrl: boolean) {
+      const selected = entries.find((entry) => entry.id === sectionId) ?? entries[0];
+      entries.forEach((entry) => {
+        const isActive = entry === selected;
+        entry.panel.hidden = !isActive;
+        entry.button.dataset.adminActive = isActive ? "true" : "false";
+        entry.button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      if (!updateUrl || !selected) return;
+      const params = new URLSearchParams(window.location.search);
+      params.set("alan", selected.id);
+      const query = params.toString();
+      router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
+    }
+
+    entries.forEach((entry) => {
+      entry.button.addEventListener("click", () => activate(entry.id, true));
+    });
+
+    navigation.append(label, tabList);
+    navigation.hidden = false;
+    activate(
+      entries.some((entry) => entry.id === requestedSection) ? requestedSection : entries[0].id,
+      false,
+    );
+
+    return () => {
+      panels.forEach((panel) => {
+        panel.hidden = false;
+        panel.removeAttribute("data-admin-workspace-panel");
+        panel.removeAttribute("role");
+        panel.removeAttribute("aria-labelledby");
+      });
+      navigation.replaceChildren();
+      navigation.hidden = true;
+    };
+  }, [pathname, router, searchKey]);
 
   return (
     <main
@@ -308,7 +411,14 @@ export function AdminShell({
             </div>
           </div>
 
-          <section className={styles.content} data-admin-region="content">
+          <nav
+            aria-label="Sayfa çalışma bölümleri"
+            data-admin-region="workspace-tabs"
+            hidden
+            ref={workspaceNavRef}
+          />
+
+          <section className={styles.content} data-admin-region="content" ref={contentRef}>
             {children}
           </section>
         </div>
