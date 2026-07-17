@@ -2,15 +2,23 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { hasPermission } from "@/domain/auth/permissions";
-import { createClientPayloadSchema } from "@/domain/clients/client-management";
+import {
+  createClientPayloadSchema,
+  type CreateClientPayload,
+} from "@/domain/clients/client-management";
+import { isRetryableTransactionError } from "@/lib/booking/appointment-hold-service";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
-import { hasTrustedOrigin } from "@/lib/request-security";
+import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
 const MAX_REQUEST_BODY_BYTES = 24 * 1_024;
+const MAX_TRANSACTION_ATTEMPTS = 3;
 
 class RequestBodyTooLargeError extends Error {}
 class GuardianNotFoundError extends Error {}
+class ClientCreateConflictError extends Error {}
+
+type StoredClient = Awaited<ReturnType<typeof findStoredClient>>;
 
 async function readBoundedJsonBody(request: Request): Promise<unknown> {
   const declaredLength = request.headers.get("content-length");
@@ -43,6 +51,60 @@ function forbidden() {
     { code: "FORBIDDEN", error: "Bu işlem için yetkiniz yok." },
     { status: 403 },
   );
+}
+
+function isUniqueConflict(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+}
+
+async function findStoredClient(clientId: string) {
+  return getDatabase().client.findUnique({
+    include: {
+      guardians: {
+        include: {
+          guardian: {
+            select: {
+              email: true,
+              firstName: true,
+              id: true,
+              lastName: true,
+              phone: true,
+            },
+          },
+        },
+      },
+    },
+    where: { id: clientId },
+  });
+}
+
+function matchesReplay(existing: NonNullable<StoredClient>, payload: CreateClientPayload): boolean {
+  const clientMatches =
+    existing.birthYear === payload.birthYear &&
+    existing.email === payload.email &&
+    existing.firstName === payload.firstName &&
+    existing.lastName === payload.lastName &&
+    existing.phone === payload.phone &&
+    existing.preferredName === payload.preferredName &&
+    existing.status === payload.status &&
+    existing.type === payload.type;
+  if (!clientMatches) return false;
+  if (payload.type === "ADULT") return true;
+
+  const relation = existing.guardians[0];
+  if (!relation || relation.relationship !== payload.relationship) return false;
+  if (payload.guardianMode === "EXISTING") {
+    return relation.guardianId === payload.guardianId;
+  }
+  if (payload.guardianMode === "NEW") {
+    return (
+      relation.guardian.email === payload.guardianEmail &&
+      relation.guardian.firstName === payload.guardianFirstName &&
+      relation.guardian.lastName === payload.guardianLastName &&
+      relation.guardian.phone === payload.guardianPhone
+    );
+  }
+  return false;
 }
 
 export async function POST(request: Request) {
@@ -107,78 +169,116 @@ export async function POST(request: Request) {
 
   const payload = parsed.data;
   const database = getDatabase();
+  const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
 
   try {
-    const client = await database.$transaction(
-      async (transaction) => {
-        const createdClient = await transaction.client.create({
-          data: {
-            birthYear: payload.birthYear,
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            phone: payload.phone,
-            preferredName: payload.preferredName,
-            status: payload.status,
-            type: payload.type,
-          },
-          select: { id: true },
-        });
+    for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
+      const existing = await findStoredClient(payload.requestId);
+      if (existing) {
+        if (!matchesReplay(existing, payload)) throw new ClientCreateConflictError();
+        return NextResponse.json({ data: { id: existing.id }, replayed: true }, { status: 200 });
+      }
 
-        if (payload.type === "CHILD") {
-          const relationship = payload.relationship;
-          if (!relationship) throw new GuardianNotFoundError();
-
-          if (payload.guardianMode === "EXISTING") {
-            const guardianId = payload.guardianId;
-            if (!guardianId) throw new GuardianNotFoundError();
-            const guardian = await transaction.guardian.findUnique({
-              select: { id: true },
-              where: { id: guardianId },
-            });
-            if (!guardian) throw new GuardianNotFoundError();
-
-            await transaction.clientGuardian.create({
+      try {
+        const client = await database.$transaction(
+          async (transaction) => {
+            const createdClient = await transaction.client.create({
               data: {
-                clientId: createdClient.id,
-                guardianId: guardian.id,
-                isPrimary: true,
-                relationship,
+                birthYear: payload.birthYear,
+                email: payload.email,
+                firstName: payload.firstName,
+                id: payload.requestId,
+                lastName: payload.lastName,
+                phone: payload.phone,
+                preferredName: payload.preferredName,
+                status: payload.status,
+                type: payload.type,
               },
+              select: { id: true },
             });
-          }
 
-          if (payload.guardianMode === "NEW") {
-            if (!payload.guardianFirstName || !payload.guardianLastName || !payload.guardianPhone) {
-              throw new GuardianNotFoundError();
+            let guardianId: string | null = null;
+            if (payload.type === "CHILD") {
+              const relationship = payload.relationship;
+              if (!relationship) throw new GuardianNotFoundError();
+
+              if (payload.guardianMode === "EXISTING") {
+                guardianId = payload.guardianId;
+                if (!guardianId) throw new GuardianNotFoundError();
+                const guardian = await transaction.guardian.findUnique({
+                  select: { id: true },
+                  where: { id: guardianId },
+                });
+                if (!guardian) throw new GuardianNotFoundError();
+              } else if (payload.guardianMode === "NEW") {
+                if (
+                  !payload.guardianFirstName ||
+                  !payload.guardianLastName ||
+                  !payload.guardianPhone
+                ) {
+                  throw new GuardianNotFoundError();
+                }
+                const guardian = await transaction.guardian.create({
+                  data: {
+                    email: payload.guardianEmail,
+                    firstName: payload.guardianFirstName,
+                    lastName: payload.guardianLastName,
+                    phone: payload.guardianPhone,
+                  },
+                  select: { id: true },
+                });
+                guardianId = guardian.id;
+              }
+
+              if (!guardianId) throw new GuardianNotFoundError();
+              await transaction.clientGuardian.create({
+                data: {
+                  clientId: createdClient.id,
+                  guardianId,
+                  isPrimary: true,
+                  relationship,
+                },
+              });
             }
-            const guardian = await transaction.guardian.create({
+
+            await transaction.auditLog.create({
               data: {
-                email: payload.guardianEmail,
-                firstName: payload.guardianFirstName,
-                lastName: payload.guardianLastName,
-                phone: payload.guardianPhone,
+                action: "client.created",
+                actorType: "USER",
+                actorUserId: session.user.id,
+                afterSummary: {
+                  guardianLinked: guardianId !== null,
+                  guardianMode: payload.type === "CHILD" ? payload.guardianMode : null,
+                  status: payload.status,
+                  type: payload.type,
+                },
+                correlationId,
+                entityId: createdClient.id,
+                entityType: "CLIENT",
+                reason: "CLIENT_CREATED",
               },
-              select: { id: true },
             });
 
-            await transaction.clientGuardian.create({
-              data: {
-                clientId: createdClient.id,
-                guardianId: guardian.id,
-                isPrimary: true,
-                relationship,
-              },
-            });
+            return createdClient;
+          },
+          { isolationLevel: "Serializable" },
+        );
+
+        return NextResponse.json({ data: client, replayed: false }, { status: 201 });
+      } catch (error) {
+        if (isUniqueConflict(error) || isRetryableTransactionError(error)) {
+          const replay = await findStoredClient(payload.requestId);
+          if (replay) {
+            if (!matchesReplay(replay, payload)) throw new ClientCreateConflictError();
+            return NextResponse.json({ data: { id: replay.id }, replayed: true }, { status: 200 });
           }
+          if (attempt < MAX_TRANSACTION_ATTEMPTS) continue;
+          throw new ClientCreateConflictError();
         }
-
-        return createdClient;
-      },
-      { isolationLevel: "Serializable" },
-    );
-
-    return NextResponse.json({ data: client }, { status: 201 });
+        throw error;
+      }
+    }
+    throw new ClientCreateConflictError();
   } catch (error) {
     if (error instanceof GuardianNotFoundError) {
       return NextResponse.json(
@@ -187,6 +287,15 @@ export async function POST(request: Request) {
           error: "Çocuk danışan için geçerli bir veli kaydı zorunludur.",
         },
         { status: 422 },
+      );
+    }
+    if (error instanceof ClientCreateConflictError) {
+      return NextResponse.json(
+        {
+          code: "CLIENT_CREATE_CONFLICT",
+          error: "Bu danışan oluşturma isteği farklı bilgilerle daha önce kullanılmış.",
+        },
+        { status: 409 },
       );
     }
     throw error;
