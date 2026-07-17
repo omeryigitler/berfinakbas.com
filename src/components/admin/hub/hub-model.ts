@@ -39,7 +39,7 @@ export type HubRecord = Readonly<{
   name: string;
   plannedAt: string;
   profileHref: string | null;
-  recordChecks: readonly string[];
+  readinessNotes: readonly string[];
   reference: string;
   nextSteps: readonly {
     detail: string;
@@ -97,7 +97,7 @@ const syntheticBase: HubRecord = {
   plannedAt: "—",
   profileHref: null,
   rawStatus: "REQUESTED",
-  recordChecks: [],
+  readinessNotes: [],
   reference: "TEST-1",
   service: "Test hizmeti",
   stage: "talep",
