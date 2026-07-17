@@ -1,4 +1,7 @@
-import type { SelectControlOption } from "./select-control";
+export type SelectControlOption = Readonly<{
+  label: string;
+  value: string;
+}>;
 
 export const SELECT_SEARCH_THRESHOLD = 12;
 
