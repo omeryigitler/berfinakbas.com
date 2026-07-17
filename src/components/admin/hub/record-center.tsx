@@ -22,6 +22,7 @@ import styles from "./record-center.module.css";
 
 type RecordCenterSection = "danisanlar" | "musaitlik" | "odemeler" | "talepler";
 type ListSection = "danisanlar" | "talepler";
+type SectionOrNull = RecordCenterSection | null;
 
 const listMeta: Readonly<Record<ListSection, { empty: string; title: string }>> = {
   danisanlar: {
@@ -67,9 +68,13 @@ export function RecordCenter({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
+  /* Progressive disclosure: nothing is open until the user clicks. Section
+     selection lives in the URL (?bolum=…) so it survives refreshes and
+     works with back/forward. */
   const sectionParam = searchParams.get("bolum");
-  let section: RecordCenterSection = "talepler";
-  if (sectionParam === "danisanlar" && canReadClients) section = "danisanlar";
+  let section: SectionOrNull = null;
+  if (sectionParam === "talepler") section = "talepler";
+  else if (sectionParam === "danisanlar" && canReadClients) section = "danisanlar";
   else if (sectionParam === "musaitlik" && availability) section = "musaitlik";
   else if (sectionParam === "odemeler" && finance) section = "odemeler";
 
@@ -115,10 +120,14 @@ export function RecordCenter({
   );
 
   const navigate = useCallback(
-    (nextSection: RecordCenterSection, recordId: string | null) => {
+    (nextSection: SectionOrNull, recordId: string | null) => {
       const params = new URLSearchParams(searchKey);
-      if (nextSection === "talepler") params.delete("bolum");
-      else params.set("bolum", nextSection);
+      if (nextSection) {
+        if (nextSection === "talepler") params.delete("bolum");
+        else params.set("bolum", nextSection);
+      } else {
+        params.delete("bolum");
+      }
       if (recordId) params.set("kayit", recordId);
       else params.delete("kayit");
       const query = params.toString();
@@ -187,6 +196,7 @@ export function RecordCenter({
       } else if (event.key === "Escape") {
         if (armedActionId) setArmedActionId(null);
         else if (activeRecordId) navigate(section, null);
+        else if (section) navigate(null, null);
       } else if (event.key === "1") navigate("talepler", null);
       else if (event.key === "2" && canReadClients) navigate("danisanlar", null);
       else if (event.key === "3" && availability) navigate("musaitlik", null);
@@ -216,7 +226,7 @@ export function RecordCenter({
             className={styles.sectionTab}
             data-active={section === option.id ? "true" : undefined}
             key={option.id}
-            onClick={() => navigate(option.id, null)}
+            onClick={() => navigate(section === option.id ? null : option.id, null)}
             type="button"
           >
             <span>{option.label}</span>
@@ -225,8 +235,8 @@ export function RecordCenter({
         ))}
       </nav>
 
-      <div className={styles.body} data-list={isListSection ? "true" : "false"}>
-        {isListSection && meta ? (
+      <div className={styles.body} data-list={section && isListSection ? "true" : "false"}>
+        {section && isListSection && meta ? (
           <section className={`${hubStyles.listPanel} ${styles.list}`} aria-label="Kayıt listesi">
             <header className={hubStyles.listHead}>
               <div>
@@ -264,8 +274,13 @@ export function RecordCenter({
           </section>
         ) : null}
 
-        <section className={`${hubStyles.workArea} ${styles.work}`} aria-label="Çalışma alanı">
-          {section === "musaitlik" && availability ? (
+        {(section && (
+          (section === "musaitlik" && availability) ||
+          (section === "odemeler" && finance) ||
+          isListSection
+        )) || record ? (
+          <section className={`${hubStyles.workArea} ${styles.work}`} aria-label="Çalışma alanı">
+            {section === "musaitlik" && availability ? (
             <>
               <div className={hubStyles.ribbon}>
                 <div className={hubStyles.ribbonActions}>
@@ -567,8 +582,9 @@ export function RecordCenter({
                 <kbd>↓</kbd> gezin · <kbd>Esc</kbd> kapat
               </p>
             </div>
-          )}
-        </section>
+            )}
+          </section>
+        ) : null}
       </div>
     </div>
   );
