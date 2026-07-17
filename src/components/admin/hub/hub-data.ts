@@ -1,10 +1,7 @@
 import type { HubRawStatus, HubRecord, HubStage, HubStatus, HubTaskState } from "./hub-model";
 
-/*
- * Pure mapping layer between real appointment rows and the Hub view model.
- * No Prisma import: the page queries with the exact select shape below, so
- * these functions stay unit-testable without a database.
- */
+/* Pure mapping layer between real appointment/client rows and the Hub view
+   model. No Prisma import keeps these functions unit-testable. */
 
 export type HubAppointmentStatus = HubRawStatus;
 
@@ -101,9 +98,10 @@ function formatClock(date: Date, timeZone: string): string {
 export function formatRelativeStamp(date: Date, now: Date, timeZone: string): string {
   const diff = dayDifference(date, now, timeZone);
   const clock = formatClock(date, timeZone);
-  if (diff <= 0) return `Bugün ${clock}`;
+  if (diff === 0) return `Bugün ${clock}`;
   if (diff === 1) return `Dün ${clock}`;
-  if (diff < 7) {
+  if (diff === -1) return `Yarın ${clock}`;
+  if (Math.abs(diff) < 7) {
     const weekday = new Intl.DateTimeFormat("tr-TR", { timeZone, weekday: "short" }).format(date);
     return `${weekday} ${clock}`;
   }
@@ -133,44 +131,27 @@ export function resolveGroup(createdAt: Date, now: Date, timeZone: string): HubR
   return "dahaEski";
 }
 
-/*
- * Readiness = how complete and decided a request is. Deterministic weights
- * over the row itself (sums to 100): phone 15, e-mail 15, guardian linked for
- * a child (adults auto-pass) 15, request note 10, time finalised 20,
- * duplicate review resolved 15, known source 10.
- */
-export function scoreReadiness(row: HubAppointmentRow): {
-  grade: string;
-  notes: readonly string[];
-  score: number;
-} {
+function orderedChecks(checks: readonly Readonly<{ label: string; ok: boolean }>[]): string[] {
+  return [
+    ...checks.filter((check) => !check.ok).map((check) => `${check.label} eksik`),
+    ...checks.filter((check) => check.ok).map((check) => `${check.label} tamam`),
+  ];
+}
+
+export function buildAppointmentRecordChecks(row: HubAppointmentRow): readonly string[] {
   const timingDecided =
     row.approvedAt !== null || row.status === "CONFIRMED" || row.status === "COMPLETED";
-  const guardianOk = row.client.type === "ADULT" || row.guardian !== null;
-  const duplicateResolved = row.duplicateReviewStatus !== "PENDING";
-
-  const checks: readonly { note: string; ok: boolean; weight: number }[] = [
-    { note: "Telefon bilgisi", ok: Boolean(row.client.phone), weight: 15 },
-    { note: "E-posta bilgisi", ok: Boolean(row.client.email), weight: 15 },
+  return orderedChecks([
+    { label: "Telefon bilgisi", ok: Boolean(row.client.phone) },
+    { label: "E-posta bilgisi", ok: Boolean(row.client.email) },
     {
-      note: row.client.type === "CHILD" ? "Veli kaydı" : "Yetişkin başvurusu",
-      ok: guardianOk,
-      weight: 15,
+      label: row.client.type === "CHILD" ? "Veli kaydı" : "Yetişkin başvurusu",
+      ok: row.client.type === "ADULT" || row.guardian !== null,
     },
-    { note: "Talep notu", ok: Boolean(row.requestNote), weight: 10 },
-    { note: "Saat kesinleşmesi", ok: timingDecided, weight: 20 },
-    { note: "Mükerrer kontrolü", ok: duplicateResolved, weight: 15 },
-    { note: "Başvuru kanalı", ok: true, weight: 10 },
-  ];
-
-  const score = checks.reduce((total, check) => total + (check.ok ? check.weight : 0), 0);
-  const grade = score >= 85 ? "A" : score >= 65 ? "B" : "C";
-  const notes = [
-    ...checks.filter((check) => !check.ok).map((check) => `${check.note} eksik`),
-    ...checks.filter((check) => check.ok).map((check) => `${check.note} tamam`),
-  ].slice(0, 4);
-
-  return { grade, notes, score };
+    { label: "Talep notu", ok: Boolean(row.requestNote) },
+    { label: "Saat kesinleşmesi", ok: timingDecided },
+    { label: "Mükerrer kontrolü", ok: row.duplicateReviewStatus !== "PENDING" },
+  ]);
 }
 
 type NextStep = HubRecord["nextSteps"][number];
@@ -252,9 +233,7 @@ export function mapAppointmentToHubRecord(
   now: Date,
   timeZone: string,
 ): HubRecord {
-  const readiness = scoreReadiness(row);
   const latestLog = row.statusLogs[0] ?? null;
-
   const timeline = [
     ...row.statusLogs.map((log) => ({
       at: formatRelativeStamp(log.createdAt, now, timeZone),
@@ -286,10 +265,8 @@ export function mapAppointmentToHubRecord(
     nextSteps: buildNextSteps(row.status),
     plannedAt: formatPlannedStamp(row.startsAt, timeZone),
     profileHref: null,
-    readinessGrade: readiness.grade,
-    readinessNotes: readiness.notes,
     rawStatus: row.status,
-    readinessScore: readiness.score,
+    recordChecks: buildAppointmentRecordChecks(row),
     reference: row.publicReference,
     service: row.serviceNameSnapshot,
     stage: stageByStatus[row.status],
@@ -297,8 +274,6 @@ export function mapAppointmentToHubRecord(
     timeline,
   };
 }
-
-/* ---------- clients ---------- */
 
 export type HubClientStatus = "ACTIVE" | "INACTIVE" | "PROSPECTIVE";
 
@@ -335,35 +310,16 @@ const clientTypeLabels: Readonly<Record<HubClientRow["type"], string>> = {
   CHILD: "Çocuk",
 };
 
-/*
- * Client readiness = profile completeness: phone 25, e-mail 25, guardian for
- * a child (adults auto-pass) 25, any appointment history 25.
- */
-export function scoreClientReadiness(row: HubClientRow): {
-  grade: string;
-  notes: readonly string[];
-  score: number;
-} {
-  const guardianOk = row.type === "ADULT" || row.guardians.length > 0;
-  const checks: readonly { note: string; ok: boolean; weight: number }[] = [
-    { note: "Telefon bilgisi", ok: Boolean(row.phone), weight: 25 },
-    { note: "E-posta bilgisi", ok: Boolean(row.email), weight: 25 },
+export function buildClientRecordChecks(row: HubClientRow): readonly string[] {
+  return orderedChecks([
+    { label: "Telefon bilgisi", ok: Boolean(row.phone) },
+    { label: "E-posta bilgisi", ok: Boolean(row.email) },
     {
-      note: row.type === "CHILD" ? "Veli kaydı" : "Yetişkin kaydı",
-      ok: guardianOk,
-      weight: 25,
+      label: row.type === "CHILD" ? "Veli kaydı" : "Yetişkin kaydı",
+      ok: row.type === "ADULT" || row.guardians.length > 0,
     },
-    { note: "Randevu geçmişi", ok: row.appointments.length > 0, weight: 25 },
-  ];
-
-  const score = checks.reduce((total, check) => total + (check.ok ? check.weight : 0), 0);
-  const grade = score >= 85 ? "A" : score >= 65 ? "B" : "C";
-  const notes = [
-    ...checks.filter((check) => !check.ok).map((check) => `${check.note} eksik`),
-    ...checks.filter((check) => check.ok).map((check) => `${check.note} tamam`),
-  ].slice(0, 4);
-
-  return { grade, notes, score };
+    { label: "Planlanan randevu", ok: row.appointments.length > 0 },
+  ]);
 }
 
 function buildClientNextSteps(status: HubClientStatus): readonly NextStep[] {
@@ -386,9 +342,7 @@ function buildClientNextSteps(status: HubClientStatus): readonly NextStep[] {
 }
 
 export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: string): HubRecord {
-  const readiness = scoreClientReadiness(row);
   const upcoming = row.appointments.find((appointment) => appointment.startsAt > now) ?? null;
-
   const timeline = [
     ...row.appointments.map((appointment) => ({
       at: formatRelativeStamp(appointment.startsAt, now, timeZone),
@@ -413,11 +367,9 @@ export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: str
     name: row.preferredName ?? `${row.firstName} ${row.lastName}`,
     nextSteps: buildClientNextSteps(row.status),
     plannedAt: upcoming ? formatPlannedStamp(upcoming.startsAt, timeZone) : "—",
-    profileHref: `/yonetim/danisan-profili/${row.id}`,
+    profileHref: `/yonetim/danisan-profili?clientId=${encodeURIComponent(row.id)}`,
     rawStatus: null,
-    readinessGrade: readiness.grade,
-    readinessNotes: readiness.notes,
-    readinessScore: readiness.score,
+    recordChecks: buildClientRecordChecks(row),
     reference: "",
     service: `${clientTypeLabels[row.type]} danışan kaydı`,
     stage: "talep",
@@ -425,8 +377,6 @@ export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: str
     timeline,
   };
 }
-
-/* ---------- availability (read-only weekly preview) ---------- */
 
 export type HubAvailabilityRuleRow = Readonly<{
   localEndTime: string;
@@ -451,7 +401,6 @@ const weekdayLabels = [
   "Cumartesi",
 ] as const;
 
-/* Monday-first working week; rules arrive Sunday-indexed (0 = Pazar). */
 const weekdayOrder = [1, 2, 3, 4, 5, 6, 0] as const;
 
 export function buildWeeklyAvailability(
@@ -467,88 +416,4 @@ export function buildWeeklyAvailability(
         range: `${rule.localStartTime}–${rule.localEndTime}`,
       })),
   }));
-}
-
-/* ---------- finance (read-only summary) ---------- */
-
-export type HubFinanceEntryRow = Readonly<{
-  amountMinor: bigint;
-  client: Readonly<{ firstName: string; lastName: string; preferredName: string | null }>;
-  currency: string;
-  occurredAt: Date;
-  type: "ACCRUAL" | "ADJUSTMENT" | "PAYMENT" | "REFUND" | "REVERSAL";
-}>;
-
-export type HubFinanceSummary = Readonly<{
-  entries: readonly Readonly<{
-    amountLabel: string;
-    at: string;
-    clientName: string;
-    id: string;
-    typeLabel: string;
-  }>[];
-  monthAccrualLabel: string;
-  monthPaymentLabel: string;
-}>;
-
-const financeTypeLabels: Readonly<Record<HubFinanceEntryRow["type"], string>> = {
-  ACCRUAL: "Plan borcu",
-  ADJUSTMENT: "Düzeltme",
-  PAYMENT: "Ödeme",
-  REFUND: "İade",
-  REVERSAL: "Dengeleyici kayıt",
-};
-
-function formatMinorAmount(amountMinor: bigint, currency: string): string {
-  return new Intl.NumberFormat("tr-TR", { currency, style: "currency" }).format(
-    Number(amountMinor) / 100,
-  );
-}
-
-function monthKey(date: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    month: "2-digit",
-    timeZone,
-    year: "numeric",
-  }).format(date);
-}
-
-/*
- * Server-side builder: converts BigInt money into display strings so the
- * result is serialisable across the RSC boundary. Month totals are plain
- * sums of the stored entry amounts for the current business-time-zone month.
- */
-export function buildFinanceSummary(
-  rows: readonly (HubFinanceEntryRow & { id: string })[],
-  now: Date,
-  timeZone: string,
-): HubFinanceSummary {
-  const currentMonth = monthKey(now, timeZone);
-  const currency = rows[0]?.currency ?? "TRY";
-
-  const sumFor = (type: HubFinanceEntryRow["type"]): { count: number; total: bigint } =>
-    rows
-      .filter((row) => row.type === type && monthKey(row.occurredAt, timeZone) === currentMonth)
-      .reduce(
-        (accumulator, row) => ({
-          count: accumulator.count + 1,
-          total: accumulator.total + row.amountMinor,
-        }),
-        { count: 0, total: 0n },
-      );
-
-  const payments = sumFor("PAYMENT");
-  const accruals = sumFor("ACCRUAL");
-
-  return {
-    entries: rows.slice(0, 8).map((row) => ({
-      amountLabel: formatMinorAmount(row.amountMinor, row.currency),
-      at: formatRelativeStamp(row.occurredAt, now, timeZone),
-      clientName: row.client.preferredName ?? `${row.client.firstName} ${row.client.lastName}`,
-      id: row.id,
-      typeLabel: financeTypeLabels[row.type],
-    })),
-    monthAccrualLabel: `${accruals.count} kayıt · ${formatMinorAmount(accruals.total, currency)}`,
-    monthPaymentLabel: `${payments.count} kayıt · ${formatMinorAmount(payments.total, currency)}`,
-  };
 }
