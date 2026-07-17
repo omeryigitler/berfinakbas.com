@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { hasPermission } from "@/domain/auth/permissions";
-import {
-  createClientPayloadSchema,
-  type CreateClientPayload,
-} from "@/domain/clients/client-management";
+import { matchesClientCreateReplay } from "@/domain/clients/client-create-idempotency";
+import { createClientPayloadSchema } from "@/domain/clients/client-management";
 import { isRetryableTransactionError } from "@/lib/booking/appointment-hold-service";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
@@ -17,8 +15,6 @@ const MAX_TRANSACTION_ATTEMPTS = 3;
 class RequestBodyTooLargeError extends Error {}
 class GuardianNotFoundError extends Error {}
 class ClientCreateConflictError extends Error {}
-
-type StoredClient = Awaited<ReturnType<typeof findStoredClient>>;
 
 async function readBoundedJsonBody(request: Request): Promise<unknown> {
   const declaredLength = request.headers.get("content-length");
@@ -66,7 +62,6 @@ async function findStoredClient(clientId: string) {
             select: {
               email: true,
               firstName: true,
-              id: true,
               lastName: true,
               phone: true,
             },
@@ -76,35 +71,6 @@ async function findStoredClient(clientId: string) {
     },
     where: { id: clientId },
   });
-}
-
-function matchesReplay(existing: NonNullable<StoredClient>, payload: CreateClientPayload): boolean {
-  const clientMatches =
-    existing.birthYear === payload.birthYear &&
-    existing.email === payload.email &&
-    existing.firstName === payload.firstName &&
-    existing.lastName === payload.lastName &&
-    existing.phone === payload.phone &&
-    existing.preferredName === payload.preferredName &&
-    existing.status === payload.status &&
-    existing.type === payload.type;
-  if (!clientMatches) return false;
-  if (payload.type === "ADULT") return true;
-
-  const relation = existing.guardians[0];
-  if (!relation || relation.relationship !== payload.relationship) return false;
-  if (payload.guardianMode === "EXISTING") {
-    return relation.guardianId === payload.guardianId;
-  }
-  if (payload.guardianMode === "NEW") {
-    return (
-      relation.guardian.email === payload.guardianEmail &&
-      relation.guardian.firstName === payload.guardianFirstName &&
-      relation.guardian.lastName === payload.guardianLastName &&
-      relation.guardian.phone === payload.guardianPhone
-    );
-  }
-  return false;
 }
 
 export async function POST(request: Request) {
@@ -175,7 +141,9 @@ export async function POST(request: Request) {
     for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
       const existing = await findStoredClient(payload.requestId);
       if (existing) {
-        if (!matchesReplay(existing, payload)) throw new ClientCreateConflictError();
+        if (!matchesClientCreateReplay(existing, payload)) {
+          throw new ClientCreateConflictError();
+        }
         return NextResponse.json({ data: { id: existing.id }, replayed: true }, { status: 200 });
       }
 
@@ -269,7 +237,9 @@ export async function POST(request: Request) {
         if (isUniqueConflict(error) || isRetryableTransactionError(error)) {
           const replay = await findStoredClient(payload.requestId);
           if (replay) {
-            if (!matchesReplay(replay, payload)) throw new ClientCreateConflictError();
+            if (!matchesClientCreateReplay(replay, payload)) {
+              throw new ClientCreateConflictError();
+            }
             return NextResponse.json({ data: { id: replay.id }, replayed: true }, { status: 200 });
           }
           if (attempt < MAX_TRANSACTION_ATTEMPTS) continue;
