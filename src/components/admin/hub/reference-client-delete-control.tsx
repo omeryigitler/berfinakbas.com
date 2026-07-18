@@ -23,18 +23,22 @@ export function ReferenceClientDeleteControl({ canManage }: { canManage: boolean
 
   if (!visible || !selectedId) return null;
 
-  const armed = armedId === selectedId;
-  const pending = pendingId === selectedId;
-  const error = deleteError?.id === selectedId ? deleteError.message : null;
+  const referenceClientId = selectedId;
+  const armed = armedId === referenceClientId;
+  const pending = pendingId === referenceClientId;
+  const error = deleteError?.id === referenceClientId ? deleteError.message : null;
 
   async function permanentlyDelete() {
-    setPendingId(selectedId);
+    setPendingId(referenceClientId);
     setDeleteError(null);
     try {
-      const response = await fetch(`/api/admin/clients/${encodeURIComponent(selectedId)}`, {
-        headers: { accept: "application/json" },
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/clients/${encodeURIComponent(referenceClientId)}`,
+        {
+          headers: { accept: "application/json" },
+          method: "DELETE",
+        },
+      );
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error ?? "Danışan silinemedi.");
 
@@ -46,7 +50,7 @@ export function ReferenceClientDeleteControl({ canManage }: { canManage: boolean
       router.refresh();
     } catch (errorCaught) {
       setDeleteError({
-        id: selectedId,
+        id: referenceClientId,
         message: errorCaught instanceof Error ? errorCaught.message : "Danışan silinemedi.",
       });
     } finally {
@@ -80,7 +84,7 @@ export function ReferenceClientDeleteControl({ canManage }: { canManage: boolean
         <button
           className={styles.armButton}
           onClick={() => {
-            setArmedId(selectedId);
+            setArmedId(referenceClientId);
             setDeleteError(null);
           }}
           type="button"
