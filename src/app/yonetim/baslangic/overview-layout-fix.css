@@ -1,0 +1,53 @@
+@media (min-width: 1021px) {
+  [aria-label="Genel özet"] + div {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr) minmax(250px, 0.78fr) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  [aria-label="Genel özet"] + div + div {
+    display: grid !important;
+    grid-template-columns: minmax(280px, 0.88fr) minmax(320px, 1fr) minmax(250px, 0.64fr) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  [aria-labelledby="operasyon-analitigi"],
+  [aria-labelledby="haftalik-ozet"],
+  [aria-labelledby="hizli-islemler"] {
+    height: 352px !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 20px !important;
+  }
+
+  [aria-labelledby="son-danisanlar"],
+  [aria-labelledby="bugun-takip"],
+  [aria-labelledby="odeme-ozeti"] {
+    min-height: 294px !important;
+    padding: 20px !important;
+  }
+
+  [aria-labelledby="operasyon-analitigi"] > div:last-child {
+    min-height: 194px !important;
+  }
+
+  [aria-labelledby="operasyon-analitigi"] > div:last-child > div > div:first-child {
+    height: 138px !important;
+  }
+
+  [aria-labelledby="haftalik-ozet"] [style*="--donut-background"] {
+    width: min(186px, 100%) !important;
+  }
+}
+
+@media (min-width: 1021px) and (max-width: 1320px) {
+  [aria-label="Genel özet"] + div {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr) minmax(230px, 0.8fr) !important;
+  }
+
+  [aria-label="Genel özet"] + div + div {
+    grid-template-columns: minmax(250px, 0.86fr) minmax(280px, 1fr) minmax(225px, 0.7fr) !important;
+  }
+}
