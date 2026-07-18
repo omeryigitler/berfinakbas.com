@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
+import "./overview-layout-fix.css";
 import styles from "./overview.module.css";
 
 function Icon({ children }: { children: ReactNode }) {
