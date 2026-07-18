@@ -1,16 +1,33 @@
-import { redirect } from "next/navigation";
+import "@fontsource-variable/inter/index.css";
 
-import { auth } from "@/auth";
+import type { Metadata } from "next";
+
+import { AdminShell } from "@/components/admin/admin-shell";
 import { hasPermission } from "@/domain/auth/permissions";
+import { requirePermission } from "@/lib/authorization";
+
+export const metadata: Metadata = {
+  robots: { follow: false, index: false, noarchive: true, nosnippet: true },
+  title: "Yönetim | Berfin Akbaş",
+};
 
 export default async function AdminStartPage() {
-  const session = await auth();
-  if (!session?.user || session.user.status !== "ACTIVE") redirect("/yonetim/giris");
+  const session = await requirePermission("appointments:read");
 
-  if (hasPermission(session.user.roles, "services:read")) redirect("/yonetim");
-  if (hasPermission(session.user.roles, "appointments:read")) redirect("/yonetim/randevular");
-  if (hasPermission(session.user.roles, "clients:read")) redirect("/yonetim/danisanlar");
-  if (hasPermission(session.user.roles, "finance:read")) redirect("/yonetim/odemeler");
-  if (hasPermission(session.user.roles, "technical-health:read")) redirect("/yonetim/saglik");
-  redirect("/yonetim/yetkisiz");
+  return (
+    <AdminShell
+      email={session.user.email}
+      permissions={{
+        appointmentsRead: true,
+        clientsRead: hasPermission(session.user.roles, "clients:read"),
+        financeRead: hasPermission(session.user.roles, "finance:read"),
+        servicesRead: hasPermission(session.user.roles, "services:read"),
+        technicalHealthRead: hasPermission(session.user.roles, "technical-health:read"),
+      }}
+      subtitle="Soldaki menüden bir çalışma alanı seçin. Liste ve kayıt detayları sağ tarafta kademeli olarak açılır."
+      title="Yönetim"
+    >
+      <div aria-hidden="true" />
+    </AdminShell>
+  );
 }
