@@ -3,7 +3,14 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 import { buildHubStatusUrl, getHubActions, type HubAction } from "./hub-actions";
 import { HubAvatar } from "./hub-avatar";
@@ -150,7 +157,11 @@ export function RecordCenter({
         });
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
         if (!response.ok) throw new Error(payload.error ?? "Randevu durumu güncellenemedi.");
-        setFeedback({ error: null, notice: `${action.label} işlemi kaydedildi.`, recordId: record.id });
+        setFeedback({
+          error: null,
+          notice: `${action.label} işlemi kaydedildi.`,
+          recordId: record.id,
+        });
         setArmed(null);
         router.refresh();
       } catch (error) {
@@ -200,7 +211,7 @@ export function RecordCenter({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeRecordId, armed, closeToMenu, isListSection, navigate, records, section]);
 
-  const meta = isListSection ? listMeta[section] : null;
+  const meta = isListSection ? listMeta[section as ListSection] : null;
   const currentFeedback = feedback?.recordId === record?.id ? feedback : null;
   const workVisible = Boolean(record) || section === "musaitlik" || section === "odemeler";
 
