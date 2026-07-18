@@ -1,126 +1,380 @@
-:global([data-admin-refresh="shell"]) {
-  grid-template-columns: 252px minmax(0, 1fr);
-  gap: 0;
+.scope {
+  display: contents;
+}
+
+.scope :global([data-admin-refresh="shell"]) {
+  --admin-bg: #e9e8e4;
+  --admin-panel: #fbfaf7;
+  --admin-panel-soft: #f4f3ef;
+  --admin-line: rgb(32 28 25 / 9%);
+  --admin-ink: #201c19;
+  --admin-muted: #77716b;
+  --admin-lime: #dcff5f;
+  --admin-lime-soft: #f2ffc2;
+  --admin-teal: #159487;
+  --admin-teal-soft: #d9efea;
+
+  display: grid !important;
+  grid-template-columns: 228px minmax(0, 1fr) !important;
+  gap: 0 !important;
+  width: 100%;
   min-height: 100vh;
-  background: #f3f2ee;
-  padding: 0;
+  padding: 0 !important;
+  background: var(--admin-bg) !important;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="sidebar"]) {
-  top: 0;
-  min-height: 100vh;
-  overflow-y: auto;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 26px 18px 22px;
-  box-shadow: none;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="sidebar"]) {
+  position: sticky;
+  top: 0 !important;
+  display: flex;
+  align-self: start;
+  flex-direction: column;
+  min-height: 100vh !important;
+  max-height: 100vh;
+  overflow-y: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 24px 16px 18px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="brand"]) {
-  padding-inline: 8px;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="brand"]) {
+  gap: 11px;
+  padding: 4px 8px 24px !important;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="brand-mark"]) {
-  border-color: rgb(32 28 25 / 7%);
-  background: rgb(255 255 255 / 38%);
-  box-shadow: none;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="brand-mark"]) {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgb(32 28 25 / 10%) !important;
+  background: rgb(255 255 255 / 34%) !important;
+  box-shadow: none !important;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="nav-group-label"]) {
-  margin-left: 10px;
-  color: rgb(32 28 25 / 52%);
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="brand"] strong) {
+  font-size: 0.88rem;
+  font-weight: 730;
+  letter-spacing: -0.025em;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="nav-child"]) {
-  min-height: 40px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding-inline: 10px 13px;
-  color: rgb(32 28 25 / 67%);
-  font-size: 0.73rem;
-  font-weight: 620;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="brand"] small) {
+  color: rgb(32 28 25 / 48%);
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="nav-child"]:hover) {
-  border-color: rgb(32 28 25 / 7%);
-  background: rgb(255 255 255 / 32%);
-  transform: none;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="nav"]) {
+  display: grid !important;
+  gap: 5px !important;
+  margin-top: 0 !important;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="nav-child"][data-admin-active="true"]) {
-  border-color: rgb(148 158 62 / 18%);
-  background: linear-gradient(90deg, #e9ff86, #dcff5f);
+.scope :global([data-admin-refresh="shell"] [data-admin-group]) {
+  display: grid;
+  gap: 2px;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="sidebar-footer"]) {
-  border-top-color: rgb(32 28 25 / 7%);
+.scope :global([data-admin-refresh="shell"] [data-admin-region="nav-group-label"]) {
+  margin: 13px 10px 5px !important;
+  color: rgb(32 28 25 / 48%) !important;
+  font-size: 0.56rem !important;
+  font-weight: 760 !important;
+  letter-spacing: 0.1em !important;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
-  min-height: 100vh;
-  padding: 18px 18px 18px 0;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="nav-child"]) {
+  display: grid !important;
+  grid-template-columns: 28px minmax(0, 1fr);
+  min-height: 40px !important;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  padding: 5px 11px 5px 7px !important;
+  color: rgb(32 28 25 / 67%) !important;
+  font-size: 0.7rem !important;
+  font-weight: 620 !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="content"]) {
-  margin-top: 0;
+.scope :global([data-admin-refresh="shell"] [data-admin-region="nav-child"] > span:first-child) {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgb(32 28 25 / 9%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 28%);
+  color: rgb(32 28 25 / 56%);
 }
 
-:global([data-admin-refresh="shell"] [data-admin-region="workspace"] > div) {
+.scope :global([data-admin-refresh="shell"] [data-admin-region="nav-child"]:hover) {
+  border-color: rgb(32 28 25 / 8%) !important;
+  background: rgb(255 255 255 / 34%) !important;
+  color: var(--admin-ink) !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="nav-child"][data-admin-active="true"]) {
+  border-color: rgb(148 158 62 / 18%) !important;
+  background: linear-gradient(90deg, #eaff8f, var(--admin-lime)) !important;
+  color: var(--admin-ink) !important;
+  font-weight: 750 !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="sidebar-footer"]) {
+  gap: 8px !important;
+  margin-top: auto;
+  border-top: 1px solid rgb(32 28 25 / 7%) !important;
+  padding-top: 13px !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="focus-button"]) {
+  min-width: 0 !important;
+  height: 40px !important;
+  border: 1px solid rgb(21 148 135 / 58%) !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--admin-teal) !important;
+  font-size: 0.64rem !important;
+  box-shadow: none !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="profile-pill"]) {
+  min-height: 46px !important;
+  border: 1px solid rgb(32 28 25 / 8%) !important;
+  background: rgb(255 255 255 / 28%) !important;
+  box-shadow: none !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+  min-width: 0;
+  min-height: 100vh !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 18px 18px 18px 0 !important;
+  box-shadow: none !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="workspace"] > div) {
   min-height: calc(100vh - 36px);
 }
 
-:global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"]),
-:global([data-admin-refresh="shell"] [aria-label="Çalışma alanı"]) {
-  border-color: rgb(32 28 25 / 6%);
-  background: rgb(251 250 248 / 82%);
-  box-shadow:
-    0 1px 1px rgb(32 28 25 / 2%),
-    0 14px 38px rgb(32 28 25 / 4%);
+.scope :global([data-admin-refresh="shell"] [data-admin-region="content"]) {
+  margin-top: 0 !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="content"] > div > div:has(> [aria-label="Kayıt listesi"])) {
+  display: grid !important;
+  grid-template-columns: 368px minmax(0, 1fr) !important;
+  gap: 16px !important;
+  align-items: start !important;
+  min-width: 0;
+}
+
+.scope :global([data-admin-refresh="shell"] [data-admin-region="content"] > div > div:not(:has(> [aria-label="Kayıt listesi"]))) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 16px !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"]) {
+  position: sticky !important;
+  top: 18px !important;
+  width: 368px !important;
+  max-width: 368px;
+  height: calc(100vh - 36px);
+  max-height: calc(100vh - 36px) !important;
+  overflow: hidden;
+  border: 1px solid rgb(32 28 25 / 7%) !important;
+  border-radius: 26px !important;
+  background: rgb(251 250 247 / 86%) !important;
+  box-shadow: 0 14px 38px rgb(32 28 25 / 4%) !important;
   backdrop-filter: blur(18px);
 }
 
-:global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"]) {
-  top: 18px;
-  max-height: calc(100vh - 36px);
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] > header) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 13px !important;
+  min-height: 0 !important;
+  border-bottom: 1px solid rgb(32 28 25 / 7%) !important;
+  background: transparent !important;
+  padding: 20px 18px 14px !important;
 }
 
-:global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] header) {
-  border-bottom-color: rgb(32 28 25 / 6%);
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] > header > div:first-child strong) {
+  font-size: 1.28rem !important;
+  font-weight: 690 !important;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] > header > div:has(.hub-search)) {
+  width: 100%;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.scope :global([data-admin-refresh="shell"] .hub-search) {
+  display: grid;
+  width: 100%;
+  min-width: 0 !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgb(32 28 25 / 9%) !important;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 48%) !important;
+  padding: 5px 5px 5px 14px;
+  box-shadow: none !important;
+}
+
+.scope :global([data-admin-refresh="shell"] .hub-search input) {
+  min-width: 0;
+  width: 100%;
+  border: 0;
   background: transparent;
+  font: inherit;
+  font-size: 0.68rem;
+  outline: 0;
 }
 
-:global([data-admin-refresh="shell"] .hub-search) {
-  min-width: min(310px, 34vw);
-  border-color: rgb(32 28 25 / 7%);
-  background: rgb(255 255 255 / 44%);
-  box-shadow: none;
+.scope :global([data-admin-refresh="shell"] .hub-search button) {
+  min-height: 32px;
+  border: 1px solid rgb(32 28 25 / 10%);
+  border-radius: 999px;
+  background: transparent;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 720;
 }
 
-@media (max-width: 980px) {
-  :global([data-admin-refresh="shell"]) {
-    grid-template-columns: 218px minmax(0, 1fr);
+.scope :global([data-admin-refresh="shell"] .hub-search-clear),
+.scope :global([data-admin-refresh="shell"] .hub-search-pages) {
+  grid-column: 1 / -1;
+  font-size: 0.6rem;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] > header + div) {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 10px 16px !important;
+  scrollbar-width: thin;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] > header + div > div > button) {
+  display: grid !important;
+  width: 100%;
+  grid-template-columns: 42px minmax(0, 1fr) 36px !important;
+  align-items: center;
+  gap: 11px !important;
+  margin-bottom: 8px;
+  border: 1px solid rgb(32 28 25 / 7%) !important;
+  border-radius: 20px !important;
+  background: rgb(255 255 255 / 46%) !important;
+  padding: 12px !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] > header + div > div > button:hover) {
+  border-color: rgb(21 148 135 / 22%) !important;
+  background: rgb(255 255 255 / 72%) !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"] > header + div > div > button[data-active="true"]) {
+  border-color: rgb(148 158 62 / 24%) !important;
+  background: linear-gradient(135deg, #efffae, var(--admin-lime)) !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Çalışma alanı"]) {
+  min-width: 0;
+  height: calc(100vh - 36px);
+  min-height: calc(100vh - 36px) !important;
+  max-height: calc(100vh - 36px);
+  overflow-y: auto !important;
+  border: 1px solid rgb(32 28 25 / 7%) !important;
+  border-radius: 26px !important;
+  background: rgb(251 250 247 / 86%) !important;
+  box-shadow: 0 14px 38px rgb(32 28 25 / 4%) !important;
+  backdrop-filter: blur(18px);
+  scrollbar-width: thin;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Çalışma alanı"] > div:first-child) {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  border-bottom: 1px solid rgb(32 28 25 / 7%) !important;
+  background: rgb(251 250 247 / 92%) !important;
+  backdrop-filter: blur(16px);
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Çalışma alanı"] header:has(h2)) {
+  border: 1px solid rgb(148 158 62 / 13%) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(115deg, #f4ffd0, #fff8e9) !important;
+  box-shadow: none !important;
+}
+
+.scope :global([data-admin-refresh="shell"] [aria-label="Çalışma alanı"] article) {
+  border-color: rgb(32 28 25 / 7%) !important;
+  background: rgb(255 255 255 / 56%) !important;
+  box-shadow: 0 8px 28px rgb(32 28 25 / 3%) !important;
+}
+
+@media (max-width: 1180px) {
+  .scope :global([data-admin-refresh="shell"]) {
+    grid-template-columns: 210px minmax(0, 1fr) !important;
   }
 
-  :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
-    padding-right: 10px;
+  .scope :global([data-admin-refresh="shell"] [data-admin-region="content"] > div > div:has(> [aria-label="Kayıt listesi"])) {
+    grid-template-columns: 340px minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"]) {
+    width: 340px !important;
+    max-width: 340px;
   }
 }
 
-@media (max-width: 720px) {
-  :global([data-admin-refresh="shell"]) {
-    display: block;
+@media (max-width: 900px) {
+  .scope :global([data-admin-refresh="shell"]) {
+    display: block !important;
   }
 
-  :global([data-admin-refresh="shell"] [data-admin-region="sidebar"]) {
+  .scope :global([data-admin-refresh="shell"] [data-admin-region="sidebar"]) {
     position: static;
-    min-height: auto;
+    min-height: auto !important;
+    max-height: none;
   }
 
-  :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
-    min-height: auto;
-    padding: 0 10px 10px;
+  .scope :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+    min-height: auto !important;
+    padding: 0 12px 12px !important;
+  }
+
+  .scope :global([data-admin-refresh="shell"] [data-admin-region="content"] > div > div:has(> [aria-label="Kayıt listesi"])) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .scope :global([data-admin-refresh="shell"] [aria-label="Kayıt listesi"]),
+  .scope :global([data-admin-refresh="shell"] [aria-label="Çalışma alanı"]) {
+    position: static !important;
+    width: 100% !important;
+    max-width: none;
+    height: auto;
+    min-height: 520px !important;
+    max-height: none !important;
   }
 }
