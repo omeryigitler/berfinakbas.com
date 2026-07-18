@@ -424,15 +424,25 @@ export function RecordCenter({
                         Profili aç
                       </Link>
                     ) : null}
-                    <button className={hubStyles.pill} onClick={() => router.refresh()} type="button">
-                      Yenile
-                    </button>
+                  </div>
+                  <div className={hubStyles.ribbonIcons}>
                     <button
-                      className={hubStyles.pill}
-                      onClick={() => navigate(section, null)}
+                      aria-label="Yenile"
+                      className={hubStyles.iconRound}
+                      onClick={() => router.refresh()}
+                      title="Yenile"
                       type="button"
                     >
-                      Detayı kapat
+                      ↻
+                    </button>
+                    <button
+                      aria-label="Detayı kapat"
+                      className={hubStyles.iconRound}
+                      onClick={() => navigate(section, null)}
+                      title="Detayı kapat"
+                      type="button"
+                    >
+                      ✕
                     </button>
                   </div>
                 </div>

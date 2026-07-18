@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import "./admin-dashboard-refresh.module.css";
 import "./admin-hub-shell-controls.module.css";
@@ -188,19 +188,6 @@ function isActivePath(
   return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
 }
 
-function getInitials(email?: string | null): string {
-  if (!email) return "BA";
-  const [name] = email.split("@");
-  return (
-    name
-      .split(/[._-]/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toLocaleUpperCase("tr-TR"))
-      .join("") || "BA"
-  );
-}
-
 function getWorkspacePanels(content: HTMLElement): HTMLElement[] {
   return Array.from(content.children).filter(
     (element): element is HTMLElement =>
@@ -214,7 +201,6 @@ function getPanelHeading(panel: HTMLElement): HTMLElement | null {
 
 export function AdminShell({
   children,
-  email,
   title,
   subtitle,
   permissions,
@@ -238,39 +224,10 @@ export function AdminShell({
   const homeHref = navigationItems[0]?.href ?? ("/yonetim/baslangic" as Route);
   const activeWorkspaceSection = searchParams.get("alan") ?? "";
   const activeHubSection = searchParams.get("bolum") ?? "";
-  const focusMode = searchParams.get("gorunum") === "tam";
   const searchKey = searchParams.toString();
-
-  const setFocusMode = useCallback(
-    (enabled: boolean) => {
-      const params = new URLSearchParams(searchKey);
-      if (enabled) params.set("gorunum", "tam");
-      else params.delete("gorunum");
-      const query = params.toString();
-      router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
-    },
-    [pathname, router, searchKey],
-  );
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
-      ) {
-        return;
-      }
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.key === "f" || event.key === "F") {
-        event.preventDefault();
-        setFocusMode(!focusMode);
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusMode, setFocusMode]);
+  /* The Record Center runs as a fixed, app-like surface: the outer window never
+     scrolls, only the inner columns do. Other admin pages keep normal flow. */
+  const fitViewport = pathname === "/yonetim/hub";
 
   useEffect(() => {
     const content = contentRef.current;
@@ -380,7 +337,7 @@ export function AdminShell({
   return (
     <main
       className={styles.shell}
-      data-admin-focus={focusMode ? "true" : undefined}
+      data-admin-fit={fitViewport ? "true" : undefined}
       data-admin-refresh="shell"
     >
       <aside className={styles.sidebar} data-admin-region="sidebar" aria-label="Yönetim alanı">
@@ -430,23 +387,6 @@ export function AdminShell({
         ) : null}
 
         <div className={styles.sidebarFooter} data-admin-region="sidebar-footer">
-          <button
-            aria-pressed={focusMode}
-            className={styles.iconButton}
-            data-admin-active={focusMode ? "true" : undefined}
-            data-admin-region="focus-button"
-            onClick={() => setFocusMode(!focusMode)}
-            type="button"
-          >
-            {focusMode ? "Panelleri geri aç" : "Tam sayfa çalış"}
-          </button>
-          <div className={styles.profilePill} data-admin-region="profile-pill">
-            <span>{getInitials(email)}</span>
-            <div>
-              <strong>Yönetici</strong>
-              <small>{email}</small>
-            </div>
-          </div>
           <Link className={styles.siteLink} href="/" target="_blank">
             Siteyi aç ↗
           </Link>
