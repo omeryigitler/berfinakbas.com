@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import "@/components/admin/hub/progressive-shell.module.css";
 import { ReferenceClientDeleteControl } from "@/components/admin/hub/reference-client-delete-control";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
