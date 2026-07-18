@@ -2,12 +2,12 @@
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgb(255 255 255 / 70%);
-  border-radius: 12px;
+  border: 2px solid rgb(255 255 255 / 85%);
+  border-radius: 50%;
   color: #201c19;
   font-weight: 820;
   letter-spacing: -0.04em;
-  box-shadow: 0 6px 16px rgb(32 28 25 / 9%);
+  box-shadow: 0 4px 12px rgb(32 28 25 / 8%);
 }
 
 .statusChip,
@@ -126,13 +126,13 @@
 .listItem {
   display: grid;
   width: 100%;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   border: 1px solid transparent;
-  border-radius: 13px;
+  border-radius: 20px;
   background: transparent;
-  padding: 10px;
+  padding: 13px;
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -183,8 +183,8 @@
 }
 
 .listItem[data-active="true"] {
-  border-color: rgb(148 158 62 / 26%);
-  background: var(--admin-lime, #dfec83);
+  border-color: rgb(148 158 62 / 30%);
+  background: linear-gradient(135deg, #efffb0, var(--admin-lime, #dcff5f));
 }
 
 .listItemBody {
@@ -416,11 +416,14 @@
 }
 
 .card {
-  border: 1px solid var(--admin-line, #e3ded7);
-  border-radius: 15px;
-  background: #fff;
-  padding: 15px;
-  box-shadow: 0 10px 24px rgb(32 28 25 / 5%);
+  border: 1px solid rgb(32 28 25 / 7%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 68%);
+  padding: 18px;
+  box-shadow:
+    0 1px 1px rgb(32 28 25 / 2%),
+    0 8px 30px rgb(32 28 25 / 3.5%);
+  backdrop-filter: blur(14px);
 }
 
 .card h3 {
@@ -581,7 +584,7 @@
   gap: 16px;
   overflow: hidden;
   border: 1px solid rgb(246 208 192 / 65%);
-  border-radius: 18px;
+  border-radius: 28px;
   background: linear-gradient(
     120deg,
     var(--admin-peach, #fbe3d2),
@@ -664,14 +667,14 @@
 }
 
 .stageStrip li[data-state="done"] {
-  background: linear-gradient(135deg, var(--admin-lime, #dfec83), var(--admin-teal-soft, #d9ece8));
-  color: var(--admin-teal, #12897b);
+  background: linear-gradient(135deg, #23a999, var(--admin-teal, #189384));
+  color: #fff;
   font-weight: 780;
 }
 
 .stageStrip li[data-state="active"] {
-  background: linear-gradient(135deg, #17a08f, var(--admin-teal, #12897b));
-  color: #fff;
+  background: linear-gradient(135deg, #efffb0, var(--admin-lime, #dcff5f));
+  color: var(--admin-ink, #201c19);
   font-weight: 840;
 }
 
