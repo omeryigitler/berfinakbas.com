@@ -473,38 +473,31 @@ export function AdminShell({
           </nav>
         ) : null}
 
-        <div className={styles.sidebarNote} data-admin-region="sidebar-note">
-          <strong>Operasyon merkezi</strong>
-          <span>Danışan, randevu, ödeme ve sistem durumunu tek panelden yönetin.</span>
-          <Link href="/" target="_blank">
+        <div className={styles.sidebarFooter} data-admin-region="sidebar-footer">
+          <button
+            aria-pressed={focusMode}
+            className={styles.iconButton}
+            data-admin-active={focusMode ? "true" : undefined}
+            data-admin-region="focus-button"
+            onClick={() => setFocusMode(!focusMode)}
+            type="button"
+          >
+            {focusMode ? "Panelleri geri aç" : "Tam sayfa çalış"}
+          </button>
+          <div className={styles.profilePill} data-admin-region="profile-pill">
+            <span>{getInitials(email)}</span>
+            <div>
+              <strong>Yönetici</strong>
+              <small>{email}</small>
+            </div>
+          </div>
+          <Link className={styles.siteLink} href="/" target="_blank">
             Siteyi aç ↗
           </Link>
         </div>
       </aside>
 
       <section className={styles.workspace} data-admin-region="workspace">
-        <header className={styles.topbar} data-admin-region="topbar">
-          <div className={styles.headerMeta} data-admin-region="header-meta">
-            <button
-              aria-pressed={focusMode}
-              className={styles.iconButton}
-              data-admin-active={focusMode ? "true" : undefined}
-              data-admin-region="focus-button"
-              onClick={() => setFocusMode(!focusMode)}
-              type="button"
-            >
-              {focusMode ? "Panelleri geri aç" : "Tam sayfa çalış"}
-            </button>
-            <div className={styles.profilePill} data-admin-region="profile-pill">
-              <span>{getInitials(email)}</span>
-              <div>
-                <strong>Yönetici</strong>
-                <small>{email}</small>
-              </div>
-            </div>
-          </div>
-        </header>
-
         <div data-admin-region="scroll-area">
           <div className={styles.srOnly}>
             <h1>{title}</h1>

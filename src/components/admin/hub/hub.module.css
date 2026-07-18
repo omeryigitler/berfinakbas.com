@@ -445,30 +445,41 @@
 
 .scoreDial {
   --dial: var(--admin-teal, #12897b);
+  position: relative;
   display: grid;
-  width: 82px;
-  height: 82px;
+  width: 84px;
+  height: 84px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 50%;
-  background: conic-gradient(var(--dial) calc(var(--score, 0) * 1%), var(--admin-line, #e3ded7) 0);
-  box-shadow: 0 8px 20px rgb(32 28 25 / 8%);
 }
 
+/* Reference "Lead Score" dial: a dashed/ticked ring where the filled ticks show
+   the score in the grade colour and the rest stay grey. The conic gradient is
+   the fill; the mask turns the solid ring into evenly spaced ticks. */
 .scoreDial::before {
-  grid-area: 1 / 1;
-  width: 62px;
-  height: 62px;
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: #fff;
+  background: conic-gradient(
+    from -90deg,
+    var(--dial) calc(var(--score, 0) * 1%),
+    var(--admin-line, #e3ded7) 0
+  );
+  -webkit-mask:
+    repeating-conic-gradient(from -90deg, #000 0 3deg, transparent 3deg 6.6deg),
+    radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
+  -webkit-mask-composite: source-in;
+  mask:
+    repeating-conic-gradient(from -90deg, #000 0 3deg, transparent 3deg 6.6deg),
+    radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
+  mask-composite: intersect;
   content: "";
 }
 
 .scoreDial span {
   z-index: 1;
-  grid-area: 1 / 1;
   color: var(--admin-ink, #201c19);
-  font-size: 1.5rem;
+  font-size: 1.55rem;
   font-weight: 850;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
