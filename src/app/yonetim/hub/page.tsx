@@ -3,7 +3,6 @@ import "@fontsource-variable/inter/index.css";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import {
   buildWeeklyAvailability,
   mapAppointmentToHubRecord,
@@ -11,7 +10,7 @@ import {
 } from "@/components/admin/hub/hub-data";
 import { buildHubFinanceSummary } from "@/components/admin/hub/hub-finance";
 import { buildSampleAppointments, buildSampleClients } from "@/components/admin/hub/hub-samples";
-import { RecordCenter } from "@/components/admin/hub/record-center";
+import { DashboardAdmin } from "@/components/admin/hub/dashboard-admin";
 import { hasPermission } from "@/domain/auth/permissions";
 import type { Prisma } from "@/generated/prisma/client";
 import { requirePermission } from "@/lib/authorization";
@@ -20,6 +19,8 @@ import { getServerEnvironment } from "@/lib/env";
 import { getZonedMonthRange } from "@/lib/time-zone";
 
 export const dynamic = "force-dynamic";
+
+// Preview retry: Dashboard visual verification at 19:30.
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false, noarchive: true, nosnippet: true },
@@ -106,7 +107,6 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canReadAvailability = hasPermission(session.user.roles, "services:read");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
-  const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
   const isSummarySection =
     (requestedSection === "musaitlik" && canReadAvailability) ||
     (requestedSection === "odemeler" && canReadFinance);
@@ -272,82 +272,69 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
         )
       : null;
   return (
-    <AdminShell
-      email={session.user.email}
-      permissions={{
-        appointmentsRead: true,
-        clientsRead: canReadClients,
-        financeRead: canReadFinance,
-        servicesRead: canReadAvailability,
-        technicalHealthRead: canReadTechnicalHealth,
-      }}
-      subtitle="Randevu talepleri, danışan kayıtları, müsaitlik ve finans özetleri tek çalışma alanında açılır."
-      title="Kayıt merkezi"
-    >
-      <RecordCenter
-        appointments={appointments}
-        availability={availability}
-        canManage={canManage}
-        canReadClients={canReadClients}
-        clients={clients}
-        finance={finance}
-        preferredSection={preferredSection}
-        sampleAppointments={buildSampleAppointments(now, timeZone)}
-        sampleClients={buildSampleClients(now, timeZone)}
-        toolbar={
-          !isSummarySection ? (
-            <form action="/yonetim/hub" className="hub-search" method="get" role="search">
-              {activeListSection === "danisanlar" ? (
-                <input name="bolum" type="hidden" value="danisanlar" />
-              ) : null}
-              <input
-                aria-label="Kayıtlarda ara"
-                defaultValue={query}
-                maxLength={100}
-                name="q"
-                placeholder="Ad, telefon, referans…"
-                type="search"
-              />
-              <button type="submit">Ara</button>
-              {query ? (
+    <DashboardAdmin
+      appointments={appointments}
+      availability={availability}
+      canManage={canManage}
+      canReadClients={canReadClients}
+      clients={clients}
+      finance={finance}
+      preferredSection={preferredSection}
+      sampleAppointments={buildSampleAppointments(now, timeZone)}
+      sampleClients={buildSampleClients(now, timeZone)}
+      toolbar={
+        !isSummarySection ? (
+          <form action="/yonetim/hub" className="hub-search" method="get" role="search">
+            {activeListSection === "danisanlar" ? (
+              <input name="bolum" type="hidden" value="danisanlar" />
+            ) : null}
+            <input
+              aria-label="Kayıtlarda ara"
+              defaultValue={query}
+              maxLength={100}
+              name="q"
+              placeholder="Ad, telefon, referans…"
+              type="search"
+            />
+            <button type="submit">Ara</button>
+            {query ? (
+              <Link
+                className="hub-search-clear"
+                href={listHref({ page: 1, query: "", section: activeListSection })}
+              >
+                Temizle
+              </Link>
+            ) : null}
+            {totalPages > 1 ? (
+              <span className="hub-search-pages">
                 <Link
-                  className="hub-search-clear"
-                  href={listHref({ page: 1, query: "", section: activeListSection })}
+                  aria-disabled={currentPage <= 1}
+                  href={listHref({
+                    page: Math.max(1, currentPage - 1),
+                    query,
+                    section: activeListSection,
+                  })}
                 >
-                  Temizle
+                  ←
                 </Link>
-              ) : null}
-              {totalPages > 1 ? (
-                <span className="hub-search-pages">
-                  <Link
-                    aria-disabled={currentPage <= 1}
-                    href={listHref({
-                      page: Math.max(1, currentPage - 1),
-                      query,
-                      section: activeListSection,
-                    })}
-                  >
-                    ←
-                  </Link>
-                  <em>
-                    {currentPage}/{totalPages}
-                  </em>
-                  <Link
-                    aria-disabled={currentPage >= totalPages}
-                    href={listHref({
-                      page: Math.min(totalPages, currentPage + 1),
-                      query,
-                      section: activeListSection,
-                    })}
-                  >
-                    →
-                  </Link>
-                </span>
-              ) : null}
-            </form>
-          ) : null
-        }
-      />
-    </AdminShell>
+                <em>
+                  {currentPage}/{totalPages}
+                </em>
+                <Link
+                  aria-disabled={currentPage >= totalPages}
+                  href={listHref({
+                    page: Math.min(totalPages, currentPage + 1),
+                    query,
+                    section: activeListSection,
+                  })}
+                >
+                  →
+                </Link>
+              </span>
+            ) : null}
+          </form>
+        ) : null
+      }
+    />
   );
 }
