@@ -20,7 +20,7 @@ import { getZonedMonthRange } from "@/lib/time-zone";
 
 export const dynamic = "force-dynamic";
 
-// Preview retry: Dashboard visual verification.
+// Preview retry: Dashboard visual verification at 19:30.
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false, noarchive: true, nosnippet: true },
