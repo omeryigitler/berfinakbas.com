@@ -506,16 +506,9 @@ export function AdminShell({
         </header>
 
         <div data-admin-region="scroll-area">
-          <div className={styles.titleRow} data-admin-region="title-row">
-            <div className={styles.titleGroup} data-admin-region="title-group">
-              <p className="section-kicker">Berfin Akbaş · Yönetim Hub</p>
-              <h1>{title}</h1>
-              {subtitle ? (
-                <p className={styles.subtitle} data-admin-region="subtitle">
-                  {subtitle}
-                </p>
-              ) : null}
-            </div>
+          <div className={styles.srOnly}>
+            <h1>{title}</h1>
+            {subtitle ? <p>{subtitle}</p> : null}
           </div>
 
           <nav
