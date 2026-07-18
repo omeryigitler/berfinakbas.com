@@ -96,6 +96,8 @@ export function buildSampleAppointments(now: Date, timeZone: string): readonly H
   return sampleAppointmentRows(now).map((row) => mapAppointmentToHubRecord(row, now, timeZone));
 }
 
-export function buildSampleClients(_now?: Date, _timeZone?: string): readonly HubRecord[] {
+export function buildSampleClients(now?: Date, timeZone?: string): readonly HubRecord[] {
+  void now;
+  void timeZone;
   return [];
 }
