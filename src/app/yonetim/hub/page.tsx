@@ -3,7 +3,6 @@ import "@fontsource-variable/inter/index.css";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 
-import { AdminShell } from "@/components/admin/admin-shell";
 import {
   buildWeeklyAvailability,
   mapAppointmentToHubRecord,
@@ -106,7 +105,6 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
   const canReadClients = hasPermission(session.user.roles, "clients:read");
   const canReadAvailability = hasPermission(session.user.roles, "services:read");
   const canReadFinance = hasPermission(session.user.roles, "finance:read");
-  const canReadTechnicalHealth = hasPermission(session.user.roles, "technical-health:read");
   const isSummarySection =
     (requestedSection === "musaitlik" && canReadAvailability) ||
     (requestedSection === "odemeler" && canReadFinance);
