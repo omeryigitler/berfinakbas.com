@@ -1,0 +1,159 @@
+:global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+  position: relative;
+}
+
+.utilityToolbar {
+  position: absolute;
+  z-index: 45;
+  top: 14px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.utilityAction {
+  position: relative;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  border: 1px solid rgb(32 28 25 / 12%);
+  border-radius: 50%;
+  background: rgb(251 250 247 / 88%);
+  color: rgb(32 28 25 / 70%);
+  text-decoration: none;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 75%) inset,
+    0 10px 26px rgb(32 28 25 / 5%);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.utilityAction svg {
+  width: 21px;
+  height: 21px;
+  overflow: visible;
+}
+
+.utilityAction::after {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 60;
+  border: 1px solid rgb(32 28 25 / 10%);
+  border-radius: 999px;
+  background: rgb(32 28 25 / 90%);
+  padding: 5px 8px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 680;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  content: attr(data-tooltip);
+  transform: translate(-50%, -4px);
+  transition:
+    opacity 130ms ease,
+    transform 130ms ease;
+}
+
+.utilityAction:hover {
+  border-color: rgb(148 158 62 / 42%);
+  background: linear-gradient(145deg, #efff9d, var(--admin-lime, #dcff5f));
+  color: var(--admin-ink, #201c19);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 70%) inset,
+    0 13px 30px rgb(91 105 19 / 12%);
+  transform: translateY(-2px);
+}
+
+.utilityAction:hover::after,
+.utilityAction:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.utilityAction:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.utilityAction:focus-visible {
+  outline: 2px solid rgb(148 158 62 / 58%);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1180px) {
+  .utilityToolbar {
+    top: 13px;
+    right: 14px;
+    gap: 7px;
+  }
+
+  .utilityAction {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .utilityAction svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+@media (max-width: 900px) {
+  .utilityToolbar {
+    top: 8px;
+    right: 10px;
+    gap: 6px;
+  }
+
+  .utilityAction {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    background: rgb(251 250 247 / 94%);
+  }
+
+  .utilityAction svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .utilityAction::after {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .utilityToolbar {
+    left: 10px;
+    right: 10px;
+    justify-content: flex-end;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .utilityToolbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .utilityAction,
+  .utilityAction::after {
+    transition: none;
+  }
+}
