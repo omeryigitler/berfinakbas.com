@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import styles from "@/components/admin/admin-shell.module.css";
@@ -379,6 +380,13 @@ export default async function AdminHomePage({
   const params = await searchParams;
   const activeModal = singleParam(params, "modal");
   const initialClientId = singleParam(params, "clientId");
+  const activeArea = singleParam(params, "alan");
+  /* The Hub record center is the default admin surface: a bare /yonetim opens it,
+     while ?modal / ?alan / ?clientId keep the settings-and-overview panel below
+     reachable (e.g. from the "Site Yönetimi" menu). */
+  if (!activeModal && !activeArea && !initialClientId) {
+    redirect("/yonetim/hub");
+  }
   const canReadAppointments = hasPermission(session.user.roles, "appointments:read");
   const canManageAppointments = hasPermission(session.user.roles, "appointments:manage");
   const canReadClients = hasPermission(session.user.roles, "clients:read");
