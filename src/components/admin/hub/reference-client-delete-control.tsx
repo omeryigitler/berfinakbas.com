@@ -2,11 +2,13 @@
 
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { isReferenceClientId } from "@/domain/clients/reference-clients";
 
 import styles from "./reference-client-delete-control.module.css";
+
+type DeleteError = Readonly<{ id: string; message: string }>;
 
 export function ReferenceClientDeleteControl({ canManage }: { canManage: boolean }) {
   const pathname = usePathname();
@@ -15,20 +17,19 @@ export function ReferenceClientDeleteControl({ canManage }: { canManage: boolean
   const selectedId = searchParams.get("kayit");
   const isClientSection = searchParams.get("bolum") === "danisanlar";
   const visible = canManage && isClientSection && isReferenceClientId(selectedId);
-  const [armed, setArmed] = useState(false);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setArmed(false);
-    setError(null);
-  }, [selectedId]);
+  const [armedId, setArmedId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<DeleteError | null>(null);
 
   if (!visible || !selectedId) return null;
 
+  const armed = armedId === selectedId;
+  const pending = pendingId === selectedId;
+  const error = deleteError?.id === selectedId ? deleteError.message : null;
+
   async function permanentlyDelete() {
-    setPending(true);
-    setError(null);
+    setPendingId(selectedId);
+    setDeleteError(null);
     try {
       const response = await fetch(`/api/admin/clients/${encodeURIComponent(selectedId)}`, {
         headers: { accept: "application/json" },
@@ -37,15 +38,19 @@ export function ReferenceClientDeleteControl({ canManage }: { canManage: boolean
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error ?? "Danışan silinemedi.");
 
+      setArmedId(null);
       const next = new URLSearchParams(searchParams.toString());
       next.delete("kayit");
       const query = next.toString();
       router.replace((query ? `${pathname}?${query}` : pathname) as Route, { scroll: false });
       router.refresh();
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Danışan silinemedi.");
+    } catch (errorCaught) {
+      setDeleteError({
+        id: selectedId,
+        message: errorCaught instanceof Error ? errorCaught.message : "Danışan silinemedi.",
+      });
     } finally {
-      setPending(false);
+      setPendingId(null);
     }
   }
 
@@ -65,14 +70,21 @@ export function ReferenceClientDeleteControl({ canManage }: { canManage: boolean
           <button
             className={styles.cancelButton}
             disabled={pending}
-            onClick={() => setArmed(false)}
+            onClick={() => setArmedId(null)}
             type="button"
           >
             Vazgeç
           </button>
         </span>
       ) : (
-        <button className={styles.armButton} onClick={() => setArmed(true)} type="button">
+        <button
+          className={styles.armButton}
+          onClick={() => {
+            setArmedId(selectedId);
+            setDeleteError(null);
+          }}
+          type="button"
+        >
           Danışanı sil
         </button>
       )}
