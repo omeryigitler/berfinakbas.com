@@ -1,0 +1,119 @@
+import { NextResponse } from "next/server";
+
+import { auth } from "@/auth";
+import { hasPermission } from "@/domain/auth/permissions";
+import { isReferenceClientId } from "@/domain/clients/reference-clients";
+import { getDatabase } from "@/lib/db";
+import { getServerEnvironment } from "@/lib/env";
+import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
+
+function forbidden() {
+  return NextResponse.json(
+    { code: "FORBIDDEN", error: "Bu işlem için yetkiniz yok." },
+    { status: 403 },
+  );
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const session = await auth();
+  if (
+    !session?.user ||
+    session.user.status !== "ACTIVE" ||
+    !hasPermission(session.user.roles, "clients:manage")
+  ) {
+    return forbidden();
+  }
+
+  const environment = getServerEnvironment();
+  if (!hasTrustedOrigin(request.headers.get("origin"), environment.APP_URL)) {
+    return NextResponse.json(
+      { code: "UNTRUSTED_ORIGIN", error: "Güvenilmeyen istek kaynağı." },
+      { status: 403 },
+    );
+  }
+
+  const { id } = await params;
+  if (!isReferenceClientId(id)) {
+    return NextResponse.json(
+      {
+        code: "REFERENCE_CLIENT_REQUIRED",
+        error: "Yalnızca referans danışan kayıtları kalıcı olarak silinebilir.",
+      },
+      { status: 409 },
+    );
+  }
+
+  const database = getDatabase();
+  const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
+
+  const deleted = await database.$transaction(
+    async (transaction) => {
+      const client = await transaction.client.findUnique({
+        select: { id: true },
+        where: { id },
+      });
+      if (!client) return false;
+
+      const guardianLinks = await transaction.clientGuardian.findMany({
+        select: { guardianId: true },
+        where: { clientId: id },
+      });
+
+      await transaction.clientGuardian.deleteMany({ where: { clientId: id } });
+      await transaction.client.delete({ where: { id } });
+
+      for (const { guardianId } of guardianLinks) {
+        const guardian = await transaction.guardian.findUnique({
+          select: {
+            _count: {
+              select: {
+                appointments: true,
+                clients: true,
+                grantedConsents: true,
+                subjectConsents: true,
+              },
+            },
+          },
+          where: { id: guardianId },
+        });
+        if (
+          guardian &&
+          guardian._count.appointments === 0 &&
+          guardian._count.clients === 0 &&
+          guardian._count.grantedConsents === 0 &&
+          guardian._count.subjectConsents === 0
+        ) {
+          await transaction.guardian.delete({ where: { id: guardianId } });
+        }
+      }
+
+      await transaction.auditLog.create({
+        data: {
+          action: "client.reference_deleted",
+          actorType: "USER",
+          actorUserId: session.user.id,
+          beforeSummary: { referenceRecord: true },
+          correlationId,
+          entityId: id,
+          entityType: "CLIENT",
+          reason: "REFERENCE_CLIENT_PERMANENT_DELETE",
+        },
+      });
+
+      return true;
+    },
+    { isolationLevel: "Serializable" },
+  );
+
+  if (!deleted) {
+    return NextResponse.json(
+      { code: "CLIENT_NOT_FOUND", error: "Danışan kaydı bulunamadı." },
+      { status: 404 },
+    );
+  }
+
+  return NextResponse.json({ data: { id }, deleted: true });
+}
