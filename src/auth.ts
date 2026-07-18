@@ -32,9 +32,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   callbacks: {
     authorized({ auth: session, request }) {
       const isAdminRoute = request.nextUrl.pathname.startsWith("/yonetim");
-      const isSignInRoute = request.nextUrl.pathname === "/yonetim/giris";
 
-      if (!isAdminRoute || isSignInRoute) return true;
+      if (!isAdminRoute) return true;
 
       return session?.user.status === "ACTIVE";
     },
@@ -90,8 +89,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   pages: {
-    error: "/yonetim/giris",
-    signIn: "/yonetim/giris",
+    error: "/yonetim",
+    signIn: "/yonetim",
   },
   providers: googleProvider ? [googleProvider] : [],
   secret: environment.AUTH_SECRET,

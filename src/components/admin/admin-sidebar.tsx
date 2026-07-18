@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import type { Route } from 'next';
 
 interface AdminSidebarProps {
   activeMenuItemId: string;
@@ -87,7 +88,7 @@ export default function AdminSidebar({ activeMenuItemId, setActiveMenuItemId }: 
                 return (
                   <Link
                     key={item.id}
-                    href={item.href}
+                    href={item.href as Route}
                     onClick={() => setActiveMenuItemId(item.id)}
                     style={{
                       ...styles.menuItem,
