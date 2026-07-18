@@ -23,18 +23,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    return [
-      {
-        source: "/yonetim/danisanlar/yeni",
-        destination: "/yonetim/danisan-olustur",
-        permanent: false,
-      },
-      {
-        source: "/yonetim/danisanlar/:id",
-        destination: "/yonetim/danisan-profili?clientId=:id",
-        permanent: false,
-      },
-    ];
+    return [];
   },
 };
 
