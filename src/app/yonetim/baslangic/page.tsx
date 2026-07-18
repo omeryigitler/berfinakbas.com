@@ -7,6 +7,8 @@ import styles from "@/components/admin/hub/progressive-shell.module.css";
 import { hasPermission } from "@/domain/auth/permissions";
 import { requirePermission } from "@/lib/authorization";
 
+import startStyles from "./start-active.module.css";
+
 export const metadata: Metadata = {
   robots: { follow: false, index: false, noarchive: true, nosnippet: true },
   title: "Yönetim | Berfin Akbaş",
@@ -16,7 +18,7 @@ export default async function AdminStartPage() {
   const session = await requirePermission("appointments:read");
 
   return (
-    <div className={styles.scope}>
+    <div className={`${styles.scope} ${startStyles.scope}`}>
       <AdminShell
         email={session.user.email}
         permissions={{
