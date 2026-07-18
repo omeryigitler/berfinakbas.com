@@ -20,8 +20,8 @@ describe("admin Hub base theme", () => {
   it("defines the single Hub token set in the base shell", () => {
     expect(css).toContain("--admin-bg: #e9e7e2");
     expect(css).toContain("--admin-panel: #fbfaf8");
-    expect(css).toContain("--admin-lime: #dfec83");
-    expect(css).toContain("--admin-teal: #12897b");
+    expect(css).toContain("--admin-lime: #dcff5f");
+    expect(css).toContain("--admin-teal: #189384");
     expect(css).toContain("--admin-peach: #fbe3d2");
   });
 
