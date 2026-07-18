@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-crm-lime: #d9f99d; /* Lime green 200 */
+  --color-crm-accent: #d2fc5c; /* The exact vibrant lime/yellow in screenshot */
+  --color-crm-bg: #f4f3ee;     /* Warm off-white page background */
+  --color-crm-sidebar: #eae8e1; /* Elegant light-beige sidebar background */
+  --color-crm-panel: #fcfbfa;  /* Subtle pale card/inner backgrounds */
+}
+
+/* Hide scrollbar globally */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
