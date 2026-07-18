@@ -1,578 +1,95 @@
 "use client";
 
-import type { Route } from "next";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 
-import {
-  buildHubStatusUrl,
-  getHubActions,
-  type HubAction,
-} from "./hub-actions";
-import { HubAvatar } from "./hub-avatar";
-import {
-  groupRecords,
-  hubGroupLabels,
-  hubStatusLabels,
-  type HubRecord,
-} from "./hub-model";
+import { getMonogram, groupRecords, hubGroupLabels, hubStatusLabels, type HubRecord } from "./hub-model";
 
-type Section = "danisanlar" | "talepler";
-
-const menu = [
-  {
-    group: "Çalışma Alanım",
-    items: [{ href: "/yonetim/baslangic", icon: "⌂", label: "Genel bakış" }],
-  },
-  {
-    group: "Randevular",
-    items: [
-      { href: "/yonetim/hub", icon: "▦", label: "Talep kuyruğu" },
-      { href: "/yonetim/randevular", icon: "◷", label: "Randevu operasyonu" },
-      { href: "/yonetim/musaitlik", icon: "▤", label: "Müsaitlik yönetimi" },
-    ],
-  },
-  {
-    group: "Danışanlar",
-    items: [
-      {
-        href: "/yonetim/hub?bolum=danisanlar",
-        icon: "◉",
-        label: "Danışan kayıt merkezi",
-      },
-      { href: "/yonetim/danisanlar", icon: "○", label: "Danışan yönetimi" },
-      { href: "/yonetim/danisan-olustur", icon: "+", label: "Yeni danışan" },
-    ],
-  },
-  {
-    group: "Finans",
-    items: [
-      { href: "/yonetim/odemeler", icon: "₺", label: "Ödeme ve planlar" },
-    ],
-  },
-  {
-    group: "Site Yönetimi",
-    items: [
-      {
-        href: "/yonetim?alan=public-iletisim-ayarlari",
-        icon: "⌁",
-        label: "İletişim ayarları",
-      },
-      {
-        href: "/yonetim?alan=hizmet-terapist-ayarlari",
-        icon: "⚙",
-        label: "Hizmet ve terapist",
-      },
-    ],
-  },
-] as const;
-
-function CircleLink({
-  href,
-  label,
-  children,
-}: {
-  href: Route;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <Link
-      aria-label={label}
-      className="grid size-10 place-items-center rounded-full border border-black/10 bg-white/25 text-lg text-slate-600 transition hover:bg-white hover:text-black"
-      href={href}
-      title={label}
-    >
-      {children}
-    </Link>
-  );
-}
-
-function Status({ record }: { record: HubRecord }) {
-  return (
-    <span className="rounded-full border border-black/5 bg-white/55 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider text-slate-600">
-      {hubStatusLabels[record.status]}
-    </span>
-  );
-}
-
-export function DashboardAdmin({
-  appointments,
-  canManage = false,
-  canReadClients = false,
-  clients = [],
-  toolbar = null,
-}: {
+type Props = {
   appointments: readonly HubRecord[];
-  canManage?: boolean;
-  canReadClients?: boolean;
-  clients?: readonly HubRecord[];
-  toolbar?: ReactNode;
-  availability?: unknown;
-  finance?: unknown;
-  preferredSection?: string;
-  sampleAppointments?: readonly HubRecord[];
-  sampleClients?: readonly HubRecord[];
-}) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const section: Section =
-    searchParams.get("bolum") === "danisanlar" && canReadClients
-      ? "danisanlar"
-      : "talepler";
-  const records = section === "danisanlar" ? clients : appointments;
-  const selectedId = searchParams.get("kayit");
-  const selected =
-    records.find((record) => record.id === selectedId) ?? records[0] ?? null;
-  const [pending, setPending] = useState<string | null>(null);
-  const buckets = useMemo(() => groupRecords(records), [records]);
-  const actions =
-    selected?.kind === "randevu" && selected.rawStatus
-      ? getHubActions(selected.rawStatus, canManage)
-      : [];
+  clients: readonly HubRecord[];
+  preferredSection: "danisanlar" | "talepler";
+  [key: string]: unknown;
+};
 
-  function select(id: string | null) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (id) params.set("kayit", id);
-    else params.delete("kayit");
-    router.replace(`${pathname}?${params.toString()}` as Route, {
-      scroll: false,
-    });
-  }
+const Icon = ({ children }: { children: string }) => <span className="text-[15px] leading-none" aria-hidden>{children}</span>;
 
-  async function run(action: HubAction) {
-    if (!selected) return;
-    setPending(action.id);
-    const response = await fetch(buildHubStatusUrl(selected.id), {
-      body: JSON.stringify({
-        reasonCode: action.reasonCode,
-        toStatus: action.toStatus,
-      }),
-      headers: { "content-type": "application/json" },
-      method: "PATCH",
-    });
-    setPending(null);
-    if (response.ok) router.refresh();
-  }
-
-  return (
-    <main className="flex h-screen overflow-hidden bg-[#eae8e1] font-sans text-[#323130]">
-      <aside className="flex h-screen w-60 shrink-0 flex-col bg-[#eae8e1]">
-        <div className="flex h-16 items-center gap-3 border-b border-black/5 px-4">
-          <span className="grid size-7 place-items-center rounded-full border border-black/10 bg-white">
-            BA
-          </span>
-          <strong className="text-sm">Berfin Akbaş</strong>
-          <span className="h-4 w-px bg-black/10" />
-          <small className="text-xs text-slate-500">Yönetim</small>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-5">
-          <div className="mb-5 flex items-center justify-between px-2">
-            <h1 className="text-xl font-bold">Menü</h1>
-            <span className="grid size-7 place-items-center rounded-full border border-black/10">
-              ←
-            </span>
-          </div>
-          {menu.map((group) => (
-            <section className="mb-5" key={group.group}>
-              <h2 className="mb-1 px-3 text-[11px] font-extrabold text-slate-800">
-                {group.group}
-              </h2>
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const active =
-                    String(item.href).split("?")[0] === pathname &&
-                    (!String(item.href).includes("bolum=") ||
-                      section === "danisanlar");
-                  return (
-                    <Link
-                      className={`flex min-h-10 items-center gap-3 rounded-full px-3 text-sm font-semibold transition ${active ? "bg-[#d2fc5c] text-black" : "text-slate-500 hover:bg-white/35 hover:text-black"}`}
-                      href={item.href as Route}
-                      key={item.href}
-                    >
-                      <span className="grid size-7 place-items-center rounded-full border border-black/10">
-                        {item.icon}
-                      </span>
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-      </aside>
-
-      <section className="flex min-w-0 flex-1 flex-col bg-[#eae8e1]">
-        <header className="flex h-16 shrink-0 items-center justify-end gap-2 px-6">
-          <CircleLink href={"/yonetim/danisanlar" as Route} label="Ara">
-            ⌕
-          </CircleLink>
-          <CircleLink href={"/yonetim/randevular" as Route} label="Randevular">
-            ◷
-          </CircleLink>
-          <CircleLink
-            href={"/yonetim/danisan-olustur" as Route}
-            label="Yeni danışan"
-          >
-            ＋
-          </CircleLink>
-          <CircleLink href={"/yonetim/baslangic" as Route} label="Genel bakış">
-            ♧
-          </CircleLink>
-          <CircleLink href={"/yonetim/hub" as Route} label="Talep kuyruğu">
-            ▽
-          </CircleLink>
-          <CircleLink
-            href={"/yonetim?alan=hizmet-terapist-ayarlari" as Route}
-            label="Ayarlar"
-          >
-            ⚙
-          </CircleLink>
-          <CircleLink href={"/" as Route} label="Siteyi aç">
-            ?
-          </CircleLink>
-          <CircleLink
-            href={"/yonetim?alan=public-iletisim-ayarlari" as Route}
-            label="İletişim"
-          >
-            ◉
-          </CircleLink>
-          <CircleLink href={"/yonetim/baslangic" as Route} label="Profil">
-            BA
-          </CircleLink>
-        </header>
-
-        <div className="flex min-h-0 flex-1 gap-2 pr-6 pb-6">
-          <section className="flex h-full w-[340px] shrink-0 flex-col overflow-hidden rounded-[2.5rem] border border-black/10 bg-[#fcfbfa] shadow-sm">
-            <header className="flex items-center justify-between p-6 pb-3">
-              <div>
-                <h2 className="text-2xl font-bold">
-                  {section === "danisanlar" ? "Danışanlar" : "Talep Kuyruğu"}
-                </h2>
-                <small className="text-slate-400">{records.length} kayıt</small>
-              </div>
-              <div className="flex gap-1.5">
-                <button
-                  className="grid size-8 place-items-center rounded-full border border-black/10"
-                  onClick={() => router.refresh()}
-                >
-                  ↻
-                </button>
-                <CircleLink
-                  href={"/yonetim/danisan-olustur" as Route}
-                  label="Yeni"
-                >
-                  ＋
-                </CircleLink>
-              </div>
-            </header>
-            <div className="px-5 pb-3">{toolbar}</div>
-            <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-6">
-              {buckets.length === 0 ? (
-                <p className="p-6 text-center text-sm text-slate-400">
-                  Kayıt bulunmuyor.
-                </p>
-              ) : (
-                buckets.map((bucket) => (
-                  <div key={bucket.group}>
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="h-px flex-1 bg-black/5" />
-                      <small className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                        {hubGroupLabels[bucket.group]}
-                      </small>
-                      <span className="h-px flex-1 bg-black/5" />
-                    </div>
-                    {bucket.items.map((record) => (
-                      <button
-                        className={`mb-3 w-full rounded-[2rem] border p-4 text-left transition ${selected?.id === record.id ? "border-black/[.04] bg-[#eafda8]" : "border-black/10 bg-white hover:bg-slate-50"}`}
-                        key={record.id}
-                        onClick={() => select(record.id)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <HubAvatar name={record.name} size={40} />
-                          <span className="min-w-0 flex-1">
-                            <strong className="block truncate text-xs">
-                              {record.name}
-                            </strong>
-                            <small className="block truncate text-[10px] text-slate-400">
-                              {record.lastAction}
-                            </small>
-                          </span>
-                          <span className="grid size-7 place-items-center rounded-full border border-black/10 text-[10px] font-extrabold">
-                            {record.score}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between">
-                          <Status record={record} />
-                          <small className="text-[9px] text-slate-400">
-                            {record.lastActionAt}
-                          </small>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[2.5rem] border border-black/10 bg-gradient-to-br from-[#f1ffb1] via-[#fbfcf4] to-white shadow-sm">
-            <div className="flex min-h-16 items-center gap-5 border-b border-black/5 px-6 text-xs font-semibold">
-              <Link
-                href={(selected?.profileHref as Route) ?? "/yonetim/danisanlar"}
-              >
-                Kaydet
-              </Link>
-              <Link href={"/yonetim/danisan-olustur" as Route}>＋ Yeni</Link>
-              {actions.map((action) => (
-                <button
-                  disabled={pending !== null}
-                  key={action.id}
-                  onClick={() => void run(action)}
-                >
-                  {pending === action.id ? "İşleniyor…" : action.label}
-                </button>
-              ))}
-              <button onClick={() => router.refresh()}>↻ Yenile</button>
-              <button onClick={() => window.print()}>▤ PDF</button>
-              <button
-                onClick={() =>
-                  document
-                    .getElementById("quality-card")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                ♙ Kalite
-              </button>
-              <button
-                onClick={() =>
-                  document
-                    .getElementById("process-card")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                ⌁ Süreç
-              </button>
-              <button className="ml-auto text-lg" onClick={() => select(null)}>
-                •••
-              </button>
-            </div>
-            {!selected ? (
-              <div className="grid flex-1 place-items-center text-slate-400">
-                Listeden bir kayıt seçin.
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto p-5">
-                <header className="mb-4 flex items-center justify-between rounded-3xl border border-black/5 bg-white/70 p-5">
-                  <div className="flex items-center gap-4">
-                    <HubAvatar name={selected.name} size={52} />
-                    <div>
-                      <h2 className="text-xl font-extrabold">
-                        {selected.name}
-                      </h2>
-                      <p className="text-xs text-slate-500">
-                        {selected.service}
-                      </p>
-                      <div className="mt-2 flex gap-2">
-                        <Status record={selected} />
-                        <span className="rounded-full bg-black px-2 py-1 text-[9px] font-bold text-white">
-                          {selected.channel}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <dl className="grid grid-cols-3 gap-8 text-xs">
-                    <div>
-                      <dt className="text-[9px] font-bold uppercase text-slate-400">
-                        Yaklaşan
-                      </dt>
-                      <dd className="font-bold">{selected.plannedAt}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-[9px] font-bold uppercase text-slate-400">
-                        Durum
-                      </dt>
-                      <dd className="font-bold">
-                        {hubStatusLabels[selected.status]}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[9px] font-bold uppercase text-slate-400">
-                        Kayıt
-                      </dt>
-                      <dd className="font-bold">{selected.reference || "—"}</dd>
-                    </div>
-                  </dl>
-                </header>
-                <nav className="mb-5 flex gap-8 border-b border-black/5 px-2 pb-2 text-xs font-bold">
-                  <span className="rounded-full bg-black px-4 py-2 text-white">
-                    Özet
-                  </span>
-                  <span className="py-2 text-slate-400">Randevular</span>
-                  <span className="py-2 text-slate-400">Finans</span>
-                  <span className="py-2 text-slate-400">İşlem geçmişi</span>
-                </nav>
-                <div className="grid grid-cols-3 gap-5">
-                  <div className="space-y-5">
-                    <article className="rounded-3xl border border-black/10 bg-white p-5">
-                      <h3 className="mb-4 border-b border-black/5 pb-2 text-sm font-bold">
-                        İletişim
-                      </h3>
-                      <dl className="space-y-3 text-xs">
-                        <div className="grid grid-cols-3">
-                          <dt className="text-slate-400">Telefon</dt>
-                          <dd className="col-span-2 font-semibold">
-                            {selected.contactPhone}
-                          </dd>
-                        </div>
-                        <div className="grid grid-cols-3">
-                          <dt className="text-slate-400">E-posta</dt>
-                          <dd className="col-span-2 break-all font-semibold text-sky-600">
-                            {selected.contactEmail}
-                          </dd>
-                        </div>
-                        <div className="grid grid-cols-3">
-                          <dt className="text-slate-400">Tip</dt>
-                          <dd className="col-span-2 font-semibold">
-                            {selected.channel}
-                          </dd>
-                        </div>
-                      </dl>
-                    </article>
-                    <article className="rounded-3xl border border-black/10 bg-white p-5">
-                      <h3 className="mb-3 text-sm font-bold">
-                        Veli / Bağlantılar
-                      </h3>
-                      {selected.connections.length ? (
-                        selected.connections.map((item) => (
-                          <div
-                            className="flex items-center gap-3 border-t border-black/5 py-3"
-                            key={item.name}
-                          >
-                            <HubAvatar name={item.name} size={34} />
-                            <div>
-                              <strong className="block text-xs">
-                                {item.name}
-                              </strong>
-                              <small className="text-slate-400">
-                                {item.relation}
-                              </small>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-slate-400">
-                          Bağlantılı kayıt yok.
-                        </p>
-                      )}
-                    </article>
-                  </div>
-                  <div className="space-y-5">
-                    <article
-                      className="rounded-3xl border border-black/10 bg-white p-5"
-                      id="process-card"
-                    >
-                      <h3 className="mb-3 text-sm font-bold">
-                        Sıradaki adımlar
-                      </h3>
-                      <ol className="space-y-3">
-                        {selected.nextSteps.map((step, index) => (
-                          <li
-                            className={
-                              index === 0
-                                ? "rounded-2xl bg-[#eafda8] p-3"
-                                : "rounded-2xl border border-black/5 bg-slate-50 p-3"
-                            }
-                            key={step.title}
-                          >
-                            <strong className="text-xs">
-                              {index + 1}. {step.title}
-                            </strong>
-                            <p className="mt-1 text-[11px] text-slate-500">
-                              {step.detail}
-                            </p>
-                            <small className="text-[9px] font-bold text-emerald-600">
-                              {step.due}
-                            </small>
-                          </li>
-                        ))}
-                      </ol>
-                    </article>
-                    <article className="rounded-3xl border border-black/10 bg-white p-5">
-                      <h3 className="mb-3 text-sm font-bold">
-                        Zaman çizelgesi
-                      </h3>
-                      {selected.timeline.map((item) => (
-                        <div
-                          className="grid grid-cols-3 border-l border-emerald-200 py-2 pl-3 text-[11px]"
-                          key={`${item.at}-${item.label}`}
-                        >
-                          <time className="font-bold text-emerald-600">
-                            {item.at}
-                          </time>
-                          <span className="col-span-2 text-slate-500">
-                            {item.label}
-                          </span>
-                        </div>
-                      ))}
-                    </article>
-                  </div>
-                  <div className="space-y-5">
-                    <article
-                      className="rounded-3xl border border-black/10 bg-white p-5"
-                      id="quality-card"
-                    >
-                      <h3 className="mb-4 border-b border-black/5 pb-2 text-sm font-bold">
-                        Kayıt kalitesi
-                      </h3>
-                      <div className="mb-4 flex items-center gap-5">
-                        <div className="grid size-24 place-items-center rounded-full border-[7px] border-emerald-500 text-3xl font-extrabold">
-                          {selected.score}
-                        </div>
-                        <div>
-                          <strong className="text-xs">
-                            {selected.grade} · Takip durumu
-                          </strong>
-                          <p className="mt-1 text-[10px] text-slate-400">
-                            İletişim, kayıt ve operasyon verilerine göre.
-                          </p>
-                        </div>
-                      </div>
-                      <ul className="space-y-2">
-                        {selected.readinessNotes.map((note) => (
-                          <li
-                            className="rounded-xl border border-emerald-100 bg-emerald-50 p-2 text-[11px]"
-                            key={note}
-                          >
-                            ✓ {note}
-                          </li>
-                        ))}
-                      </ul>
-                    </article>
-                    <article className="rounded-3xl border border-black/10 bg-white p-5">
-                      <h3 className="mb-3 text-sm font-bold">Finans ve plan</h3>
-                      <p className="text-xs text-slate-500">
-                        Yetkili finans özeti danışan profili üzerinden açılır.
-                      </p>
-                      {selected.profileHref ? (
-                        <Link
-                          className="mt-3 inline-flex rounded-xl bg-black px-4 py-2 text-[10px] font-bold text-white"
-                          href={selected.profileHref as Route}
-                        >
-                          Danışan profilini aç
-                        </Link>
-                      ) : null}
-                    </article>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
-      </section>
+export function DashboardAdmin({ appointments, clients, preferredSection }: Props) {
+  const [activeMenuItem, setActiveMenuItem] = useState(preferredSection === "danisanlar" ? "clients" : "requests");
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [notice, setNotice] = useState("");
+  const records = activeMenuItem === "clients" ? clients : appointments;
+  const filtered = useMemo(() => records.filter((record) => `${record.name} ${record.lastAction} ${record.contactPhone}`.toLocaleLowerCase("tr-TR").includes(query.toLocaleLowerCase("tr-TR"))), [query, records]);
+  const selected = filtered.find((record) => record.id === selectedId) ?? filtered[0] ?? null;
+  const nav = [
+    ["Çalışma alanım", [["home", "Genel bakış", "⌂"]]],
+    ["Randevular", [["requests", "Talep kuyruğu", "▦"], ["calendar", "Randevu operasyonu", "◷"], ["summary", "Müsaitlik özeti", "▤"]]],
+    ["Danışanlar", [["clients", "Danışan kayıt merkezi", "◉"], ["client-management", "Danışan yönetimi", "○"], ["new", "Yeni danışan", "+"]]],
+    ["Finans", [["finance", "Ödeme ve planlar", "₺"]]],
+    ["Site yönetimi", [["settings", "İletişim ayarları", "⌁"], ["services", "Hizmet ve terapist", "✺"]]],
+  ] as const;
+  const selectMenu = (id: string) => {
+    if (id === "clients" || id === "requests") { setActiveMenuItem(id); setSelectedId(null); return; }
+    if (id === "new") { window.location.assign("/yonetim/danisan-olustur"); return; }
+    if (id === "finance") { window.location.assign("/yonetim/odemeler"); return; }
+    if (id === "settings" || id === "services") { window.location.assign(`/yonetim/hub?alan=${id}`); return; }
+    setNotice("Bu alan mevcut yönetim akışına yönlendirilmek üzere hazırlanıyor.");
+  };
+  return <div className="flex h-screen min-h-[760px] overflow-hidden bg-[#eae8e1] font-sans text-[#111827]">
+    <aside className="h-screen w-60 shrink-0 bg-[#eae8e1] flex flex-col select-none">
+      <div className="flex h-16 items-center gap-3 border-b border-[#e2e1df]/60 px-4">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 border border-black/10 bg-white text-[10px] font-bold">BA</div>
+        <div className="flex items-center gap-2 whitespace-nowrap"><span className="font-bold text-[#323130] text-sm tracking-tight">Berfin Akbaş</span><span className="w-px h-3.5 bg-[#dcdad3]"/><span className="text-xs text-[#605e5c] font-semibold">Yönetim</span></div>
+      </div>
+      <div className="flex-1 overflow-y-auto py-5 space-y-5 px-4">
+        <div className="flex items-center justify-between px-2"><span className="text-xl font-bold text-gray-800 tracking-tight">Menü</span><button className="w-7 h-7 rounded-full border border-gray-400/20 text-gray-500" onClick={() => setNotice("Menü açık.")}>←</button></div>
+        {nav.map(([title, items]) => <div key={title} className="space-y-1.5 pt-1"><span className="px-3 text-[12px] font-bold text-gray-900 block mb-1">{title}</span><div className="space-y-1">{items.map(([id,label,icon]) => <button key={id} onClick={() => selectMenu(id)} className={`w-full flex items-center gap-3.5 px-3 py-1.5 rounded-full text-sm transition-colors cursor-pointer ${activeMenuItem === id ? "bg-[#d2fc5c] text-black font-bold" : "text-gray-500 hover:bg-white/30 hover:text-black font-semibold"}`}><div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${activeMenuItem === id ? "border-black/15" : "border-gray-400/20"}`}><Icon>{icon}</Icon></div><span className="truncate">{label}</span></button>)}</div></div>)}
+      </div>
+    </aside>
+    <main className="flex min-w-0 flex-1 flex-col">
+      <header className="h-16 px-6 flex items-center justify-between shrink-0 relative"><div className="flex-1"/><div className="flex items-center gap-1">{[["⌕","Ara"],["◷","Randevular"],["+","Yeni danışan"],["♧","İçgörüler"],["▽","Filtre"],["⚙","Ayarlar"],["?","Yardım"],["◉","Destek"]].map(([icon,title], index) => <button key={title} title={title} onClick={() => index === 2 ? window.location.assign("/yonetim/danisan-olustur") : index === 1 ? window.location.assign("/yonetim/randevular") : index === 0 || index === 4 ? setShowSearch(true) : setNotice(`${title} etkin.`)} className="w-9 h-9 rounded-full border border-gray-400/20 flex items-center justify-center hover:bg-white/30 text-gray-500 hover:text-black transition-colors"><Icon>{icon}</Icon></button>)}<div className="relative ml-1 w-9 h-9 rounded-full bg-white border border-gray-400/20 flex items-center justify-center text-xs">BA<span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"/></div></div></header>
+      <div className="flex min-h-0 flex-1 gap-2 px-0 pb-4">
+        <section id="my-work-panel" className="w-[340px] bg-[#fcfbfa] rounded-[2.5rem] border border-gray-300/40 shadow-sm flex flex-col overflow-hidden h-[calc(100vh-5rem)] shrink-0 select-none">
+          <div className="p-6 pb-3 flex items-center justify-between"><h2 className="text-2xl font-bold text-gray-900 tracking-tight">My Work</h2><div className="flex items-center gap-1.5"><button onClick={() => {setQuery("");setSelectedId(null)}} title="Yenile" className="w-8 h-8 rounded-full border border-gray-400/20 bg-white/40">↻</button><button onClick={() => setNotice(`${filtered.length} kayıt listeleniyor.`)} title="Kuyruk" className="w-8 h-8 rounded-full border border-gray-400/20 bg-white/40">▤</button><button onClick={() => setShowSearch(!showSearch)} title="Ara" className={`w-8 h-8 rounded-full border ${showSearch ? "bg-black border-black text-white" : "border-gray-400/20 bg-white/40 text-gray-500"}`}>⌕</button></div></div>
+          {showSearch && <div className="px-6 pb-3"><div className="relative"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Danışan veya işlem ara..." autoFocus className="w-full bg-white/60 border border-gray-300/60 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:border-black/50"/></div></div>}
+          <div className="px-6 pb-3"><div className="flex items-center justify-center gap-2"><div className="flex-1 h-px bg-gray-200/60"/><span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">{activeMenuItem === "clients" ? "Danışanlar" : "Bugün"}</span><div className="flex-1 h-px bg-gray-200/60"/></div></div>
+          <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-4">{filtered.length === 0 ? <div className="text-center py-10 px-4 text-xs text-gray-400 font-semibold">Bu bölümde kayıt bulunmuyor.</div> : groupRecords(filtered).map((bucket) => <div key={bucket.group} className="space-y-4"><div className="flex items-center justify-center gap-2"><div className="flex-1 h-px bg-gray-200/60"/><span className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">{hubGroupLabels[bucket.group]}</span><div className="flex-1 h-px bg-gray-200/60"/></div>{bucket.items.map((record) => <button key={record.id} onClick={() => setSelectedId(record.id)} className={`w-full text-left transition-all duration-200 rounded-[2rem] p-4 flex flex-col gap-3 shadow-xs border ${selected?.id === record.id ? "bg-[#eafda8] border-black/[0.04]" : "bg-white hover:bg-gray-50/50 border-gray-200/60"}`}><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2.5"><div className="w-10 h-10 rounded-full bg-[#dcead1] border border-black/5 flex items-center justify-center text-xs font-bold">{getMonogram(record.name)}</div><div><span className="text-xs font-bold leading-tight block text-gray-800">{record.name}</span><span className="text-[10px] text-gray-400 font-semibold">{record.lastAction}</span></div></div><div className="w-7 h-7 rounded-full bg-gray-50 text-gray-400 border border-gray-200 flex items-center justify-center">{record.contactEmail ? "✉" : "☎"}</div></div><div className="flex items-center justify-between"><div className="px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wider bg-gray-50 text-gray-400 border border-gray-100">{record.kind === "danisan" ? "DANIŞAN" : "TALEP"}</div><div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-xs border bg-[#ecfdf5] text-emerald-600 border-emerald-100">{record.score}</div></div></button>)}</div>)}</div>
+        </section>
+        <Workspace record={selected} notice={notice} clearNotice={() => setNotice("")} />
+      </div>
     </main>
-  );
+  </div>;
 }
+
+function Workspace({ record, notice, clearNotice }: { record: HubRecord | null; notice: string; clearNotice: () => void }) {
+  const [tab,setTab] = useState("Özet");
+  if (!record) return <section className="flex-1 bg-gradient-to-br from-[#eafda8]/75 via-white/80 to-white/95 rounded-[2.5rem] border border-gray-300/40 p-5 h-[calc(100vh-5rem)] flex items-center justify-center text-sm font-semibold text-gray-400">Listeden bir danışan seçin.</section>;
+  const stage = ["Talep", "Kontrol", "Onay", "Görüşme"];
+  const stageIndex = ["talep","kontrol","onay","gorusme"].indexOf(record.stage);
+  return <section id="workspace-panel" className="flex-1 min-w-0 bg-gradient-to-br from-[#eafda8]/75 via-white/80 to-white/95 rounded-[2.5rem] border border-gray-300/40 p-5 flex flex-col h-[calc(100vh-5rem)] shadow-sm overflow-y-auto select-none gap-5">
+    {notice && <button onClick={clearNotice} className="rounded-xl bg-[#fff7d6] p-2 text-left text-xs font-semibold">{notice} ×</button>}
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.04] pb-4">
+      <div className="flex items-center gap-1">
+        {([
+          ["▣", "Kaydet", () => { if (record.profileHref) window.location.assign(record.profileHref); }],
+          ["+", "Yeni", () => window.location.assign("/yonetim/danisan-olustur")],
+          ["⌫", "Kapat", () => history.back()],
+          ["↻", "Yenile", () => window.location.reload()],
+          ["⌘", "Erişimi denetle", () => alert("Bu kayıt için mevcut görüntüleme yetkisi doğrulandı.")],
+          ["▤", "PDF", () => window.print()],
+          ["♙", "Kalite", () => document.getElementById("record-quality")?.scrollIntoView({ behavior: "smooth" })],
+          ["⌁", "Süreç", () => document.getElementById("record-process")?.scrollIntoView({ behavior: "smooth" })],
+        ] as const).map(([icon, label, action]) => <button key={label} onClick={action} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-black/[0.03] text-gray-700 hover:text-black text-xs font-semibold"><Icon>{icon}</Icon><span>{label}</span></button>)}
+      </div>
+      <button className="w-8 h-8 rounded-full hover:bg-black/[0.03]">•••</button>
+    </div>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/40 p-4 rounded-3xl border border-white/60 shadow-xs"><div className="flex items-center gap-3.5"><div className="w-14 h-14 rounded-full bg-[#dcead1] border-2 border-white shadow-sm flex items-center justify-center font-bold">{getMonogram(record.name)}</div><div className="flex flex-col gap-1"><h1 className="text-xl font-bold text-gray-900 tracking-tight">{record.name}</h1><div className="flex items-center gap-1.5"><span className="px-2.5 py-0.5 bg-[#eafda8] text-black text-[9px] font-bold uppercase tracking-wider rounded-full">{record.kind === "danisan" ? "Danışan" : "Talep"}</span><span className="px-2.5 py-0.5 bg-black text-white text-[9px] font-bold uppercase tracking-wider rounded-full">KAYIT GÖRÜNÜMÜ</span></div></div></div><div className="flex items-center gap-6 text-[11px] font-medium text-gray-500 pr-2"><Stat label="KAYNAK" value={record.channel}/><Stat label="HİZMET" value={record.service}/><Stat label="DURUM" value={hubStatusLabels[record.status]}/><Stat label="REFERANS" value={record.reference}/></div></div>
+    <div id="record-process" className="bg-white/40 border border-white/60 rounded-3xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs"><div className="flex flex-col gap-0.5 pl-2.5"><span className="text-xs font-bold text-gray-900 leading-tight">Danışan işlem süreci</span><span className="text-[10px] text-gray-400 font-semibold">{record.lastActionAt}</span></div><div className="flex flex-1 items-center justify-end gap-1 text-[11px] font-bold">{stage.map((label,index) => <div key={label} className="flex items-center gap-1"><div className={`flex items-center ${index===0?"rounded-l-full":"rounded-lg"} ${index===stage.length-1?"rounded-r-full":""} ${index <= stageIndex ? "bg-teal-500 text-white" : "bg-white/70 border border-gray-200 text-gray-600"} px-4 py-1.5`}><span>{index < stageIndex ? "✓" : index === stageIndex ? "●" : "◌"}</span><span>{label}</span></div>{index<stage.length-1 && <span className="text-gray-300">›</span>}</div>)}</div></div>
+    <div className="flex items-center gap-1 border-b border-black/[0.03] pb-2 text-xs font-bold">{["Özet","İlişki analizi","Detaylar","İlgili"].map(item => <button onClick={() => setTab(item)} key={item} className={`px-5 py-2 rounded-full ${tab===item ? "bg-black text-white shadow-xs" : "text-gray-400 hover:text-black"}`}>{item}</button>)}</div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5"><div className="flex flex-col gap-5"><Card title="İletişim"><Row label="Telefon" value={record.contactPhone}/><Row label="E-posta" value={record.contactEmail}/><Row label="Hizmet" value={record.service}/><Row label="Planlanan" value={record.plannedAt}/></Card><Card title="Bağlantılar">{record.connections.length ? record.connections.map(c=><Row key={c.name} label={c.relation} value={c.name}/>) : <Row label="Durum" value="Bağlantılı kayıt yok"/>}</Card></div><div className="flex flex-col gap-5"><Card title="Sıradaki adımlar">{record.nextSteps.length ? record.nextSteps.map((step,index)=><div key={step.title} className="rounded-2xl border border-gray-200/80 p-3 mb-2"><div className="flex gap-3"><span className="w-6 h-6 rounded-lg bg-[#201d1d] text-white text-xs flex items-center justify-center font-bold">{index+1}</span><div><p className="text-xs font-bold">{step.title}</p><p className="text-[10px] text-gray-400 mt-1">{step.detail}</p><p className="text-[10px] text-teal-600 font-bold mt-2">{step.due}</p></div></div></div>) : <p className="text-xs text-gray-400">Planlanmış adım yok.</p>}</Card><Card title="Zaman çizelgesi">{record.timeline.length ? record.timeline.map(item=><div key={`${item.at}-${item.label}`} className="flex gap-5 text-[10px] py-2"><span className="text-teal-600 font-bold">{item.at}</span><span className="text-gray-500">{item.label}</span></div>) : <p className="text-xs text-gray-400">Zaman çizelgesi henüz boş.</p>}</Card></div><div className="flex flex-col gap-5"><Card title="Kayıt skoru"><div id="record-quality" className="flex items-center justify-center gap-5 py-3"><div className="w-24 h-24 rounded-full border-[8px] border-emerald-500 flex flex-col justify-center items-center"><b className="text-3xl">{record.score}</b><span className="text-[8px] font-bold text-emerald-600">GRADE {record.grade}</span></div><div className="text-xs"><b className="text-emerald-600">● Kararlı</b><p className="text-[10px] text-gray-400 mt-2">Kayıt etkileşimleri ve planlanan adımlardan hesaplanır.</p></div></div></Card><Card title="Kontrol notları">{record.readinessNotes.length ? record.readinessNotes.map(note=><p key={note} className="rounded-xl bg-[#ecfdf5] border border-emerald-200 px-3 py-2 text-xs mb-2">✓ {note}</p>) : <p className="text-xs text-gray-400">Kontrol notu bulunmuyor.</p>}</Card></div></div>
+  </section>;
+}
+function Stat({label,value}:{label:string;value:string}){return <div className="flex flex-col gap-0.5"><span className="text-gray-400 font-bold uppercase text-[9px] tracking-wider">{label}</span><span className="text-gray-900 font-bold max-w-28 truncate">{value || "—"}</span></div>}
+function Card({title,children}:{title:string;children:ReactNode}){return <div className="bg-white border border-gray-200/60 rounded-3xl p-5 shadow-xs"><h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">{title}</h3>{children}</div>}
+function Row({label,value}:{label:string;value:string}){return <div className="grid grid-cols-3 gap-3 py-2 border-b border-gray-100 last:border-0 text-xs"><span className="text-gray-400 font-semibold">{label}</span><span className="col-span-2 font-medium break-all">{value || "—"}</span></div>}
