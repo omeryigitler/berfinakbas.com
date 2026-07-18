@@ -1,8 +1,8 @@
-export default function OdemelerPage() {
+export default function FirsatlarPage() {
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>💳 Ödemeler</h1>
-      <p style={styles.subtitle}>Ödeme işlemleri bu sayfada gösterilecek</p>
+      <h1 style={styles.title}>💡 Fırsatlar</h1>
+      <p style={styles.subtitle}>Satış fırsatları bu sayfada gösterilecek</p>
     </div>
   );
 }

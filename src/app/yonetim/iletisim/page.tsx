@@ -1,8 +1,8 @@
-export default function OdemelerPage() {
+export default function IletisimPage() {
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>💳 Ödemeler</h1>
-      <p style={styles.subtitle}>Ödeme işlemleri bu sayfada gösterilecek</p>
+      <h1 style={styles.title}>📞 İletişim</h1>
+      <p style={styles.subtitle}>İletişim kayıtları bu sayfada gösterilecek</p>
     </div>
   );
 }

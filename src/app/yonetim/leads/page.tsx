@@ -1,8 +1,8 @@
-export default function OdemelerPage() {
+export default function LeadsPage() {
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>💳 Ödemeler</h1>
-      <p style={styles.subtitle}>Ödeme işlemleri bu sayfada gösterilecek</p>
+      <h1 style={styles.title}>🎯 Leads</h1>
+      <p style={styles.subtitle}>Potansiyel danışanlar bu sayfada gösterilecek</p>
     </div>
   );
 }
