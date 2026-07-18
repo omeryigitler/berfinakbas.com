@@ -238,23 +238,8 @@ export function AdminShell({
   const homeHref = navigationItems[0]?.href ?? ("/yonetim/baslangic" as Route);
   const activeWorkspaceSection = searchParams.get("alan") ?? "";
   const activeHubSection = searchParams.get("bolum") ?? "";
-  const activeGroupId =
-    navigationGroups.find((group) =>
-      group.items.some((item) =>
-        isActivePath(pathname, item.href, activeWorkspaceSection, activeHubSection),
-      ),
-    )?.id ??
-    navigationGroups[0]?.id ??
-    "calisma";
-  const [openGroup, setOpenGroup] = useState<string>(activeGroupId);
-  const [lastActiveGroupId, setLastActiveGroupId] = useState(activeGroupId);
   const focusMode = searchParams.get("gorunum") === "tam";
   const searchKey = searchParams.toString();
-
-  if (lastActiveGroupId !== activeGroupId) {
-    setLastActiveGroupId(activeGroupId);
-    setOpenGroup(activeGroupId);
-  }
 
   const setFocusMode = useCallback(
     (enabled: boolean) => {
@@ -411,65 +396,36 @@ export function AdminShell({
 
         {navigationGroups.length > 0 ? (
           <nav className={styles.nav} data-admin-region="nav" aria-label="Yönetim menüsü">
-            {navigationGroups.map((group) => {
-              const isOpen = openGroup === group.id;
-              const containsActive = group.items.some((item) =>
-                isActivePath(pathname, item.href, activeWorkspaceSection, activeHubSection),
-              );
-              return (
-                <div
-                  data-admin-group={group.id}
-                  data-admin-group-open={isOpen ? "true" : undefined}
-                  key={group.id}
-                >
-                  <button
-                    aria-expanded={isOpen}
-                    className={styles.navLink}
-                    data-admin-active={containsActive ? "true" : undefined}
-                    data-admin-region="nav-group-button"
-                    onClick={() => setOpenGroup(isOpen ? "" : group.id)}
-                    type="button"
-                  >
-                    <span
-                      className={styles.navIcon}
-                      data-admin-region="nav-icon"
-                      aria-hidden="true"
+            {navigationGroups.map((group) => (
+              <div className={styles.navGroup} data-admin-group={group.id} key={group.id}>
+                <p className={styles.navGroupLabel} data-admin-region="nav-group-label">
+                  {group.label}
+                </p>
+                {group.items.map((item) => {
+                  const isActive = isActivePath(
+                    pathname,
+                    item.href,
+                    activeWorkspaceSection,
+                    activeHubSection,
+                  );
+                  const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
+                  return (
+                    <Link
+                      className={className}
+                      data-admin-active={isActive ? "true" : undefined}
+                      data-admin-region="nav-child"
+                      href={item.href}
+                      key={item.href}
                     >
-                      {group.icon}
-                    </span>
-                    <span data-admin-region="nav-label">{group.label}</span>
-                    <span data-admin-region="nav-chevron" aria-hidden="true">
-                      ›
-                    </span>
-                  </button>
-
-                  {isOpen ? (
-                    <div data-admin-region="nav-children">
-                      {group.items.map((item) => {
-                        const isActive = isActivePath(
-                          pathname,
-                          item.href,
-                          activeWorkspaceSection,
-                          activeHubSection,
-                        );
-                        const className = `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ""}`;
-                        return (
-                          <Link
-                            className={className}
-                            data-admin-active={isActive ? "true" : undefined}
-                            data-admin-region="nav-child"
-                            href={item.href}
-                            key={item.href}
-                          >
-                            <span>{item.label}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
+                      <span className={styles.navIcon} aria-hidden="true">
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
         ) : null}
 
