@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -126,6 +127,14 @@ export function RecordCenter({
     null,
   );
   const [feedback, setFeedback] = useState<ActionFeedback | null>(null);
+  const processRef = useRef<HTMLElement>(null);
+  const qualityRef = useRef<HTMLElement>(null);
+
+  const focusWorkspaceCard = useCallback((target: "process" | "quality") => {
+    const element = target === "process" ? processRef.current : qualityRef.current;
+    element?.scrollIntoView({ behavior: "smooth", block: "center" });
+    element?.focus({ preventScroll: true });
+  }, []);
 
   const navigate = useCallback(
     (nextSection: RecordCenterSection, recordId: string | null) => {
@@ -424,6 +433,31 @@ export function RecordCenter({
                         Profili aç
                       </Link>
                     ) : null}
+                    {record.kind === "danisan" ? (
+                      <Link className={hubStyles.pill} href={"/yonetim/danisan-olustur" as Route}>
+                        ＋ Yeni
+                      </Link>
+                    ) : null}
+                    <button className={hubStyles.pill} onClick={() => router.refresh()} type="button">
+                      ↻ Yenile
+                    </button>
+                    <button className={hubStyles.pill} onClick={() => window.print()} type="button">
+                      ▤ PDF
+                    </button>
+                    <button
+                      className={hubStyles.pill}
+                      onClick={() => focusWorkspaceCard("quality")}
+                      type="button"
+                    >
+                      ♙ Kalite
+                    </button>
+                    <button
+                      className={hubStyles.pill}
+                      onClick={() => focusWorkspaceCard("process")}
+                      type="button"
+                    >
+                      ⤴ Süreç
+                    </button>
                   </div>
                   <div className={hubStyles.ribbonIcons}>
                     <button
@@ -532,7 +566,11 @@ export function RecordCenter({
                     </section>
 
                     <section className={hubStyles.workColumn}>
-                      <article className={`${hubStyles.card} ${hubStyles.nextStepsCard}`}>
+                      <article
+                        className={`${hubStyles.card} ${hubStyles.nextStepsCard}`}
+                        ref={processRef}
+                        tabIndex={-1}
+                      >
                         <h3>Sıradaki adımlar</h3>
                         <ol className={hubStyles.nextSteps}>
                           {record.nextSteps.map((step, index) => (
@@ -550,7 +588,7 @@ export function RecordCenter({
                     </section>
 
                     <section className={hubStyles.workColumn}>
-                      <article className={hubStyles.card}>
+                      <article className={hubStyles.card} ref={qualityRef} tabIndex={-1}>
                         <div className={hubStyles.scoreHead}>
                           <div
                             className={hubStyles.scoreDial}
