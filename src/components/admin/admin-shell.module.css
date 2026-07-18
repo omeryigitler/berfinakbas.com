@@ -145,10 +145,10 @@ button.navLink {
 
 .navLinkActive,
 .navLink[data-admin-active="true"] {
-  background: var(--admin-lime);
+  background: linear-gradient(135deg, #ecf58f, var(--admin-lime));
   color: var(--admin-ink);
   transform: none;
-  box-shadow: 0 10px 24px rgb(148 158 62 / 18%);
+  box-shadow: 0 8px 26px rgb(185 205 55 / 55%);
 }
 
 .navIcon {
@@ -216,7 +216,8 @@ button.navLink {
   top: 14px;
   z-index: 10;
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: end;
   align-items: center;
   gap: 14px;
   border-radius: 20px;
