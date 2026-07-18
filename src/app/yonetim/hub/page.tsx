@@ -13,10 +13,12 @@ import { buildHubFinanceSummary } from "@/components/admin/hub/hub-finance";
 import { buildSampleAppointments, buildSampleClients } from "@/components/admin/hub/hub-samples";
 import { RecordCenter } from "@/components/admin/hub/record-center";
 import { hasPermission } from "@/domain/auth/permissions";
+import { buildClientProfileFinanceSummary } from "@/domain/clients/client-profile-summary";
 import type { Prisma } from "@/generated/prisma/client";
 import { requirePermission } from "@/lib/authorization";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
+import { getFilteredFinanceOverview } from "@/lib/finance/finance-overview-filter";
 import { getZonedMonthRange } from "@/lib/time-zone";
 
 export const dynamic = "force-dynamic";
@@ -133,8 +135,14 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
   const currentPage = Math.min(requestedPage, totalPages);
   const skip = (currentPage - 1) * PAGE_SIZE;
 
-  const [appointmentRows, clientRows, availabilityRows, recentFinanceRows, financeAggregateRows] =
-    await Promise.all([
+  const [
+    appointmentRows,
+    clientRows,
+    availabilityRows,
+    recentFinanceRows,
+    financeAggregateRows,
+    clientFinanceOverview,
+  ] = await Promise.all([
       database.appointment.findMany({
         orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
         select: {
@@ -242,10 +250,20 @@ export default async function AdminHubPage({ searchParams }: { searchParams: Sea
             },
           })
         : Promise.resolve(null),
+      canReadFinance
+        ? getFilteredFinanceOverview({ status: "ALL" })
+        : Promise.resolve(null),
     ]);
 
   const appointments = appointmentRows.map((row) => mapAppointmentToHubRecord(row, now, timeZone));
-  const clients = clientRows.map((row) => mapClientToHubRecord(row, now, timeZone));
+  const clients = clientRows.map((row) => {
+    const financeSummary = clientFinanceOverview
+      ? buildClientProfileFinanceSummary(
+          clientFinanceOverview.plans.filter((plan) => plan.clientId === row.id),
+        )
+      : undefined;
+    return mapClientToHubRecord(row, now, timeZone, financeSummary);
+  });
   const availability = availabilityRows ? buildWeeklyAvailability(availabilityRows) : null;
   const finance =
     recentFinanceRows && financeAggregateRows
