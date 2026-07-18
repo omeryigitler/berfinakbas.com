@@ -28,12 +28,6 @@ export type HubRecordKind = "danisan" | "randevu";
 export type HubGrade = "A" | "B" | "C";
 
 export type HubRecord = Readonly<{
-  clientFinance?: Readonly<{
-    openBalanceLabel: string;
-    paidLabel: string;
-    planTotalLabel: string;
-    remainingSessions: number;
-  }>;
   channel: string;
   connections: readonly { name: string; relation: string }[];
   contactEmail: string;

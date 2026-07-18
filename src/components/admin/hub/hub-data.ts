@@ -407,12 +407,7 @@ function buildClientNextSteps(status: HubClientStatus): readonly NextStep[] {
   }
 }
 
-export function mapClientToHubRecord(
-  row: HubClientRow,
-  now: Date,
-  timeZone: string,
-  clientFinance?: HubRecord["clientFinance"],
-): HubRecord {
+export function mapClientToHubRecord(row: HubClientRow, now: Date, timeZone: string): HubRecord {
   const upcoming = row.appointments.find((appointment) => appointment.startsAt > now) ?? null;
   const timeline = [
     ...row.appointments.map((appointment) => ({
@@ -427,7 +422,6 @@ export function mapClientToHubRecord(
 
   return {
     channel: clientTypeLabels[row.type],
-    clientFinance,
     connections: row.guardians.map((entry) => ({
       name: `${entry.guardian.firstName} ${entry.guardian.lastName}`,
       relation: entry.relationship,

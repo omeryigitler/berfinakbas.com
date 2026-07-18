@@ -13,7 +13,6 @@ import "./dashboard-action-order.module.css";
 import "./service-practitioner-symmetry.module.css";
 import "./dashboard-config-summary-polish.module.css";
 import styles from "./admin-shell.module.css";
-import hubStyles from "./hub/hub.module.css";
 import "./admin-icon-placement.module.css";
 
 export type AdminNavPermissions = {
@@ -396,89 +395,6 @@ export function AdminShell({
 
       <section className={styles.workspace} data-admin-region="workspace">
         <div data-admin-region="scroll-area">
-          <nav className={styles.topbar} aria-label="Hızlı yönetim araçları">
-            <div className={hubStyles.ribbonIcons}>
-              <Link
-                aria-label="Danışanlarda ara"
-                className={hubStyles.iconRound}
-                href={"/yonetim/danisanlar" as Route}
-                title="Danışanlarda ara"
-              >
-                ⌕
-              </Link>
-              <Link
-                aria-label="Randevuları aç"
-                className={hubStyles.iconRound}
-                href={"/yonetim/randevular" as Route}
-                title="Randevular"
-              >
-                ◷
-              </Link>
-              {permissions.clientsRead === true ? (
-                <Link
-                  aria-label="Yeni danışan oluştur"
-                  className={hubStyles.iconRound}
-                  href={"/yonetim/danisan-olustur" as Route}
-                  title="Yeni danışan"
-                >
-                  ＋
-                </Link>
-              ) : null}
-              <Link
-                aria-label="Genel bakışı aç"
-                className={hubStyles.iconRound}
-                href={"/yonetim/baslangic" as Route}
-                title="Genel bakış"
-              >
-                ◇
-              </Link>
-              {permissions.appointmentsRead ? (
-                <Link
-                  aria-label="Talep kuyruğunu aç"
-                  className={hubStyles.iconRound}
-                  href={"/yonetim/hub" as Route}
-                  title="Talep kuyruğu"
-                >
-                  ▽
-                </Link>
-              ) : null}
-              {permissions.servicesRead ? (
-                <Link
-                  aria-label="Yönetim ayarlarını aç"
-                  className={hubStyles.iconRound}
-                  href={"/yonetim?alan=hizmet-terapist-ayarlari" as Route}
-                  title="Ayarlar"
-                >
-                  ⚙
-                </Link>
-              ) : null}
-              <Link
-                aria-label="Public siteyi yeni sekmede aç"
-                className={hubStyles.iconRound}
-                href="/"
-                target="_blank"
-                title="Siteyi aç"
-              >
-                ?
-              </Link>
-              <Link
-                aria-label="İletişim ayarlarını aç"
-                className={hubStyles.iconRound}
-                href={"/yonetim?alan=public-iletisim-ayarlari" as Route}
-                title="İletişim"
-              >
-                ◉
-              </Link>
-              <Link
-                aria-label="Yönetim ana sayfası"
-                className={hubStyles.iconRound}
-                href={homeHref}
-                title="Berfin Akbaş Yönetim"
-              >
-                <Image src="/logo-mark.png" alt="" width={24} height={24} />
-              </Link>
-            </div>
-          </nav>
           <div className={styles.srOnly}>
             <h1>{title}</h1>
             {subtitle ? <p>{subtitle}</p> : null}
