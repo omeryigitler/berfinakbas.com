@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 
 import { getMonogram, groupRecords, hubGroupLabels, hubStatusLabels, type HubRecord } from "./hub-model";
