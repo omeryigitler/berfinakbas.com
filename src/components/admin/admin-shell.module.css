@@ -416,6 +416,58 @@ button.navLink {
   margin-top: 14px;
 }
 
+/* Record Center runs as a fixed, app-like surface: the outer window never
+   scrolls; the sidebar and the work columns scroll inside their own bounds. */
+.shell[data-admin-fit="true"] {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.shell[data-admin-fit="true"] .sidebar {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.shell[data-admin-fit="true"] .workspace {
+  min-height: 0;
+  height: 100%;
+}
+
+.shell[data-admin-fit="true"] [data-admin-region="scroll-area"] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.shell[data-admin-fit="true"] .content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  .shell[data-admin-fit="true"] {
+    height: auto;
+    overflow: visible;
+  }
+
+  .shell[data-admin-fit="true"] .sidebar {
+    overflow: hidden;
+  }
+
+  .shell[data-admin-fit="true"] [data-admin-region="scroll-area"] {
+    display: block;
+    height: auto;
+    min-height: 0;
+  }
+
+  .shell[data-admin-fit="true"] .content {
+    overflow: visible;
+  }
+}
+
 .dashboardGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

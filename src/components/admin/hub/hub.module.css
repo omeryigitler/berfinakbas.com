@@ -311,6 +311,47 @@
   opacity: 0.58;
 }
 
+/* Reference-style icon cluster at the top-right of the record panel: thin,
+   frameless round buttons rather than boxed controls. */
+.ribbonIcons {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconRound {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--admin-line, #e3ded7);
+  border-radius: 50%;
+  background: #fff;
+  padding: 0;
+  color: var(--admin-muted, #78716a);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.iconRound:hover:not(:disabled) {
+  border-color: var(--admin-teal, #12897b);
+  background: var(--admin-teal, #12897b);
+  color: #fff;
+}
+
+.iconRound:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .ribbonNote {
   margin: 0;
   border-bottom: 1px solid var(--admin-line, #e3ded7);
