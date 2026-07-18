@@ -1,12 +1,13 @@
 :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
   position: relative;
+  padding-top: 94px !important;
 }
 
 .utilityToolbar {
   position: absolute;
   z-index: 45;
-  top: 14px;
-  right: 18px;
+  top: 26px;
+  right: 30px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -95,9 +96,13 @@
 }
 
 @media (max-width: 1180px) {
+  :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+    padding-top: 86px !important;
+  }
+
   .utilityToolbar {
-    top: 13px;
-    right: 14px;
+    top: 22px;
+    right: 22px;
     gap: 7px;
   }
 
@@ -114,9 +119,13 @@
 }
 
 @media (max-width: 900px) {
+  :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+    padding-top: 72px !important;
+  }
+
   .utilityToolbar {
-    top: 8px;
-    right: 10px;
+    top: 16px;
+    right: 16px;
     gap: 6px;
   }
 
@@ -139,8 +148,8 @@
 
 @media (max-width: 520px) {
   .utilityToolbar {
-    left: 10px;
-    right: 10px;
+    left: 14px;
+    right: 14px;
     justify-content: flex-end;
     overflow-x: auto;
     scrollbar-width: none;
