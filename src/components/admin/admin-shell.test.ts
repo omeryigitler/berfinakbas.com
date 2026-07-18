@@ -12,7 +12,7 @@ describe("getAdminNavItems", () => {
     });
 
     expect(items.map((item) => item.href)).toEqual([
-      "/yonetim",
+      "/yonetim/baslangic",
       "/yonetim/hub",
       "/yonetim/randevular",
       "/yonetim/musaitlik",

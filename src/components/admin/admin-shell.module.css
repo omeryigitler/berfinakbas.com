@@ -471,32 +471,39 @@ button.navLink {
 .dashboardGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 0;
   margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid var(--admin-line);
+  border-radius: 22px;
+  background: linear-gradient(100deg, #e8ff74 0%, #f4ffc7 25%, #fffdf4 62%, #fff 100%);
+  box-shadow: 0 14px 34px rgb(32 28 25 / 4%);
 }
 
 .dashboardCard {
   position: relative;
   min-height: 132px;
   overflow: hidden;
-  border-radius: 20px;
-  padding: 18px;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 18px 20px;
+  box-shadow: none;
+}
+
+.dashboardCard:not(:last-child) {
+  border-right: 1px solid rgb(32 28 25 / 10%);
 }
 
 .dashboardCard:hover {
-  transform: translateY(-2px);
-  border-color: rgb(18 137 123 / 28%);
-  box-shadow: 0 22px 44px rgb(32 28 25 / 10%);
+  transform: none;
+  box-shadow: none;
 }
 
 .dashboardCardPrimary {
-  border-color: var(--admin-teal);
-  background: linear-gradient(145deg, #0d6f64, var(--admin-teal));
-  color: #fff;
+  border-color: transparent;
+  background: transparent;
+  color: var(--admin-ink);
 }
 
 .dashboardCard span,
@@ -512,9 +519,12 @@ button.navLink {
   text-transform: uppercase;
 }
 
-.dashboardCardPrimary span,
+.dashboardCardPrimary span {
+  color: var(--admin-teal);
+}
+
 .dashboardCardPrimary small {
-  color: rgb(255 255 255 / 76%);
+  color: var(--admin-muted);
 }
 
 .dashboardCard strong {
@@ -528,7 +538,7 @@ button.navLink {
 }
 
 .dashboardCardPrimary strong {
-  color: #fff;
+  color: var(--admin-ink);
 }
 
 .dashboardCard small {
@@ -553,9 +563,9 @@ button.navLink {
 }
 
 .dashboardCardPrimary .dashboardCardIcon {
-  border-color: rgb(255 255 255 / 22%);
-  background: rgb(255 255 255 / 14%);
-  color: #fff;
+  border-color: rgb(32 28 25 / 8%);
+  background: rgb(255 255 255 / 55%);
+  color: var(--admin-teal);
 }
 
 .dashboardLayout {
@@ -883,6 +893,11 @@ button.navLink {
   .actionGrid,
   .analyticsBars {
     grid-template-columns: 1fr;
+  }
+
+  .dashboardCard:not(:last-child) {
+    border-right: 0;
+    border-bottom: 1px solid rgb(32 28 25 / 10%);
   }
 
   .titleRow {
