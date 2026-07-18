@@ -1,4 +1,5 @@
 import "@fontsource-variable/inter/index.css";
+import "@/components/admin/hub/progressive-shell.module.css";
 
 import type { Metadata } from "next";
 
