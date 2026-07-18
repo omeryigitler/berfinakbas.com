@@ -47,7 +47,7 @@ const siteWorkspaceSections = new Set(["hizmet-terapist-ayarlari", "public-ileti
 export function getAdminNavItems(permissions: AdminNavPermissions): AdminNavItem[] {
   const items: AdminNavItem[] = [];
   if (permissions.servicesRead) {
-    items.push({ href: "/yonetim", icon: "⌂", label: "Genel bakış" });
+    items.push({ href: "/yonetim/baslangic", icon: "⌂", label: "Genel bakış" });
   }
   if (permissions.appointmentsRead) {
     items.push({ href: "/yonetim/hub", icon: "▦", label: "Kayıt merkezi" });
@@ -76,7 +76,7 @@ function getAdminNavGroups(permissions: AdminNavPermissions): AdminNavGroup[] {
     groups.push({
       id: "calisma",
       icon: "⌂",
-      items: [{ href: "/yonetim", icon: "⌂", label: "Genel bakış" }],
+      items: [{ href: "/yonetim/baslangic", icon: "⌂", label: "Genel bakış" }],
       label: "Çalışma Alanım",
     });
   }
