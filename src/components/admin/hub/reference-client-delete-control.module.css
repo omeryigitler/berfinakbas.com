@@ -1,0 +1,97 @@
+.control {
+  position: fixed;
+  z-index: 80;
+  top: 92px;
+  right: 34px;
+  display: inline-flex;
+  max-width: min(520px, calc(100vw - 32px));
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(32 28 25 / 8%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 78%);
+  padding: 5px 6px 5px 13px;
+  box-shadow: 0 8px 28px rgb(32 28 25 / 4%);
+  backdrop-filter: blur(18px);
+}
+
+.label {
+  color: #78716a;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.confirmGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.armButton,
+.deleteButton,
+.cancelButton {
+  min-height: 32px;
+  border: 1px solid rgb(32 28 25 / 11%);
+  border-radius: 999px;
+  background: transparent;
+  padding: 0 12px;
+  color: #201c19;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 690;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.armButton:hover,
+.cancelButton:hover {
+  border-color: rgb(32 28 25 / 18%);
+  background: rgb(255 255 255 / 82%);
+}
+
+.deleteButton {
+  border-color: rgb(168 69 50 / 20%);
+  background: #fbe3d2;
+  color: #7f2f22;
+}
+
+.deleteButton:hover {
+  border-color: rgb(168 69 50 / 30%);
+  background: #f6d0c0;
+}
+
+.armButton:active,
+.deleteButton:active,
+.cancelButton:active {
+  transform: translateY(1px);
+}
+
+.armButton:disabled,
+.deleteButton:disabled,
+.cancelButton:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.error {
+  max-width: 220px;
+  color: #9b2c20;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .control {
+    top: auto;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    justify-content: space-between;
+  }
+}
