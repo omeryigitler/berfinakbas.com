@@ -1,15 +1,13 @@
 import {
   mapAppointmentToHubRecord,
-  mapClientToHubRecord,
   type HubAppointmentRow,
-  type HubClientRow,
 } from "./hub-data";
 import type { HubRecord } from "./hub-model";
 
-/* Placeholder records shown only when a Hub list section is empty, so the
-   record center keeps its reference layout (list + record + score) instead of
-   collapsing to a bare empty state. These never touch the database and are
-   clearly flagged as "önizleme" in the UI. */
+/* Appointment placeholders remain available for the empty request queue. Client
+   placeholders are intentionally disabled: the Hub now receives ten real,
+   removable reference clients from the database migration, and deleted client
+   records must never reappear as synthetic rows. */
 
 function sampleAppointmentRows(now: Date): HubAppointmentRow[] {
   const h = 3_600_000;
@@ -94,51 +92,10 @@ function sampleAppointmentRows(now: Date): HubAppointmentRow[] {
   ];
 }
 
-function sampleClientRows(now: Date): HubClientRow[] {
-  const h = 3_600_000;
-  const day = 86_400_000;
-  return [
-    {
-      appointments: [
-        {
-          serviceNameSnapshot: "Ses terapisi",
-          startsAt: new Date(now.getTime() + 4 * day),
-          status: "CONFIRMED",
-        },
-      ],
-      createdAt: new Date(now.getTime() - 40 * day),
-      email: "ornek.danisan@onizleme.dev",
-      firstName: "Örnek",
-      guardians: [],
-      id: "sample-client-1",
-      lastName: "Danışan",
-      phone: "0500 000 00 10",
-      preferredName: null,
-      status: "ACTIVE",
-      type: "ADULT",
-      updatedAt: new Date(now.getTime() - 3 * h),
-    },
-    {
-      appointments: [],
-      createdAt: new Date(now.getTime() - 8 * day),
-      email: "ornek.cocuk@onizleme.dev",
-      firstName: "Örnek",
-      guardians: [{ guardian: { firstName: "Veli", lastName: "Örnek" }, relationship: "Annesi" }],
-      id: "sample-client-2",
-      lastName: "Çocuk",
-      phone: "0500 000 00 11",
-      preferredName: null,
-      status: "PROSPECTIVE",
-      type: "CHILD",
-      updatedAt: new Date(now.getTime() - 1 * day),
-    },
-  ];
-}
-
 export function buildSampleAppointments(now: Date, timeZone: string): readonly HubRecord[] {
   return sampleAppointmentRows(now).map((row) => mapAppointmentToHubRecord(row, now, timeZone));
 }
 
-export function buildSampleClients(now: Date, timeZone: string): readonly HubRecord[] {
-  return sampleClientRows(now).map((row) => mapClientToHubRecord(row, now, timeZone));
+export function buildSampleClients(): readonly HubRecord[] {
+  return [];
 }
