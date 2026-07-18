@@ -484,16 +484,6 @@ export function AdminShell({
 
       <section className={styles.workspace} data-admin-region="workspace">
         <header className={styles.topbar} data-admin-region="topbar">
-          <form
-            className={styles.searchForm}
-            data-admin-region="search"
-            action="/yonetim/danisanlar"
-          >
-            <span aria-hidden="true">⌕</span>
-            <input name="q" placeholder="Danışan, telefon veya e-posta ara" type="search" />
-            <kbd>Enter</kbd>
-          </form>
-
           <div className={styles.headerMeta} data-admin-region="header-meta">
             <button
               aria-pressed={focusMode}
