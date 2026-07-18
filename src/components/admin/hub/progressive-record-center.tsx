@@ -7,7 +7,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -127,14 +126,6 @@ export function RecordCenter({
     null,
   );
   const [feedback, setFeedback] = useState<ActionFeedback | null>(null);
-  const processRef = useRef<HTMLElement>(null);
-  const qualityRef = useRef<HTMLElement>(null);
-
-  const focusWorkspaceCard = useCallback((target: "process" | "quality") => {
-    const element = target === "process" ? processRef.current : qualityRef.current;
-    element?.scrollIntoView({ behavior: "smooth", block: "center" });
-    element?.focus({ preventScroll: true });
-  }, []);
 
   const navigate = useCallback(
     (nextSection: RecordCenterSection, recordId: string | null) => {
@@ -433,31 +424,6 @@ export function RecordCenter({
                         Profili aç
                       </Link>
                     ) : null}
-                    {record.kind === "danisan" ? (
-                      <Link className={hubStyles.pill} href={"/yonetim/danisan-olustur" as Route}>
-                        ＋ Yeni
-                      </Link>
-                    ) : null}
-                    <button className={hubStyles.pill} onClick={() => router.refresh()} type="button">
-                      ↻ Yenile
-                    </button>
-                    <button className={hubStyles.pill} onClick={() => window.print()} type="button">
-                      ▤ PDF
-                    </button>
-                    <button
-                      className={hubStyles.pill}
-                      onClick={() => focusWorkspaceCard("quality")}
-                      type="button"
-                    >
-                      ♙ Kalite
-                    </button>
-                    <button
-                      className={hubStyles.pill}
-                      onClick={() => focusWorkspaceCard("process")}
-                      type="button"
-                    >
-                      ⤴ Süreç
-                    </button>
                   </div>
                   <div className={hubStyles.ribbonIcons}>
                     <button
@@ -547,7 +513,7 @@ export function RecordCenter({
                             <dd>{record.channel}</dd>
                           </div>
                           <div>
-                            <dt>{record.kind === "danisan" ? "Yaklaşan randevu" : "Planlanan saat"}</dt>
+                            <dt>Planlanan saat</dt>
                             <dd>{record.plannedAt}</dd>
                           </div>
                         </dl>
@@ -566,12 +532,8 @@ export function RecordCenter({
                     </section>
 
                     <section className={hubStyles.workColumn}>
-                      <article
-                        className={`${hubStyles.card} ${hubStyles.nextStepsCard}`}
-                        ref={processRef}
-                        tabIndex={-1}
-                      >
-                        <h3>{record.kind === "danisan" ? "Danışan takibi" : "Sıradaki adımlar"}</h3>
+                      <article className={`${hubStyles.card} ${hubStyles.nextStepsCard}`}>
+                        <h3>Sıradaki adımlar</h3>
                         <ol className={hubStyles.nextSteps}>
                           {record.nextSteps.map((step, index) => (
                             <li data-state={step.state} key={step.title}>
@@ -588,36 +550,7 @@ export function RecordCenter({
                     </section>
 
                     <section className={hubStyles.workColumn}>
-                      {record.kind === "danisan" && record.clientFinance ? (
-                        <article className={hubStyles.card}>
-                          <h3>Finans ve plan</h3>
-                          <dl className={hubStyles.contactList}>
-                            <div>
-                              <dt>Plan toplamı</dt>
-                              <dd>{record.clientFinance.planTotalLabel}</dd>
-                            </div>
-                            <div>
-                              <dt>Ödenen</dt>
-                              <dd>{record.clientFinance.paidLabel}</dd>
-                            </div>
-                            <div>
-                              <dt>Açık bakiye</dt>
-                              <dd>{record.clientFinance.openBalanceLabel}</dd>
-                            </div>
-                            <div>
-                              <dt>Kalan seans</dt>
-                              <dd>{record.clientFinance.remainingSessions}</dd>
-                            </div>
-                          </dl>
-                          <Link
-                            className={hubStyles.pill}
-                            href={`/yonetim/odemeler?clientId=${encodeURIComponent(record.id)}` as Route}
-                          >
-                            Finans detayını aç
-                          </Link>
-                        </article>
-                      ) : null}
-                      <article className={hubStyles.card} ref={qualityRef} tabIndex={-1}>
+                      <article className={hubStyles.card}>
                         <div className={hubStyles.scoreHead}>
                           <div
                             className={hubStyles.scoreDial}
@@ -627,7 +560,7 @@ export function RecordCenter({
                             <span>{record.score}</span>
                           </div>
                           <div>
-                            <h3>{record.kind === "danisan" ? "Kayıt kalitesi" : "Hazırlık skoru"}</h3>
+                            <h3>Hazırlık skoru</h3>
                             <p className={hubStyles.scoreGrade} data-grade={record.grade}>
                               {record.grade} · {gradeLabels[record.grade]}
                             </p>
@@ -643,7 +576,7 @@ export function RecordCenter({
                       </article>
                       {record.connections.length > 0 ? (
                         <article className={hubStyles.card}>
-                          <h3>{record.kind === "danisan" ? "Veli ve ilişkili kayıtlar" : "Bağlantılı kayıtlar"}</h3>
+                          <h3>Bağlantılı kayıtlar</h3>
                           <ul className={hubStyles.connections}>
                             {record.connections.map((connection) => (
                               <li key={`${connection.name}-${connection.relation}`}>
