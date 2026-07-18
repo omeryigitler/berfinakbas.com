@@ -1,0 +1,19 @@
+:global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+  padding-top: 86px !important;
+}
+
+:global([data-admin-refresh="shell"] [data-admin-region="workspace"] > div) {
+  position: relative;
+}
+
+@media (max-width: 1180px) {
+  :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+    padding-top: 80px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  :global([data-admin-refresh="shell"] [data-admin-region="workspace"]) {
+    padding-top: 64px !important;
+  }
+}
