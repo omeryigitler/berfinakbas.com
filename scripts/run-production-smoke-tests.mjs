@@ -4,13 +4,19 @@ const host = "127.0.0.1";
 const port = "3210";
 const baseUrl = `http://${host}:${port}`;
 const packageManagerPath = process.env.npm_execpath;
+const smokeEnvironment = {
+  ...process.env,
+  AUTH_TRUST_HOST: "true",
+  AUTH_URL: baseUrl,
+  PORT: port,
+};
 const child = packageManagerPath
   ? spawn(process.execPath, [packageManagerPath, "start", "-H", host, "-p", port], {
-      env: { ...process.env, PORT: port },
+      env: smokeEnvironment,
       stdio: "inherit",
     })
   : spawn("pnpm", ["start", "-H", host, "-p", port], {
-      env: { ...process.env, PORT: port },
+      env: smokeEnvironment,
       stdio: "inherit",
     });
 
