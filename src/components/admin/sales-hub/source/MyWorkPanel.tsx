@@ -1,14 +1,14 @@
-import { useMemo, type RefObject } from 'react';
+import type { ClientListItem } from "@/components/admin/client-dashboard-types";
 
-import type { ClientListItem } from '@/components/admin/client-dashboard-types';
+import { useMemo, type RefObject } from "react";
 
 import {
   filterAndSortClientList,
   type ClientGroupFilter,
   type ClientSortMode,
-} from '../adapters/client-list-adapter';
-import styles from '../sales-hub-dashboard.module.css';
-import { SalesHubIcon } from './sales-hub-icon';
+} from "../adapters/client-list-adapter";
+import styles from "../sales-hub-dashboard.module.css";
+import { SalesHubIcon } from "./sales-hub-icon";
 
 interface MyWorkPanelProps {
   clients: ClientListItem[];
@@ -90,14 +90,14 @@ export default function MyWorkPanel({
         <div className={styles.controlButtons}>
           <button
             className={styles.smallPillButton}
-            onClick={() => onFilterChange(filter === 'ALL' ? 'ACTIVE' : 'ALL')}
+            onClick={() => onFilterChange(filter === "ALL" ? "ACTIVE" : "ALL")}
             type="button"
           >
             <SalesHubIcon name="filter" size={13} /> FİLTRELE
           </button>
           <button
             className={styles.smallPillButton}
-            onClick={() => onSortChange(sortBy === 'updated' ? 'name' : 'updated')}
+            onClick={() => onSortChange(sortBy === "updated" ? "name" : "updated")}
             type="button"
           >
             <SalesHubIcon name="sort" size={13} /> SIRALA
@@ -113,7 +113,9 @@ export default function MyWorkPanel({
 
         {visibleClients.map((client) => (
           <button
-            className={`${styles.clientCard} ${client.id === selectedId ? styles.clientCardActive : ''}`}
+            className={`${styles.clientCard} ${
+              client.id === selectedId ? styles.clientCardActive : ""
+            }`}
             data-client-id={client.id}
             key={client.id}
             onClick={() => onSelectClient(client.id)}
@@ -126,7 +128,9 @@ export default function MyWorkPanel({
                 <span className={styles.clientService}>{client.serviceLabel}</span>
               </span>
               <span
-                className={`${styles.statusBadge} ${client.status === 'ACTIVE' ? styles.statusBadgeGood : ''}`}
+                className={`${styles.statusBadge} ${
+                  client.status === "ACTIVE" ? styles.statusBadgeGood : ""
+                }`}
               >
                 {client.statusLabel}
               </span>
@@ -135,8 +139,10 @@ export default function MyWorkPanel({
             <div className={styles.planRow} data-visual-dynamic="client-plan">
               <div className={styles.planPills}>
                 <span className={styles.miniBadge}>Plan: {client.planLabel}</span>
-                {client.nextAppointmentLabel !== '—' ? (
-                  <span className={styles.miniBadge}>Sıradaki: {client.nextAppointmentLabel}</span>
+                {client.nextAppointmentLabel !== "—" ? (
+                  <span className={styles.miniBadge}>
+                    Sıradaki: {client.nextAppointmentLabel}
+                  </span>
                 ) : null}
               </div>
             </div>
