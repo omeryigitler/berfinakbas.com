@@ -19,6 +19,8 @@ import { DASHBOARD_SOURCE_COMMIT } from './source-version';
 
 interface ExactSalesHubDashboardProps {
   clients: ClientListItem[];
+  currentUserEmail?: string | null;
+  currentUserName?: string | null;
   loading: boolean;
   onChanged: () => void;
   onNew: () => void;
@@ -32,8 +34,21 @@ async function readError(response: Response) {
   return payload?.error ?? 'İşlem tamamlanamadı.';
 }
 
+function getUserInitials(name?: string | null, email?: string | null) {
+  const source = name?.trim() || email?.split('@')[0]?.trim() || '';
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length > 1) {
+    return `${parts[0]?.charAt(0) ?? ''}${parts.at(-1)?.charAt(0) ?? ''}`.toLocaleUpperCase(
+      'tr-TR',
+    );
+  }
+  return parts[0]?.slice(0, 2).toLocaleUpperCase('tr-TR') || '—';
+}
+
 export default function ExactSalesHubDashboard({
   clients,
+  currentUserEmail = null,
+  currentUserName = null,
   loading,
   onChanged,
   onNew,
@@ -94,6 +109,7 @@ export default function ExactSalesHubDashboard({
   }, [toast]);
 
   const displayName = detail ? adaptClientDetail(detail).displayName : 'Danışan seçilmedi';
+  const currentUserInitials = getUserInitials(currentUserName, currentUserEmail);
 
   async function updateClient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -221,6 +237,7 @@ export default function ExactSalesHubDashboard({
           onShowInsights={() =>
             document.getElementById('sales-hub-score')?.scrollIntoView({ behavior: 'smooth' })
           }
+          userInitials={currentUserInitials}
         />
 
         <div className={styles.workspaceRow}>
