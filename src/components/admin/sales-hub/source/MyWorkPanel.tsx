@@ -114,11 +114,12 @@ export default function MyWorkPanel({
         {visibleClients.map((client) => (
           <button
             className={`${styles.clientCard} ${client.id === selectedId ? styles.clientCardActive : ''}`}
+            data-client-id={client.id}
             key={client.id}
             onClick={() => onSelectClient(client.id)}
             type="button"
           >
-            <div className={styles.clientTop}>
+            <div className={styles.clientTop} data-visual-dynamic="client-identity">
               <span className={styles.clientAvatar}>{client.initials}</span>
               <span>
                 <span className={styles.clientName}>{client.displayName}</span>
@@ -131,7 +132,7 @@ export default function MyWorkPanel({
               </span>
             </div>
             <span className={styles.clientCardLine} />
-            <div className={styles.planRow}>
+            <div className={styles.planRow} data-visual-dynamic="client-plan">
               <div className={styles.planPills}>
                 <span className={styles.miniBadge}>Plan: {client.planLabel}</span>
                 {client.nextAppointmentLabel !== '—' ? (
@@ -139,7 +140,7 @@ export default function MyWorkPanel({
                 ) : null}
               </div>
             </div>
-            <div className={styles.metaRow}>
+            <div className={styles.metaRow} data-visual-dynamic="client-meta">
               <span>KAYIT: {client.createdAtLabel}</span>
               <span className={styles.metaStatus}>{client.statusLabel}</span>
             </div>
