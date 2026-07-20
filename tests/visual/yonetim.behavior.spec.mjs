@@ -84,8 +84,10 @@ test('preserves panel collapse behavior and routes operational actions correctly
 
   const sidebar = page.getByTestId('sales-hub-sidebar');
   const expanded = await sidebar.boundingBox();
+  expect(expanded).not.toBeNull();
   await page.getByTitle('Menüyü daralt').click();
   const collapsed = await sidebar.boundingBox();
+  expect(collapsed).not.toBeNull();
   expect(collapsed.width).toBeLessThan(expanded.width);
 
   await page.evaluate(() => {
@@ -118,8 +120,10 @@ test('requires guardian fields for a child client before any API write', async (
   );
 });
 
-test('rejects unauthenticated client API access', async ({ playwright, baseURL }) => {
-  const anonymous = await playwright.request.newContext({ baseURL });
+test('rejects unauthenticated client API access', async ({ playwright }) => {
+  const anonymous = await playwright.request.newContext({
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000',
+  });
   const response = await anonymous.get('/api/admin/clients?take=1');
   expect(response.status()).toBe(403);
   await anonymous.dispose();
