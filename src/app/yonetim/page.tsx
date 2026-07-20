@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import DanisanlarPage from './danisanlar/page';
 
 export default function YonetimPage() {
-  redirect('/yonetim/danisanlar');
+  return <DanisanlarPage />;
 }
