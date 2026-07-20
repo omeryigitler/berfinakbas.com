@@ -43,7 +43,11 @@ export default function DanisanlarPage() {
   }, []);
 
   useEffect(() => {
-    void loadClients();
+    const timeoutId = window.setTimeout(() => {
+      void loadClients();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadClients]);
 
   async function createClient(event: FormEvent<HTMLFormElement>) {
