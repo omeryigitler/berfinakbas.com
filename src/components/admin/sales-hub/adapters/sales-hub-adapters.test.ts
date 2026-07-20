@@ -35,9 +35,11 @@ describe("Sales Hub client list adapter", () => {
   it("filters and sorts only the supplied live records", () => {
     const child: ClientListItem = {
       ...client,
+      email: "ada@example.com",
       firstName: "Ada",
       id: "client-2",
       lastName: "Yılmaz",
+      phone: "5559998877",
       status: "PROSPECTIVE",
       type: "CHILD",
       updatedAt: "2026-07-03T10:00:00.000Z",
