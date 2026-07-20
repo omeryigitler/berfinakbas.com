@@ -109,6 +109,7 @@ export async function GET(request: Request) {
           status: { in: ["REQUESTED", "PENDING_REVIEW", "CONFIRMED", "RESCHEDULE_PROPOSED"] },
         },
       },
+      createdAt: true,
       email: true,
       firstName: true,
       id: true,
@@ -150,6 +151,7 @@ export async function GET(request: Request) {
 
         return {
           appointmentsCount: client._count.appointments,
+          createdAt: client.createdAt,
           email: client.email,
           firstName: client.firstName,
           id: client.id,
