@@ -9,12 +9,20 @@ import ExactSalesHubDashboard from './exact-sales-hub-dashboard';
 import styles from './sales-hub-dashboard.module.css';
 import { SalesHubIcon } from './source/sales-hub-icon';
 
+interface SalesHubPageProps {
+  currentUserEmail?: string | null;
+  currentUserName?: string | null;
+}
+
 async function readError(response: Response) {
   const payload = (await response.json().catch(() => null)) as { error?: string } | null;
   return payload?.error ?? 'İşlem tamamlanamadı.';
 }
 
-export default function SalesHubPage() {
+export default function SalesHubPage({
+  currentUserEmail = null,
+  currentUserName = null,
+}: SalesHubPageProps) {
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -66,10 +74,14 @@ export default function SalesHubPage() {
           guardianEmail:
             type === 'CHILD' ? String(formData.get('guardianEmail') ?? '').trim() || null : null,
           guardianFirstName:
-            type === 'CHILD' ? String(formData.get('guardianFirstName') ?? '').trim() || null : null,
+            type === 'CHILD'
+              ? String(formData.get('guardianFirstName') ?? '').trim() || null
+              : null,
           guardianId: null,
           guardianLastName:
-            type === 'CHILD' ? String(formData.get('guardianLastName') ?? '').trim() || null : null,
+            type === 'CHILD'
+              ? String(formData.get('guardianLastName') ?? '').trim() || null
+              : null,
           guardianMode: type === 'CHILD' ? 'NEW' : null,
           guardianPhone:
             type === 'CHILD' ? String(formData.get('guardianPhone') ?? '').trim() || null : null,
@@ -111,6 +123,8 @@ export default function SalesHubPage() {
     <>
       <ExactSalesHubDashboard
         clients={clients}
+        currentUserEmail={currentUserEmail}
+        currentUserName={currentUserName}
         loading={loading}
         onChanged={() => void loadClients()}
         onNew={openCreate}
@@ -162,26 +176,72 @@ export default function SalesHubPage() {
                     <option value="INACTIVE">Pasif</option>
                   </select>
                 </label>
-                <label className={styles.field}>Ad<input name="firstName" required /></label>
-                <label className={styles.field}>Soyad<input name="lastName" required /></label>
-                <label className={styles.field}>Tercih edilen ad<input name="preferredName" /></label>
-                <label className={styles.field}>Doğum yılı<input max={new Date().getFullYear()} min="1900" name="birthYear" type="number" /></label>
-                <label className={styles.field}>Telefon<input name="phone" /></label>
-                <label className={styles.field}>E-posta<input name="email" type="email" /></label>
+                <label className={styles.field}>
+                  Ad
+                  <input name="firstName" required />
+                </label>
+                <label className={styles.field}>
+                  Soyad
+                  <input name="lastName" required />
+                </label>
+                <label className={styles.field}>
+                  Tercih edilen ad
+                  <input name="preferredName" />
+                </label>
+                <label className={styles.field}>
+                  Doğum yılı
+                  <input
+                    max={new Date().getFullYear()}
+                    min="1900"
+                    name="birthYear"
+                    type="number"
+                  />
+                </label>
+                <label className={styles.field}>
+                  Telefon
+                  <input name="phone" />
+                </label>
+                <label className={styles.field}>
+                  E-posta
+                  <input name="email" type="email" />
+                </label>
                 {type === 'CHILD' ? (
                   <>
-                    <label className={styles.field}>Veli adı<input name="guardianFirstName" required /></label>
-                    <label className={styles.field}>Veli soyadı<input name="guardianLastName" required /></label>
-                    <label className={styles.field}>Veli telefonu<input name="guardianPhone" required /></label>
-                    <label className={styles.field}>Veli e-postası<input name="guardianEmail" type="email" /></label>
-                    <label className={styles.field}>Yakınlık<input name="relationship" placeholder="Anne, baba, vasi..." required /></label>
+                    <label className={styles.field}>
+                      Veli adı
+                      <input name="guardianFirstName" required />
+                    </label>
+                    <label className={styles.field}>
+                      Veli soyadı
+                      <input name="guardianLastName" required />
+                    </label>
+                    <label className={styles.field}>
+                      Veli telefonu
+                      <input name="guardianPhone" required />
+                    </label>
+                    <label className={styles.field}>
+                      Veli e-postası
+                      <input name="guardianEmail" type="email" />
+                    </label>
+                    <label className={styles.field}>
+                      Yakınlık
+                      <input name="relationship" placeholder="Anne, baba, vasi..." required />
+                    </label>
                   </>
                 ) : null}
               </div>
               {message ? <div className={styles.toast}>{message}</div> : null}
               <div className={styles.modalActions}>
-                <button className={styles.secondaryAction} onClick={() => setCreateOpen(false)} type="button">Vazgeç</button>
-                <button className={styles.primaryAction} disabled={submitting} type="submit">{submitting ? 'Oluşturuluyor...' : 'Danışanı oluştur'}</button>
+                <button
+                  className={styles.secondaryAction}
+                  onClick={() => setCreateOpen(false)}
+                  type="button"
+                >
+                  Vazgeç
+                </button>
+                <button className={styles.primaryAction} disabled={submitting} type="submit">
+                  {submitting ? 'Oluşturuluyor...' : 'Danışanı oluştur'}
+                </button>
               </div>
             </form>
           </div>
