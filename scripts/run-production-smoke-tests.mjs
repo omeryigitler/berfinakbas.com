@@ -70,18 +70,31 @@ async function runSmokeChecks() {
     "CSP frame-ancestors koruması bulunmalıdır.",
   );
 
-  const adminResponse = await fetch(`${baseUrl}/yonetim`, { redirect: "manual" });
-  const adminLocation = adminResponse.headers.get("location") ?? "";
+  const adminRootResponse = await fetch(`${baseUrl}/yonetim`, { redirect: "manual" });
+  assert(
+    [302, 303, 307, 308].includes(adminRootResponse.status),
+    "/yonetim canonical danışan çalışma ekranına yönlenmelidir.",
+  );
+  assert(
+    adminRootResponse.headers.get("location") === "/yonetim/danisanlar",
+    "/yonetim hedefi /yonetim/danisanlar olmalıdır.",
+  );
+
+  const protectedAdminResponse = await fetch(`${baseUrl}/yonetim/danisanlar`, {
+    redirect: "manual",
+  });
+  const protectedAdminLocation = protectedAdminResponse.headers.get("location") ?? "";
   const redirectsToAuthentication =
-    adminLocation.includes("/giris") || adminLocation.includes("/api/auth/signin");
+    protectedAdminLocation.includes("/giris") ||
+    protectedAdminLocation.includes("/api/auth/signin");
 
   assert(
-    [302, 303, 307, 308].includes(adminResponse.status),
-    "Oturumsuz yönetim isteği kimlik doğrulamaya yönlenmelidir.",
+    [302, 303, 307, 308].includes(protectedAdminResponse.status),
+    "Oturumsuz yönetim ekranı kimlik doğrulamaya yönlenmelidir.",
   );
   assert(
     redirectsToAuthentication,
-    `Oturumsuz yönetim isteğinin hedefi kimlik doğrulama olmalıdır: ${adminLocation}`,
+    `Oturumsuz yönetim ekranının hedefi kimlik doğrulama olmalıdır: ${protectedAdminLocation}`,
   );
 }
 
