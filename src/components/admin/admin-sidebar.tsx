@@ -9,7 +9,6 @@ const menuGroups = [
   {
     title: 'YÖNETİM',
     items: [
-      { id: 'baslangic', icon: '⌂', label: 'Genel Bakış', href: '/yonetim/baslangic' },
       { id: 'danisanlar', icon: '◉', label: 'Danışanlar', href: '/yonetim/danisanlar' },
       { id: 'randevular', icon: '◷', label: 'Randevular', href: '/yonetim/randevular' },
       { id: 'odemeler', icon: '₺', label: 'Ödemeler', href: '/yonetim/odemeler' },
@@ -59,9 +58,7 @@ export default function AdminSidebar() {
             {!isCollapsed && <span style={styles.groupTitle}>{group.title}</span>}
             <div style={styles.itemsContainer}>
               {group.items.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== '/yonetim/baslangic' && pathname.startsWith(`${item.href}/`));
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
                 return (
                   <Link

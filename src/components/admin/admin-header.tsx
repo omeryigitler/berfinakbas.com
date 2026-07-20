@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 const actions = [
-  { href: '/yonetim/baslangic', icon: '⌂', label: 'Genel bakış' },
   { href: '/yonetim/danisanlar', icon: '◉', label: 'Danışanlar' },
   { href: '/yonetim/randevular', icon: '◷', label: 'Randevular' },
   { href: '/yonetim/odemeler', icon: '₺', label: 'Ödemeler' },
@@ -19,7 +18,7 @@ export default function AdminHeader() {
     <header style={styles.header}>
       <div style={styles.pageTitle}>
         <span style={styles.pageKicker}>YÖNETİM</span>
-        <strong>{actions.find((action) => pathname.startsWith(action.href))?.label ?? 'Yönetim paneli'}</strong>
+        <strong>{actions.find((action) => pathname.startsWith(action.href))?.label ?? 'Danışanlar'}</strong>
       </div>
 
       <div style={styles.icons}>
