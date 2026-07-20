@@ -99,7 +99,11 @@ export default function OdemelerPage() {
   }, []);
 
   useEffect(() => {
-    void loadOverview();
+    const timeoutId = window.setTimeout(() => {
+      void loadOverview();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadOverview]);
 
   const selectedPlan = useMemo(
