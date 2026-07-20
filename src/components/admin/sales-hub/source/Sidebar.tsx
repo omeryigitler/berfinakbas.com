@@ -13,10 +13,11 @@ export default function Sidebar({ collapsed, onNavigate, onToggle }: SidebarProp
     <aside
       className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ""}`}
       data-testid="sales-hub-sidebar"
+      id="sidebar-container"
     >
       <div className={styles.brandRow}>
         <span className={styles.waffle}>
-          <SalesHubIcon name="waffle" size={21} />
+          <SalesHubIcon name="waffle" size={20} strokeWidth={2} />
         </span>
         <div className={styles.brandText}>
           <strong>Dynamic 365</strong>
@@ -34,7 +35,11 @@ export default function Sidebar({ collapsed, onNavigate, onToggle }: SidebarProp
             title={collapsed ? "Menüyü genişlet" : "Menüyü daralt"}
             type="button"
           >
-            <SalesHubIcon name={collapsed ? "arrow-right" : "arrow-left"} size={14} />
+            <SalesHubIcon
+              name={collapsed ? "arrow-right-from-line" : "arrow-left-from-line"}
+              size={16}
+              strokeWidth={2}
+            />
           </button>
         </div>
 
@@ -46,15 +51,15 @@ export default function Sidebar({ collapsed, onNavigate, onToggle }: SidebarProp
                 const active = item.id === "danisanlar";
                 return (
                   <button
+                    aria-disabled={!item.route}
                     className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
-                    disabled={!item.route}
                     key={item.id}
                     onClick={() => item.route && onNavigate(item.route)}
                     title={collapsed ? item.label : undefined}
                     type="button"
                   >
                     <span className={styles.navIcon}>
-                      <SalesHubIcon name={item.icon} size={16} />
+                      <SalesHubIcon name={item.icon} size={16} strokeWidth={active ? 2.5 : 2} />
                     </span>
                     <span className={styles.navLabel}>{item.label}</span>
                   </button>

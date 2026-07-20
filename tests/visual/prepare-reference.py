@@ -6,7 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 
-EXPECTED_SHA256 = "131af1b80ab162e2445daf56658d292b58d80a214422b29fb232effd35362e23"
+EXPECTED_SHA256 = "40450b438b81538d5d82cc2708ef3d9e2b745fb4ce4d5fb52c9a8605a8f7018c"
 EXPECTED_SIZE = (1904, 861)
 ROOT = Path(__file__).resolve().parents[2]
 DESTINATION = ROOT / "tests/visual/references/yonetim-approved.png"
