@@ -1,31 +1,36 @@
 name: Dashboard integration check
 
 on:
-  push:
-    branches:
-      - agent/dashboard-system-integration
   pull_request:
     branches:
       - main
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      APP_URL: http://localhost:3000
+      AUTH_SECRET: ci-only-auth-secret-not-for-production-use
+      BOOKING_HOLD_DURATION_MINUTES: 8
+      BUSINESS_TIME_ZONE: Europe/Istanbul
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/berfinakbas?schema=public
+      NEXT_TELEMETRY_DISABLED: 1
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: actions/checkout@v7
         with:
-          version: 11.7.0
+          persist-credentials: false
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -36,8 +41,36 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
-      - name: Typecheck
-        run: pnpm typecheck
+      - name: Run diagnostics
+        id: diagnostics
+        shell: bash
+        run: |
+          set +e
+          pnpm lint > lint-output.txt 2>&1
+          lint_status=$?
+          pnpm typecheck > typecheck-output.txt 2>&1
+          typecheck_status=$?
 
-      - name: Lint
-        run: pnpm lint
+          {
+            echo "### Dashboard integration diagnostics"
+            echo
+            echo "#### Lint"
+            echo '```text'
+            tail -n 120 lint-output.txt
+            echo '```'
+            echo
+            echo "#### Typecheck"
+            echo '```text'
+            tail -n 120 typecheck-output.txt
+            echo '```'
+          } > diagnostics-comment.md
+
+          if [ "$lint_status" -ne 0 ] || [ "$typecheck_status" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Post diagnostics
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file diagnostics-comment.md
