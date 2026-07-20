@@ -1,719 +1,502 @@
 'use client';
 
+import Link from 'next/link';
+import type { FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import type { ClientDetail } from './client-dashboard-types';
+import styles from './danisan-detay-panel.module.css';
+
 interface DanisanDetayPanelProps {
+  onChanged: () => void;
+  onNew: () => void;
   selectedDanisanId: string;
 }
 
-interface Danisan {
-  id: string;
-  ad: string;
-  soyad: string;
-  email: string;
-  telefon: string;
-  hizmet: string;
-  durum: string;
-  ilkTarix: string;
-  notlar: string;
-  score: number;
-  trend: string;
-}
+type ActiveTab = 'summary' | 'progress' | 'notes' | 'relations';
+type ModalType = 'edit' | 'note' | 'delete' | null;
 
-const danisanlar: Record<string, Danisan> = {
-  'danisan-1': {
-    id: 'danisan-1',
-    ad: 'Ahmet',
-    soyad: 'Yılmaz',
-    email: 'ahmet@example.com',
-    telefon: '0531 234 5678',
-    hizmet: 'Psikolojik Danışmanlık',
-    durum: 'İlk Konsültasyon',
-    ilkTarix: '24/07/2026',
-    notlar: 'Başlangıç değerlendirmesi tamamlandı. Haftalık seanslara devam önerildi.',
-    score: 90,
-    trend: 'İyileşti',
-  },
-  'danisan-2': {
-    id: 'danisan-2',
-    ad: 'Fatma',
-    soyad: 'Demir',
-    email: 'fatma@example.com',
-    telefon: '0532 345 6789',
-    hizmet: 'Kişisel Gelişim Koçluğu',
-    durum: 'Devam Eden Tedavi',
-    ilkTarix: '15/06/2026',
-    notlar: 'Düzenli seans katılımı. İlerleme gözleniliyor.',
-    score: 83,
-    trend: 'Gelişti',
-  },
-  'danisan-3': {
-    id: 'danisan-3',
-    ad: 'Mehmet',
-    soyad: 'Can',
-    email: 'mehmet@example.com',
-    telefon: '0533 456 7890',
-    hizmet: 'Aile Danışmanlığı',
-    durum: 'Değerlendirme Bekleme',
-    ilkTarix: '20/07/2026',
-    notlar: 'İlk seans öncesi değerlendirme formu bekleniyor.',
-    score: 72,
-    trend: 'Sabit',
-  },
-  'danisan-4': {
-    id: 'danisan-4',
-    ad: 'Ayşe',
-    soyad: 'Kaya',
-    email: 'ayse@example.com',
-    telefon: '0534 567 8901',
-    hizmet: 'Stres Yönetimi',
-    durum: 'Tamamlandı',
-    ilkTarix: '10/05/2026',
-    notlar: 'Tedavi döngüsü başarıyla tamamlandı. Follow-up randevusu önerildi.',
-    score: 32,
-    trend: 'Azaldı',
-  },
+const clientStatusLabels: Record<string, string> = {
+  ACTIVE: 'Aktif',
+  INACTIVE: 'Pasif',
+  PROSPECTIVE: 'Ön görüşme',
 };
 
-export default function DanisanDetayPanel({ selectedDanisanId }: DanisanDetayPanelProps) {
-  const danisan = danisanlar[selectedDanisanId] || danisanlar['danisan-1'];
+const appointmentStatusLabels: Record<string, string> = {
+  CANCELLED_BY_CLIENT: 'Danışan iptal etti',
+  CANCELLED_BY_PRACTITIONER: 'Uzman iptal etti',
+  COMPLETED: 'Tamamlandı',
+  CONFIRMED: 'Onaylı',
+  NO_SHOW: 'Gelmedi',
+  PENDING_REVIEW: 'Onay bekliyor',
+  REJECTED: 'Reddedildi',
+  REQUESTED: 'Talep alındı',
+  RESCHEDULE_PROPOSED: 'Saat önerildi',
+};
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return '—';
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'Europe/Malta',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return '—';
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: '2-digit',
+    timeZone: 'Europe/Malta',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
+function formatMoney(amountMinor: string, currency: string) {
+  const amount = Number(amountMinor) / 100;
+  return new Intl.NumberFormat('tr-TR', {
+    currency,
+    style: 'currency',
+  }).format(amount);
+}
+
+async function readError(response: Response) {
+  const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+  return payload?.error ?? 'İşlem tamamlanamadı.';
+}
+
+export default function DanisanDetayPanel({
+  onChanged,
+  onNew,
+  selectedDanisanId,
+}: DanisanDetayPanelProps) {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('summary');
+  const [detail, setDetail] = useState<ClientDetail | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [modal, setModal] = useState<ModalType>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadDetail = useCallback(async () => {
+    if (!selectedDanisanId) {
+      setDetail(null);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/admin/clients/${selectedDanisanId}`, {
+        cache: 'no-store',
+        headers: { accept: 'application/json' },
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      const payload = (await response.json()) as { data: ClientDetail };
+      setDetail(payload.data);
+    } catch (loadError) {
+      setDetail(null);
+      setError(loadError instanceof Error ? loadError.message : 'Danışan bilgileri yüklenemedi.');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDanisanId]);
+
+  useEffect(() => {
+    setActiveTab('summary');
+    void loadDetail();
+  }, [loadDetail]);
+
+  const completedAppointments = useMemo(
+    () => detail?.appointments.filter((appointment) => appointment.status === 'COMPLETED').length ?? 0,
+    [detail],
+  );
+
+  const latestService = detail?.nextAppointment?.serviceNameSnapshot ?? detail?.appointments[0]?.serviceNameSnapshot ?? 'Henüz hizmet yok';
+  const latestNote = detail?.notes[0] ?? null;
+  const activePlan = detail?.plans.find((plan) => plan.status === 'ACTIVE') ?? detail?.plans[0] ?? null;
+  const grade = !detail ? '—' : detail.score >= 85 ? 'A' : detail.score >= 70 ? 'B' : detail.score >= 50 ? 'C' : 'D';
+
+  async function submitEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!detail) return;
+
+    const formData = new FormData(event.currentTarget);
+    const birthYearValue = String(formData.get('birthYear') ?? '').trim();
+    setSubmitting(true);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/admin/clients/${detail.id}`, {
+        body: JSON.stringify({
+          birthYear: birthYearValue ? Number(birthYearValue) : null,
+          email: String(formData.get('email') ?? '').trim() || null,
+          firstName: String(formData.get('firstName') ?? '').trim(),
+          lastName: String(formData.get('lastName') ?? '').trim(),
+          phone: String(formData.get('phone') ?? '').trim() || null,
+          preferredName: String(formData.get('preferredName') ?? '').trim() || null,
+          status: String(formData.get('status') ?? detail.status),
+        }),
+        headers: {
+          'content-type': 'application/json',
+          'x-correlation-id': crypto.randomUUID(),
+        },
+        method: 'PATCH',
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      setModal(null);
+      await loadDetail();
+      onChanged();
+    } catch (submitError) {
+      setMessage(submitError instanceof Error ? submitError.message : 'Danışan kaydedilemedi.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function submitNote(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!detail) return;
+
+    const formData = new FormData(event.currentTarget);
+    setSubmitting(true);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/admin/clients/${detail.id}/notes`, {
+        body: JSON.stringify({
+          category: String(formData.get('category') ?? 'GENERAL'),
+          note: String(formData.get('note') ?? '').trim(),
+        }),
+        headers: {
+          'content-type': 'application/json',
+          'x-correlation-id': crypto.randomUUID(),
+        },
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      setModal(null);
+      await loadDetail();
+      onChanged();
+    } catch (submitError) {
+      setMessage(submitError instanceof Error ? submitError.message : 'Not eklenemedi.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function deactivateClient() {
+    if (!detail) return;
+    setSubmitting(true);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/admin/clients/${detail.id}`, {
+        headers: { 'x-correlation-id': crypto.randomUUID() },
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      setModal(null);
+      await loadDetail();
+      onChanged();
+    } catch (submitError) {
+      setMessage(submitError instanceof Error ? submitError.message : 'Danışan pasife alınamadı.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!selectedDanisanId) {
+    return <section className={styles.panel}><div className={styles.loadingState}>Bir danışan seçin.</div></section>;
+  }
+
+  if (loading && !detail) {
+    return <section className={styles.panel}><div className={styles.loadingState}>Danışan bilgileri yükleniyor...</div></section>;
+  }
+
+  if (error || !detail) {
+    return (
+      <section className={styles.panel}>
+        <div className={styles.errorState}>
+          <span>{error || 'Danışan kaydı bulunamadı.'}</span>
+          <button className={styles.btnPrimary} onClick={() => void loadDetail()} type="button">Yeniden dene</button>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <div style={styles.panel}>
-      <section style={styles.topSection}>
-        <div style={styles.toolbar}>
-          <button style={styles.toolBtn} type="button">💾 Kaydet</button>
-          <button style={styles.toolBtn} type="button">➕ Yeni</button>
-          <button style={styles.toolBtn} type="button">🗑️ Sil</button>
-          <button style={styles.toolBtn} type="button">🔄 Yenile</button>
-          <button style={styles.toolBtn} type="button">📝 Not Ekle</button>
-          <button style={styles.toolBtn} type="button">📊 Raporla</button>
+    <section className={styles.panel}>
+      <div className={styles.topSection}>
+        <div className={styles.toolbar}>
+          <button className={styles.toolBtn} onClick={() => { setMessage(''); setModal('edit'); }} type="button">💾 Kaydet</button>
+          <button className={styles.toolBtn} onClick={onNew} type="button">➕ Yeni</button>
+          <button className={styles.toolBtn} disabled={detail.status === 'INACTIVE'} onClick={() => { setMessage(''); setModal('delete'); }} type="button">🗑️ Pasife Al</button>
+          <button className={styles.toolBtn} onClick={() => void loadDetail()} type="button">🔄 Yenile</button>
+          <button className={styles.toolBtn} onClick={() => { setMessage(''); setModal('note'); }} type="button">📝 Not Ekle</button>
+          <button className={styles.toolBtn} onClick={() => window.print()} type="button">📊 Raporla</button>
         </div>
 
-        <div style={styles.headerCard}>
-          <div style={styles.headerLeft}>
-            <div style={styles.avatar}>👤</div>
-            <div style={styles.headerInfo}>
-              <h1 style={styles.headerName}>{danisan.ad} {danisan.soyad}</h1>
-              <div style={styles.headerBadges}>
-                <span style={styles.badge1}>DANIŞAN</span>
-                <span style={styles.badge2}>✨ Kaydedildi</span>
+        <div className={styles.headerCard}>
+          <div className={styles.headerLeft}>
+            <div className={styles.avatar}>{detail.firstName[0]}{detail.lastName[0]}</div>
+            <div className={styles.headerInfo}>
+              <h1 className={styles.headerName}>{detail.firstName} {detail.lastName}</h1>
+              <div className={styles.headerBadges}>
+                <span className={styles.badge}>{detail.type === 'CHILD' ? 'ÇOCUK DANIŞAN' : 'YETİŞKİN DANIŞAN'}</span>
+                <span className={styles.badgeDark}>✓ {clientStatusLabels[detail.status]}</span>
               </div>
             </div>
           </div>
 
-          <div style={styles.headerRight}>
-            <div style={styles.stat}>
-              <span style={styles.statLabel}>HİZMET</span>
-              <span style={styles.statValue}>{danisan.hizmet}</span>
+          <div className={styles.headerRight}>
+            <div className={styles.stat}>
+              <span className={styles.statLabel}>HİZMET</span>
+              <span className={styles.statValue}>{latestService}</span>
             </div>
-            <div style={styles.stat}>
-              <span style={styles.statLabel}>DURUM</span>
-              <span style={styles.statValue}>{danisan.durum}</span>
+            <div className={styles.stat}>
+              <span className={styles.statLabel}>DURUM</span>
+              <span className={styles.statValue}>{clientStatusLabels[detail.status]}</span>
             </div>
-            <div style={styles.stat}>
-              <span style={styles.statLabel}>İLK TARİH</span>
-              <span style={styles.statValue}>{danisan.ilkTarix}</span>
-            </div>
-          </div>
-        </div>
-
-        <div style={styles.processCard}>
-          <div style={styles.processLeft}>
-            <span style={styles.processTitle}>Danışmanlık Süreci</span>
-            <span style={styles.processSubtitle}>Etkin - 3 seansda</span>
-          </div>
-          <div style={styles.processSteps}>
-            <div style={styles.stepActive}>
-              <span>✓</span>
-              <span>Değerlendirme (7.25)</span>
-            </div>
-            <span style={styles.stepSeparator}>›</span>
-            <div style={styles.stepInactive}>
-              <span>🔒</span>
-              <span>Müdahale</span>
-            </div>
-            <span style={styles.stepSeparator}>›</span>
-            <div style={styles.stepInactive}>
-              <span>🔒</span>
-              <span>İzleme</span>
-            </div>
-            <span style={styles.stepSeparator}>›</span>
-            <div style={styles.stepInactive}>
-              <span>🔒</span>
-              <span>Sonlandırma</span>
+            <div className={styles.stat}>
+              <span className={styles.statLabel}>KAYIT TARİHİ</span>
+              <span className={styles.statValue}>{formatDate(detail.createdAt)}</span>
             </div>
           </div>
         </div>
 
-        <div style={styles.tabs}>
-          <button style={styles.tabActive} type="button">Özet</button>
-          <button style={styles.tabInactive} type="button">İlerleme</button>
-          <button style={styles.tabInactive} type="button">Notlar</button>
-          <button style={styles.tabInactive} type="button">İlişkiler</button>
-        </div>
-      </section>
-
-      <section style={styles.bottomSection}>
-        <div style={styles.grid}>
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>👤 Danışan Bilgileri</h3>
-            <div style={styles.cardContent}>
-              <div style={styles.field}>
-                <span style={styles.label}>Ad</span>
-                <span style={styles.value}>{danisan.ad}</span>
-              </div>
-              <div style={styles.field}>
-                <span style={styles.label}>Soyad</span>
-                <span style={styles.value}>{danisan.soyad}</span>
-              </div>
-              <div style={styles.field}>
-                <span style={styles.label}>Email</span>
-                <span style={styles.valueBlue}>{danisan.email}</span>
-              </div>
-              <div style={styles.field}>
-                <span style={styles.label}>Telefon</span>
-                <span style={styles.value}>📞 {danisan.telefon}</span>
-              </div>
-            </div>
+        <div className={styles.processCard}>
+          <div className={styles.processLeft}>
+            <span className={styles.processTitle}>Danışmanlık Süreci</span>
+            <span className={styles.processSubtitle}>{completedAppointments} tamamlanan seans • {detail.appointments.length} toplam kayıt</span>
           </div>
+          <div className={styles.processSteps}>
+            <div className={styles.stepActive}><span>✓</span><span>Değerlendirme</span></div>
+            <div className={completedAppointments >= 1 ? styles.stepActive : styles.stepInactive}><span>{completedAppointments >= 1 ? '✓' : '○'}</span><span>Müdahale</span></div>
+            <div className={completedAppointments >= 4 ? styles.stepActive : styles.stepInactive}><span>{completedAppointments >= 4 ? '✓' : '○'}</span><span>İzleme</span></div>
+            <div className={detail.status === 'INACTIVE' ? styles.stepActive : styles.stepInactive}><span>{detail.status === 'INACTIVE' ? '✓' : '○'}</span><span>Sonlandırma</span></div>
+          </div>
+        </div>
 
-          <div style={{ ...styles.card, ...styles.upNextCard }}>
-            <div style={styles.cardHeader}>
-              <h3 style={styles.cardTitlePlain}>Sonraki Seans</h3>
-              <span style={styles.badgeMini}>AKTİF</span>
-            </div>
-            <div style={styles.cardContent}>
-              <div style={styles.sequenceLabel}>Takvim: Haftalık Seanslar</div>
-              <div style={styles.task}>
-                <div style={styles.taskIcon}>📞</div>
-                <div style={styles.taskInfo}>
-                  <span style={styles.taskName}>Seans 4</span>
-                  <span style={styles.taskTime}>Adım 4 • 3 gün içinde</span>
+        <div className={styles.tabs}>
+          <button className={activeTab === 'summary' ? styles.tabActive : styles.tabInactive} onClick={() => setActiveTab('summary')} type="button">Özet</button>
+          <button className={activeTab === 'progress' ? styles.tabActive : styles.tabInactive} onClick={() => setActiveTab('progress')} type="button">İlerleme</button>
+          <button className={activeTab === 'notes' ? styles.tabActive : styles.tabInactive} onClick={() => setActiveTab('notes')} type="button">Notlar</button>
+          <button className={activeTab === 'relations' ? styles.tabActive : styles.tabInactive} onClick={() => setActiveTab('relations')} type="button">İlişkiler</button>
+        </div>
+      </div>
+
+      <div className={styles.lowerSection}>
+        {activeTab === 'summary' ? (
+          <div className={styles.grid}>
+            <article className={styles.card}>
+              <h2 className={styles.cardTitle}>👤 Danışan Bilgileri</h2>
+              <div className={styles.cardContent}>
+                <div className={styles.field}><span className={styles.label}>Ad</span><span className={styles.value}>{detail.firstName}</span></div>
+                <div className={styles.field}><span className={styles.label}>Soyad</span><span className={styles.value}>{detail.lastName}</span></div>
+                <div className={styles.field}><span className={styles.label}>E-posta</span><span className={styles.valueBlue}>{detail.email ?? '—'}</span></div>
+                <div className={styles.field}><span className={styles.label}>Telefon</span><span className={styles.value}>{detail.phone ?? '—'}</span></div>
+              </div>
+            </article>
+
+            <article className={`${styles.card} ${styles.cardAccent}`}>
+              <div className={styles.cardHeader}><h2 className={styles.cardTitle}>Sonraki Seans</h2><span className={styles.badgeMini}>{detail.nextAppointment ? 'AKTİF' : 'BOŞ'}</span></div>
+              {detail.nextAppointment ? (
+                <div className={styles.cardContent}>
+                  <div className={styles.sequenceLabel}>{detail.nextAppointment.serviceNameSnapshot}</div>
+                  <div className={styles.task}>
+                    <span className={styles.taskIcon}>◷</span>
+                    <div className={styles.taskInfo}>
+                      <span className={styles.taskName}>{formatDateTime(detail.nextAppointment.startsAt)}</span>
+                      <span className={styles.taskTime}>{appointmentStatusLabels[detail.nextAppointment.status] ?? detail.nextAppointment.status} • {detail.nextAppointment.durationMinutesSnapshot} dk</span>
+                    </div>
+                  </div>
+                  <p className={styles.taskDesc}>{detail.nextAppointment.requestNote ?? 'Randevu notu bulunmuyor.'}</p>
+                  <div className={styles.taskButtons}>
+                    <Link className={styles.btnPrimary} href="/yonetim/randevular">Randevuya git</Link>
+                    <button className={styles.btnSecondary} onClick={() => setActiveTab('progress')} type="button">Tarihçe</button>
+                  </div>
                 </div>
-              </div>
-              <p style={styles.taskDesc}>
-                İlerleme değerlendirmesi yap ve sonraki hedefleri belirle.
-              </p>
-              <div style={styles.taskButtons}>
-                <button style={styles.btnPrimary} type="button">Seansı Başlat</button>
-                <button style={styles.btnSecondary} type="button">Tamamla</button>
-              </div>
-            </div>
-          </div>
+              ) : <p className={styles.empty}>Planlanmış randevu bulunmuyor.</p>}
+            </article>
 
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <h3 style={styles.cardTitlePlain}>İlerleme Puanı</h3>
-              <span style={styles.aiLabel}>AI DESTEKLİ</span>
-            </div>
-            <div style={styles.scoreContainer}>
-              <div style={styles.scoreCircle}>
-                <span style={styles.scoreNumber}>{danisan.score}</span>
-                <span style={styles.scoreGrade}>A</span>
+            <article className={styles.card}>
+              <div className={styles.cardHeader}><h2 className={styles.cardTitle}>Kayıt Puanı</h2><span className={styles.aiLabel}>CANLI VERİ</span></div>
+              <div className={styles.scoreContainer}>
+                <div className={styles.scoreCircle}><span className={styles.scoreNumber}>{detail.score}</span><span className={styles.scoreGrade}>{grade}</span></div>
+                <div className={styles.scoreTrend}><span>{detail.score >= 70 ? '🟢 Düzenli' : '🟠 Geliştirilmeli'}</span><p className={styles.trendText}>İletişim bilgileri, seans ve not kayıtlarından hesaplanır.</p></div>
               </div>
-              <div style={styles.scoreTrend}>
-                <span>🟢 {danisan.trend}</span>
-                <p style={styles.trendText}>
-                  Seans katılımı, görev tamamlama ve geri bildirim temeli.
-                </p>
+              <div className={styles.insights}>
+                <span className={styles.insightsLabel}>Gözlemler</span>
+                <ul className={styles.insightsList}>
+                  <li>{detail.phone ? 'Telefon kayıtlı' : 'Telefon bilgisi eksik'}</li>
+                  <li>{detail.email ? 'E-posta kayıtlı' : 'E-posta bilgisi eksik'}</li>
+                  <li>{detail.appointments.length} randevu kaydı</li>
+                  <li>{detail.notes.length} yönetim notu</li>
+                </ul>
               </div>
-            </div>
-            <div style={styles.insights}>
-              <span style={styles.insightsLabel}>Gözlemler</span>
-              <ul style={styles.insightsList}>
-                <li>Seansa düzenli katılım</li>
-                <li>Ev ödevi uyumluluğu yüksek</li>
-                <li>Hedeflere doğru ilerleme</li>
-                <li>Pozitif tutum değişimi</li>
-              </ul>
-            </div>
-          </div>
+            </article>
 
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>🎯 Hizmet Bilgileri</h3>
-            <div style={styles.cardContent}>
-              <div style={styles.field}>
-                <span style={styles.label}>Hizmet</span>
-                <span style={styles.value}>{danisan.hizmet}</span>
+            <article className={styles.card}>
+              <h2 className={styles.cardTitle}>🎯 Plan Bilgileri</h2>
+              <div className={styles.cardContent}>
+                <div className={styles.field}><span className={styles.label}>Plan</span><span className={styles.value}>{activePlan?.name ?? 'Plan yok'}</span></div>
+                <div className={styles.field}><span className={styles.label}>Seans</span><span className={styles.value}>{activePlan ? `${activePlan.sessionCount} × ${activePlan.sessionDurationMinutes} dk` : '—'}</span></div>
+                <div className={styles.field}><span className={styles.label}>Tutar</span><span className={styles.value}>{activePlan ? formatMoney(activePlan.totalAmountMinor, activePlan.currency) : '—'}</span></div>
               </div>
-              <div style={styles.field}>
-                <span style={styles.label}>İlk Seans</span>
-                <span style={styles.value}>{danisan.ilkTarix}</span>
+            </article>
+
+            <article className={styles.card}>
+              <h2 className={styles.cardTitle}>📅 Tarihçe</h2>
+              <div className={styles.historyList}>
+                {detail.appointments.slice(0, 3).map((appointment) => (
+                  <div className={styles.historyItem} key={appointment.id}>
+                    <strong>{appointment.serviceNameSnapshot}</strong>
+                    <span className={styles.historyMeta}>{formatDateTime(appointment.startsAt)} • {appointmentStatusLabels[appointment.status] ?? appointment.status}</span>
+                  </div>
+                ))}
+                {detail.appointments.length === 0 ? <p className={styles.empty}>Randevu kaydı bulunmuyor.</p> : null}
               </div>
-            </div>
-          </div>
+            </article>
 
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>📅 Tarihçe</h3>
-            <input
-              type="text"
-              placeholder="Tarihçe ara..."
-              style={styles.searchSmall}
-            />
+            <article className={`${styles.card} ${styles.cardWarm}`}>
+              <h2 className={styles.cardTitle}>Önemli Notlar</h2>
+              <div className={styles.notesArea}>
+                <p className={styles.notes}>{latestNote?.note ?? 'Henüz danışan notu eklenmedi.'}</p>
+                {latestNote ? <span className={styles.historyMeta}>{formatDateTime(latestNote.createdAt)} • {latestNote.createdBy.name ?? 'Yönetici'}</span> : null}
+              </div>
+            </article>
           </div>
+        ) : null}
 
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Önemli Notlar</h3>
-            <div style={styles.notesArea}>
-              <p style={styles.notes}>{danisan.notlar}</p>
+        {activeTab === 'progress' ? (
+          <div className={styles.grid}>
+            <article className={`${styles.card} ${styles.fullWidth}`}>
+              <div className={styles.cardHeader}><h2 className={styles.cardTitle}>Randevu ve İlerleme Geçmişi</h2><span className={styles.badgeMini}>{detail.appointments.length} KAYIT</span></div>
+              <div className={styles.historyList}>
+                {detail.appointments.map((appointment) => (
+                  <div className={styles.historyItem} key={appointment.id}>
+                    <strong>{appointment.serviceNameSnapshot} • {appointment.practitioner.displayName}</strong>
+                    <span className={styles.historyMeta}>{formatDateTime(appointment.startsAt)} • {appointment.durationMinutesSnapshot} dk • {appointmentStatusLabels[appointment.status] ?? appointment.status}</span>
+                    {appointment.requestNote ? <span className={styles.notes}>{appointment.requestNote}</span> : null}
+                  </div>
+                ))}
+                {detail.appointments.length === 0 ? <p className={styles.empty}>Randevu geçmişi bulunmuyor.</p> : null}
+              </div>
+            </article>
+          </div>
+        ) : null}
+
+        {activeTab === 'notes' ? (
+          <div className={styles.grid}>
+            <article className={`${styles.card} ${styles.fullWidth}`}>
+              <div className={styles.cardHeader}><h2 className={styles.cardTitle}>Danışan Notları</h2><button className={styles.btnPrimary} onClick={() => setModal('note')} type="button">Not ekle</button></div>
+              <div className={styles.historyList}>
+                {detail.notes.map((note) => (
+                  <div className={styles.historyItem} key={note.id}>
+                    <strong>{note.category}</strong>
+                    <span className={styles.notes}>{note.note}</span>
+                    <span className={styles.historyMeta}>{formatDateTime(note.createdAt)} • {note.createdBy.name ?? 'Yönetici'}</span>
+                  </div>
+                ))}
+                {detail.notes.length === 0 ? <p className={styles.empty}>Not bulunmuyor.</p> : null}
+              </div>
+            </article>
+          </div>
+        ) : null}
+
+        {activeTab === 'relations' ? (
+          <div className={styles.grid}>
+            <article className={styles.card}>
+              <h2 className={styles.cardTitle}>Veli / Yakın İlişkileri</h2>
+              <div className={styles.historyList}>
+                {detail.guardians.map((relation) => (
+                  <div className={styles.historyItem} key={relation.guardian.id}>
+                    <strong>{relation.guardian.firstName} {relation.guardian.lastName}</strong>
+                    <span className={styles.historyMeta}>{relation.relationship}{relation.isPrimary ? ' • Birincil' : ''}</span>
+                    <span className={styles.notes}>{relation.guardian.phone} • {relation.guardian.email ?? 'E-posta yok'}</span>
+                  </div>
+                ))}
+                {detail.guardians.length === 0 ? <p className={styles.empty}>Bağlı veli kaydı bulunmuyor.</p> : null}
+              </div>
+            </article>
+            <article className={styles.card}>
+              <h2 className={styles.cardTitle}>Ödeme Planları</h2>
+              <div className={styles.historyList}>
+                {detail.plans.map((plan) => (
+                  <div className={styles.historyItem} key={plan.id}>
+                    <strong>{plan.name}</strong>
+                    <span className={styles.historyMeta}>{plan.status} • {plan.sessionCount} seans • {formatMoney(plan.totalAmountMinor, plan.currency)}</span>
+                  </div>
+                ))}
+                {detail.plans.length === 0 ? <p className={styles.empty}>Ödeme planı bulunmuyor.</p> : null}
+              </div>
+            </article>
+            <article className={`${styles.card} ${styles.fullWidth}`}>
+              <h2 className={styles.cardTitle}>Finans Hareketleri</h2>
+              <div className={styles.historyList}>
+                {detail.financeEntries.map((entry) => (
+                  <div className={styles.historyItem} key={entry.id}>
+                    <strong>{entry.type} • {formatMoney(entry.amountMinor, entry.currency)}</strong>
+                    <span className={styles.historyMeta}>{formatDateTime(entry.occurredAt)} • {entry.paymentMethod?.name ?? entry.plan?.name ?? 'Genel hareket'}</span>
+                    {entry.note ? <span className={styles.notes}>{entry.note}</span> : null}
+                  </div>
+                ))}
+                {detail.financeEntries.length === 0 ? <p className={styles.empty}>Finans hareketi bulunmuyor.</p> : null}
+              </div>
+            </article>
+          </div>
+        ) : null}
+      </div>
+
+      {modal === 'edit' ? (
+        <div className={styles.modalBackdrop} role="presentation">
+          <div aria-labelledby="danisan-duzenle" aria-modal="true" className={styles.modal} role="dialog">
+            <div className={styles.modalHeader}><div><span className={styles.badge}>DANIŞAN</span><h2 className={styles.modalTitle} id="danisan-duzenle">Danışan bilgilerini düzenle</h2></div><button className={styles.modalClose} onClick={() => setModal(null)} type="button">×</button></div>
+            <form className={styles.modalForm} onSubmit={submitEdit}>
+              <div className={styles.formGrid}>
+                <label className={styles.formField}><span>Ad</span><input defaultValue={detail.firstName} name="firstName" required /></label>
+                <label className={styles.formField}><span>Soyad</span><input defaultValue={detail.lastName} name="lastName" required /></label>
+                <label className={styles.formField}><span>Tercih edilen ad</span><input defaultValue={detail.preferredName ?? ''} name="preferredName" /></label>
+                <label className={styles.formField}><span>Doğum yılı</span><input defaultValue={detail.birthYear ?? ''} max={new Date().getFullYear()} min="1900" name="birthYear" type="number" /></label>
+                <label className={styles.formField}><span>E-posta</span><input defaultValue={detail.email ?? ''} name="email" type="email" /></label>
+                <label className={styles.formField}><span>Telefon</span><input defaultValue={detail.phone ?? ''} name="phone" /></label>
+                <label className={styles.formField}><span>Durum</span><select defaultValue={detail.status} name="status"><option value="PROSPECTIVE">Ön görüşme</option><option value="ACTIVE">Aktif</option><option value="INACTIVE">Pasif</option></select></label>
+              </div>
+              {message ? <div className={styles.formMessage}>{message}</div> : null}
+              <div className={styles.modalActions}><button className={styles.modalButtonSecondary} onClick={() => setModal(null)} type="button">Vazgeç</button><button className={styles.modalButton} disabled={submitting} type="submit">{submitting ? 'Kaydediliyor...' : 'Kaydet'}</button></div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {modal === 'note' ? (
+        <div className={styles.modalBackdrop} role="presentation">
+          <div aria-labelledby="not-ekle" aria-modal="true" className={styles.modal} role="dialog">
+            <div className={styles.modalHeader}><div><span className={styles.badge}>NOT</span><h2 className={styles.modalTitle} id="not-ekle">Danışan notu ekle</h2></div><button className={styles.modalClose} onClick={() => setModal(null)} type="button">×</button></div>
+            <form className={styles.modalForm} onSubmit={submitNote}>
+              <label className={styles.formField}><span>Kategori</span><select defaultValue="GENERAL" name="category"><option value="GENERAL">Genel</option><option value="CLINICAL">Klinik</option><option value="FOLLOW_UP">Takip</option><option value="FINANCE">Finans</option></select></label>
+              <label className={styles.formField}><span>Not</span><textarea maxLength={500} name="note" required /></label>
+              {message ? <div className={styles.formMessage}>{message}</div> : null}
+              <div className={styles.modalActions}><button className={styles.modalButtonSecondary} onClick={() => setModal(null)} type="button">Vazgeç</button><button className={styles.modalButton} disabled={submitting} type="submit">{submitting ? 'Ekleniyor...' : 'Notu ekle'}</button></div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {modal === 'delete' ? (
+        <div className={styles.modalBackdrop} role="presentation">
+          <div aria-labelledby="danisan-pasif" aria-modal="true" className={styles.modal} role="dialog">
+            <div className={styles.modalHeader}><div><span className={styles.badge}>DURUM DEĞİŞİKLİĞİ</span><h2 className={styles.modalTitle} id="danisan-pasif">Danışanı pasife al</h2></div><button className={styles.modalClose} onClick={() => setModal(null)} type="button">×</button></div>
+            <div className={styles.modalForm}>
+              <p className={styles.notes}>{detail.firstName} {detail.lastName} kaydı silinmeyecek; geçmiş randevu ve ödeme bağlantıları korunarak pasif duruma alınacak.</p>
+              {message ? <div className={styles.formMessage}>{message}</div> : null}
+              <div className={styles.modalActions}><button className={styles.modalButtonSecondary} onClick={() => setModal(null)} type="button">Vazgeç</button><button className={styles.modalButton} disabled={submitting} onClick={() => void deactivateClient()} type="button">{submitting ? 'İşleniyor...' : 'Pasife al'}</button></div>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      ) : null}
+    </section>
   );
 }
-
-const styles = {
-  panel: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 0,
-    borderRadius: 28,
-    border: '1px solid rgba(32, 28, 25, 0.12)',
-    background: 'linear-gradient(104deg, #e9ff7d 0%, #f2ffd0 28%, #f5f2eb 67%, #ffffff 100%)',
-    boxShadow: '0 18px 46px rgba(32, 28, 25, 0.08)',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    overflow: 'auto',
-  },
-  topSection: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 16,
-    padding: '20px 22px 14px',
-    background: 'rgba(255, 255, 255, 0.18)',
-    borderBottom: '1px solid rgba(32, 28, 25, 0.08)',
-  },
-  bottomSection: {
-    padding: '18px 22px 22px',
-    background: 'linear-gradient(108deg, rgba(228, 255, 96, 0.78) 0%, rgba(241, 255, 193, 0.72) 32%, rgba(247, 245, 239, 0.9) 70%, rgba(255, 255, 255, 0.96) 100%)',
-  },
-  toolbar: {
-    display: 'flex',
-    gap: 8,
-    paddingBottom: 12,
-    borderBottom: '1px solid rgba(32, 28, 25, 0.08)',
-    flexWrap: 'wrap' as const,
-  },
-  toolBtn: {
-    minHeight: 32,
-    padding: '6px 12px',
-    borderRadius: 999,
-    border: '1px solid rgba(32, 28, 25, 0.14)',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    cursor: 'pointer',
-    fontSize: 11,
-    fontWeight: 650,
-    color: '#4f4a46',
-    transition: 'all 0.2s',
-  },
-  headerCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.28)',
-    borderRadius: 22,
-    border: '1px solid rgba(255, 255, 255, 0.64)',
-    padding: 16,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 16,
-  },
-  headerLeft: {
-    display: 'flex',
-    gap: 14,
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: '50%',
-    backgroundColor: '#050505',
-    color: '#eaff66',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 25,
-    border: '2px solid rgba(255, 255, 255, 0.9)',
-  },
-  headerInfo: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 6,
-  },
-  headerName: {
-    margin: 0,
-    fontSize: 20,
-    fontWeight: 750,
-    color: '#201c19',
-  },
-  headerBadges: {
-    display: 'flex',
-    gap: 6,
-  },
-  badge1: {
-    padding: '4px 10px',
-    backgroundColor: '#eaff7a',
-    color: '#111111',
-    fontSize: 8,
-    fontWeight: 750,
-    borderRadius: 999,
-    textTransform: 'uppercase' as const,
-  },
-  badge2: {
-    padding: '4px 10px',
-    backgroundColor: '#000000',
-    color: '#ffffff',
-    fontSize: 8,
-    fontWeight: 750,
-    borderRadius: 999,
-    textTransform: 'uppercase' as const,
-  },
-  headerRight: {
-    display: 'flex',
-    gap: 24,
-    alignItems: 'center',
-  },
-  stat: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 2,
-  },
-  statLabel: {
-    fontSize: 9,
-    fontWeight: 700,
-    color: 'rgba(96, 94, 92, 0.8)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.3,
-  },
-  statValue: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: '#201c19',
-  },
-  processCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.36)',
-    borderRadius: 22,
-    border: '1px solid rgba(255, 255, 255, 0.66)',
-    padding: 12,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 14,
-  },
-  processLeft: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 2,
-    paddingLeft: 8,
-  },
-  processTitle: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: '#201c19',
-  },
-  processSubtitle: {
-    fontSize: 10,
-    color: 'rgba(96, 94, 92, 0.8)',
-  },
-  processSteps: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 4,
-    fontSize: 11,
-  },
-  stepActive: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#050505',
-    color: '#ffffff',
-    padding: '7px 14px',
-    borderRadius: 999,
-    fontWeight: 650,
-  },
-  stepInactive: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.58)',
-    color: '#77716c',
-    padding: '7px 14px',
-    borderRadius: 999,
-    fontWeight: 600,
-    border: '1px solid rgba(32, 28, 25, 0.1)',
-  },
-  stepSeparator: {
-    color: 'rgba(96, 94, 92, 0.45)',
-  },
-  tabs: {
-    display: 'flex',
-    gap: 6,
-    paddingBottom: 4,
-    fontSize: 12,
-    overflowX: 'auto' as const,
-  },
-  tabActive: {
-    padding: '8px 16px',
-    backgroundColor: '#000000',
-    color: '#ffffff',
-    borderRadius: 999,
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: 700,
-  },
-  tabInactive: {
-    padding: '8px 16px',
-    backgroundColor: 'transparent',
-    color: 'rgba(65, 61, 57, 0.76)',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: 650,
-    whiteSpace: 'nowrap' as const,
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-    gridTemplateRows: 'minmax(250px, auto) minmax(160px, auto)',
-    gap: 18,
-    alignItems: 'stretch',
-  },
-  card: {
-    minWidth: 0,
-    height: '100%',
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
-    borderRadius: 24,
-    border: '1px solid rgba(32, 28, 25, 0.72)',
-    padding: 20,
-    boxShadow: '0 8px 24px rgba(32, 28, 25, 0.04)',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 16,
-  },
-  upNextCard: {
-    background: 'linear-gradient(145deg, rgba(248, 255, 220, 0.96), rgba(238, 247, 205, 0.9))',
-  },
-  cardTitle: {
-    margin: 0,
-    fontSize: 14,
-    fontWeight: 750,
-    color: '#9298aa',
-    borderBottom: '1px solid rgba(32, 28, 25, 0.08)',
-    paddingBottom: 10,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-  },
-  cardTitlePlain: {
-    margin: 0,
-    fontSize: 14,
-    fontWeight: 750,
-    color: '#201c19',
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid rgba(32, 28, 25, 0.08)',
-    paddingBottom: 10,
-  },
-  badgeMini: {
-    fontSize: 8,
-    fontWeight: 750,
-    color: '#111111',
-    backgroundColor: '#eaff64',
-    padding: '3px 9px',
-    borderRadius: 999,
-    textTransform: 'uppercase' as const,
-  },
-  aiLabel: {
-    fontSize: 8,
-    fontWeight: 750,
-    color: '#605e5c',
-    backgroundColor: 'rgba(96, 94, 92, 0.08)',
-    padding: '3px 9px',
-    borderRadius: 999,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.3,
-  },
-  cardContent: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 14,
-    fontSize: 12,
-  },
-  field: {
-    display: 'grid',
-    gridTemplateColumns: '80px minmax(0, 1fr)',
-    alignItems: 'center',
-    gap: 8,
-  },
-  label: {
-    color: '#9298aa',
-    fontWeight: 650,
-    fontSize: 11,
-  },
-  value: {
-    color: '#201c19',
-    fontWeight: 650,
-  },
-  valueBlue: {
-    color: '#0078d4',
-    fontWeight: 650,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  sequenceLabel: {
-    fontSize: 10,
-    fontWeight: 750,
-    color: '#605e5c',
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
-    padding: 9,
-    borderRadius: 12,
-    textAlign: 'center' as const,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.3,
-  },
-  task: {
-    backgroundColor: '#eaff64',
-    borderRadius: 18,
-    padding: 13,
-    display: 'flex',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  taskIcon: {
-    fontSize: 20,
-    marginTop: 2,
-  },
-  taskInfo: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 2,
-  },
-  taskName: {
-    fontSize: 12,
-    fontWeight: 750,
-    color: '#201c19',
-  },
-  taskTime: {
-    fontSize: 10,
-    color: 'rgba(0, 0, 0, 0.6)',
-  },
-  taskDesc: {
-    margin: 0,
-    fontSize: 11,
-    color: '#605e5c',
-    lineHeight: 1.4,
-  },
-  taskButtons: {
-    display: 'flex',
-    gap: 8,
-  },
-  btnPrimary: {
-    flex: 1,
-    padding: '8px 12px',
-    backgroundColor: '#000000',
-    color: '#ffffff',
-    borderRadius: 999,
-    border: 'none',
-    fontSize: 10,
-    fontWeight: 750,
-    cursor: 'pointer',
-  },
-  btnSecondary: {
-    flex: 1,
-    padding: '8px 12px',
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
-    color: '#201c19',
-    borderRadius: 999,
-    border: '1px solid rgba(32, 28, 25, 0.14)',
-    fontSize: 10,
-    fontWeight: 750,
-    cursor: 'pointer',
-  },
-  searchSmall: {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: 12,
-    border: '1px solid rgba(32, 28, 25, 0.12)',
-    backgroundColor: 'rgba(243, 242, 241, 0.52)',
-    fontSize: 11,
-    fontFamily: 'inherit',
-  },
-  scoreContainer: {
-    display: 'flex',
-    gap: 20,
-    alignItems: 'center',
-  },
-  scoreCircle: {
-    width: 96,
-    height: 96,
-    flex: '0 0 96px',
-    borderRadius: '50%',
-    backgroundColor: '#ffffff',
-    border: '7px solid #050505',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 1,
-  },
-  scoreNumber: {
-    fontSize: 28,
-    fontWeight: 800,
-    color: '#201c19',
-  },
-  scoreGrade: {
-    fontSize: 11,
-    fontWeight: 750,
-    color: '#16a34a',
-    textTransform: 'uppercase' as const,
-  },
-  scoreTrend: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 4,
-    fontSize: 12,
-    fontWeight: 700,
-  },
-  trendText: {
-    fontSize: 10,
-    color: 'rgba(96, 94, 92, 0.8)',
-    lineHeight: 1.35,
-    margin: 0,
-  },
-  insights: {
-    backgroundColor: 'rgba(243, 242, 241, 0.56)',
-    padding: 13,
-    borderRadius: 16,
-    border: '1px solid rgba(32, 28, 25, 0.08)',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 8,
-  },
-  insightsLabel: {
-    fontSize: 10,
-    fontWeight: 750,
-    color: '#9298aa',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.3,
-  },
-  insightsList: {
-    margin: 0,
-    paddingLeft: 16,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 5,
-    fontSize: 11,
-    color: '#605e5c',
-  },
-  notesArea: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 8,
-  },
-  notes: {
-    fontSize: 12,
-    color: '#605e5c',
-    lineHeight: 1.5,
-    margin: 0,
-  },
-};
