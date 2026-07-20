@@ -70,13 +70,16 @@ async function runSmokeChecks() {
     "CSP frame-ancestors koruması bulunmalıdır.",
   );
 
-  const redirectResponse = await fetch(`${baseUrl}/yonetim/danisanlar/yeni`, {
-    redirect: "manual",
-  });
-  assert(redirectResponse.status === 307, "Eski danışan oluşturma yolu 307 dönmelidir.");
+  const adminResponse = await fetch(`${baseUrl}/yonetim`, { redirect: "manual" });
+  const adminLocation = adminResponse.headers.get("location") ?? "";
+
   assert(
-    redirectResponse.headers.get("location") === "/yonetim/danisan-olustur",
-    "Eski danışan oluşturma yolu canonical yönetim yoluna yönlenmelidir.",
+    [302, 303, 307, 308].includes(adminResponse.status),
+    "Oturumsuz yönetim isteği giriş sayfasına yönlenmelidir.",
+  );
+  assert(
+    adminLocation.includes("/giris"),
+    "Oturumsuz yönetim isteğinin hedefi giriş sayfası olmalıdır.",
   );
 }
 
