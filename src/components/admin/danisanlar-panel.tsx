@@ -1,120 +1,94 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+
+import type { ClientListItem } from './client-dashboard-types';
 
 interface DanisanlarPanelProps {
-  selectedId: string;
+  clients: ClientListItem[];
+  loading: boolean;
+  onNew: () => void;
+  onRefresh: () => void;
   onSelectDanisan: (id: string) => void;
+  selectedId: string;
 }
 
-interface Danisan {
-  id: string;
-  ad: string;
-  telefon: string;
-  email: string;
-  durumu: string;
-  randevuTarihi: string;
-  score: number;
-  scoreBg: string;
-  scoreColor: string;
+const statusLabels: Record<ClientListItem['status'], string> = {
+  ACTIVE: 'Aktif danışan',
+  INACTIVE: 'Pasif danışan',
+  PROSPECTIVE: 'Aday danışan',
+};
+
+function formatAppointment(value: string | undefined) {
+  if (!value) return 'Randevu planlanmadı';
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: '2-digit',
+    timeZone: 'Europe/Malta',
+    year: 'numeric',
+  }).format(new Date(value));
 }
 
-const danisanlar: Danisan[] = [
-  {
-    id: 'danisan-1',
-    ad: 'Ahmet Yılmaz',
-    telefon: '0531 234 5678',
-    email: 'ahmet@example.com',
-    durumu: 'İlk Konsültasyon',
-    randevuTarihi: '24/07/2026, 10:00',
-    score: 90,
-    scoreBg: '#000000',
-    scoreColor: '#ffffff',
-  },
-  {
-    id: 'danisan-2',
-    ad: 'Fatma Demir',
-    telefon: '0532 345 6789',
-    email: 'fatma@example.com',
-    durumu: 'Devam Eden Tedavi',
-    randevuTarihi: '24/07/2026, 14:30',
-    score: 83,
-    scoreBg: '#ecfdf5',
-    scoreColor: '#16a34a',
-  },
-  {
-    id: 'danisan-3',
-    ad: 'Mehmet Can',
-    telefon: '0533 456 7890',
-    email: 'mehmet@example.com',
-    durumu: 'Değerlendirme Bekleme',
-    randevuTarihi: '25/07/2026, 09:00',
-    score: 72,
-    scoreBg: '#fffbeb',
-    scoreColor: '#b45309',
-  },
-  {
-    id: 'danisan-4',
-    ad: 'Ayşe Kaya',
-    telefon: '0534 567 8901',
-    email: 'ayse@example.com',
-    durumu: 'Tamamlandı',
-    randevuTarihi: '20/07/2026, 16:00',
-    score: 32,
-    scoreBg: '#fdf2f2',
-    scoreColor: '#dc2626',
-  }
-];
-
-export default function DanisanlarPanel({ selectedId, onSelectDanisan }: DanisanlarPanelProps) {
+export default function DanisanlarPanel({
+  clients,
+  loading,
+  onNew,
+  onRefresh,
+  onSelectDanisan,
+  selectedId,
+}: DanisanlarPanelProps) {
   const [arama, setArama] = useState('');
 
-  const filteredDanisanlar = danisanlar.filter(d =>
-    d.ad.toLowerCase().includes(arama.toLowerCase()) ||
-    d.email.toLowerCase().includes(arama.toLowerCase())
-  );
+  const filteredDanisanlar = useMemo(() => {
+    const query = arama.trim().toLocaleLowerCase('tr-TR');
+    if (!query) return clients;
+    return clients.filter((client) =>
+      [client.firstName, client.lastName, client.email ?? '', client.phone ?? '']
+        .join(' ')
+        .toLocaleLowerCase('tr-TR')
+        .includes(query),
+    );
+  }, [arama, clients]);
 
   return (
-    <div style={styles.panel}>
-      {/* Header */}
+    <section style={styles.panel}>
       <div style={styles.header}>
         <h2 style={styles.title}>Danışanlar</h2>
         <div style={styles.actionButtons}>
-          <button style={styles.btn} title="Yenile">🔄</button>
-          <button style={styles.btn} title="Liste">📋</button>
-          <button style={styles.btn} title="Arama">🔍</button>
+          <button onClick={onRefresh} style={styles.btn} title="Yenile" type="button">↻</button>
+          <button onClick={onNew} style={styles.btn} title="Yeni danışan" type="button">＋</button>
+          <button onClick={() => setArama('')} style={styles.btn} title="Aramayı temizle" type="button">⌕</button>
         </div>
       </div>
 
-      {/* Arama */}
       <div style={styles.searchContainer}>
         <input
-          type="text"
-          placeholder="Danışan adı veya email..."
-          value={arama}
-          onChange={(e) => setArama(e.target.value)}
+          onChange={(event) => setArama(event.target.value)}
+          placeholder="Danışan adı, e-posta veya telefon..."
           style={styles.searchInput}
+          type="search"
+          value={arama}
         />
       </div>
 
-      {/* Tarih Başlığı */}
       <div style={styles.dateHeader}>
-        <div style={styles.divider}></div>
-        <span style={styles.dateText}>{arama ? 'ARAMA SONUÇLARI' : 'BUGÜN'}</span>
-        <div style={styles.divider}></div>
+        <div style={styles.divider} />
+        <span style={styles.dateText}>{arama ? 'ARAMA SONUÇLARI' : 'TÜM KAYITLAR'}</span>
+        <div style={styles.divider} />
       </div>
 
-      {/* Danışan Listesi */}
       <div style={styles.list}>
-        {filteredDanisanlar.length === 0 ? (
-          <div style={styles.noResults}>
-            <span style={styles.noResultsText}>Sonuç bulunamadı</span>
-          </div>
+        {loading ? (
+          <div style={styles.noResults}><span style={styles.noResultsText}>Danışanlar yükleniyor...</span></div>
+        ) : filteredDanisanlar.length === 0 ? (
+          <div style={styles.noResults}><span style={styles.noResultsText}>Sonuç bulunamadı</span></div>
         ) : (
           filteredDanisanlar.map((danisan) => {
             const isActive = selectedId === danisan.id;
             return (
-              <div
+              <button
                 key={danisan.id}
                 onClick={() => onSelectDanisan(danisan.id)}
                 style={{
@@ -122,38 +96,37 @@ export default function DanisanlarPanel({ selectedId, onSelectDanisan }: Danisan
                   backgroundColor: isActive ? '#eafda8' : '#ffffff',
                   borderColor: isActive ? 'rgba(0, 0, 0, 0.04)' : 'rgba(226, 225, 223, 0.6)',
                 }}
+                type="button"
               >
-                {/* Top Row */}
                 <div style={styles.cardTop}>
                   <div style={styles.cardInfo}>
-                    <span style={styles.cardName}>{danisan.ad}</span>
-                    <span style={styles.cardRole}>{danisan.durumu}</span>
+                    <span style={styles.cardName}>{danisan.firstName} {danisan.lastName}</span>
+                    <span style={styles.cardRole}>{statusLabels[danisan.status]}</span>
                   </div>
-                  <div style={{
-                    ...styles.actionIcon,
-                    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.6)' : 'rgba(243, 242, 241, 1)',
-                  }}>
-                    📞
+                  <div
+                    style={{
+                      ...styles.actionIcon,
+                      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.6)' : 'rgba(243, 242, 241, 1)',
+                    }}
+                  >
+                    {danisan.type === 'CHILD' ? 'Ç' : 'Y'}
                   </div>
                 </div>
 
-                {/* Bottom Row */}
+                <div style={styles.appointmentText}>{formatAppointment(danisan.nextAppointment?.startsAt)}</div>
+
                 <div style={styles.cardBottom}>
-                  <div style={styles.badge}>DANIŞAN</div>
-                  <div style={{
-                    ...styles.score,
-                    backgroundColor: danisan.scoreBg,
-                    color: danisan.scoreColor,
-                  }}>
+                  <div style={styles.badge}>{danisan.type === 'CHILD' ? 'ÇOCUK' : 'YETİŞKİN'}</div>
+                  <div style={{ ...styles.score, ...(danisan.score >= 75 ? styles.scoreGood : danisan.score >= 50 ? styles.scoreMid : styles.scoreLow) }}>
                     {danisan.score}
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -168,6 +141,7 @@ const styles = {
     flexDirection: 'column' as const,
     overflow: 'hidden',
     height: 'calc(100vh - 160px)',
+    flex: '0 0 auto',
   },
   header: {
     padding: '24px',
@@ -176,15 +150,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 700,
-    color: '#323130',
-  },
-  actionButtons: {
-    display: 'flex',
-    gap: 6,
-  },
+  title: { margin: 0, fontSize: 24, fontWeight: 700, color: '#323130' },
+  actionButtons: { display: 'flex', gap: 6 },
   btn: {
     width: 32,
     height: 32,
@@ -193,16 +160,8 @@ const styles = {
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
     cursor: 'pointer',
     fontSize: 14,
-    transition: 'all 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  searchContainer: {
-    paddingLeft: 24,
-    paddingRight: 24,
-    paddingBottom: 12,
-  },
+  searchContainer: { paddingLeft: 24, paddingRight: 24, paddingBottom: 12 },
   searchInput: {
     width: '100%',
     padding: '8px 12px',
@@ -212,6 +171,7 @@ const styles = {
     fontSize: 12,
     color: '#323130',
     fontFamily: 'inherit',
+    outline: 0,
   },
   dateHeader: {
     paddingLeft: 24,
@@ -221,16 +181,11 @@ const styles = {
     alignItems: 'center',
     gap: 8,
   },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(226, 225, 223, 0.6)',
-  },
+  divider: { flex: 1, height: 1, backgroundColor: 'rgba(226, 225, 223, 0.6)' },
   dateText: {
     fontSize: 9,
     fontWeight: 700,
     color: 'rgba(96, 94, 92, 0.8)',
-    textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
   },
   list: {
@@ -243,46 +198,25 @@ const styles = {
     flexDirection: 'column' as const,
     gap: 16,
   },
-  noResults: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 200,
-  },
-  noResultsText: {
-    fontSize: 12,
-    color: 'rgba(96, 94, 92, 0.8)',
-  },
+  noResults: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 },
+  noResultsText: { fontSize: 12, color: 'rgba(96, 94, 92, 0.8)' },
   card: {
+    width: '100%',
     borderRadius: 16,
     padding: 16,
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: 12,
+    gap: 10,
     cursor: 'pointer',
     transition: 'all 0.2s',
     border: '1px solid rgba(226, 225, 223, 0.6)',
+    font: 'inherit',
+    textAlign: 'left' as const,
   },
-  cardTop: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  cardInfo: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-  },
-  cardName: {
-    fontSize: 12,
-    fontWeight: 700,
-    color: '#323130',
-  },
-  cardRole: {
-    fontSize: 10,
-    color: 'rgba(96, 94, 92, 0.8)',
-    fontWeight: 600,
-  },
+  cardTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  cardInfo: { display: 'flex', flexDirection: 'column' as const, gap: 3 },
+  cardName: { fontSize: 12, fontWeight: 700, color: '#323130' },
+  cardRole: { fontSize: 10, color: 'rgba(96, 94, 92, 0.8)', fontWeight: 600 },
   actionIcon: {
     width: 28,
     height: 28,
@@ -291,14 +225,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: 14,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+    fontSize: 10,
+    fontWeight: 800,
   },
-  cardBottom: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+  appointmentText: { color: '#77727d', fontSize: 9, lineHeight: 1.4 },
+  cardBottom: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   badge: {
     padding: '4px 8px',
     borderRadius: 8,
@@ -306,7 +237,6 @@ const styles = {
     fontWeight: 700,
     color: 'rgba(96, 94, 92, 0.8)',
     backgroundColor: 'rgba(243, 242, 241, 1)',
-    textTransform: 'uppercase' as const,
     letterSpacing: 0.3,
   },
   score: {
@@ -318,6 +248,8 @@ const styles = {
     justifyContent: 'center',
     fontSize: 10,
     fontWeight: 700,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  }
+  },
+  scoreGood: { backgroundColor: '#050505', color: '#ffffff' },
+  scoreMid: { backgroundColor: '#fffbeb', color: '#b45309' },
+  scoreLow: { backgroundColor: '#fdf2f2', color: '#dc2626' },
 };
