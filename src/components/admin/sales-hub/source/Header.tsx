@@ -1,5 +1,5 @@
-import { SalesHubIcon } from './sales-hub-icon';
 import styles from '../sales-hub-dashboard.module.css';
+import { SalesHubIcon } from './sales-hub-icon';
 
 interface HeaderProps {
   filterActive: boolean;
@@ -24,7 +24,12 @@ export default function Header({
 }: HeaderProps) {
   return (
     <header className={styles.topbar} data-testid="sales-hub-header">
-      <button className={styles.iconButton} onClick={onFocusSearch} title="Ara" type="button">
+      <button
+        className={styles.iconButton}
+        onClick={onFocusSearch}
+        title="Ara"
+        type="button"
+      >
         <SalesHubIcon name="search" />
       </button>
       <button
@@ -36,7 +41,12 @@ export default function Header({
       >
         <SalesHubIcon name="clock" />
       </button>
-      <button className={styles.iconButton} onClick={onNewClient} title="Yeni danışan" type="button">
+      <button
+        className={styles.iconButton}
+        onClick={onNewClient}
+        title="Yeni danışan"
+        type="button"
+      >
         <SalesHubIcon name="plus" />
       </button>
       <button
@@ -65,7 +75,7 @@ export default function Header({
       <button className={styles.iconButton} disabled title="Destek" type="button">
         <SalesHubIcon name="support" />
       </button>
-      <div className={styles.avatarTop}>
+      <div className={styles.avatarTop} data-visual-dynamic="authenticated-user">
         {userInitials}
         <span className={styles.onlineDot} />
       </div>
