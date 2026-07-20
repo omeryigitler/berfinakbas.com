@@ -35,7 +35,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       if (!isAdminRoute) return true;
 
-      return session?.user.status === "ACTIVE";
+      return session?.user?.status === "ACTIVE";
     },
     async session({ session, user }) {
       const applicationUser = await database.user.findUnique({
