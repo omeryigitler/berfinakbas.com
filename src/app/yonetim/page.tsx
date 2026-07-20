@@ -1,5 +1,5 @@
-import DanisanlarPage from './danisanlar/page';
+import SalesHubPage from '@/components/admin/sales-hub/sales-hub-page';
 
 export default function YonetimPage() {
-  return <DanisanlarPage />;
+  return <SalesHubPage />;
 }
