@@ -100,7 +100,11 @@ export default function RandevularPage() {
   }, []);
 
   useEffect(() => {
-    void loadAppointments();
+    const timeoutId = window.setTimeout(() => {
+      void loadAppointments();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadAppointments]);
 
   const selectedService = useMemo(
