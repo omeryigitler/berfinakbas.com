@@ -1,33 +1,22 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
-import AdminSidebar from './admin-sidebar';
+import type { ReactNode } from 'react';
+
 import AdminHeader from './admin-header';
+import AdminSidebar from './admin-sidebar';
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const [activeMenuItemId, setActiveMenuItemId] = useState('danisanlar');
-
   return (
     <div style={styles.container}>
-      {/* Sidebar */}
-      <AdminSidebar
-        activeMenuItemId={activeMenuItemId}
-        setActiveMenuItemId={setActiveMenuItemId}
-      />
+      <AdminSidebar />
 
-      {/* Main Area */}
       <div style={styles.mainArea}>
-        {/* Header */}
         <AdminHeader />
-
-        {/* Content */}
-        <div style={styles.contentWrapper}>
-          {children}
-        </div>
+        <div style={styles.contentWrapper}>{children}</div>
       </div>
     </div>
   );
@@ -50,5 +39,5 @@ const styles = {
     flex: 1,
     overflow: 'auto',
     padding: '24px',
-  }
+  },
 };
