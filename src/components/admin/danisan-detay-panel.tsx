@@ -107,8 +107,12 @@ export default function DanisanDetayPanel({
   }, [selectedDanisanId]);
 
   useEffect(() => {
-    setActiveTab('summary');
-    void loadDetail();
+    const timeoutId = window.setTimeout(() => {
+      setActiveTab('summary');
+      void loadDetail();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadDetail]);
 
   const completedAppointments = useMemo(
