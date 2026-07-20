@@ -96,11 +96,15 @@ export default function ExactSalesHubDashboard({
   }, []);
 
   useEffect(() => {
-    setActiveTab("Genel Bakış");
-    setDeactivateOpen(false);
-    setEditOpen(false);
-    setNoteOpen(false);
-    void loadDetail(selectedId);
+    const timeoutId = window.setTimeout(() => {
+      setActiveTab("Genel Bakış");
+      setDeactivateOpen(false);
+      setEditOpen(false);
+      setNoteOpen(false);
+      void loadDetail(selectedId);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadDetail, selectedId]);
 
   useEffect(() => {
