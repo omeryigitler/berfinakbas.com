@@ -145,9 +145,10 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!client) return notFound();
 
   const now = Date.now();
-  const nextAppointment = [...client.appointments]
-    .filter((appointment) => appointment.startsAt.getTime() >= now)
-    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())[0] ?? null;
+  const nextAppointment =
+    [...client.appointments]
+      .filter((appointment) => appointment.startsAt.getTime() >= now)
+      .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())[0] ?? null;
   const completedAppointments = client.appointments.filter(
     (appointment) => appointment.status === "COMPLETED",
   ).length;
@@ -250,7 +251,18 @@ export async function PATCH(request: Request, context: RouteContext) {
         action: "client.updated",
         actorType: "USER",
         actorUserId: session.user.id,
-        afterSummary: record,
+        afterSummary: {
+          birthYear: record.birthYear,
+          email: record.email,
+          firstName: record.firstName,
+          id: record.id,
+          lastName: record.lastName,
+          phone: record.phone,
+          preferredName: record.preferredName,
+          status: record.status,
+          type: record.type,
+          updatedAt: record.updatedAt.toISOString(),
+        },
         beforeSummary: existing,
         correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
         entityId: clientId,
