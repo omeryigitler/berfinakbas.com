@@ -52,12 +52,36 @@ export default function SalesHubModals({
             </div>
             <form onSubmit={onUpdateSubmit}>
               <div className={styles.formGrid}>
-                <label className={styles.field}>Ad<input defaultValue={detail.firstName} name="firstName" required /></label>
-                <label className={styles.field}>Soyad<input defaultValue={detail.lastName} name="lastName" required /></label>
-                <label className={styles.field}>Tercih edilen ad<input defaultValue={detail.preferredName ?? ''} name="preferredName" /></label>
-                <label className={styles.field}>Doğum yılı<input defaultValue={detail.birthYear ?? ''} max={new Date().getFullYear()} min="1900" name="birthYear" type="number" /></label>
-                <label className={styles.field}>Telefon<input defaultValue={detail.phone ?? ''} name="phone" /></label>
-                <label className={styles.field}>E-posta<input defaultValue={detail.email ?? ''} name="email" type="email" /></label>
+                <label className={styles.field}>
+                  Ad
+                  <input defaultValue={detail.firstName} name="firstName" required />
+                </label>
+                <label className={styles.field}>
+                  Soyad
+                  <input defaultValue={detail.lastName} name="lastName" required />
+                </label>
+                <label className={styles.field}>
+                  Tercih edilen ad
+                  <input defaultValue={detail.preferredName ?? ''} name="preferredName" />
+                </label>
+                <label className={styles.field}>
+                  Doğum yılı
+                  <input
+                    defaultValue={detail.birthYear ?? ''}
+                    max={new Date().getFullYear()}
+                    min="1900"
+                    name="birthYear"
+                    type="number"
+                  />
+                </label>
+                <label className={styles.field}>
+                  Telefon
+                  <input defaultValue={detail.phone ?? ''} name="phone" />
+                </label>
+                <label className={styles.field}>
+                  E-posta
+                  <input defaultValue={detail.email ?? ''} name="email" type="email" />
+                </label>
                 <label className={styles.field}>
                   Durum
                   <select defaultValue={detail.status} name="status">
@@ -68,7 +92,13 @@ export default function SalesHubModals({
                 </label>
               </div>
               <div className={styles.modalActions}>
-                <button className={styles.secondaryAction} onClick={onCloseEdit} type="button">Vazgeç</button>
+                <button
+                  className={styles.secondaryAction}
+                  onClick={onCloseEdit}
+                  type="button"
+                >
+                  Vazgeç
+                </button>
                 <button className={styles.primaryAction} disabled={submitting} type="submit">
                   {submitting ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
@@ -82,7 +112,10 @@ export default function SalesHubModals({
         <div className={styles.modalBackdrop} role="presentation">
           <div aria-modal="true" className={styles.modal} role="dialog">
             <div className={styles.modalHeader}>
-              <div><h2>Operasyonel not ekle</h2><p>{displayName}</p></div>
+              <div>
+                <h2>Operasyonel not ekle</h2>
+                <p>{displayName}</p>
+              </div>
               <button className={styles.circleButton} onClick={onCloseNote} type="button">
                 <SalesHubIcon name="x" size={15} />
               </button>
@@ -98,10 +131,19 @@ export default function SalesHubModals({
                     <option value="PLAN">Plan</option>
                   </select>
                 </label>
-                <label className={`${styles.field} ${styles.fieldWide}`}>Not<textarea name="note" required /></label>
+                <label className={`${styles.field} ${styles.fieldWide}`}>
+                  Not
+                  <textarea name="note" required />
+                </label>
               </div>
               <div className={styles.modalActions}>
-                <button className={styles.secondaryAction} onClick={onCloseNote} type="button">Vazgeç</button>
+                <button
+                  className={styles.secondaryAction}
+                  onClick={onCloseNote}
+                  type="button"
+                >
+                  Vazgeç
+                </button>
                 <button className={styles.primaryAction} disabled={submitting} type="submit">
                   {submitting ? 'Ekleniyor...' : 'Notu ekle'}
                 </button>
@@ -119,13 +161,28 @@ export default function SalesHubModals({
                 <h2>Danışanı pasife al</h2>
                 <p>{displayName} kaydı silinmez; pasif duruma geçirilir.</p>
               </div>
-              <button className={styles.circleButton} onClick={onCloseDeactivate} type="button">
+              <button
+                className={styles.circleButton}
+                onClick={onCloseDeactivate}
+                type="button"
+              >
                 <SalesHubIcon name="x" size={15} />
               </button>
             </div>
             <div className={styles.modalActions}>
-              <button className={styles.secondaryAction} onClick={onCloseDeactivate} type="button">Vazgeç</button>
-              <button className={styles.primaryAction} disabled={submitting} onClick={onDeactivate} type="button">
+              <button
+                className={styles.secondaryAction}
+                onClick={onCloseDeactivate}
+                type="button"
+              >
+                Vazgeç
+              </button>
+              <button
+                className={styles.primaryAction}
+                disabled={submitting}
+                onClick={onDeactivate}
+                type="button"
+              >
                 {submitting ? 'İşleniyor...' : 'Pasife al'}
               </button>
             </div>
