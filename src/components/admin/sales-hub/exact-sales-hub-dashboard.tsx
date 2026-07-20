@@ -110,6 +110,8 @@ export default function ExactSalesHubDashboard({
 
   const displayName = detail ? adaptClientDetail(detail).displayName : 'Danışan seçilmedi';
   const currentUserInitials = getUserInitials(currentUserName, currentUserEmail);
+  const currentUserDisplayName =
+    currentUserName?.trim() || currentUserEmail?.split('@')[0]?.trim() || '—';
 
   async function updateClient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -270,6 +272,8 @@ export default function ExactSalesHubDashboard({
             onPrint={() => window.print()}
             onRefresh={refreshDashboard}
             onTabChange={setActiveTab}
+            representativeInitials={currentUserInitials}
+            representativeName={currentUserDisplayName}
             submitting={submitting}
           />
         </div>
