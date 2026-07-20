@@ -1,5 +1,6 @@
 export interface ClientListItem {
   appointmentsCount: number;
+  createdAt?: string;
   email: string | null;
   firstName: string;
   id: string;
