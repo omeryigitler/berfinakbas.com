@@ -29,10 +29,56 @@ function displayNameFromSession(name?: string | null): string {
   return value && value.length > 1 ? value : "Berfin Akbaş";
 }
 
-export async function POST(request: Request) {
+async function requireAppointmentManager() {
   const session = await auth();
-  if (!session?.user || session.user.status !== "ACTIVE") return forbidden();
-  if (!hasPermission(session.user.roles, "appointments:manage")) return forbidden();
+  if (
+    !session?.user ||
+    session.user.status !== "ACTIVE" ||
+    !hasPermission(session.user.roles, "appointments:manage")
+  ) {
+    return null;
+  }
+  return session;
+}
+
+export async function GET() {
+  const session = await requireAppointmentManager();
+  if (!session) return forbidden();
+
+  const database = getDatabase();
+  const [clients, practitioners, services] = await Promise.all([
+    database.client.findMany({
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      select: { firstName: true, id: true, lastName: true, type: true },
+      take: 200,
+      where: { status: { in: ["PROSPECTIVE", "ACTIVE"] } },
+    }),
+    database.practitioner.findMany({
+      orderBy: { displayName: "asc" },
+      select: { displayName: true, id: true, timeZone: true },
+      where: { status: "ACTIVE" },
+    }),
+    database.service.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        defaultDurationMinutes: true,
+        id: true,
+        locationType: true,
+        name: true,
+      },
+      where: { status: "ACTIVE" },
+    }),
+  ]);
+
+  return NextResponse.json(
+    { data: { clients, practitioners, services } },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
+
+export async function POST(request: Request) {
+  const session = await requireAppointmentManager();
+  if (!session) return forbidden();
 
   const environment = getServerEnvironment();
   if (!hasTrustedOrigin(request.headers.get("origin"), environment.APP_URL)) {
