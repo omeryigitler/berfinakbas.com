@@ -1,6 +1,6 @@
-import { navigationGroups } from './sales-hub-config';
-import { SalesHubIcon } from './sales-hub-icon';
-import styles from '../sales-hub-dashboard.module.css';
+import styles from "../sales-hub-dashboard.module.css";
+import { navigationGroups } from "./sales-hub-config";
+import { SalesHubIcon } from "./sales-hub-icon";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -11,7 +11,7 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onNavigate, onToggle }: SidebarProps) {
   return (
     <aside
-      className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`}
+      className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ""}`}
       data-testid="sales-hub-sidebar"
     >
       <div className={styles.brandRow}>
@@ -31,10 +31,10 @@ export default function Sidebar({ collapsed, onNavigate, onToggle }: SidebarProp
           <button
             className={styles.circleButton}
             onClick={onToggle}
-            title={collapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
+            title={collapsed ? "Menüyü genişlet" : "Menüyü daralt"}
             type="button"
           >
-            <SalesHubIcon name={collapsed ? 'arrow-right' : 'arrow-left'} size={14} />
+            <SalesHubIcon name={collapsed ? "arrow-right" : "arrow-left"} size={14} />
           </button>
         </div>
 
@@ -43,10 +43,10 @@ export default function Sidebar({ collapsed, onNavigate, onToggle }: SidebarProp
             <span className={styles.navGroupTitle}>{group.title}</span>
             <div className={styles.navItems}>
               {group.items.map((item) => {
-                const active = item.id === 'danisanlar';
+                const active = item.id === "danisanlar";
                 return (
                   <button
-                    className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
+                    className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
                     disabled={!item.route}
                     key={item.id}
                     onClick={() => item.route && onNavigate(item.route)}
