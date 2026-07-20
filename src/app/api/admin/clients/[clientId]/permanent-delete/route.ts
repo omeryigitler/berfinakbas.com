@@ -18,7 +18,7 @@ function forbidden() {
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ clientId: string }> },
 ) {
   const session = await auth();
   if (
@@ -37,8 +37,8 @@ export async function DELETE(
     );
   }
 
-  const { id } = await params;
-  if (!isReferenceClientId(id)) {
+  const { clientId } = await params;
+  if (!isReferenceClientId(clientId)) {
     return NextResponse.json(
       {
         code: "REFERENCE_CLIENT_REQUIRED",
@@ -68,7 +68,7 @@ export async function DELETE(
             },
             id: true,
           },
-          where: { id },
+          where: { id: clientId },
         });
         if (!client) return false;
 
@@ -83,11 +83,11 @@ export async function DELETE(
 
         const guardianLinks = await transaction.clientGuardian.findMany({
           select: { guardianId: true },
-          where: { clientId: id },
+          where: { clientId },
         });
 
-        await transaction.clientGuardian.deleteMany({ where: { clientId: id } });
-        await transaction.client.delete({ where: { id } });
+        await transaction.clientGuardian.deleteMany({ where: { clientId } });
+        await transaction.client.delete({ where: { id: clientId } });
 
         for (const { guardianId } of guardianLinks) {
           const guardian = await transaction.guardian.findUnique({
@@ -121,7 +121,7 @@ export async function DELETE(
             actorUserId: session.user.id,
             beforeSummary: { referenceRecord: true },
             correlationId,
-            entityId: id,
+            entityId: clientId,
             entityType: "CLIENT",
             reason: "REFERENCE_CLIENT_PERMANENT_DELETE",
           },
@@ -139,7 +139,7 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ data: { id }, deleted: true });
+    return NextResponse.json({ data: { id: clientId }, deleted: true });
   } catch (error) {
     if (error instanceof ReferenceClientHasLinkedDataError) {
       return NextResponse.json(
