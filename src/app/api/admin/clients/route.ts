@@ -11,6 +11,7 @@ import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
 const MAX_REQUEST_BODY_BYTES = 24 * 1_024;
 const MAX_TRANSACTION_ATTEMPTS = 3;
+const clientStatuses = ["PROSPECTIVE", "ACTIVE", "INACTIVE"] as const;
 
 class RequestBodyTooLargeError extends Error {}
 class GuardianNotFoundError extends Error {}
@@ -71,6 +72,102 @@ async function findStoredClient(clientId: string) {
     },
     where: { id: clientId },
   });
+}
+
+export async function GET(request: Request) {
+  const session = await auth();
+  if (
+    !session?.user ||
+    session.user.status !== "ACTIVE" ||
+    !hasPermission(session.user.roles, "clients:read")
+  ) {
+    return forbidden();
+  }
+
+  const params = new URL(request.url).searchParams;
+  const query = params.get("q")?.trim() ?? "";
+  const rawTake = Number(params.get("take") ?? "100");
+  const take = Number.isFinite(rawTake) ? Math.min(Math.max(Math.trunc(rawTake), 1), 100) : 100;
+  const rawStatus = params.get("status");
+  const status = clientStatuses.find((value) => value === rawStatus);
+  const now = new Date();
+
+  const clients = await getDatabase().client.findMany({
+    orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+    select: {
+      _count: { select: { appointments: true, notes: true, plans: true } },
+      appointments: {
+        orderBy: { startsAt: "asc" },
+        select: {
+          serviceNameSnapshot: true,
+          startsAt: true,
+          status: true,
+        },
+        take: 1,
+        where: {
+          startsAt: { gte: now },
+          status: { in: ["REQUESTED", "PENDING_REVIEW", "CONFIRMED", "RESCHEDULE_PROPOSED"] },
+        },
+      },
+      email: true,
+      firstName: true,
+      id: true,
+      lastName: true,
+      phone: true,
+      preferredName: true,
+      status: true,
+      type: true,
+      updatedAt: true,
+    },
+    take,
+    where: {
+      ...(status ? { status } : {}),
+      ...(query
+        ? {
+            OR: [
+              { firstName: { contains: query, mode: "insensitive" } },
+              { lastName: { contains: query, mode: "insensitive" } },
+              { email: { contains: query, mode: "insensitive" } },
+              { phone: { contains: query } },
+            ],
+          }
+        : {}),
+    },
+  });
+
+  return NextResponse.json(
+    {
+      data: clients.map((client) => {
+        const nextAppointment = client.appointments[0] ?? null;
+        const score = Math.min(
+          100,
+          35 +
+            (client.phone ? 15 : 0) +
+            (client.email ? 15 : 0) +
+            Math.min(client._count.appointments * 5, 20) +
+            Math.min(client._count.notes * 3, 15),
+        );
+
+        return {
+          appointmentsCount: client._count.appointments,
+          email: client.email,
+          firstName: client.firstName,
+          id: client.id,
+          lastName: client.lastName,
+          nextAppointment,
+          notesCount: client._count.notes,
+          phone: client.phone,
+          plansCount: client._count.plans,
+          preferredName: client.preferredName,
+          score,
+          status: client.status,
+          type: client.type,
+          updatedAt: client.updatedAt,
+        };
+      }),
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function POST(request: Request) {
