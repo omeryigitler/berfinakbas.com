@@ -4,8 +4,9 @@ import type { FormEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ClientListItem } from '@/components/admin/client-dashboard-types';
-import SalesHubDashboard from '@/components/admin/sales-hub/sales-hub-dashboard';
+import ExactSalesHubDashboard from '@/components/admin/sales-hub/exact-sales-hub-dashboard';
 import styles from '@/components/admin/sales-hub/sales-hub-dashboard.module.css';
+import { SalesHubIcon } from '@/components/admin/sales-hub/source/sales-hub-icon';
 
 async function readError(response: Response) {
   const payload = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -35,6 +36,7 @@ export default function DanisanlarPage() {
         if (current && payload.data.some((client) => client.id === current)) return current;
         return payload.data[0]?.id ?? '';
       });
+      setMessage('');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Danışanlar yüklenemedi.');
     } finally {
@@ -50,14 +52,14 @@ export default function DanisanlarPage() {
   async function createClient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const birthYear = String(formData.get('birthYear') ?? '').trim();
+    const birthYearValue = String(formData.get('birthYear') ?? '').trim();
 
     setSubmitting(true);
     setMessage('');
     try {
       const response = await fetch('/api/admin/clients', {
         body: JSON.stringify({
-          birthYear: birthYear || null,
+          birthYear: birthYearValue ? Number(birthYearValue) : null,
           email: String(formData.get('email') ?? '').trim() || null,
           firstName: String(formData.get('firstName') ?? '').trim(),
           guardianEmail: type === 'CHILD' ? String(formData.get('guardianEmail') ?? '').trim() || null : null,
@@ -101,7 +103,7 @@ export default function DanisanlarPage() {
 
   return (
     <>
-      <SalesHubDashboard
+      <ExactSalesHubDashboard
         clients={clients}
         loading={loading}
         onChanged={() => void loadClients()}
@@ -111,12 +113,14 @@ export default function DanisanlarPage() {
         selectedId={selectedDanisanId}
       />
 
+      {message && !createOpen ? <div className={styles.toast}>{message}</div> : null}
+
       {createOpen ? (
         <div className={styles.modalBackdrop} role="presentation">
           <div aria-labelledby="danisan-olustur" aria-modal="true" className={styles.modal} role="dialog">
             <div className={styles.modalHeader}>
               <div><h2 id="danisan-olustur">Yeni danışan</h2><p>Portföye gerçek danışan kaydı ekleyin.</p></div>
-              <button className={styles.circleButton} onClick={() => setCreateOpen(false)} type="button">×</button>
+              <button className={styles.circleButton} onClick={() => setCreateOpen(false)} type="button"><SalesHubIcon name="x" size={15} /></button>
             </div>
             <form onSubmit={createClient}>
               <div className={styles.formGrid}>
