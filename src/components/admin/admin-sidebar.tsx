@@ -1,111 +1,97 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
 import type { Route } from 'next';
-
-interface AdminSidebarProps {
-  activeMenuItemId: string;
-  setActiveMenuItemId: (id: string) => void;
-}
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 const menuGroups = [
   {
-    title: 'BENIM ÇALIŞMAM',
+    title: 'YÖNETİM',
     items: [
-      { id: 'danisanlar', label: 'Danışanlar', href: '/yonetim/danisanlar' },
-      { id: 'randevular', label: 'Randevular', href: '/yonetim/randevular' },
-      { id: 'odemeler', label: 'Ödemeler', href: '/yonetim/odemeler' },
-    ]
+      { id: 'baslangic', icon: '⌂', label: 'Genel Bakış', href: '/yonetim/baslangic' },
+      { id: 'danisanlar', icon: '◉', label: 'Danışanlar', href: '/yonetim/danisanlar' },
+      { id: 'randevular', icon: '◷', label: 'Randevular', href: '/yonetim/randevular' },
+      { id: 'odemeler', icon: '₺', label: 'Ödemeler', href: '/yonetim/odemeler' },
+    ],
   },
-  {
-    title: 'MÜŞTERİLER',
-    items: [
-      { id: 'hesaplar', label: 'Hesaplar', href: '/yonetim/hesaplar' },
-      { id: 'iletisim', label: 'İletişim', href: '/yonetim/iletisim' },
-    ]
-  },
-  {
-    title: 'SATIŞLAR',
-    items: [
-      { id: 'leads', label: 'Leads', href: '/yonetim/leads' },
-      { id: 'firsatlar', label: 'Fırsatlar', href: '/yonetim/firsatlar' },
-    ]
-  },
-  {
-    title: 'PERFORMANS',
-    items: [
-      { id: 'hedefler', label: 'Hedefler', href: '/yonetim/hedefler' },
-      { id: 'tahminler', label: 'Tahminler', href: '/yonetim/tahminler' },
-    ]
-  }
 ];
 
-export default function AdminSidebar({ activeMenuItemId, setActiveMenuItemId }: AdminSidebarProps) {
+export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
 
   return (
-    <div style={{
-      ...styles.sidebar,
-      width: isCollapsed ? 64 : 240,
-    }}>
-      {/* Header */}
+    <aside
+      style={{
+        ...styles.sidebar,
+        width: isCollapsed ? 64 : 240,
+      }}
+    >
       <div style={styles.header}>
         <div style={styles.logo}>
-          <div style={styles.logoIcon}>📊</div>
+          <div style={styles.logoIcon}>BA</div>
         </div>
         {!isCollapsed && (
           <div style={styles.logoText}>
             <span style={styles.brandName}>Berfin Akbaş</span>
-            <span style={styles.subtitle}>Admin</span>
+            <span style={styles.subtitle}>Yönetim</span>
           </div>
         )}
       </div>
 
-      {/* Navigation */}
-      <div style={styles.nav}>
-        {/* Menu Header */}
+      <nav aria-label="Yönetim menüsü" style={styles.nav}>
         <div style={styles.menuHeader}>
-          {!isCollapsed && <span style={styles.menuTitle}>Menu</span>}
+          {!isCollapsed && <span style={styles.menuTitle}>Menü</span>}
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-label={isCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
+            onClick={() => setIsCollapsed((value) => !value)}
             style={styles.collapseBtn}
             title={isCollapsed ? 'Genişlet' : 'Daralt'}
+            type="button"
           >
             {isCollapsed ? '→' : '←'}
           </button>
         </div>
 
-        {/* Menu Groups */}
         {menuGroups.map((group) => (
           <div key={group.title} style={styles.menuGroup}>
-            {!isCollapsed && (
-              <span style={styles.groupTitle}>{group.title}</span>
-            )}
+            {!isCollapsed && <span style={styles.groupTitle}>{group.title}</span>}
             <div style={styles.itemsContainer}>
               {group.items.map((item) => {
-                const isActive = activeMenuItemId === item.id;
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== '/yonetim/baslangic' && pathname.startsWith(`${item.href}/`));
+
                 return (
                   <Link
-                    key={item.id}
+                    aria-current={isActive ? 'page' : undefined}
                     href={item.href as Route}
-                    onClick={() => setActiveMenuItemId(item.id)}
+                    key={item.id}
                     style={{
                       ...styles.menuItem,
                       ...(isActive ? styles.menuItemActive : {}),
                       justifyContent: isCollapsed ? 'center' : 'flex-start',
                     }}
+                    title={isCollapsed ? item.label : undefined}
                   >
+                    <span style={styles.itemIcon}>{item.icon}</span>
                     {!isCollapsed && <span style={styles.itemLabel}>{item.label}</span>}
-                    {isCollapsed && <span style={styles.itemLabelCollapsed}>{item.label[0]}</span>}
                   </Link>
                 );
               })}
             </div>
           </div>
         ))}
+      </nav>
+
+      <div style={styles.footer}>
+        <Link href="/" style={styles.siteLink} title="Siteyi aç">
+          <span style={styles.itemIcon}>↗</span>
+          {!isCollapsed && <span>Siteyi aç</span>}
+        </Link>
       </div>
-    </div>
+    </aside>
   );
 }
 
@@ -118,6 +104,7 @@ const styles = {
     height: '100vh',
     transition: 'width 0.3s ease',
     overflow: 'hidden',
+    flex: '0 0 auto',
   },
   header: {
     display: 'flex',
@@ -127,17 +114,23 @@ const styles = {
     paddingLeft: 16,
     paddingRight: 16,
     gap: 12,
-    shrinkFlexGrow: 0,
+    flex: '0 0 auto',
   },
   logo: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: '50%',
+    backgroundColor: '#050505',
+    flex: '0 0 auto',
   },
   logoIcon: {
-    fontSize: 18,
+    color: '#dfff65',
+    fontSize: 9,
+    fontWeight: 850,
+    letterSpacing: '-0.04em',
   },
   logoText: {
     display: 'flex',
@@ -186,7 +179,6 @@ const styles = {
     cursor: 'pointer',
     fontSize: 12,
     color: '#605e5c',
-    transition: 'all 0.2s',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -214,32 +206,50 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
+    minHeight: 40,
     paddingLeft: 12,
     paddingRight: 12,
-    paddingTop: 8,
-    paddingBottom: 8,
     borderRadius: 12,
     fontSize: 13,
     fontWeight: 600,
     color: '#605e5c',
     textDecoration: 'none',
     transition: 'all 0.2s',
-    cursor: 'pointer',
-    border: 'none',
-    backgroundColor: 'transparent',
   },
   menuItemActive: {
-    backgroundColor: '#c7e9c0',
+    backgroundColor: '#eafda8',
     color: '#000000',
     fontWeight: 700,
+  },
+  itemIcon: {
+    display: 'grid',
+    width: 20,
+    height: 20,
+    flex: '0 0 auto',
+    placeItems: 'center',
+    fontSize: 12,
+    fontWeight: 800,
   },
   itemLabel: {
     overflow: 'hidden',
     textOverflow: 'ellipsis' as const,
     whiteSpace: 'nowrap' as const,
   },
-  itemLabelCollapsed: {
+  footer: {
+    borderTop: '1px solid rgba(226, 225, 223, 0.6)',
+    padding: 12,
+  },
+  siteLink: {
+    display: 'flex',
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 12,
+    background: '#ffffff',
+    color: '#605e5c',
     fontSize: 12,
     fontWeight: 700,
-  }
+    textDecoration: 'none',
+  },
 };

@@ -89,8 +89,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   pages: {
-    error: "/yonetim",
-    signIn: "/yonetim",
+    error: "/giris",
+    signIn: "/giris",
   },
   providers: googleProvider ? [googleProvider] : [],
   secret: environment.AUTH_SECRET,
