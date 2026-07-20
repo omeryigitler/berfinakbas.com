@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   validate:
@@ -51,26 +50,30 @@ jobs:
           pnpm typecheck > typecheck-output.txt 2>&1
           typecheck_status=$?
 
+          echo "lint_status=$lint_status" >> "$GITHUB_OUTPUT"
+          echo "typecheck_status=$typecheck_status" >> "$GITHUB_OUTPUT"
+
           {
-            echo "### Dashboard integration diagnostics"
+            echo "Dashboard integration diagnostics"
             echo
-            echo "#### Lint"
-            echo '```text'
-            tail -n 120 lint-output.txt
-            echo '```'
+            echo "===== LINT ====="
+            cat lint-output.txt
             echo
-            echo "#### Typecheck"
-            echo '```text'
-            tail -n 120 typecheck-output.txt
-            echo '```'
-          } > diagnostics-comment.md
+            echo "===== TYPECHECK ====="
+            cat typecheck-output.txt
+          } > diagnostics.txt
 
-          if [ "$lint_status" -ne 0 ] || [ "$typecheck_status" -ne 0 ]; then
-            exit 1
-          fi
+          exit 0
 
-      - name: Post diagnostics
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh pr comment ${{ github.event.pull_request.number }} --body-file diagnostics-comment.md
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-diagnostics
+          path: diagnostics.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Fail on diagnostics
+        if: steps.diagnostics.outputs.lint_status != '0' || steps.diagnostics.outputs.typecheck_status != '0'
+        run: exit 1
