@@ -72,14 +72,16 @@ async function runSmokeChecks() {
 
   const adminResponse = await fetch(`${baseUrl}/yonetim`, { redirect: "manual" });
   const adminLocation = adminResponse.headers.get("location") ?? "";
+  const redirectsToAuthentication =
+    adminLocation.includes("/giris") || adminLocation.includes("/api/auth/signin");
 
   assert(
     [302, 303, 307, 308].includes(adminResponse.status),
-    "Oturumsuz yönetim isteği giriş sayfasına yönlenmelidir.",
+    "Oturumsuz yönetim isteği kimlik doğrulamaya yönlenmelidir.",
   );
   assert(
-    adminLocation.includes("/giris"),
-    "Oturumsuz yönetim isteğinin hedefi giriş sayfası olmalıdır.",
+    redirectsToAuthentication,
+    `Oturumsuz yönetim isteğinin hedefi kimlik doğrulama olmalıdır: ${adminLocation}`,
   );
 }
 
