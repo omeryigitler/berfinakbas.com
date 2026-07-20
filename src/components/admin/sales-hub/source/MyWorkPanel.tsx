@@ -105,7 +105,7 @@ export default function MyWorkPanel({
         </div>
       </div>
 
-      <div className={styles.clientList}>
+      <div className={styles.clientList} data-visual-dynamic="client-list">
         {loading ? <div className={styles.loadingLayer}>Danışanlar yükleniyor...</div> : null}
         {!loading && visibleClients.length === 0 ? (
           <div className={styles.loadingLayer}>Bu filtrede danışan bulunmuyor.</div>
