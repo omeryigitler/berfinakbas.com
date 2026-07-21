@@ -18,10 +18,40 @@ async function ensurePractitioner() {
     const existing = await database.practitioner.findUnique({ where: { id: configuredId } });
     if (existing) {
       return database.practitioner.update({
-        data: { status: "ACTIVE" },
+        data: { status: "ACTIVE", timeZone: environment.BUSINESS_TIME_ZONE },
         where: { id: configuredId },
       });
     }
+
+    const publicBookingUser = await database.user.upsert({
+      create: {
+        email: "booking-public@berfinakbas.local",
+        name: "Berfin Akbaş",
+        status: "ACTIVE",
+      },
+      update: { name: "Berfin Akbaş", status: "ACTIVE" },
+      where: { email: "booking-public@berfinakbas.local" },
+    });
+    const practitionerForUser = await database.practitioner.findUnique({
+      where: { userId: publicBookingUser.id },
+    });
+
+    if (practitionerForUser) {
+      return database.practitioner.update({
+        data: { status: "ACTIVE", timeZone: environment.BUSINESS_TIME_ZONE },
+        where: { id: practitionerForUser.id },
+      });
+    }
+
+    return database.practitioner.create({
+      data: {
+        displayName: "Berfin Akbaş",
+        id: configuredId,
+        status: "ACTIVE",
+        timeZone: environment.BUSINESS_TIME_ZONE,
+        userId: publicBookingUser.id,
+      },
+    });
   }
 
   const existingActive = await database.practitioner.findFirst({
@@ -40,9 +70,18 @@ async function ensurePractitioner() {
     where: { email: "booking-test@berfinakbas.local" },
   });
 
+  const practitionerForUser = await database.practitioner.findUnique({
+    where: { userId: user.id },
+  });
+  if (practitionerForUser) {
+    return database.practitioner.update({
+      data: { status: "ACTIVE", timeZone: environment.BUSINESS_TIME_ZONE },
+      where: { id: practitionerForUser.id },
+    });
+  }
+
   return database.practitioner.create({
     data: {
-      ...(configuredId ? { id: configuredId } : {}),
       displayName: "Berfin Akbaş",
       status: "ACTIVE",
       timeZone: environment.BUSINESS_TIME_ZONE,

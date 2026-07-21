@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { normalizeEmailAddress } from "@/domain/auth/admin-access";
 
+const PRODUCTION_BOOKING_PRACTITIONER_ID = "00000000-0000-4000-8000-000000000001";
+
 const timeZoneSchema = z
   .string()
   .min(1)
@@ -101,14 +103,39 @@ export function parseServerEnvironment(
   return serverEnvironmentSchema.parse(environment);
 }
 
+function withProductionBookingDefaults(
+  environment: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const resolved = { ...environment };
+
+  if (environment.VERCEL_ENV !== "production") return resolved;
+
+  resolved.PUBLIC_BOOKING_FLOW_ENABLED = "true";
+  resolved.PUBLIC_APPOINTMENT_SLOTS_ENABLED = "true";
+  resolved.PUBLIC_APPOINTMENT_HOLDS_ENABLED = "true";
+  resolved.PUBLIC_APPOINTMENT_REQUESTS_ENABLED = "true";
+
+  if (!resolved.BOOKING_HOLD_DURATION_MINUTES?.trim()) {
+    resolved.BOOKING_HOLD_DURATION_MINUTES = "8";
+  }
+  if (!resolved.BOOKING_PUBLIC_PRACTITIONER_ID?.trim()) {
+    resolved.BOOKING_PUBLIC_PRACTITIONER_ID = PRODUCTION_BOOKING_PRACTITIONER_ID;
+  }
+
+  return resolved;
+}
+
 export function getServerEnvironment(): ServerEnvironment {
-  return parseServerEnvironment(process.env);
+  return parseServerEnvironment(withProductionBookingDefaults(process.env));
 }
 
 export function getAllowedAdminEmails(environment: ServerEnvironment): Set<string> {
-  return new Set(
-    environment.AUTH_ALLOWED_EMAILS.split(",")
-      .map((email) => normalizeEmailAddress(email))
-      .filter((email): email is string => email !== null),
-  );
+  const allowedEmails = environment.AUTH_ALLOWED_EMAILS.split(",")
+    .map((email) => normalizeEmailAddress(email))
+    .filter((email): email is string => email !== null);
+  const bootstrapEmail = normalizeEmailAddress(environment.AUTH_BOOTSTRAP_ADMIN_EMAIL);
+
+  if (bootstrapEmail) allowedEmails.push(bootstrapEmail);
+
+  return new Set(allowedEmails);
 }

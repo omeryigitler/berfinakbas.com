@@ -69,21 +69,32 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         throw new Error("Oluşturulan yönetici hesabında kullanıcı kimliği bulunamadı.");
       }
 
-      const userId = user.id;
-
       if (!isAllowedBootstrapAdmin(user.email, allowedAdminEmails)) {
         await database.user.update({
           data: { status: "SUSPENDED" },
-          where: { id: userId },
+          where: { id: user.id },
         });
         throw new Error("Allowlist dışında yönetici hesabı oluşturma girişimi reddedildi.");
       }
 
-      await activateBootstrapAdmin(database, userId);
+      await activateBootstrapAdmin(database, user.id);
     },
     async signIn({ user }) {
+      if (!user.id) {
+        throw new Error("Giriş yapan yönetici hesabında kullanıcı kimliği bulunamadı.");
+      }
+
+      if (isAllowedBootstrapAdmin(user.email, allowedAdminEmails)) {
+        await activateBootstrapAdmin(database, user.id);
+      } else {
+        await database.user.update({
+          data: { status: "ACTIVE" },
+          where: { id: user.id },
+        });
+      }
+
       await database.user.update({
-        data: { lastLoginAt: new Date(), status: "ACTIVE" },
+        data: { lastLoginAt: new Date() },
         where: { id: user.id },
       });
     },

@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!hasTrustedOrigin(request.headers.get("origin"), environment.APP_URL)) {
+  if (!hasTrustedOrigin(request.headers.get("origin"), request.url, environment.APP_URL)) {
     return publicJsonResponse(
       correlationId,
       { code: "UNTRUSTED_ORIGIN", error: "Güvenilmeyen istek kaynağı." },
