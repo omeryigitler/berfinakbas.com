@@ -25,22 +25,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [];
   },
-  async rewrites() {
-    return {
-      beforeFiles: [],
-      afterFiles: [
-        {
-          source: "/yonetim",
-          destination: "/yonetim-static/index.html",
-        },
-        {
-          source: "/yonetim/assets/:path*",
-          destination: "/yonetim-static/assets/:path*",
-        },
-      ],
-      fallback: [],
-    };
-  },
 };
 
 export default withBotId(nextConfig);
