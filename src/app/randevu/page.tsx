@@ -18,7 +18,7 @@ export default async function BookingPage() {
   return (
     <main className="inner-page">
       <SiteHeader />
-      <PublicBookingFlow initiallyEnabled={Boolean(runtime.practitionerId)} />
+      <PublicBookingFlow initiallyEnabled={runtime.enabled && Boolean(runtime.practitionerId)} />
       <SiteFooter />
     </main>
   );
