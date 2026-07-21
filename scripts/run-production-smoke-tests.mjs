@@ -4,13 +4,19 @@ const host = "127.0.0.1";
 const port = "3210";
 const baseUrl = `http://${host}:${port}`;
 const packageManagerPath = process.env.npm_execpath;
+const smokeEnvironment = {
+  ...process.env,
+  AUTH_TRUST_HOST: "true",
+  AUTH_URL: baseUrl,
+  PORT: port,
+};
 const child = packageManagerPath
   ? spawn(process.execPath, [packageManagerPath, "start", "-H", host, "-p", port], {
-      env: { ...process.env, PORT: port },
+      env: smokeEnvironment,
       stdio: "inherit",
     })
   : spawn("pnpm", ["start", "-H", host, "-p", port], {
-      env: { ...process.env, PORT: port },
+      env: smokeEnvironment,
       stdio: "inherit",
     });
 
@@ -64,13 +70,31 @@ async function runSmokeChecks() {
     "CSP frame-ancestors koruması bulunmalıdır.",
   );
 
-  const redirectResponse = await fetch(`${baseUrl}/yonetim/danisanlar/yeni`, {
+  const adminRootResponse = await fetch(`${baseUrl}/yonetim`, { redirect: "manual" });
+  assert(
+    [302, 303, 307, 308].includes(adminRootResponse.status),
+    "/yonetim canonical danışan çalışma ekranına yönlenmelidir.",
+  );
+  assert(
+    adminRootResponse.headers.get("location") === "/yonetim/danisanlar",
+    "/yonetim hedefi /yonetim/danisanlar olmalıdır.",
+  );
+
+  const protectedAdminResponse = await fetch(`${baseUrl}/yonetim/danisanlar`, {
     redirect: "manual",
   });
-  assert(redirectResponse.status === 307, "Eski danışan oluşturma yolu 307 dönmelidir.");
+  const protectedAdminLocation = protectedAdminResponse.headers.get("location") ?? "";
+  const redirectsToAuthentication =
+    protectedAdminLocation.includes("/giris") ||
+    protectedAdminLocation.includes("/api/auth/signin");
+
   assert(
-    redirectResponse.headers.get("location") === "/yonetim/danisan-olustur",
-    "Eski danışan oluşturma yolu canonical yönetim yoluna yönlenmelidir.",
+    [302, 303, 307, 308].includes(protectedAdminResponse.status),
+    "Oturumsuz yönetim ekranı kimlik doğrulamaya yönlenmelidir.",
+  );
+  assert(
+    redirectsToAuthentication,
+    `Oturumsuz yönetim ekranının hedefi kimlik doğrulama olmalıdır: ${protectedAdminLocation}`,
   );
 }
 

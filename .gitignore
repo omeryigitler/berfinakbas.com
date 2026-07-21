@@ -10,6 +10,8 @@ src/generated/prisma/
 
 # Tests and coverage
 coverage/
+tests/visual/.auth/
+tests/visual/results/
 
 # Environment files
 .env

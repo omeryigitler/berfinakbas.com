@@ -16,3 +16,7 @@ src/components/admin/admin-url-modal.module.css
 src/components/admin/admin-url-modal.tsx
 src/components/admin/client-profile-url-modals.tsx
 src/components/admin/dashboard-url-modals.tsx
+src/components/admin/sales-hub/sales-hub-dashboard.module.css
+src/components/admin/sales-hub/sales-hub-detail.module.css
+src/components/admin/sales-hub/source/**
+tests/visual/**/*.mjs

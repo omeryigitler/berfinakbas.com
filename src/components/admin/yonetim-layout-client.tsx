@@ -8,7 +8,9 @@ import { AdminLayout } from '@/components/admin/admin-layout';
 export function YonetimLayoutClient({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isSalesHubRoute =
-    pathname === '/yonetim/danisanlar' || pathname.startsWith('/yonetim/danisanlar/');
+    pathname === '/yonetim' ||
+    pathname === '/yonetim/danisanlar' ||
+    pathname.startsWith('/yonetim/danisanlar/');
 
   if (isSalesHubRoute) return <>{children}</>;
 
