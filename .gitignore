@@ -8,6 +8,10 @@ out/
 # Generated Prisma client
 src/generated/prisma/
 
+# Generated exact Dashboard build
+.dashboard-source/
+public/yonetim-static/
+
 # Tests and coverage
 coverage/
 tests/visual/.auth/
