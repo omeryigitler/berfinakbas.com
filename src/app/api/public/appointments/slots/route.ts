@@ -11,12 +11,12 @@ export async function GET(request: Request) {
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
   const runtime = await resolvePublicBookingRuntime();
 
-  if (!runtime.practitionerId) {
+  if (!runtime.enabled || !runtime.practitionerId) {
     return publicJsonResponse(
       correlationId,
       {
         code: "BOOKING_SLOTS_DISABLED",
-        error: "Aktif randevu uzmanı bulunamadı.",
+        error: "Randevu saatleri şu anda kullanıma açık değil.",
       },
       404,
     );
