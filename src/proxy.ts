@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 
 // Auth.js wraps the Next.js proxy handler at runtime; its current beta type overload
 // does not model the proxy export signature used by Next.js 16.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore -- runtime-compatible Auth.js proxy wrapper
 export const proxy = auth((request) => {
   const { pathname } = request.nextUrl;
