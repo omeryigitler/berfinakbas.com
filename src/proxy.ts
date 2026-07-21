@@ -1,15 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
-
-export async function proxy(request: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user) {
-    return NextResponse.redirect(new URL("/giris", request.url));
-  }
-
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/yonetim" || pathname === "/yonetim/") {
