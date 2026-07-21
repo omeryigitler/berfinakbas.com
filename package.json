@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "next dev",
     "build:dashboard-source": "node scripts/build-dashboard-source.mjs",
-    "build": "pnpm build:dashboard-source && prisma generate && if [ \"${VERCEL_ENV:-development}\" = \"production\" ]; then prisma migrate deploy; fi && next build",
+    "build": "pnpm build:dashboard-source && prisma generate && if [ \"${VERCEL_ENV:-development}\" = \"production\" ]; then prisma migrate deploy && pnpm tsx scripts/activate-booking-test-data.ts; fi && next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
