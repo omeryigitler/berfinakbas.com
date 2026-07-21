@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { PublicBookingFlow } from "@/components/booking/public-booking-flow";
 import { SiteFooter, SiteHeader } from "@/components/public-shell";
-import { getServerEnvironment } from "@/lib/env";
+import { resolvePublicBookingRuntime } from "@/lib/booking/public-booking-runtime";
 
 export const dynamic = "force-dynamic";
 
@@ -12,20 +12,13 @@ export const metadata: Metadata = {
   title: "Randevu Talebi | Berfin Akbaş",
 };
 
-export default function BookingPage() {
-  const environment = getServerEnvironment();
-  const initiallyEnabled =
-    environment.PUBLIC_BOOKING_FLOW_ENABLED &&
-    environment.PUBLIC_APPOINTMENT_SLOTS_ENABLED &&
-    environment.PUBLIC_APPOINTMENT_HOLDS_ENABLED &&
-    environment.PUBLIC_APPOINTMENT_REQUESTS_ENABLED &&
-    Boolean(environment.BOOKING_PUBLIC_PRACTITIONER_ID) &&
-    environment.BOOKING_HOLD_DURATION_MINUTES !== undefined;
+export default async function BookingPage() {
+  const runtime = await resolvePublicBookingRuntime();
 
   return (
     <main className="inner-page">
       <SiteHeader />
-      <PublicBookingFlow initiallyEnabled={initiallyEnabled} />
+      <PublicBookingFlow initiallyEnabled={Boolean(runtime.practitionerId)} />
       <SiteFooter />
     </main>
   );
