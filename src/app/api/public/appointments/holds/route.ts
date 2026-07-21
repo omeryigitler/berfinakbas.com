@@ -31,12 +31,12 @@ export async function POST(request: Request) {
   const environment = getServerEnvironment();
   const runtime = await resolvePublicBookingRuntime();
 
-  if (!runtime.practitionerId) {
+  if (!runtime.enabled || !runtime.practitionerId) {
     return publicJsonResponse(
       correlationId,
       {
         code: "BOOKING_HOLDS_DISABLED",
-        error: "Aktif randevu uzmanı bulunamadı.",
+        error: "Randevu saati ayırma şu anda kullanıma açık değil.",
       },
       404,
     );
@@ -55,10 +55,7 @@ export async function POST(request: Request) {
     return publicJsonResponse(
       correlationId,
       botProtection === "blocked"
-        ? {
-            code: "AUTOMATED_REQUEST_REJECTED",
-            error: "Otomatik istek reddedildi.",
-          }
+        ? { code: "AUTOMATED_REQUEST_REJECTED", error: "Otomatik istek reddedildi." }
         : {
             code: "BOT_PROTECTION_UNAVAILABLE",
             error: "Randevu koruması geçici olarak kullanılamıyor.",
@@ -70,10 +67,7 @@ export async function POST(request: Request) {
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return publicJsonResponse(
       correlationId,
-      {
-        code: "UNSUPPORTED_MEDIA_TYPE",
-        error: "İstek gövdesi JSON olmalıdır.",
-      },
+      { code: "UNSUPPORTED_MEDIA_TYPE", error: "İstek gövdesi JSON olmalıdır." },
       415,
     );
   }
@@ -85,10 +79,7 @@ export async function POST(request: Request) {
     if (error instanceof RequestBodyTooLargeError) {
       return publicJsonResponse(
         correlationId,
-        {
-          code: "BODY_TOO_LARGE",
-          error: "İstek gövdesi izin verilen sınırı aşıyor.",
-        },
+        { code: "BODY_TOO_LARGE", error: "İstek gövdesi izin verilen sınırı aşıyor." },
         413,
       );
     }
