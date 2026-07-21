@@ -27,7 +27,8 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      beforeFiles: [
+      beforeFiles: [],
+      afterFiles: [
         {
           source: "/yonetim",
           destination: "/yonetim-static/index.html",
@@ -37,7 +38,6 @@ const nextConfig: NextConfig = {
           destination: "/yonetim-static/assets/:path*",
         },
       ],
-      afterFiles: [],
       fallback: [],
     };
   },
