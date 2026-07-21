@@ -50,7 +50,7 @@ if (resolvedCommit !== SOURCE_COMMIT) {
   throw new Error(`Dashboard source commit mismatch: expected ${SOURCE_COMMIT}, received ${resolvedCommit}`);
 }
 
-await run("npm", ["ci"], workspace);
+await run("npm", ["install", "--no-package-lock"], workspace);
 await run("npm", ["run", "build", "--", "--base=/yonetim/"], workspace);
 
 const sourceIndex = await readFile(path.join(workspace, "dist/index.html"), "utf-8");
