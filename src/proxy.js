@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 
-export const proxy = auth((request) => {
+export async function proxy(request) {
+  const session = await auth();
+
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/giris", request.url));
+  }
+
   const { pathname } = request.nextUrl;
 
   if (pathname === "/yonetim" || pathname === "/yonetim/") {
@@ -15,7 +21,7 @@ export const proxy = auth((request) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/yonetim/:path*"],
