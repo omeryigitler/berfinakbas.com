@@ -26,12 +26,12 @@ export async function POST(request: Request) {
   const environment = getServerEnvironment();
   const runtime = await resolvePublicBookingRuntime();
 
-  if (!runtime.practitionerId) {
+  if (!runtime.enabled || !runtime.practitionerId) {
     return publicJsonResponse(
       correlationId,
       {
         code: "BOOKING_REQUESTS_DISABLED",
-        error: "Aktif randevu uzmanı bulunamadı.",
+        error: "Randevu talebi şu anda kullanıma açık değil.",
       },
       404,
     );
