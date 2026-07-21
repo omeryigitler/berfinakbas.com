@@ -5,6 +5,7 @@ import {
   SlotConflictError,
 } from "@/domain/booking/appointment-hold";
 import { createAppointmentHold } from "@/lib/booking/appointment-hold-service";
+import { resolvePublicBookingRuntime } from "@/lib/booking/public-booking-runtime";
 import { getServerEnvironment } from "@/lib/env";
 import {
   isJsonContentType,
@@ -28,18 +29,14 @@ const appointmentHoldPayloadSchema = z
 export async function POST(request: Request) {
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
   const environment = getServerEnvironment();
+  const runtime = await resolvePublicBookingRuntime();
 
-  if (
-    !environment.PUBLIC_BOOKING_FLOW_ENABLED ||
-    !environment.PUBLIC_APPOINTMENT_HOLDS_ENABLED ||
-    !environment.BOOKING_PUBLIC_PRACTITIONER_ID ||
-    environment.BOOKING_HOLD_DURATION_MINUTES === undefined
-  ) {
+  if (!runtime.practitionerId) {
     return publicJsonResponse(
       correlationId,
       {
         code: "BOOKING_HOLDS_DISABLED",
-        error: "Randevu saati ayırma şu anda kullanıma açık değil.",
+        error: "Aktif randevu uzmanı bulunamadı.",
       },
       404,
     );
@@ -118,7 +115,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (parsed.data.practitionerId !== environment.BOOKING_PUBLIC_PRACTITIONER_ID) {
+  if (parsed.data.practitionerId !== runtime.practitionerId) {
     const error = new BookingResourceUnavailableError();
     return publicJsonResponse(correlationId, { code: error.code, error: error.message }, 409);
   }
