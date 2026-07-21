@@ -1,16 +1,15 @@
-import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: Request) {
   const session = await auth();
 
-  if (session?.user?.status !== "ACTIVE") {
+  if (!session?.user) {
     return NextResponse.redirect(new URL("/giris", request.url));
   }
 
-  const { pathname } = request.nextUrl;
+  const pathname = new URL(request.url).pathname;
 
   if (pathname === "/yonetim" || pathname === "/yonetim/") {
     return NextResponse.rewrite(new URL("/yonetim-static/index.html", request.url));
