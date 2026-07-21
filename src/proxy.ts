@@ -3,10 +3,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 export const proxy = auth((request) => {
-  if (request.auth?.user?.status !== "ACTIVE") {
-    return NextResponse.redirect(new URL("/giris", request.url));
-  }
-
   const { pathname } = request.nextUrl;
 
   if (pathname === "/yonetim" || pathname === "/yonetim/") {
