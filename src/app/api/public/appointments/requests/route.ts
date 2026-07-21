@@ -4,6 +4,7 @@ import {
   AppointmentHoldUnavailableError,
   BookingRequestConflictError,
 } from "@/lib/booking/appointment-request-service";
+import { resolvePublicBookingRuntime } from "@/lib/booking/public-booking-runtime";
 import {
   publicBookingSubmissionPayloadSchema,
   submitPublicBookingRequest,
@@ -23,17 +24,14 @@ const MAX_REQUEST_BODY_BYTES = 16 * 1_024;
 export async function POST(request: Request) {
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
   const environment = getServerEnvironment();
+  const runtime = await resolvePublicBookingRuntime();
 
-  if (
-    !environment.PUBLIC_BOOKING_FLOW_ENABLED ||
-    !environment.PUBLIC_APPOINTMENT_REQUESTS_ENABLED ||
-    !environment.BOOKING_PUBLIC_PRACTITIONER_ID
-  ) {
+  if (!runtime.practitionerId) {
     return publicJsonResponse(
       correlationId,
       {
         code: "BOOKING_REQUESTS_DISABLED",
-        error: "Randevu talebi şu anda kullanıma açık değil.",
+        error: "Aktif randevu uzmanı bulunamadı.",
       },
       404,
     );
@@ -116,7 +114,7 @@ export async function POST(request: Request) {
     const appointment = await submitPublicBookingRequest(
       { ...parsed.data, correlationId },
       {
-        publicPractitionerId: environment.BOOKING_PUBLIC_PRACTITIONER_ID,
+        publicPractitionerId: runtime.practitionerId,
         requiredExplicitConsentDocumentTypes:
           environment.BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES,
       },
