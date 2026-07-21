@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function AdminSignInPage() {
-  redirect("/yonetim");
+  redirect("/yonetim" as never);
 }
