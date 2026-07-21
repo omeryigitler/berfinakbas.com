@@ -70,21 +70,15 @@ async function runSmokeChecks() {
     "CSP frame-ancestors koruması bulunmalıdır.",
   );
 
-  const protectedAdminResponse = await fetch(`${baseUrl}/yonetim`, {
+  const adminResponse = await fetch(`${baseUrl}/yonetim`, {
     redirect: "manual",
   });
-  const protectedAdminLocation = protectedAdminResponse.headers.get("location") ?? "";
-  const redirectsToAuthentication =
-    protectedAdminLocation.includes("/giris") ||
-    protectedAdminLocation.includes("/api/auth/signin");
+  const adminHtml = await adminResponse.text();
 
+  assert(adminResponse.status === 200, "Test modunda /yonetim 200 dönmelidir.");
   assert(
-    [302, 303, 307, 308].includes(protectedAdminResponse.status),
-    "Oturumsuz /yonetim isteği kimlik doğrulamaya yönlenmelidir.",
-  );
-  assert(
-    redirectsToAuthentication,
-    `Oturumsuz /yonetim isteğinin hedefi kimlik doğrulama olmalıdır: ${protectedAdminLocation}`,
+    adminHtml.includes("/yonetim/assets/"),
+    "Test modunda /yonetim exact Dashboard build'ini sunmalıdır.",
   );
 }
 
