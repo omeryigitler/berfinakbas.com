@@ -7,11 +7,11 @@ export async function requirePermission(permission: Permission) {
   const session = await auth();
 
   if (!session?.user || session.user.status !== "ACTIVE") {
-    redirect("/yonetim");
+    redirect("/giris");
   }
 
   if (!hasPermission(session.user.roles, permission)) {
-    redirect("/yonetim");
+    redirect("/giris");
   }
 
   return session;
