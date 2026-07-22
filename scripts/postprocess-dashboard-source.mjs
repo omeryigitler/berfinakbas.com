@@ -3,282 +3,163 @@ import path from "node:path";
 
 const root = path.resolve("public/yonetim-static");
 const assets = path.join(root, "assets");
-const identities = [["Ömer Yiğitler", "Berfin Akbaş"], ["Ömer YİĞİTLER", "Berfin Akbaş"], ["ÖMER YİĞİTLER", "Berfin Akbaş"], ["ÖY", "BA"]];
 
-async function files(dir) {
+async function walk(dir) {
   const out = [];
-  for (const item of await readdir(dir, { withFileTypes: true })) {
-    const file = path.join(dir, item.name);
-    if (item.isDirectory()) out.push(...await files(file));
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...await walk(file));
     else out.push(file);
   }
   return out;
 }
 
-for (const file of await files(assets)) {
+for (const file of await walk(assets)) {
   if (!file.endsWith(".js")) continue;
   const source = await readFile(file, "utf-8");
-  let next = source;
-  for (const [from, to] of identities) next = next.split(from).join(to);
-  if (next !== source) await writeFile(file, next, "utf-8");
+  const patched = source
+    .replaceAll("Ömer Yiğitler", "Berfin Akbaş")
+    .replaceAll("Ömer YİĞİTLER", "Berfin Akbaş")
+    .replaceAll("ÖMER YİĞİTLER", "Berfin Akbaş")
+    .replaceAll("ÖY", "BA");
+  if (patched !== source) await writeFile(file, patched, "utf-8");
 }
 
 const runtime = String.raw`
 (() => {
-  const R = {
-    "Randevular": [["Liste Görünümü","Randevu Listesi","Tüm randevuları tek listede yönetin."],["Takvim Görünümü","Takvim","Randevuları takvim üzerinde görüntüleyin."]],
-    "Takvim ve Uygunluk": [["Takvim","Takvim","Randevuları ve uygun saatleri görüntüleyin."],["Haftalık Çalışma Saatleri","Çalışma Saatleri","Haftalık çalışma düzenini yönetin."],["Tarihe Özel Saatler","Özel Saatler","Belirli tarihler için farklı saatler tanımlayın."],["Kapalı Zamanlar","Kapalı Zamanlar","İzin ve kapalı zaman bloklarını yönetin."],["Randevu Kuralları","Randevu Kuralları","Süre, tampon ve rezervasyon kurallarını belirleyin."],["İlk Görüşme Ayarları","İlk Görüşme","İlk görüşme süresi ve ücretini yönetin."],["İptal ve Değişiklik Kuralları","İptal ve Değişiklik","İptal ve yeniden planlama kurallarını yönetin."],["Takvim Entegrasyonları","Entegrasyonlar","Google Takvim ve senkronizasyonu yönetin."]],
-    "Talepler ve İletişim": [["Tüm Talepler","Talepler","Başvuruları tek listede görüntüleyin ve yönetin."],["Mesaj Şablonları","Mesaj Şablonları","Hazır iletişim metinlerini yönetin."],["Gönderim Geçmişi","Gönderim Geçmişi","Gönderilen mesaj ve e-postaları inceleyin."],["İletişim İzinleri","İletişim İzinleri","İletişim ve pazarlama izinlerini yönetin."]],
-    "Hizmetler": [["Tüm Hizmetler","Hizmet Listesi","Tüm hizmetleri tek listede yönetin."]],
-    "Ödeme ve Planlar": [["Finans Özeti","Finans Özeti","Tahsilat, alacak ve finans durumunu izleyin."],["Tüm Planlar","Planlar","Danışan planlarını görüntüleyin ve yönetin."],["Tüm Ödemeler","Ödemeler","Ödeme kayıtlarını görüntüleyin ve yönetin."]],
-    "PDF ve Kaynaklar": [["Tüm PDF’ler","PDF ve Kaynaklar","Yayınlanan ve taslak dosyaları yönetin."],["PDF Talep Kayıtları","Talep Kayıtları","PDF talep ve gönderim kayıtlarını inceleyin."],["Gönderim Ayarları","Gönderim Ayarları","E-posta gönderim ayarlarını yönetin."]],
-    "Raporlar": [["Finans Raporları","Finans","Gelir, ödeme ve alacak raporlarını inceleyin."],["Randevu Raporları","Randevular","Randevu performansını inceleyin."],["Danışan Raporları","Danışanlar","Danışan dağılımı ve devam oranlarını inceleyin."],["Plan Raporları","Planlar","Plan kullanım ve satış verilerini inceleyin."],["Talep ve Dönüşüm Raporları","Talep ve Dönüşüm","Talep kaynakları ve dönüşüm oranlarını inceleyin."],["Kayıtlı Raporlar","Kayıtlı Raporlar","Kaydedilmiş raporları açın."],["Dışa Aktarımlar","Dışa Aktarımlar","Hazırlanan dışa aktarma dosyalarını inceleyin."]],
-    "Kullanıcılar ve Yetkiler": [["Tüm Kullanıcılar","Kullanıcılar","Berfin Akbaş ve yetkili hesapları yönetin."],["Kullanıcı Davetleri","Davetler","Yeni kullanıcı davetlerini yönetin."],["Roller","Roller","Sistem rollerini yönetin."],["Yetki Grupları","Yetki Grupları","Erişim yetkilerini yönetin."],["Yönetici E-posta İzinleri","Yönetici E-posta İzinleri","Yönetim paneline erişebilecek adresleri yönetin."],["Giriş Geçmişi","Giriş Geçmişi","Hesap erişim geçmişini inceleyin."]],
-    "Ayarlar": [["İşletme Bilgileri","İşletme","Berfin Akbaş işletme ve iletişim bilgilerini yönetin."],["Danışan Ayarları","Danışanlar","Danışan kayıt kurallarını yönetin."],["Randevu Ayarları","Randevular","Varsayılan randevu ayarlarını yönetin."],["Finans Ayarları","Finans","Para birimi ve ödeme kurallarını yönetin."],["Bildirim Ayarları","Bildirimler","Sistem bildirimlerini yönetin."],["E-posta Şablonları","E-posta Şablonları","Otomatik e-posta içeriklerini yönetin."],["Entegrasyonlar","Entegrasyonlar","Bağlı servisleri yönetin."],["KVKK ve Veri","KVKK ve Veri","Veri saklama ve izin ayarlarını yönetin."],["Görünüm Ayarları","Görünüm","Yönetim paneli görünümünü yönetin."]],
-    "Arşiv": [["Arşivlenen Danışanlar","Arşivlenen Kayıtlar","Arşivlenen kayıtları tek alanda inceleyin."],["Çöp Kutusu","Çöp Kutusu","Silinen kayıtları inceleyin ve geri yükleyin."],["İşlem Geçmişi","İşlem Geçmişi","Sistem değişiklik geçmişini inceleyin."]]
+  const CONTACT_CACHE = "berfin-site-contact-cache-v3";
+  const realFetch = window.fetch.bind(window);
+  const cacheContact = async (response) => {
+    if (!response?.ok) return;
+    try {
+      const value = await response.clone().text();
+      JSON.parse(value);
+      localStorage.setItem(CONTACT_CACHE, value);
+    } catch {}
   };
-
-  const t = (e) => (e?.textContent || "").replace(/\s+/g, " ").trim();
-  const nav = () => document.querySelector("#module-nav-panel");
-  const ws = () => document.querySelector("#module-workspace");
-  const moduleTitle = () => t(nav()?.querySelector("h2"));
-  const workspaceTitle = () => t(ws()?.querySelector("h1"));
-  const parts = (b) => {
-    const box = Array.from(b.querySelectorAll("div")).find((e) => e.className.includes("min-w-0") && e.className.includes("flex-1"));
-    const spans = box ? Array.from(box.querySelectorAll("span")) : [];
-    return { label: spans[0], description: spans[1] };
-  };
-  const originalButtons = () => Array.from(nav()?.querySelectorAll("section:not([data-compact-nav]) button") || []);
-  const original = (labels) => {
-    const set = new Set(Array.isArray(labels) ? labels : [labels]);
-    return originalButtons().find((b) => set.has(parts(b).label?.textContent?.trim()));
-  };
-  const clickOriginal = (labels) => { const b = original(labels); if (!b) return false; b.click(); return true; };
-  const active = (b) => b.className.includes("from-[#eafda8]") || b.className.includes("bg-gradient-to-br") || b.getAttribute("aria-current") === "page";
-  const searchBlock = (panel) => {
-    let e = panel?.querySelector("input");
-    while (e && e.parentElement !== panel) e = e.parentElement;
-    return e;
-  };
-
-  const compactNav = () => {
-    const panel = nav();
-    if (!panel) return;
-    const scroll = Array.from(panel.children).find((e) => e.className.includes("overflow-y-auto"));
-    if (!scroll) return;
-    const rules = R[t(panel.querySelector("h2"))];
-    const compact = scroll.querySelector(":scope > section[data-compact-nav]");
-    const sections = Array.from(scroll.querySelectorAll(":scope > section:not([data-compact-nav])"));
-    const headButton = panel.querySelector(":scope > div:first-child button");
-    const search = searchBlock(panel);
-
-    if (!rules) {
-      compact?.remove();
-      sections.forEach((s) => { s.style.display = ""; });
-      if (headButton) headButton.style.display = "";
-      if (search) search.style.display = "";
-      return;
-    }
-
-    const buttons = sections.flatMap((s) => Array.from(s.querySelectorAll("button")));
-    const allowed = rules.map(([source,label,description]) => {
-      const button = buttons.find((b) => parts(b).label?.textContent?.trim() === source);
-      return button ? { source,label,description,button } : null;
-    }).filter(Boolean);
-    if (!allowed.length) return;
-    const selected = allowed.find(({button}) => active(button));
-    if (!selected) { allowed[0].button.click(); return; }
-    const signature = JSON.stringify([t(panel.querySelector("h2")), selected.source]);
-
-    sections.forEach((s) => { s.style.display = "none"; });
-    if (headButton) headButton.style.display = "none";
-    if (search) search.style.display = "none";
-    if (compact?.dataset.signature === signature) return;
-    compact?.remove();
-
-    const section = document.createElement("section");
-    section.dataset.compactNav = "true";
-    section.dataset.signature = signature;
-    section.className = "space-y-2";
-    section.innerHTML = '<div class="flex items-center justify-between px-1"><span class="text-[9px] text-gray-400 font-black tracking-[0.16em] uppercase">Bölümler</span><span class="text-[9px] text-gray-400 font-bold bg-gray-100 px-2 py-0.5 rounded-full">' + allowed.length + '</span></div>';
-    const list = document.createElement("div");
-    list.className = "space-y-2";
-    allowed.forEach(({label,description,button}) => {
-      const clone = button.cloneNode(true);
-      const p = parts(clone);
-      if (p.label) p.label.textContent = label;
-      if (p.description) p.description.textContent = description;
-      clone.addEventListener("click", () => button.click());
-      list.appendChild(clone);
-    });
-    section.appendChild(list);
-    scroll.prepend(section);
-  };
-
-  const bind = (button, key, fn) => {
-    if (!button) return;
-    button.__runtimeFn = fn;
-    button.dataset.runtimeKey = key;
-    if (button.dataset.runtimeBound) return;
-    button.dataset.runtimeBound = "1";
-    button.addEventListener("click", (event) => {
-      event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation();
-      button.__runtimeFn?.();
-    }, true);
-  };
-  const notice = (message, error = false) => {
-    document.querySelector("[data-runtime-notice]")?.remove();
-    const e = document.createElement("div");
-    e.dataset.runtimeNotice = "1";
-    e.textContent = message;
-    e.className = "fixed left-1/2 top-5 z-[9999] -translate-x-1/2 rounded-full px-4 py-2 text-[10px] font-black shadow-xl " + (error ? "bg-[#9f3f35] text-white" : "bg-black text-[#eafda8]");
-    document.body.appendChild(e);
-    setTimeout(() => e.remove(), 2200);
-  };
-  const rename = (button, text) => {
-    if (!button) return;
-    const nodes = []; const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
-    while (walker.nextNode()) if (walker.currentNode.nodeValue?.trim()) nodes.push(walker.currentNode);
-    if (nodes.length) nodes.at(-1).nodeValue = text;
-  };
-
-  const rows = () => {
-    const workspace = ws();
-    if (!workspace) return [];
-    const statuses = ["Yayında","Taslak","Arşivde","Gönderildi","Bekliyor","Hata"];
-    const badges = Array.from(workspace.querySelectorAll("span,div")).filter((e) => e.childElementCount === 0 && statuses.includes(t(e)));
-    const found = [];
-    badges.forEach((badge) => {
-      let row = badge.parentElement;
-      while (row && row !== workspace) {
-        const value = t(row);
-        if (value.length < 420 && (value.includes("PDF-") || value.includes("@") || value.includes("Talep"))) break;
-        row = row.parentElement;
+  window.fetch = async (input, init) => {
+    const request = input instanceof Request ? input : null;
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : request?.url || "";
+    const method = String(init?.method || request?.method || "GET").toUpperCase();
+    if (url.includes("/api/site-contact") && method === "GET") {
+      const cached = localStorage.getItem(CONTACT_CACHE);
+      if (cached) {
+        realFetch(input, init).then(cacheContact).catch(() => {});
+        return new Response(cached, { status: 200, headers: { "Content-Type": "application/json" } });
       }
-      if (row && row !== workspace && !found.includes(row)) found.push(row);
-    });
-    const counts = new Map(); found.forEach((r) => counts.set(r.parentElement, (counts.get(r.parentElement) || 0) + 1));
-    const parent = Array.from(counts.entries()).sort((a,b) => b[1]-a[1])[0]?.[0];
-    return parent ? found.filter((r) => r.parentElement === parent) : found;
+    }
+    const response = await realFetch(input, init);
+    if (url.includes("/api/site-contact") && response.ok) cacheContact(response);
+    return response;
+  };
+  realFetch("/api/site-contact", { cache: "no-store", credentials: "include" }).then(cacheContact).catch(() => {});
+
+  const NAV = {
+    "Randevular": [["Liste Görünümü","Randevu Listesi"],["Takvim Görünümü","Takvim"]],
+    "Takvim ve Uygunluk": [["Takvim","Takvim"],["Haftalık Çalışma Saatleri","Çalışma Saatleri"],["Tarihe Özel Saatler","Özel Saatler"],["Kapalı Zamanlar","Kapalı Zamanlar"],["Randevu Kuralları","Randevu Kuralları"],["İlk Görüşme Ayarları","İlk Görüşme"],["İptal ve Değişiklik Kuralları","İptal ve Değişiklik"],["Takvim Entegrasyonları","Entegrasyonlar"]],
+    "Talepler ve İletişim": [["Tüm Talepler","Talepler"],["Mesaj Şablonları","Mesaj Şablonları"],["Gönderim Geçmişi","Gönderim Geçmişi"],["İletişim İzinleri","İletişim İzinleri"]],
+    "Hizmetler": [["Tüm Hizmetler","Hizmet Listesi"]],
+    "Ödeme ve Planlar": [["Finans Özeti","Finans Özeti"],["Tüm Planlar","Planlar"],["Tüm Ödemeler","Ödemeler"]],
+    "PDF ve Kaynaklar": [["Tüm PDF’ler","PDF ve Kaynaklar"],["PDF Talep Kayıtları","Talep Kayıtları"],["Gönderim Ayarları","Gönderim Ayarları"]],
+    "Raporlar": [["Finans Raporları","Finans"],["Randevu Raporları","Randevular"],["Danışan Raporları","Danışanlar"],["Plan Raporları","Planlar"],["Talep ve Dönüşüm Raporları","Talep ve Dönüşüm"],["Kayıtlı Raporlar","Kayıtlı Raporlar"],["Dışa Aktarımlar","Dışa Aktarımlar"]],
+    "Kullanıcılar ve Yetkiler": [["Tüm Kullanıcılar","Kullanıcılar"],["Kullanıcı Davetleri","Davetler"],["Roller","Roller"],["Yetki Grupları","Yetki Grupları"],["Yönetici E-posta İzinleri","Yönetici E-posta İzinleri"],["Giriş Geçmişi","Giriş Geçmişi"]],
+    "Ayarlar": [["İşletme Bilgileri","İşletme"],["Danışan Ayarları","Danışanlar"],["Randevu Ayarları","Randevular"],["Finans Ayarları","Finans"],["Bildirim Ayarları","Bildirimler"],["E-posta Şablonları","E-posta Şablonları"],["Entegrasyonlar","Entegrasyonlar"],["KVKK ve Veri","KVKK ve Veri"],["Görünüm Ayarları","Görünüm"]],
+    "Arşiv": [["Arşivlenen Danışanlar","Arşivlenen Kayıtlar"],["Çöp Kutusu","Çöp Kutusu"],["İşlem Geçmişi","İşlem Geçmişi"]]
   };
 
-  const tools = () => {
-    const workspace = ws();
-    if (!workspace) return null;
-    let box = workspace.querySelector("[data-pdf-tools]");
-    if (box) return box;
-    const listTitle = Array.from(workspace.querySelectorAll("h2,h3,span")).find((e) => e.childElementCount === 0 && ["Kayıt Listesi","PDF Listesi","Talep Listesi"].includes(t(e)));
-    if (!listTitle) return null;
-    let card = listTitle.parentElement;
-    while (card && card !== workspace && !t(card).includes("PDF-") && !t(card).includes("Talep")) card = card.parentElement;
-    if (!card || card === workspace) return null;
-    const request = workspaceTitle().includes("Talep");
-    const statuses = request ? ["Gönderildi","Bekliyor","Hata"] : ["Yayında","Taslak","Arşivde"];
-    box = document.createElement("div");
-    box.dataset.pdfTools = "1";
-    box.className = "hidden rounded-[1.4rem] border border-black/[0.07] bg-white/85 p-3 shadow-sm flex-wrap items-center gap-2";
-    box.innerHTML = '<input data-pdf-search type="search" placeholder="PDF veya kayıt ara..." class="min-w-[240px] flex-1 rounded-full border border-black/10 bg-white px-4 py-2 text-[11px] font-semibold outline-none focus:border-black/25" /><button data-status="all" class="rounded-full bg-black px-3 py-2 text-[9px] font-black text-[#eafda8]">Tümü</button>' + statuses.map((s) => '<button data-status="' + s + '" class="rounded-full border border-black/10 bg-white px-3 py-2 text-[9px] font-black text-gray-700">' + s + '</button>').join("");
-    card.parentElement?.insertBefore(box, card);
-    const apply = () => {
-      const q = (box.querySelector("input")?.value || "").trim().toLocaleLowerCase("tr-TR");
-      const status = box.dataset.status || "all";
-      rows().forEach((row) => {
-        const value = t(row).toLocaleLowerCase("tr-TR");
-        row.style.display = (!q || value.includes(q)) && (status === "all" || value.includes(status.toLocaleLowerCase("tr-TR"))) ? "" : "none";
-      });
-    };
-    box.querySelector("input")?.addEventListener("input", apply);
-    box.querySelectorAll("[data-status]").forEach((button) => button.addEventListener("click", () => {
-      box.dataset.status = button.dataset.status || "all";
-      box.querySelectorAll("[data-status]").forEach((b) => { b.className = b === button ? "rounded-full bg-black px-3 py-2 text-[9px] font-black text-[#eafda8]" : "rounded-full border border-black/10 bg-white px-3 py-2 text-[9px] font-black text-gray-700"; });
-      apply();
-    }));
-    return box;
-  };
-  const toggleTools = () => {
-    const box = tools();
-    if (!box) return notice("Bu görünümde filtrelenecek liste bulunmuyor.", true);
-    const open = box.classList.contains("hidden");
-    box.classList.toggle("hidden", !open); box.classList.toggle("flex", open);
-    if (open) box.querySelector("input")?.focus();
-  };
-  const sortRows = () => {
-    const list = rows(); if (list.length < 2) return notice("Sıralanacak kayıt bulunmuyor.", true);
-    const mode = ws().dataset.sortMode === "asc" ? "desc" : "asc"; ws().dataset.sortMode = mode;
-    list.sort((a,b) => t(a).localeCompare(t(b), "tr", { numeric: true }) * (mode === "asc" ? 1 : -1));
-    list.forEach((row) => row.parentElement?.appendChild(row)); notice(mode === "asc" ? "Kayıtlar A–Z sıralandı." : "Kayıtlar Z–A sıralandı.");
-  };
-  const exportRows = () => {
-    const list = rows().filter((r) => r.style.display !== "none"); if (!list.length) return notice("Dışa aktarılacak kayıt bulunmuyor.", true);
-    const esc = (v) => '"' + String(v).replaceAll('"','""') + '"';
-    const blob = new Blob(["\ufeff", ["Kayıt", ...list.map((r) => esc(t(r)))].join("\n")], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (workspaceTitle().includes("Talep") ? "pdf-talep-kayitlari-" : "pdf-kayitlari-") + new Date().toISOString().slice(0,10) + ".csv"; a.click(); URL.revokeObjectURL(a.href); notice("CSV dosyası hazırlandı.");
+  const SCOPE = {
+    "Randevular": {"Randevu Listesi":["Kayıt Listesi","Randevu Listesi"],"Liste Görünümü":["Kayıt Listesi","Randevu Listesi"],"Takvim":["Takvim","Takvim Görünümü"],"Takvim Görünümü":["Takvim","Takvim Görünümü"]},
+    "Takvim ve Uygunluk": {"Takvim":["Takvim"],"Çalışma Saatleri":["Haftalık Çalışma Saatleri"],"Haftalık Çalışma Saatleri":["Haftalık Çalışma Saatleri"],"Özel Saatler":["Tarihe Özel Saatler"],"Tarihe Özel Saatler":["Tarihe Özel Saatler"],"Kapalı Zamanlar":["Kapalı Zamanlar"],"Randevu Kuralları":["Randevu Kuralları"],"İlk Görüşme":["İlk Görüşme Ayarları"],"İlk Görüşme Ayarları":["İlk Görüşme Ayarları"],"İptal ve Değişiklik":["İptal Kuralları"],"İptal ve Değişiklik Kuralları":["İptal Kuralları"],"Entegrasyonlar":["Entegrasyonlar"],"Takvim Entegrasyonları":["Entegrasyonlar"]},
+    "Talepler ve İletişim": {"Talepler":["Kayıt Listesi","Talep Detayı","Talep İşlemleri"],"Tüm Talepler":["Kayıt Listesi","Talep Detayı","Talep İşlemleri"],"Mesaj Şablonları":["Mesaj Şablonları"],"Gönderim Geçmişi":["Kayıt Listesi","Gönderim Geçmişi"],"İletişim İzinleri":["İletişim İzinleri"]},
+    "Hizmetler": {"Hizmet Listesi":["Kayıt Listesi","Hizmet Genel Bilgileri"],"Tüm Hizmetler":["Kayıt Listesi","Hizmet Genel Bilgileri"]},
+    "Ödeme ve Planlar": {"Finans Özeti":["Finans Genel Bakış"],"Planlar":["Kayıt Listesi","Plan Detayı","Ödeme Planı","Seans Kullanımı","Hareket Geçmişi","Plan İşlemleri"],"Tüm Planlar":["Kayıt Listesi","Plan Detayı","Ödeme Planı","Seans Kullanımı","Hareket Geçmişi","Plan İşlemleri"],"Ödemeler":["Kayıt Listesi","Ödeme Detayı","Ödeme İşlemleri"],"Tüm Ödemeler":["Kayıt Listesi","Ödeme Detayı","Ödeme İşlemleri"]},
+    "PDF ve Kaynaklar": {"PDF ve Kaynaklar":["Kayıt Listesi","PDF Detayı","PDF İşlemleri"],"Tüm PDF’ler":["Kayıt Listesi","PDF Detayı","PDF İşlemleri"],"Talep Kayıtları":["Kayıt Listesi","PDF Talep Kayıtları"],"PDF Talep Kayıtları":["Kayıt Listesi","PDF Talep Kayıtları"],"Gönderim Ayarları":["Gönderim Ayarları"]},
+    "Raporlar": {"Finans":["Finans Raporları","Rapor Üst İşlemleri"],"Finans Raporları":["Finans Raporları","Rapor Üst İşlemleri"],"Randevular":["Randevu Raporları","Rapor Üst İşlemleri"],"Randevu Raporları":["Randevu Raporları","Rapor Üst İşlemleri"],"Danışanlar":["Danışan Raporları","Rapor Üst İşlemleri"],"Danışan Raporları":["Danışan Raporları","Rapor Üst İşlemleri"],"Planlar":["Plan Raporları","Rapor Üst İşlemleri"],"Plan Raporları":["Plan Raporları","Rapor Üst İşlemleri"],"Talep ve Dönüşüm":["Talep Raporları","Rapor Üst İşlemleri"],"Talep ve Dönüşüm Raporları":["Talep Raporları","Rapor Üst İşlemleri"],"Kayıtlı Raporlar":["Kayıt Listesi","Kayıtlı Raporlar"],"Dışa Aktarımlar":["Kayıt Listesi","Dışa Aktarımlar"]},
+    "Kullanıcılar ve Yetkiler": {"Kullanıcılar":["Kayıt Listesi","Kullanıcı Detayı","Kullanıcı İşlemleri"],"Tüm Kullanıcılar":["Kayıt Listesi","Kullanıcı Detayı","Kullanıcı İşlemleri"],"Davetler":["Kayıt Listesi","Kullanıcı Davetleri"],"Kullanıcı Davetleri":["Kayıt Listesi","Kullanıcı Davetleri"],"Roller":["Roller"],"Yetki Grupları":["Yetkiler","Yetki Grupları"],"Yönetici E-posta İzinleri":["Yönetici E-posta İzinleri"],"Giriş Geçmişi":["Kayıt Listesi","Giriş Geçmişi"]},
+    "Ayarlar": {"İşletme":["İşletme Bilgileri"],"İşletme Bilgileri":["İşletme Bilgileri"],"Danışanlar":["Danışan Ayarları"],"Danışan Ayarları":["Danışan Ayarları"],"Randevular":["Randevu Ayarları"],"Randevu Ayarları":["Randevu Ayarları"],"Finans":["Finans Ayarları"],"Finans Ayarları":["Finans Ayarları"],"Bildirimler":["Bildirim Ayarları"],"Bildirim Ayarları":["Bildirim Ayarları"],"E-posta Şablonları":["E-posta Şablonları"],"Entegrasyonlar":["Entegrasyonlar"],"KVKK ve Veri":["KVKK ve Veri"],"Görünüm":["Görünüm Ayarları"],"Görünüm Ayarları":["Görünüm Ayarları"]},
+    "Arşiv": {"Arşivlenen Kayıtlar":["Kayıt Listesi","Arşiv Detayı"],"Arşivlenen Danışanlar":["Kayıt Listesi","Arşiv Detayı"],"Çöp Kutusu":["Kayıt Listesi","Çöp Kutusu"],"İşlem Geçmişi":["Kayıt Listesi","İşlem Geçmişi"]}
   };
 
-  const pdfActions = () => {
-    if (moduleTitle() !== "PDF ve Kaynaklar") return;
-    const workspace = ws(); if (!workspace) return;
-    const title = workspaceTitle();
-    const buttons = Array.from(workspace.querySelectorAll("button"));
-    const by = (label) => buttons.find((b) => t(b) === label);
-    const add = by("Yeni kayıt") || by("Yeni PDF"); const filter = by("Filtrele"); const sort = by("Sırala"); const exp = by("Dışa aktar");
-    const library = title === "Tüm PDF’ler" || title === "PDF ve Kaynaklar";
-    const list = library || title.includes("Talep");
-    if (library) { rename(add, "Yeni PDF"); if (add) add.style.display = ""; bind(add,"pdf-new",() => clickOriginal("Yeni PDF") || notice("Yeni PDF ekranı bulunamadı.", true)); }
-    else if (add) add.style.display = "none";
-    [filter,sort,exp].forEach((b) => { if (b) b.style.display = list ? "" : "none"; });
-    if (list) { bind(filter,"pdf-filter",toggleTools); bind(sort,"pdf-sort",sortRows); bind(exp,"pdf-export",exportRows); }
-    buttons.forEach((b) => {
-      if (b.querySelector("svg.lucide-search")) { if (list) bind(b,"pdf-search",toggleTools); else b.style.display = "none"; }
-      if (b.querySelector("svg.lucide-settings-2")) b.style.display = "none";
-    });
-  };
+  const txt = (e) => (e?.textContent || "").replace(/\s+/g," ").trim();
+  const nav = () => document.querySelector("#module-nav-panel");
+  const ws = () => document.querySelector("#module-workspace") || document.querySelector("#contact-social-workspace");
+  const mod = () => txt(nav()?.querySelector("h2"));
+  const view = () => txt(ws()?.querySelector("h1"));
+  const parts = (b) => { const d = Array.from(b.querySelectorAll("div")).find((x) => x.className.includes("min-w-0") && x.className.includes("flex-1")); const s = d ? Array.from(d.querySelectorAll("span")) : []; return {label:s[0],desc:s[1]}; };
+  const originals = () => Array.from(nav()?.querySelectorAll("section:not([data-compact-nav]) button") || []);
+  const findOriginal = (labels) => { const wanted = new Set(Array.isArray(labels) ? labels : [labels]); return originals().find((b) => wanted.has(parts(b).label?.textContent?.trim())); };
+  const clickOriginal = (labels) => { const b = findOriginal(labels); if (!b) return false; b.click(); setTimeout(run,0); return true; };
+  const active = (b) => b.className.includes("from-[#eafda8]") || b.className.includes("bg-gradient-to-br") || b.getAttribute("aria-current") === "page";
 
-  const calendarActions = () => {
-    if (!["Randevular","Takvim ve Uygunluk"].includes(moduleTitle())) return;
-    const buttons = Array.from(ws()?.querySelectorAll("button") || []);
-    const add = buttons.find((b) => t(b) === "Yeni randevu");
-    bind(add,"new-appointment",() => clickOriginal("Yeni Randevu") || notice("Yeni randevu ekranı bulunamadı.", true));
-    ["Bugüne dön","Görünüm","Senkronize et"].forEach((label) => { const b = buttons.find((x) => t(x) === label); if (b) b.style.display = "none"; });
-  };
+  function compactNav() {
+    const panel = nav(); if (!panel) return;
+    const scroll = Array.from(panel.children).find((e) => e.className.includes("overflow-y-auto")); if (!scroll) return;
+    const old = scroll.querySelector(":scope>section[data-compact-nav]");
+    const sections = Array.from(scroll.querySelectorAll(":scope>section:not([data-compact-nav])"));
+    const rules = NAV[mod()];
+    let search = panel.querySelector("input"); while (search && search.parentElement !== panel) search = search.parentElement;
+    const plus = panel.querySelector(":scope>div:first-child button");
+    if (!rules) { old?.remove(); sections.forEach((s)=>s.style.display=""); if(search)search.style.display=""; if(plus)plus.style.display=""; return; }
+    const source = sections.flatMap((s)=>Array.from(s.querySelectorAll("button")));
+    const allowed = rules.map(([from,to]) => { const button=source.find((b)=>parts(b).label?.textContent?.trim()===from); return button ? {from,to,button}:null; }).filter(Boolean);
+    if (!allowed.length) return;
+    const selected = allowed.find((x)=>active(x.button)); if(!selected){allowed[0].button.click();setTimeout(run,0);return;}
+    sections.forEach((s)=>s.style.display="none"); if(search)search.style.display="none"; if(plus)plus.style.display="none";
+    const sig=mod()+"|"+selected.from; if(old?.dataset.signature===sig)return; old?.remove();
+    const section=document.createElement("section"); section.dataset.compactNav="1"; section.dataset.signature=sig; section.className="space-y-2";
+    section.innerHTML='<div class="flex items-center justify-between px-1"><span class="text-[9px] text-gray-400 font-black tracking-[0.16em] uppercase">Bölümler</span><span class="text-[9px] text-gray-400 font-bold bg-gray-100 px-2 py-0.5 rounded-full">'+allowed.length+'</span></div>';
+    const list=document.createElement("div"); list.className="space-y-2";
+    allowed.forEach(({to,button})=>{const clone=button.cloneNode(true);const p=parts(clone);if(p.label)p.label.textContent=to;clone.addEventListener("click",()=>{button.click();setTimeout(run,0);});list.appendChild(clone);});
+    section.appendChild(list);scroll.prepend(section);
+  }
 
-  const headerActions = () => {
-    const header = document.querySelector("#main-app-header"); if (!header) return;
-    const buttons = Array.from(header.querySelectorAll("button"));
-    ["Son işlemler","Öngörüler","Yardım","Destek"].forEach((title) => { const b = buttons.find((x) => x.title === title); if (b) b.style.display = "none"; });
-    const map = { "Randevular":["Yeni Randevu"], "Takvim ve Uygunluk":["Yeni Randevu"], "Talepler ve İletişim":["Manuel Kayıt","Yeni Talep"], "Hizmetler":["Yeni Hizmet"], "Ödeme ve Planlar":["Yeni Plan"], "PDF ve Kaynaklar":["Yeni PDF"], "Kullanıcılar ve Yetkiler":["Kullanıcı Davetleri"] };
-    const plus = buttons.find((b) => b.title === "Hızlı oluştur"); const labels = map[moduleTitle()];
-    if (plus && labels && original(labels)) { plus.style.display = ""; bind(plus,"header-add-" + moduleTitle(),() => clickOriginal(labels)); } else if (plus) plus.style.display = "none";
-    const filter = buttons.find((b) => b.title === "Filtreler");
-    if (filter && moduleTitle() === "PDF ve Kaynaklar" && workspaceTitle().includes("PDF")) { filter.style.display = ""; bind(filter,"header-pdf-filter",toggleTools); } else if (filter) filter.style.display = "none";
-    const search = buttons.find((b) => b.title === "Ara");
-    const input = Array.from(document.querySelectorAll("#module-workspace input,#contact-social-workspace input")).find((e) => e.getClientRects().length && getComputedStyle(e).display !== "none");
-    if (search && input) { search.style.display = ""; bind(search,"header-focus-" + moduleTitle(),() => input.focus()); }
-    else if (search && moduleTitle() === "PDF ve Kaynaklar" && workspaceTitle().includes("PDF")) { search.style.display = ""; bind(search,"header-pdf-search",toggleTools); }
-    else if (search) search.style.display = "none";
-  };
+  const sections = (root) => Array.from(root.querySelectorAll("section")).filter((s)=>!s.dataset.globalFilter && !s.parentElement?.closest("section"));
+  function scope() {
+    const root=ws(); if(!root || root.id==="contact-social-workspace")return;
+    const map=SCOPE[mod()], allowed=map?.[view()]; if(!allowed)return;
+    const known=new Set(Object.values(map).flat());
+    sections(root).forEach((s)=>{const h=txt(s.querySelector("h2,h3"));if(h&&known.has(h))s.style.display=allowed.includes(h)?"":"none";});
+    const stats=Array.from(root.children).find((e)=>e.className?.includes("grid-cols-2")&&e.querySelectorAll(":scope>div").length>=3);
+    const keep=new Set(["Randevu Listesi","Liste Görünümü","Takvim","Takvim Görünümü","Talepler","Tüm Talepler","Hizmet Listesi","Tüm Hizmetler","Finans Özeti","PDF ve Kaynaklar","Tüm PDF’ler","Kullanıcılar","Tüm Kullanıcılar","Arşivlenen Kayıtlar","Arşivlenen Danışanlar"]);
+    if(stats)stats.style.display=keep.has(view())?"":"none";
+  }
 
-  const identity = () => {
-    const profile = Array.from(document.querySelectorAll("#main-app-header *")).find((e) => e.childElementCount === 0 && t(e) === "BA");
-    if (profile) { profile.title = "Berfin Akbaş · Terapist ve Site Sahibi"; profile.setAttribute("aria-label", profile.title); }
-  };
+  function notice(message,error=false){document.querySelector("[data-dash-note]")?.remove();const n=document.createElement("div");n.dataset.dashNote="1";n.textContent=message;n.className="fixed left-1/2 top-5 z-[9999] -translate-x-1/2 rounded-full px-4 py-2 text-[10px] font-black shadow-xl "+(error?"bg-[#9f3f35] text-white":"bg-black text-[#eafda8]");document.body.appendChild(n);setTimeout(()=>n.remove(),2200);}
+  function bind(button,key,fn){if(!button)return;button.__dashFn=fn;button.dataset.dashKey=key;if(button.dataset.dashBound)return;button.dataset.dashBound="1";button.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();button.__dashFn?.();},true);}
+  const itemText=(item)=>txt(item)+" "+Array.from(item.querySelectorAll("input,textarea,select")).map((c)=>c.value||"").join(" ");
+  function rows(root){const status=new Set(["Aktif","Pasif","Yayında","Taslak","Arşivde","Onaylandı","Onay Bekliyor","Ödeme Bekliyor","Yeniden Planlandı","Gönderildi","Bekliyor","Hata","Tamamlandı","İptal"]);const badges=Array.from(root.querySelectorAll("span,div")).filter((e)=>e.childElementCount===0&&status.has(txt(e)));const found=[];badges.forEach((badge)=>{let row=badge.parentElement;while(row&&row!==root){const v=txt(row);if(v.length>=20&&v.length<=700&&row.parentElement?.children.length>=2)break;row=row.parentElement;}if(row&&row!==root&&!found.includes(row))found.push(row);});const count=new Map();found.forEach((r)=>count.set(r.parentElement,(count.get(r.parentElement)||0)+1));const parent=Array.from(count.entries()).sort((a,b)=>b[1]-a[1])[0]?.[0];return parent?found.filter((r)=>r.parentElement===parent):[];}
+  function items(){const root=ws();if(!root)return[];if(root.id==="contact-social-workspace"){const h=Array.from(root.querySelectorAll("h2")).find((x)=>txt(x)==="İletişim kanalları");const a=h?.closest("section")?.querySelectorAll("article");if(a?.length)return Array.from(a);}const r=rows(root);if(r.length>1)return r;return sections(root).filter((s)=>s.style.display!=="none"&&txt(s.querySelector("h2,h3")));}
 
-  let queued = false;
-  const apply = () => {
-    if (queued) return; queued = true;
-    requestAnimationFrame(() => { queued = false; identity(); compactNav(); pdfActions(); calendarActions(); headerActions(); });
-  };
-  new MutationObserver(apply).observe(document.documentElement, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["class","aria-current"] });
-  apply();
+  function filterPanel(){return ws()?.querySelector("[data-global-filter]");}
+  function applyFilter(){const panel=filterPanel();if(!panel)return;const q=(panel.querySelector("input")?.value||"").trim().toLocaleLowerCase("tr-TR");items().forEach((item)=>item.style.display=!q||itemText(item).toLocaleLowerCase("tr-TR").includes(q)?"":"none");}
+  function filter(){const root=ws();if(!root)return;let panel=filterPanel();if(!panel){panel=document.createElement("section");panel.dataset.globalFilter="1";panel.className="hidden rounded-[1.4rem] border border-black/[0.07] bg-white/88 p-3 shadow-sm items-center gap-2";panel.innerHTML='<input type="search" placeholder="Bu görünümde ara ve filtrele..." class="min-w-[240px] flex-1 rounded-full border border-black/10 bg-white px-4 py-2 text-[11px] font-semibold outline-none focus:border-black/25"><button class="rounded-full border border-black/10 bg-white px-3 py-2 text-[9px] font-black text-gray-600">Temizle</button>';const header=Array.from(root.children).find((e)=>e.tagName==="HEADER");header?root.insertBefore(panel,header.nextSibling):root.prepend(panel);panel.querySelector("input")?.addEventListener("input",applyFilter);panel.querySelector("button")?.addEventListener("click",()=>{panel.querySelector("input").value="";applyFilter();panel.querySelector("input").focus();});}const open=panel.classList.contains("hidden");panel.classList.toggle("hidden",!open);panel.classList.toggle("flex",open);if(open)panel.querySelector("input")?.focus();else{panel.querySelector("input").value="";applyFilter();}}
+  function sort(){const root=ws();if(!root)return;if(root.id==="contact-social-workspace"){const h=Array.from(root.querySelectorAll("h2")).find((x)=>txt(x)==="Sıralama");if(!h)return notice("Sıralama alanı bulunamadı.",true);h.closest("section")?.scrollIntoView({behavior:"smooth",block:"center"});return notice("Kanal sırasını oklarla değiştirip kaydet.");}const list=items().filter((x)=>x.style.display!=="none");if(list.length<2)return notice("Sıralanacak kayıt bulunmuyor.",true);const dir=root.dataset.sortDirection==="asc"?"desc":"asc";root.dataset.sortDirection=dir;const groups=new Map();list.forEach((x)=>{if(!groups.has(x.parentElement))groups.set(x.parentElement,[]);groups.get(x.parentElement).push(x);});for(const [parent,group] of groups){group.sort((a,b)=>itemText(a).localeCompare(itemText(b),"tr",{numeric:true})*(dir==="asc"?1:-1));group.forEach((x)=>parent.appendChild(x));}notice(dir==="asc"?"A–Z sıralandı.":"Z–A sıralandı.");}
+  function exportCsv(){const list=items().filter((x)=>x.style.display!=="none");if(!list.length)return notice("Dışa aktarılacak içerik bulunmuyor.",true);const esc=(v)=>'"'+String(v).replaceAll('"','""')+'"';const data=[["Bölüm","Görünüm","Kayıt"],...list.map((x)=>[mod(),view(),itemText(x)])];const blob=new Blob(["\ufeff"+data.map((r)=>r.map(esc).join(",")).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(mod()||"yonetim").toLocaleLowerCase("tr-TR").replace(/[^a-z0-9çğıöşü]+/gi,"-")+"-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);notice("CSV dışa aktarıldı.");}
+
+  const svg={filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-3.5 w-3.5"><path d="M4 5h16l-6 7v5l-4 2v-7z"/></svg>',sort:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-3.5 w-3.5"><path d="m8 7 4-4 4 4M12 3v18m4-4-4 4-4-4"/></svg>',export:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-3.5 w-3.5"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg>'};
+  const primary=()=>{const m=mod(),v=view();if(m==="Randevular"||m==="Takvim ve Uygunluk")return["Yeni randevu",["Yeni Randevu"]];if(m==="Talepler ve İletişim"&&["Talepler","Tüm Talepler"].includes(v))return["Yeni talep",["Manuel Kayıt","Yeni Talep"]];if(m==="Hizmetler")return["Yeni hizmet",["Yeni Hizmet"]];if(m==="Ödeme ve Planlar"&&["Planlar","Tüm Planlar"].includes(v))return["Yeni plan",["Yeni Plan"]];if(m==="Ödeme ve Planlar"&&["Ödemeler","Tüm Ödemeler"].includes(v))return["Yeni ödeme",["Yeni Ödeme"]];if(m==="PDF ve Kaynaklar"&&["PDF ve Kaynaklar","Tüm PDF’ler"].includes(v))return["Yeni PDF",["Yeni PDF"]];if(m==="Kullanıcılar ve Yetkiler"&&["Kullanıcılar","Tüm Kullanıcılar"].includes(v))return["Kullanıcı davet et",["Kullanıcı Davetleri"]];return null;};
+  function label(button,value){const nodes=[],walker=document.createTreeWalker(button,NodeFilter.SHOW_TEXT);while(walker.nextNode())if(walker.currentNode.nodeValue?.trim())nodes.push(walker.currentNode);if(nodes.length)nodes.at(-1).nodeValue=value;}
+  function actionButton(key,name,icon){const b=document.createElement("button");b.type="button";b.dataset.globalAction=key;b.className="rounded-full border border-black/10 bg-white/65 px-3 py-1.5 text-[10px] font-bold text-gray-700 flex items-center gap-1.5 transition-all hover:bg-white cursor-pointer";b.innerHTML=icon+"<span>"+name+"</span>";return b;}
+  function actions(){const root=ws();if(!root)return;const row=Array.from(root.children).find((e)=>e.tagName==="DIV"&&e.querySelector("button,a"));if(!row)return;const group=Array.from(row.children).find((e)=>e.querySelector?.("button,a"))||row;const contact=root.id==="contact-social-workspace";const existing=Array.from(group.querySelectorAll(":scope>button"));if(!contact){const p=primary();existing.forEach((b,i)=>{if(b.dataset.globalAction)return;if(p&&i===0&&findOriginal(p[1])){b.style.display="";label(b,p[0]);bind(b,"primary",()=>clickOriginal(p[1])||notice("Oluşturma ekranı bulunamadı.",true));}else b.style.display="none";});}[["filter","Filtrele",svg.filter,filter],["sort","Sırala",svg.sort,sort],["export","Dışa aktar",svg.export,exportCsv]].forEach(([key,name,icon,fn])=>{let b=group.querySelector('[data-global-action="'+key+'"]');if(!b){b=actionButton(key,name,icon);group.appendChild(b);}bind(b,key,fn);});}
+  function header(){const h=document.querySelector("#main-app-header");if(!h)return;const buttons=Array.from(h.querySelectorAll("button"));["Son işlemler","Öngörüler","Yardım","Destek","Filtreler"].forEach((title)=>{const b=buttons.find((x)=>x.title===title);if(b)b.style.display="none";});const p=primary(),plus=buttons.find((x)=>x.title==="Hızlı oluştur");if(plus&&p&&findOriginal(p[1])){plus.style.display="";bind(plus,"header-primary",()=>clickOriginal(p[1]));}else if(plus)plus.style.display="none";const search=buttons.find((x)=>x.title==="Ara");if(search){search.style.display="";bind(search,"header-search",filter);}const profile=Array.from(h.querySelectorAll("*")).find((e)=>e.childElementCount===0&&txt(e)==="BA");if(profile){profile.title="Berfin Akbaş · Terapist ve Site Sahibi";profile.setAttribute("aria-label",profile.title);}}
+
+  let queued=false;function apply(){queued=false;compactNav();scope();actions();header();}function run(){if(queued)return;queued=true;requestAnimationFrame(apply);}function start(){const style=document.createElement("style");style.textContent="#contact-social-workspace{animation-duration:.12s!important}#dashboard-right-column>.grid.place-items-center{background:linear-gradient(118deg,#eafda8 0%,#fff8ed 28%,#fff 55%,#fff8f4 100%)!important}";document.head.appendChild(style);new MutationObserver(run).observe(document.querySelector("#app-root-layout")||document.body,{childList:true,subtree:true});run();}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 })();
 `;
 
-const index = path.join(root, "index.html");
-const html = await readFile(index, "utf-8");
-const marker = "data-dashboard-runtime-enhancements";
+const indexPath = path.join(root, "index.html");
+const html = await readFile(indexPath, "utf-8");
+const marker = "data-dashboard-runtime-v4";
 if (!html.includes(marker)) {
-  const script = `<script ${marker}>${runtime}</script>`;
-  await writeFile(index, html.includes("</body>") ? html.replace("</body>", `${script}</body>`) : `${html}${script}`, "utf-8");
+  const injection = `<script ${marker}>${runtime}</script>`;
+  const moduleScript = '<script type="module"';
+  const patched = html.includes(moduleScript)
+    ? html.replace(moduleScript, `${injection}${moduleScript}`)
+    : html.includes("</body>")
+      ? html.replace("</body>", `${injection}</body>`)
+      : `${html}${injection}`;
+  await writeFile(indexPath, patched, "utf-8");
 }
 
-console.log("Dashboard navigation, PDF actions and identity post-processing completed.");
+console.log("Dashboard scoped workspaces, active filter/sort/export controls and contact cache applied.");
