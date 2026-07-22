@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import ManagedContactFab from "@/components/managed-contact-fab";
 import { publicSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
@@ -31,7 +32,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="tr" data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ManagedContactFab />
+      </body>
     </html>
   );
 }
