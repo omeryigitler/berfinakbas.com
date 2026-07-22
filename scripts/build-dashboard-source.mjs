@@ -50,6 +50,35 @@ if (resolvedCommit !== SOURCE_COMMIT) {
   throw new Error(`Dashboard source commit mismatch: expected ${SOURCE_COMMIT}, received ${resolvedCommit}`);
 }
 
+const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
+const sidebarSource = await readFile(sidebarPath, "utf-8");
+const sidebarWithoutGridImport = sidebarSource.replace(
+  "  ArrowRightFromLine,\n  Grid\n} from 'lucide-react';",
+  "  ArrowRightFromLine\n} from 'lucide-react';",
+);
+
+if (sidebarWithoutGridImport === sidebarSource) {
+  throw new Error("Dashboard sidebar Grid import could not be replaced.");
+}
+
+const oldBrandIcon = `        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0">
+          <Grid className="w-5 h-5 text-gray-700" />
+        </div>`;
+const newBrandIcon = `        <a
+          href="/"
+          aria-label="Berfin Akbaş ana sayfasına dön"
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-black/10 bg-white/70 hover:bg-white transition-colors"
+        >
+          <img src="/logo-mark.png" alt="" className="w-[78%] h-[78%] object-contain" />
+        </a>`;
+const patchedSidebar = sidebarWithoutGridImport.replace(oldBrandIcon, newBrandIcon);
+
+if (patchedSidebar === sidebarWithoutGridImport) {
+  throw new Error("Dashboard sidebar brand icon could not be replaced with the site logo.");
+}
+
+await writeFile(sidebarPath, patchedSidebar, "utf-8");
+
 await run("npm", ["install", "--no-package-lock"], workspace);
 await run("npm", ["run", "build", "--", "--base=/yonetim/"], workspace);
 
@@ -66,4 +95,4 @@ await writeFile(
   "utf-8",
 );
 
-console.log(`Dashboard source ${SOURCE_COMMIT} copied unchanged to public/yonetim-static.`);
+console.log(`Dashboard source ${SOURCE_COMMIT} patched and copied to public/yonetim-static.`);
