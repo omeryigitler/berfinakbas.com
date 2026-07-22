@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 
 const SOURCE_REPOSITORY = "https://github.com/omeryigitler/Dashboard.git";
-const SOURCE_COMMIT = "7279431b696ae809a37c1e6d71ce02f82b7bf255";
+const SOURCE_COMMIT = "632ada3f9878c6452846eb3660cba7abc8149840";
 const workspace = path.resolve(".dashboard-source");
 const publicTarget = path.resolve("public/yonetim-static");
 
