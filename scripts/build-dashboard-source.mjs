@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 
 const SOURCE_REPOSITORY = "https://github.com/omeryigitler/Dashboard.git";
-const SOURCE_COMMIT = "f8419258ee868dc4ba8f3034a9bf13fcdb261908";
+const SOURCE_COMMIT = "6562cae4950c8e9e3e779f1e71bdef0c81a0ac98";
 const KEDI_REPOSITORY = "https://github.com/omeryigitler/kedi.git";
 const KEDI_COMMIT = "739faa3f41ba31dff435d07dbfeaa642e49290be";
 const workspace = path.resolve(".dashboard-source");
