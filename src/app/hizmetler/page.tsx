@@ -128,6 +128,18 @@ export default function ServicesPage() {
           background: rgb(255 255 255 / 62%);
         }
 
+        .service-page-grid-visual .service-visual-card:hover {
+          transform: none;
+          border-color: var(--line);
+          box-shadow: 0 20px 46px rgb(102 68 47 / 7%);
+        }
+
+        .service-page-grid-visual .service-visual-card:hover > span {
+          color: rgb(217 111 77 / 42%);
+          font-size: 1.3rem;
+          text-shadow: none;
+        }
+
         .service-page-grid-visual .service-visual-card-peach {
           background:
             radial-gradient(circle at 84% 56%, rgb(247 223 208 / 92%), transparent 48%),
@@ -188,6 +200,16 @@ export default function ServicesPage() {
           height: 100%;
           object-fit: contain;
           object-position: center;
+          transform: translateY(0) scale(1);
+          transition:
+            transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+            filter 320ms ease;
+          will-change: transform;
+        }
+
+        .service-page-grid-visual .service-visual-card:hover .service-visual-image img {
+          transform: translateY(-7px) scale(1.055);
+          filter: saturate(1.04) contrast(1.02);
         }
 
         @media (max-width: 980px) {
@@ -231,6 +253,17 @@ export default function ServicesPage() {
 
           .service-page-grid-visual .service-visual-copy {
             grid-row: 2;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .service-page-grid-visual .service-visual-image img {
+            transition: none;
+          }
+
+          .service-page-grid-visual .service-visual-card:hover .service-visual-image img {
+            transform: none;
+            filter: none;
           }
         }
       `}</style>
