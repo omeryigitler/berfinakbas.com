@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 
 const SOURCE_REPOSITORY = "https://github.com/omeryigitler/Dashboard.git";
-const SOURCE_COMMIT = "632ada3f9878c6452846eb3660cba7abc8149840";
+const SOURCE_COMMIT = "8f95c1dbc82b64303eae68d5c84e6c66b784bb33";
 const workspace = path.resolve(".dashboard-source");
 const publicTarget = path.resolve("public/yonetim-static");
 
@@ -50,62 +50,42 @@ if (resolvedCommit !== SOURCE_COMMIT) {
   throw new Error(`Dashboard source commit mismatch: expected ${SOURCE_COMMIT}, received ${resolvedCommit}`);
 }
 
+const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
+const sidebarSource = await readFile(sidebarPath, "utf-8");
+const sidebarWithoutGridImport = sidebarSource.replace(
+  "  ArrowRightFromLine,\n  Grid\n} from 'lucide-react';",
+  "  ArrowRightFromLine\n} from 'lucide-react';",
+);
+
+if (sidebarWithoutGridImport === sidebarSource) {
+  throw new Error("Dashboard sidebar Grid import could not be replaced.");
+}
+
+const oldBrandIcon = `        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0">
+          <Grid className="w-5 h-5 text-gray-700" />
+        </div>`;
+const newBrandIcon = `        <a
+          href="/"
+          aria-label="Berfin Akbaş ana sayfasına dön"
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-black/10 bg-white/70 hover:bg-white transition-colors"
+        >
+          <img src="/logo-mark.png" alt="" className="w-[78%] h-[78%] object-contain" />
+        </a>`;
+const patchedSidebar = sidebarWithoutGridImport.replace(oldBrandIcon, newBrandIcon);
+
+if (patchedSidebar === sidebarWithoutGridImport) {
+  throw new Error("Dashboard sidebar brand icon could not be replaced with the site logo.");
+}
+
+await writeFile(sidebarPath, patchedSidebar, "utf-8");
+
 await run("npm", ["install", "--no-package-lock"], workspace);
 await run("npm", ["run", "build", "--", "--base=/yonetim/"], workspace);
 
-const sourceIndexPath = path.join(workspace, "dist/index.html");
-const sourceIndex = await readFile(sourceIndexPath, "utf-8");
+const sourceIndex = await readFile(path.join(workspace, "dist/index.html"), "utf-8");
 if (!sourceIndex.includes("/yonetim/assets/")) {
   throw new Error("Dashboard build does not use the required /yonetim asset base.");
 }
-
-const sidebarLogoScript = `<script>
-(() => {
-  const applySidebarLogo = () => {
-    const icon = document.querySelector('#sidebar-container > div:first-of-type > div:first-child');
-    if (!(icon instanceof HTMLElement)) return;
-    if (icon.querySelector('img[data-sidebar-home-logo]')) return;
-
-    const image = document.createElement('img');
-    image.src = '/logo-mark.png';
-    image.alt = '';
-    image.dataset.sidebarHomeLogo = 'true';
-    image.style.width = '78%';
-    image.style.height = '78%';
-    image.style.objectFit = 'contain';
-
-    icon.replaceChildren(image);
-    icon.setAttribute('aria-label', 'Berfin Akbaş ana sayfasına dön');
-    icon.setAttribute('role', 'link');
-    icon.setAttribute('tabindex', '0');
-    icon.style.width = '32px';
-    icon.style.height = '32px';
-    icon.style.cursor = 'pointer';
-    icon.style.overflow = 'hidden';
-    icon.style.border = '1px solid rgba(0, 0, 0, 0.1)';
-    icon.style.background = 'rgba(255, 255, 255, 0.7)';
-
-    const goHome = () => window.location.assign('/');
-    icon.addEventListener('click', goHome);
-    icon.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        goHome();
-      }
-    });
-  };
-
-  const observer = new MutationObserver(applySidebarLogo);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-  applySidebarLogo();
-})();
-</script>`;
-
-const enhancedSourceIndex = sourceIndex.replace("</body>", `${sidebarLogoScript}\n</body>`);
-if (enhancedSourceIndex === sourceIndex) {
-  throw new Error("Dashboard index could not be enhanced with the home logo behavior.");
-}
-await writeFile(sourceIndexPath, enhancedSourceIndex, "utf-8");
 
 await mkdir(publicTarget, { recursive: true });
 await cp(path.join(workspace, "dist"), publicTarget, { recursive: true });
@@ -115,4 +95,4 @@ await writeFile(
   "utf-8",
 );
 
-console.log(`Dashboard source ${SOURCE_COMMIT} copied with the site-logo enhancement to public/yonetim-static.`);
+console.log(`Dashboard source ${SOURCE_COMMIT} patched and copied to public/yonetim-static.`);
