@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { publicSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
+import "./ui-polish.css";
 
 export const metadata: Metadata = {
   metadataBase: publicSiteUrl,
