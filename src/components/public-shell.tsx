@@ -1,9 +1,5 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import type { MouseEvent } from "react";
 
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
@@ -20,21 +16,9 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
 }
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  function handleBrandClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (pathname !== "/") return;
-
-    event.preventDefault();
-    if (event.detail >= 3) {
-      router.push("/yonetim");
-    }
-  }
-
   return (
     <header className="site-header">
-      <Link href="/" aria-label="Berfin Akbaş ana sayfa" onClick={handleBrandClick}>
+      <Link href="/" aria-label="Berfin Akbaş ana sayfa">
         <BrandMark />
       </Link>
       <nav aria-label="Ana menü">

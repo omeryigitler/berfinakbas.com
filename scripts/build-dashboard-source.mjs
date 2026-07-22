@@ -52,15 +52,6 @@ if (resolvedCommit !== SOURCE_COMMIT) {
 
 const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
 const sidebarSource = await readFile(sidebarPath, "utf-8");
-const sidebarWithoutGridImport = sidebarSource.replace(
-  "  ArrowRightFromLine,\n  Grid\n} from 'lucide-react';",
-  "  ArrowRightFromLine\n} from 'lucide-react';",
-);
-
-if (sidebarWithoutGridImport === sidebarSource) {
-  throw new Error("Dashboard sidebar Grid import could not be replaced.");
-}
-
 const oldBrandIcon = `        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0">
           <Grid className="w-5 h-5 text-gray-700" />
         </div>`;
@@ -71,9 +62,9 @@ const newBrandIcon = `        <a
         >
           <img src="/logo-mark.png" alt="" className="w-[78%] h-[78%] object-contain" />
         </a>`;
-const patchedSidebar = sidebarWithoutGridImport.replace(oldBrandIcon, newBrandIcon);
+const patchedSidebar = sidebarSource.replace(oldBrandIcon, newBrandIcon);
 
-if (patchedSidebar === sidebarWithoutGridImport) {
+if (patchedSidebar === sidebarSource) {
   throw new Error("Dashboard sidebar brand icon could not be replaced with the site logo.");
 }
 
