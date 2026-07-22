@@ -11,14 +11,28 @@ export async function proxy(request: NextRequest) {
   }
 
   const { pathname } = request.nextUrl;
+  const rewriteTo = (targetPathname: string) => {
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.pathname = targetPathname;
+    return NextResponse.rewrite(targetUrl);
+  };
 
   if (pathname === "/yonetim" || pathname === "/yonetim/") {
-    return NextResponse.rewrite(new URL("/yonetim-static/index.html", request.url));
+    return rewriteTo("/yonetim-static/index.html");
   }
 
   if (pathname.startsWith("/yonetim/assets/")) {
     const assetPath = pathname.slice("/yonetim/assets/".length);
-    return NextResponse.rewrite(new URL(`/yonetim-static/assets/${assetPath}`, request.url));
+    return rewriteTo(`/yonetim-static/assets/${assetPath}`);
+  }
+
+  if (pathname === "/yonetim/kedi" || pathname === "/yonetim/kedi/") {
+    return rewriteTo("/yonetim-static/kedi/index.html");
+  }
+
+  if (pathname.startsWith("/yonetim/kedi/")) {
+    const kediPath = pathname.slice("/yonetim/kedi/".length);
+    return rewriteTo(`/yonetim-static/kedi/${kediPath}`);
   }
 
   return NextResponse.next();
