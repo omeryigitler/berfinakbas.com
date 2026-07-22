@@ -71,8 +71,6 @@ export default function HeroScroll() {
 
     const updateHeroProgress = () => {
       const rect = hero.getBoundingClientRect();
-      // Play the animation over ~1.15 screens of scroll, then hold the finished
-      // state for the remaining scroll so the hero dwells before releasing.
       const animationDistance = Math.max(window.innerHeight * 1.15, 1);
       const state = getHeroMotionState(-rect.top / animationDistance);
 
@@ -151,18 +149,39 @@ export default function HeroScroll() {
           <Link className={styles.scrollHeroNavCta} href="/randevu">
             {heroContent.primaryActionLabel}
           </Link>
+
           <details className="hero-mobile-menu">
             <summary aria-label="Menüyü aç veya kapat">
               <span />
               <span />
               <span />
             </summary>
-            <nav aria-label="Mobil menü">
-              <Link href="/hizmetler">Hizmetler</Link>
-              <Link href="/hakkimda">Hakkımda</Link>
-              <Link href="/randevu">Randevu</Link>
-              <Link href="/iletisim">İletişim</Link>
-            </nav>
+            <div className="hero-mobile-menu-panel">
+              <Link className="hero-mobile-menu-brand" href="/" aria-label="Berfin Akbaş ana sayfa">
+                <BrandMark />
+              </Link>
+
+              <nav aria-label="Mobil menü">
+                <Link href="/hizmetler">Hizmetler</Link>
+                <Link href="/hakkimda">Hakkımda</Link>
+                <Link href="/surec">Terapi Yaklaşımı</Link>
+                <Link className="hero-mobile-menu-booking" href="/randevu">
+                  Randevu Talebi
+                </Link>
+                <Link href="/iletisim">İletişim</Link>
+              </nav>
+
+              <div className="hero-mobile-menu-actions">
+                <Link className="primary-button" href="/randevu">
+                  Online Randevu Talebi Oluştur
+                </Link>
+                <Link className="secondary-button" href="/hizmetler">
+                  Hizmetleri İncele
+                </Link>
+              </div>
+
+              <small>© Berfin Akbaş 2026</small>
+            </div>
           </details>
         </header>
 
@@ -221,16 +240,21 @@ export default function HeroScroll() {
         }
 
         @media (max-width: 980px) {
+          html:has(.hero-mobile-menu[open]),
+          body:has(.hero-mobile-menu[open]) {
+            overflow: hidden;
+          }
+
           .${styles.scrollHero} {
             height: auto;
-            min-height: 1050px;
+            min-height: 1030px;
           }
 
           .${styles.scrollHeroSticky} {
             position: relative;
             top: auto;
-            height: 1050px;
-            min-height: 1050px;
+            height: 1030px;
+            min-height: 1030px;
           }
 
           .${styles.scrollHeroRoom} {
@@ -307,6 +331,14 @@ export default function HeroScroll() {
             justify-self: end;
           }
 
+          .hero-mobile-menu[open] {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            padding: 12px;
+            background: rgb(44 38 34 / 72%);
+          }
+
           .hero-mobile-menu summary {
             display: grid;
             width: 44px;
@@ -318,6 +350,16 @@ export default function HeroScroll() {
             background: rgb(255 255 255 / 44%);
             cursor: pointer;
             list-style: none;
+          }
+
+          .hero-mobile-menu[open] summary {
+            position: fixed;
+            top: 28px;
+            right: 28px;
+            z-index: 1002;
+            border-color: rgb(88 62 49 / 18%);
+            background: rgb(255 250 244 / 76%);
+            backdrop-filter: blur(18px);
           }
 
           .hero-mobile-menu summary::-webkit-details-marker {
@@ -351,35 +393,101 @@ export default function HeroScroll() {
             transform: translateY(-7px) rotate(-45deg);
           }
 
-          .hero-mobile-menu nav {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
+          .hero-mobile-menu-panel {
+            position: fixed;
+            inset: 12px;
+            z-index: 1001;
+            display: grid;
+            grid-template-rows: auto 1fr auto auto;
+            align-items: center;
+            overflow-y: auto;
+            padding: 28px 22px 24px;
+            border: 1px solid rgb(255 255 255 / 64%);
+            border-radius: 30px;
+            background:
+              linear-gradient(180deg, rgb(255 250 244 / 92%), rgb(250 239 228 / 96%)),
+              rgb(255 250 244 / 92%);
+            box-shadow:
+              0 28px 80px rgb(36 27 22 / 28%),
+              inset 0 1px 0 rgb(255 255 255 / 88%);
+            backdrop-filter: blur(28px) saturate(1.15);
+          }
+
+          .hero-mobile-menu-brand {
+            justify-self: center;
+            padding-top: 2px;
+          }
+
+          .hero-mobile-menu-brand .brand-mark {
+            flex-direction: column;
+            gap: 7px;
+            text-align: center;
+          }
+
+          .hero-mobile-menu-brand .brand-symbol {
+            width: 58px !important;
+            height: 58px !important;
+            flex-basis: 58px !important;
+          }
+
+          .hero-mobile-menu-brand .brand-mark strong {
+            font-size: 1.35rem !important;
+          }
+
+          .hero-mobile-menu-brand .brand-mark small {
+            display: block !important;
+            font-size: 0.52rem !important;
+            letter-spacing: 0.13em !important;
+          }
+
+          .hero-mobile-menu-panel nav {
             display: grid !important;
-            width: min(250px, calc(100vw - 32px));
-            overflow: hidden;
-            border: 1px solid rgb(88 62 49 / 12%);
-            border-radius: 22px;
-            background: rgb(255 250 244 / 96%);
-            box-shadow: 0 24px 56px rgb(67 39 26 / 18%);
-            backdrop-filter: blur(20px);
+            align-content: center;
+            width: min(100%, 360px);
+            margin: 20px auto;
           }
 
-          .hero-mobile-menu nav a {
-            padding: 14px 18px;
-            border-bottom: 1px solid rgb(88 62 49 / 9%);
+          .hero-mobile-menu-panel nav a {
+            padding: 14px 8px;
+            border-bottom: 1px solid rgb(88 62 49 / 12%);
             color: var(--ink);
-            font-size: 0.8rem;
-            font-weight: 750;
-            text-align: left;
+            font-family: var(--serif);
+            font-size: clamp(1.65rem, 7.5vw, 2.25rem);
+            font-weight: 500;
+            line-height: 1.05;
+            text-align: center;
           }
 
-          .hero-mobile-menu nav a:last-child {
+          .hero-mobile-menu-panel nav a:last-child {
             border-bottom: 0;
           }
 
+          .hero-mobile-menu-panel nav .hero-mobile-menu-booking {
+            color: var(--coral-dark);
+          }
+
+          .hero-mobile-menu-actions {
+            display: grid;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 18px;
+          }
+
+          .hero-mobile-menu-actions a {
+            width: 100%;
+            min-height: 56px;
+            font-family: var(--serif);
+            font-size: 1rem;
+          }
+
+          .hero-mobile-menu-panel > small {
+            color: var(--muted);
+            font-size: 0.72rem;
+            text-align: center;
+          }
+
           .${styles.scrollHeroPortrait} {
-            top: 84px;
+            top: 106px;
             bottom: auto;
             left: 50%;
             z-index: 12;
@@ -393,7 +501,7 @@ export default function HeroScroll() {
           }
 
           .${styles.scrollHeroCopy} {
-            top: 445px;
+            top: 466px;
             right: auto;
             bottom: auto;
             left: 0;
@@ -451,19 +559,9 @@ export default function HeroScroll() {
             transform: none;
           }
 
-          .hero-progress-card-desktop {
-            display: none !important;
-          }
-
+          .hero-progress-card-desktop,
           .${styles.scrollHeroHighlights} {
-            align-items: flex-start;
-            flex-direction: column;
-            width: max-content;
-            max-width: 100%;
-            margin: 16px auto 0;
-            gap: 9px;
-            font-size: 0.78rem;
-            text-align: left;
+            display: none !important;
           }
         }
 
@@ -491,15 +589,36 @@ export default function HeroScroll() {
             letter-spacing: 0.08em;
           }
 
+          .hero-mobile-menu-panel {
+            inset: 8px;
+            padding: 24px 18px 20px;
+            border-radius: 26px;
+          }
+
+          .hero-mobile-menu[open] summary {
+            top: 22px;
+            right: 22px;
+          }
+
+          .hero-mobile-menu-panel nav a {
+            padding-block: 12px;
+            font-size: clamp(1.5rem, 7vw, 1.95rem);
+          }
+
+          .hero-mobile-menu-actions a {
+            min-height: 52px;
+            font-size: 0.9rem;
+          }
+
           .${styles.scrollHeroPortrait} {
-            top: 78px;
+            top: 100px;
             width: min(340px, 94vw);
             height: 500px;
             min-height: 500px;
           }
 
           .${styles.scrollHeroCopy} {
-            top: 430px;
+            top: 450px;
           }
 
           .${styles.scrollHeroCopy} h1 {
