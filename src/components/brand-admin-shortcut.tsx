@@ -11,7 +11,10 @@ export default function BrandAdminShortcut() {
 
     const handleBrandClick = (event: MouseEvent) => {
       const target = event.target;
-      if (!(target instanceof Element) || !target.closest(".brand-mark")) return;
+      if (!(target instanceof Element)) return;
+
+      const brandMark = target.closest(".brand-mark");
+      if (!brandMark?.closest('header[aria-label="Ana menü"]')) return;
 
       event.preventDefault();
       if (event.detail >= 3) {

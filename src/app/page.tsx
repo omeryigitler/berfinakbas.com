@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import AboutHighlight from "@/components/about-highlight";
 import HeroScroll from "@/components/hero-scroll";
+import ManagedContactFab from "@/components/managed-contact-fab";
 import { SiteFooter } from "@/components/public-shell";
 
 import "./home-performance.module.css";
@@ -183,6 +184,7 @@ export default function Home() {
       </section>
 
       <SiteFooter />
+      <ManagedContactFab />
     </main>
   );
 }

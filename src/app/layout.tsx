@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
 import BrandAdminShortcut from "@/components/brand-admin-shortcut";
-import ManagedContactFab from "@/components/managed-contact-fab";
 import { publicSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
@@ -36,7 +35,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         {children}
         <BrandAdminShortcut />
-        <ManagedContactFab />
       </body>
     </html>
   );

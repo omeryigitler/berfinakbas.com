@@ -70,8 +70,13 @@ export function SiteFooter() {
 
       <div className="site-footer-base">
         <span>© 2026 Berfin Akbaş · Tüm hakları saklıdır.</span>
-        <nav className="site-footer-legal" aria-label="Yasal bağlantılar">
+        <nav
+          className="site-footer-legal"
+          aria-label="Yasal bağlantılar"
+          style={{ alignItems: "center", display: "flex" }}
+        >
           <Link href="/kvkk">KVKK</Link>
+          <span aria-hidden="true">·</span>
           <Link href="/gizlilik">Gizlilik ve çerezler</Link>
         </nav>
         <p className="site-footer-credit">
