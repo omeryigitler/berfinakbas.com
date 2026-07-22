@@ -148,14 +148,18 @@ const dashboardKitSource = await readFile(
   path.join(kediWorkspace, "src/dashboard/DashboardKit.tsx"),
   "utf-8",
 );
-const patchedDashboardKit = dashboardKitSource.replace(
+let patchedDashboardKit = replaceRequired(
+  dashboardKitSource,
   "import CatWidget from '../components/CatWidget';",
   "import CatWidget from './KediCatWidget';",
+  "Kedi dashboard integration import",
 );
-
-if (patchedDashboardKit === dashboardKitSource) {
-  throw new Error("Kedi dashboard integration import could not be patched.");
-}
+patchedDashboardKit = replaceRequired(
+  patchedDashboardKit,
+  '    <div className="h-full overflow-y-auto bg-[#f6f5f1] p-5 text-[#292723] sm:p-6">',
+  '    <div className="h-full overflow-y-auto overscroll-contain bg-[#f6f5f1] p-5 text-[#292723] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:p-6">',
+  "Kedi hidden scrollbar",
+);
 
 await writeFile(
   path.join(dashboardComponents, "KediDashboardKit.tsx"),
