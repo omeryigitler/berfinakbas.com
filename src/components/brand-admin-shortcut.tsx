@@ -1,11 +1,10 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 export default function BrandAdminShortcut() {
   const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
     if (pathname !== "/") return;
@@ -16,13 +15,13 @@ export default function BrandAdminShortcut() {
 
       event.preventDefault();
       if (event.detail >= 3) {
-        router.push("/yonetim");
+        window.location.assign("/yonetim");
       }
     };
 
     document.addEventListener("click", handleBrandClick, true);
     return () => document.removeEventListener("click", handleBrandClick, true);
-  }, [pathname, router]);
+  }, [pathname]);
 
   return null;
 }
