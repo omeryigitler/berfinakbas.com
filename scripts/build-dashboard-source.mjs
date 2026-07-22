@@ -4,9 +4,9 @@ import path from "node:path";
 import process from "node:process";
 
 const SOURCE_REPOSITORY = "https://github.com/omeryigitler/Dashboard.git";
-const SOURCE_COMMIT = "aed57c45d396b73479c2100b5ab161e58188a4a3";
+const SOURCE_COMMIT = "f8419258ee868dc4ba8f3034a9bf13fcdb261908";
 const KEDI_REPOSITORY = "https://github.com/omeryigitler/kedi.git";
-const KEDI_COMMIT = "a9538d99b65df956aeff981f1dff31e8d98e00e3";
+const KEDI_COMMIT = "739faa3f41ba31dff435d07dbfeaa642e49290be";
 const workspace = path.resolve(".dashboard-source");
 const kediWorkspace = path.resolve(".kedi-source");
 const publicTarget = path.resolve("public/yonetim-static");
@@ -55,6 +55,7 @@ async function checkoutPinnedSource(repository, commit, target, label) {
 
 await rm(publicTarget, { force: true, recursive: true });
 await checkoutPinnedSource(SOURCE_REPOSITORY, SOURCE_COMMIT, workspace, "Dashboard");
+await checkoutPinnedSource(KEDI_REPOSITORY, KEDI_COMMIT, kediWorkspace, "Kedi");
 
 const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
 const sidebarSource = await readFile(sidebarPath, "utf-8");
@@ -84,6 +85,32 @@ if (patchedSidebar === sidebarWithoutGridImport) {
 }
 
 await writeFile(sidebarPath, patchedSidebar, "utf-8");
+
+const dashboardComponents = path.join(workspace, "src/components");
+await cp(
+  path.join(kediWorkspace, "src/components/CatWidget.tsx"),
+  path.join(dashboardComponents, "KediCatWidget.tsx"),
+);
+
+const dashboardKitSource = await readFile(
+  path.join(kediWorkspace, "src/dashboard/DashboardKit.tsx"),
+  "utf-8",
+);
+const patchedDashboardKit = dashboardKitSource.replace(
+  "import CatWidget from '../components/CatWidget';",
+  "import CatWidget from './KediCatWidget';",
+);
+
+if (patchedDashboardKit === dashboardKitSource) {
+  throw new Error("Kedi dashboard integration import could not be patched.");
+}
+
+await writeFile(
+  path.join(dashboardComponents, "KediDashboardKit.tsx"),
+  patchedDashboardKit,
+  "utf-8",
+);
+
 await run("npm", ["install", "--no-package-lock"], workspace);
 await run("npm", ["run", "build", "--", "--base=/yonetim/"], workspace);
 
@@ -94,24 +121,13 @@ if (!sourceIndex.includes("/yonetim/assets/")) {
 
 await mkdir(publicTarget, { recursive: true });
 await cp(path.join(workspace, "dist"), publicTarget, { recursive: true });
-
-await checkoutPinnedSource(KEDI_REPOSITORY, KEDI_COMMIT, kediWorkspace, "Kedi");
-await run("npm", ["install", "--no-package-lock"], kediWorkspace);
-await run("npm", ["run", "build", "--", "--base=/yonetim/kedi/"], kediWorkspace);
-
-const kediIndex = await readFile(path.join(kediWorkspace, "dist/index.html"), "utf-8");
-if (!kediIndex.includes("/yonetim/kedi/assets/")) {
-  throw new Error("Kedi build does not use the required /yonetim/kedi asset base.");
-}
-
-await cp(path.join(kediWorkspace, "dist"), path.join(publicTarget, "kedi"), { recursive: true });
 await writeFile(
   path.join(publicTarget, "source-manifest.json"),
   JSON.stringify(
     {
       repository: SOURCE_REPOSITORY,
       commit: SOURCE_COMMIT,
-      kedi: { repository: KEDI_REPOSITORY, commit: KEDI_COMMIT },
+      kedi: { repository: KEDI_REPOSITORY, commit: KEDI_COMMIT, integration: "native" },
     },
     null,
     2,
@@ -120,5 +136,5 @@ await writeFile(
 );
 
 console.log(
-  `Dashboard source ${SOURCE_COMMIT} and Kedi source ${KEDI_COMMIT} copied to public/yonetim-static.`,
+  `Dashboard source ${SOURCE_COMMIT} built with native Kedi source ${KEDI_COMMIT}.`,
 );
