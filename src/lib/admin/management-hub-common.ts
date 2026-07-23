@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
+import type { Session } from 'next-auth';
 import type { Prisma } from '@/generated/prisma/client';
 import type { Permission } from '@/domain/auth/permissions';
 import { hasPermission } from '@/domain/auth/permissions';
 import { getDatabase } from '@/lib/db';
-import type { auth } from '@/auth';
 import { settingKeys } from './management-hub-schema';
 
-export type ActiveSession = NonNullable<Awaited<ReturnType<typeof auth>>>;
+export type ActiveSession = Session;
 
 export function forbidden() {
   return NextResponse.json({ error: 'Bu işlem için yetkiniz yok.' }, { status: 403 });
