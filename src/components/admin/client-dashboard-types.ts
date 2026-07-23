@@ -15,8 +15,8 @@ export interface ClientListItem {
   plansCount: number;
   preferredName: string | null;
   score: number;
-  status: 'PROSPECTIVE' | 'ACTIVE' | 'INACTIVE';
-  type: 'ADULT' | 'CHILD';
+  status: "PROSPECTIVE" | "ACTIVE" | "INACTIVE";
+  type: "ADULT" | "CHILD";
   updatedAt: string;
 }
 
@@ -81,10 +81,19 @@ export interface ClientDetail {
     note: string;
   }>;
   phone: string | null;
+  financeSummary: {
+    hasOpenBalance: boolean;
+    openBalanceLabel: string;
+    paidLabel: string;
+    planTotalLabel: string;
+    remainingSessions: number;
+  };
   plans: Array<{
+    balanceMinor: string;
     currency: string;
     id: string;
     name: string;
+    remainingSessions: string;
     sessionCount: number;
     sessionDurationMinutes: number;
     status: string;
@@ -94,7 +103,7 @@ export interface ClientDetail {
   }>;
   preferredName: string | null;
   score: number;
-  status: 'PROSPECTIVE' | 'ACTIVE' | 'INACTIVE';
-  type: 'ADULT' | 'CHILD';
+  status: "PROSPECTIVE" | "ACTIVE" | "INACTIVE";
+  type: "ADULT" | "CHILD";
   updatedAt: string;
 }

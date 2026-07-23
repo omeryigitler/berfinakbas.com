@@ -5,7 +5,6 @@ import type { ClientDetail } from "@/components/admin/client-dashboard-types";
 import {
   adaptClientDetail,
   formatDashboardDate,
-  formatDashboardMoney,
   getDetailEmptyValue,
 } from "../adapters/client-detail-adapter";
 import styles from "../sales-hub-detail.module.css";
@@ -13,7 +12,9 @@ import { SalesHubIcon } from "./sales-hub-icon";
 
 interface WorkspaceOverviewProps {
   detail: ClientDetail;
+  onCompleteAppointment: (appointmentId: string) => void;
   onNewNote: () => void;
+  submitting: boolean;
 }
 
 function statusText(value: string): string {
@@ -31,12 +32,15 @@ function statusText(value: string): string {
 
 export default function WorkspaceOverview({
   detail,
+  onCompleteAppointment,
   onNewNote,
+  submitting,
 }: WorkspaceOverviewProps) {
   const detailView = adaptClientDetail(detail);
   const emptyValue = getDetailEmptyValue();
   const nextAppointment = detailView.nextAppointment;
   const guardian = detail.guardians[0]?.guardian;
+  const canCompleteNext = nextAppointment?.status === "CONFIRMED";
 
   return (
     <div className={`${styles.contentGrid} ${styles.overviewGrid}`}>
@@ -125,8 +129,15 @@ export default function WorkspaceOverview({
                 Call
               </button>
               <button
-                disabled
-                title="Randevu tamamlama backend işlemi mevcut değil"
+                disabled={!canCompleteNext || submitting}
+                onClick={() => {
+                  if (nextAppointment && canCompleteNext) onCompleteAppointment(nextAppointment.id);
+                }}
+                title={
+                  canCompleteNext
+                    ? "Seansı tamamlandı olarak işaretle"
+                    : "Yalnızca onaylanmış randevu tamamlanabilir"
+                }
                 type="button"
               >
                 Mark Complete
@@ -225,28 +236,27 @@ export default function WorkspaceOverview({
         <div className={styles.financeRows}>
           <div className={styles.infoRow}>
             <span>Toplam Plan Tutarı</span>
-            <strong>
-              {detailView.activePlan
-                ? formatDashboardMoney(
-                    BigInt(detailView.activePlan.totalAmountMinor),
-                    detailView.activePlan.currency,
-                  )
-                : emptyValue}
-            </strong>
+            <strong>{detailView.planTotalLabel}</strong>
+          </div>
+          <div className={styles.infoRow}>
+            <span>Alınan Ödeme</span>
+            <strong>{detailView.paidLabel}</strong>
           </div>
           <div className={styles.infoRow}>
             <span>Kalan Borç Tutarı</span>
-            <strong>
-              {formatDashboardMoney(detailView.balance.amountMinor, detailView.balance.currency)}
-            </strong>
+            <strong>{detailView.openBalanceLabel}</strong>
           </div>
           <div className={styles.infoRow}>
             <span>Aktif Plan</span>
             <strong>{detailView.activePlan?.name ?? emptyValue}</strong>
           </div>
           <div className={styles.infoRow}>
-            <span>Seans Sayısı</span>
-            <strong>{detailView.activePlan?.sessionCount ?? emptyValue}</strong>
+            <span>Kalan Seans</span>
+            <strong>
+              {detailView.activePlan
+                ? `${detailView.remainingSessions} / ${detailView.activePlan.sessionCount}`
+                : detailView.remainingSessions}
+            </strong>
           </div>
         </div>
       </article>

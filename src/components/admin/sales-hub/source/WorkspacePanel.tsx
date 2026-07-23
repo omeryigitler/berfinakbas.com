@@ -17,6 +17,7 @@ interface WorkspacePanelProps {
   detail: ClientDetail | null;
   detailLoading: boolean;
   onBack: () => void;
+  onCompleteAppointment: (appointmentId: string) => void;
   onDeactivate: () => void;
   onEdit: () => void;
   onNewAppointment: () => void;
@@ -36,6 +37,7 @@ export default function WorkspacePanel({
   detail,
   detailLoading,
   onBack,
+  onCompleteAppointment,
   onDeactivate,
   onEdit,
   onNewAppointment,
@@ -174,7 +176,12 @@ export default function WorkspacePanel({
           {detailLoading ? <div className={styles.loadingLayer}>Danışan ayrıntıları yükleniyor...</div> : null}
           {!detailLoading && !detail ? <div className={styles.loadingLayer}>Portföyden bir danışan seçin.</div> : null}
           {!detailLoading && detail && activeTab === "Genel Bakış" ? (
-            <WorkspaceOverview detail={detail} onNewNote={onNewNote} />
+            <WorkspaceOverview
+              detail={detail}
+              onCompleteAppointment={onCompleteAppointment}
+              onNewNote={onNewNote}
+              submitting={submitting}
+            />
           ) : null}
           {!detailLoading && detail && activeTab !== "Genel Bakış" ? <WorkspaceTabs activeTab={activeTab} detail={detail} /> : null}
         </div>

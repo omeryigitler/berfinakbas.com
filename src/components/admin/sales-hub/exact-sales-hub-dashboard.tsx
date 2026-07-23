@@ -204,6 +204,29 @@ export default function ExactSalesHubDashboard({
     }
   }
 
+  async function completeAppointment(appointmentId: string) {
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/admin/appointments/${appointmentId}/status`, {
+        body: JSON.stringify({ reasonCode: "APPOINTMENT_COMPLETED", toStatus: "COMPLETED" }),
+        headers: {
+          "content-type": "application/json",
+          "x-correlation-id": crypto.randomUUID(),
+        },
+        method: "PATCH",
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      if (selectedId) await loadDetail(selectedId);
+      onChanged();
+      setToast("Seans tamamlandı olarak işaretlendi.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Seans tamamlanamadı.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function openAppointmentRoute() {
     if (!detail) return;
     router.push(`/yonetim/randevular?clientId=${encodeURIComponent(detail.id)}` as Route);
@@ -270,6 +293,7 @@ export default function ExactSalesHubDashboard({
             detail={detail}
             detailLoading={detailLoading}
             onBack={() => router.back()}
+            onCompleteAppointment={(appointmentId) => void completeAppointment(appointmentId)}
             onDeactivate={() => setDeactivateOpen(true)}
             onEdit={() => setEditOpen(true)}
             onNewAppointment={openAppointmentRoute}

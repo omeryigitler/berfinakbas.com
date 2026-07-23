@@ -14,9 +14,14 @@ export interface SalesHubClientDetailView {
   balance: SalesHubBalance;
   completedAppointments: number;
   displayName: string;
+  hasOpenBalance: boolean;
   initials: string;
   nextAppointment: ClientDetail["nextAppointment"];
+  openBalanceLabel: string;
+  paidLabel: string;
+  planTotalLabel: string;
   processIndex: number;
+  remainingSessions: number;
   scoreTitle: string;
 }
 
@@ -32,13 +37,11 @@ export function calculateClientBalance(detail: ClientDetail): SalesHubBalance {
   let amountMinor = 0n;
   let currency = detail.financeEntries[0]?.currency ?? detail.plans[0]?.currency ?? "TRY";
 
+  // Ledger amounts are stored signed: accruals positive, payments negative.
+  // The open balance is therefore the plain signed sum, clamped at zero.
   for (const entry of detail.financeEntries) {
-    const value = BigInt(entry.amountMinor);
     currency = entry.currency || currency;
-    if (entry.type === "ACCRUAL") amountMinor += value;
-    if (entry.type === "PAYMENT") amountMinor -= value;
-    if (entry.type === "REFUND") amountMinor += value;
-    if (entry.type === "ADJUSTMENT") amountMinor += value;
+    amountMinor += BigInt(entry.amountMinor);
   }
 
   return { amountMinor: amountMinor > 0n ? amountMinor : 0n, currency };
@@ -65,9 +68,14 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
     balance: calculateClientBalance(detail),
     completedAppointments,
     displayName: `${detail.firstName} ${detail.lastName}`.trim(),
+    hasOpenBalance: detail.financeSummary.hasOpenBalance,
     initials: getDashboardInitials(detail.firstName, detail.lastName),
     nextAppointment: detail.nextAppointment,
+    openBalanceLabel: detail.financeSummary.openBalanceLabel,
+    paidLabel: detail.financeSummary.paidLabel,
+    planTotalLabel: detail.financeSummary.planTotalLabel,
     processIndex,
+    remainingSessions: detail.financeSummary.remainingSessions,
     scoreTitle:
       detail.score >= 80
         ? "Kapsamlı Gelişim"

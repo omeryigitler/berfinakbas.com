@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { hasPermission } from "@/domain/auth/permissions";
+import { buildClientProfileFinanceSummary } from "@/domain/clients/client-profile-summary";
+import { calculateLedgerBalance } from "@/domain/finance/finance-operations";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
@@ -124,8 +126,10 @@ export async function GET(_request: Request, context: RouteContext) {
         select: {
           currency: true,
           id: true,
+          ledgerEntries: { select: { amountMinor: true } },
           name: true,
           sessionCount: true,
+          sessionCreditEntries: { select: { quantityDelta: true } },
           sessionDurationMinutes: true,
           status: true,
           totalAmountMinor: true,
@@ -161,6 +165,24 @@ export async function GET(_request: Request, context: RouteContext) {
       Math.min(client.notes.length * 3, 15),
   );
 
+  const plans = client.plans.map(({ ledgerEntries, sessionCreditEntries, ...plan }) => ({
+    ...plan,
+    balanceMinor: calculateLedgerBalance(ledgerEntries).toString(),
+    remainingSessions: sessionCreditEntries
+      .reduce((total, entry) => total + entry.quantityDelta, 0)
+      .toString(),
+    totalAmountMinor: plan.totalAmountMinor.toString(),
+  }));
+  const financeSummary = buildClientProfileFinanceSummary(
+    plans.map((plan) => ({
+      balanceMinor: plan.balanceMinor,
+      currency: plan.currency,
+      remainingSessions: plan.remainingSessions,
+      status: plan.status,
+      totalAmountMinor: plan.totalAmountMinor,
+    })),
+  );
+
   return NextResponse.json(
     {
       data: {
@@ -169,11 +191,9 @@ export async function GET(_request: Request, context: RouteContext) {
           ...entry,
           amountMinor: entry.amountMinor.toString(),
         })),
+        financeSummary,
         nextAppointment,
-        plans: client.plans.map((plan) => ({
-          ...plan,
-          totalAmountMinor: plan.totalAmountMinor.toString(),
-        })),
+        plans,
         score,
       },
     },

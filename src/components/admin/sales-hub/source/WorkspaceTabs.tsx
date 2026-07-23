@@ -116,8 +116,8 @@ export default function WorkspaceTabs({ activeTab, detail }: WorkspaceTabsProps)
           <div className={styles.listItem} key={plan.id}>
             <strong>{plan.name}</strong>
             <span>
-              {plan.sessionCount} seans · {plan.sessionDurationMinutes} dk ·{" "}
-              {formatDashboardMoney(BigInt(plan.totalAmountMinor), plan.currency)}
+              {plan.remainingSessions}/{plan.sessionCount} seans · {plan.sessionDurationMinutes} dk
+              · {formatDashboardMoney(BigInt(plan.totalAmountMinor), plan.currency)}
             </span>
             <small>
               {formatDashboardDate(plan.validFrom)} – {formatDashboardDate(plan.validUntil)} ·{" "}

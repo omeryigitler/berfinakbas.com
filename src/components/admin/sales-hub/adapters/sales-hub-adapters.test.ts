@@ -46,14 +46,10 @@ describe("Sales Hub client list adapter", () => {
     };
 
     expect(
-      filterAndSortClientList([client, child], "CHILD", "", "updated").map(
-        (item) => item.id,
-      ),
+      filterAndSortClientList([client, child], "CHILD", "", "updated").map((item) => item.id),
     ).toEqual(["client-2"]);
     expect(
-      filterAndSortClientList([client, child], "ALL", "berfin", "name").map(
-        (item) => item.id,
-      ),
+      filterAndSortClientList([client, child], "ALL", "berfin", "name").map((item) => item.id),
     ).toEqual(["client-1"]);
   });
 });
@@ -78,7 +74,7 @@ describe("Sales Hub finance adapter", () => {
           type: "ACCRUAL",
         },
         {
-          amountMinor: "200000",
+          amountMinor: "-200000",
           currency: "TRY",
           externalReference: null,
           id: "entry-2",
@@ -89,6 +85,13 @@ describe("Sales Hub finance adapter", () => {
           type: "PAYMENT",
         },
       ],
+      financeSummary: {
+        hasOpenBalance: true,
+        openBalanceLabel: "₺3.000,00",
+        paidLabel: "₺2.000,00",
+        planTotalLabel: "₺5.000,00",
+        remainingSessions: 0,
+      },
       firstName: "Berfin",
       guardians: [],
       id: "client-1",
