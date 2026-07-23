@@ -144,6 +144,33 @@ workspacePanelSource = replaceRequired(
 );
 workspacePanelSource = replaceRequired(
   workspacePanelSource,
+  `      if (selectedLeadId === 'bugunun-ozeti' || selectedLeadId === 'siradaki-randevular') {`,
+  `      if (selectedLeadId === 'bugunun-ozeti') {`,
+  "Remove duplicate upcoming appointments workspace",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100/60 px-3.5 py-1.5 rounded-full shadow-xs">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="text-[10px] text-emerald-800 font-black uppercase tracking-wider">4 Seans Aktif</span>
+              </div>`,
+  ``,
+  "Remove hardcoded active appointment count",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `                      {/* Interactive Mail / Phone / Video pill based on type */}
+                      <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition-all cursor-pointer shadow-2xs">
+                        {app.type === 'Online' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                      </div>
+
+`,
+  ``,
+  "Remove decorative meeting type icons",
+);
+workspacePanelSource = workspacePanelSource.replace("Ban, Video, MapPin, CalendarCheck", "Ban, CalendarCheck");
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
   `        const todayAppointments = [
           { name: 'Gabriela Christiansen', time: '09:30', service: 'Diyet ve Beslenme', duration: '50 dk', type: 'Online', status: 'Tamamlandı', payment: 'Ödendi', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face' },
           { name: 'Halle Griffiths', time: '11:15', service: 'Bireysel Yaşam Koçluğu', duration: '60 dk', type: 'Yüz Yüze', status: 'Tamamlandı', payment: 'Ödendi', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face' },
@@ -172,6 +199,48 @@ workspacePanelSource = replaceRequired(
 );
 workspacePanelSource = workspacePanelSource.replaceAll("Ömer Yiğitler", "Berfin Akbaş").replaceAll("Ömer YİĞİTLER", "Berfin Akbaş").replaceAll("ÖMER YİĞİTLER", "Berfin Akbaş");
 await writeFile(workspacePanelPath, workspacePanelSource, "utf-8");
+
+const myWorkPanelPath = path.join(workspace, "src/components/MyWorkPanel.tsx");
+let myWorkPanelSource = await readFile(myWorkPanelPath, "utf-8");
+myWorkPanelSource = replaceRequired(
+  myWorkPanelSource,
+  `    {
+      id: 'siradaki-randevular',
+      name: 'Sıradaki Randevular',
+      avatar: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=150&h=150&fit=crop',
+      role: 'Yaklaşan Seans Zamanları',
+      score: 88,
+      date: 'Sıradaki',
+      type: 'custom',
+      category: 'Program',
+      scoreBg: 'bg-[#fffbeb]',
+      scoreText: 'text-amber-600',
+      badgeBorder: 'border-amber-100'
+    },
+`,
+  ``,
+  "Remove duplicate upcoming appointments navigation item",
+);
+myWorkPanelSource = replaceRequired(
+  myWorkPanelSource,
+  `    {
+      id: 'danisan-ozeti',
+      name: 'Danışan Özeti',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
+      role: 'Aktif, Yeni ve Potansiyel Durumları',
+      score: 85,
+      date: 'Genel',
+      type: 'custom',
+      category: 'Danışanlar',
+      scoreBg: 'bg-indigo-50',
+      scoreText: 'text-indigo-600',
+      badgeBorder: 'border-indigo-100'
+    },
+`,
+  ``,
+  "Remove hardcoded client summary navigation item",
+);
+await writeFile(myWorkPanelPath, myWorkPanelSource, "utf-8");
 
 const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
 const sidebarSource = await readFile(sidebarPath, "utf-8");
