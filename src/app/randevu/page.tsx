@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { PublicBookingFlow } from "@/components/booking/public-booking-flow";
+import { PublicBookingFlowV2 } from "@/components/booking/public-booking-flow-v2";
 import { SiteFooter, SiteHeader } from "@/components/public-shell";
 import { getServerEnvironment } from "@/lib/env";
 
@@ -25,7 +25,7 @@ export default function BookingPage() {
   return (
     <main className="inner-page">
       <SiteHeader />
-      <PublicBookingFlow initiallyEnabled={initiallyEnabled} />
+      <PublicBookingFlowV2 initiallyEnabled={initiallyEnabled} />
       <SiteFooter />
     </main>
   );
