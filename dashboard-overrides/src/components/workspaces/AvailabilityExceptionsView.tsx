@@ -1,8 +1,12 @@
+import { useState } from 'react';
+import { CustomDatePicker, CustomSelect } from './CustomControls';
 import { EmptyState, formatDate, normalized, type ModuleViewsProps } from './shared';
 
 export default function AvailabilityExceptionsView({ props, controller }: { props: ModuleViewsProps; controller: any }) {
   const { data, selectedItemId, filter, sortDirection } = props;
   const { exceptionOpen, setExceptionOpen, createException, toggleException, saving } = controller;
+  const [exceptionDate, setExceptionDate] = useState('');
+  const [exceptionType, setExceptionType] = useState('CLOSED');
   const allowedTypes = selectedItemId === 'ozel-saatler' ? ['CUSTOM_HOURS'] : ['CLOSED', 'BLOCKED'];
   const query = normalized(filter);
   const exceptions = [...(data.exceptions ?? [])]
@@ -12,22 +16,18 @@ export default function AvailabilityExceptionsView({ props, controller }: { prop
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="flex justify-end">
-        <button type="button" onClick={() => setExceptionOpen((value: boolean) => !value)} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">
-          + {selectedItemId === 'ozel-saatler' ? 'Özel saat ekle' : 'Kapalı zaman ekle'}
-        </button>
-      </div>
+      <div className="flex justify-end"><button type="button" onClick={() => setExceptionOpen((value: boolean) => !value)} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">+ {selectedItemId === 'ozel-saatler' ? 'Özel saat ekle' : 'Kapalı zaman ekle'}</button></div>
       {exceptionOpen && (
         <form onSubmit={createException} className="rounded-[2rem] border border-black/[0.07] bg-white/92 p-5">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Tarih</span><input type="date" name="date" required className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
-            {selectedItemId === 'kapali-zamanlar' && <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Tür</span><select name="type" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold"><option value="CLOSED">Tam gün kapalı</option><option value="BLOCKED">Saat aralığı kapalı</option></select></label>}
+            <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Tarih</span><input type="hidden" name="date" value={exceptionDate} /><CustomDatePicker value={exceptionDate} onChange={setExceptionDate} min={new Date().toISOString().slice(0, 10)} /></label>
+            {selectedItemId === 'kapali-zamanlar' && <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Tür</span><input type="hidden" name="type" value={exceptionType} /><CustomSelect value={exceptionType} onChange={setExceptionType} options={[{ value: 'CLOSED', label: 'Tam gün kapalı' }, { value: 'BLOCKED', label: 'Saat aralığı kapalı' }]} /></label>}
             <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Başlangıç</span><input type="time" name="start" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
             <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Bitiş</span><input type="time" name="end" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
             <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Sebep</span><input name="reasonCode" required defaultValue="MANUAL" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
             <label className="space-y-1.5 xl:col-span-2"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Özel not</span><textarea name="privateNote" maxLength={500} className="min-h-20 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-semibold" /></label>
           </div>
-          <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setExceptionOpen(false)} className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-[10px] font-bold text-gray-600">Vazgeç</button><button type="submit" disabled={saving} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8] disabled:opacity-50">Kaydet</button></div>
+          <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setExceptionOpen(false)} className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-[10px] font-bold text-gray-600">Vazgeç</button><button type="submit" disabled={saving || !exceptionDate} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8] disabled:opacity-50">Kaydet</button></div>
         </form>
       )}
       {exceptions.length === 0 ? <EmptyState title="Kayıt bulunamadı" text="Bu görünüm için özel veya kapalı zaman kaydı bulunmuyor." /> : (

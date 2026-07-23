@@ -13,16 +13,59 @@ export async function readOperationModule(session: ActiveSession, module: string
     const statuses = module === 'talepler-iletisim'
       ? ['REQUESTED', 'PENDING_REVIEW', 'RESCHEDULE_PROPOSED'] as const
       : ['REQUESTED', 'PENDING_REVIEW', 'CONFIRMED', 'RESCHEDULE_PROPOSED', 'COMPLETED', 'NO_SHOW', 'CANCELLED_BY_CLIENT', 'CANCELLED_BY_PRACTITIONER'] as const;
-    const appointments = await database.appointment.findMany({
-      orderBy: [{ startsAt: 'asc' }, { createdAt: 'desc' }],
-      select: appointmentSelect(),
-      take: 250,
-      where: { ...accessWhere, status: { in: [...statuses] } },
+
+    const [appointments, practitioner, clients, services, settings] = await Promise.all([
+      database.appointment.findMany({
+        orderBy: [{ startsAt: 'asc' }, { createdAt: 'desc' }],
+        select: appointmentSelect(),
+        take: 250,
+        where: { ...accessWhere, status: { in: [...statuses] } },
+      }),
+      module === 'randevular' ? resolvePractitioner(session) : null,
+      module === 'randevular' && can(session, 'clients:read')
+        ? database.client.findMany({
+            orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+            select: {
+              firstName: true,
+              guardians: {
+                orderBy: { isPrimary: 'desc' },
+                select: {
+                  guardianId: true,
+                  isPrimary: true,
+                  guardian: { select: { firstName: true, lastName: true } },
+                },
+              },
+              id: true,
+              lastName: true,
+              status: true,
+              type: true,
+            },
+            take: 500,
+            where: { status: { in: ['ACTIVE', 'PROSPECTIVE'] } },
+          })
+        : [],
+      module === 'randevular' && can(session, 'services:read')
+        ? database.service.findMany({
+            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+            select: { defaultDurationMinutes: true, id: true, locationType: true, name: true, status: true },
+            where: { status: 'ACTIVE' },
+          })
+        : [],
+      module === 'talepler-iletisim'
+        ? readSettings(['MESSAGE_TEMPLATES', 'COMMUNICATION_CONSENTS'])
+        : Promise.resolve({}),
+    ]);
+
+    return NextResponse.json({
+      data: {
+        appointments,
+        clients,
+        practitioner,
+        services,
+        settings,
+        timeZone: practitioner?.timeZone ?? 'Europe/Malta',
+      },
     });
-    const settings = module === 'talepler-iletisim'
-      ? await readSettings(['MESSAGE_TEMPLATES', 'COMMUNICATION_CONSENTS'])
-      : {};
-    return NextResponse.json({ data: { appointments, settings } });
   }
 
   if (module === 'takvim-uygunluk') {
@@ -56,11 +99,18 @@ export async function readOperationModule(session: ActiveSession, module: string
       orderBy: { createdAt: 'desc' },
       select: {
         client: { select: { firstName: true, id: true, lastName: true } },
-        createdAt: true, currency: true, id: true,
+        createdAt: true,
+        currency: true,
+        id: true,
         installments: { orderBy: { sequence: 'asc' }, select: { amountDueMinor: true, dueDate: true, id: true, sequence: true } },
         ledgerEntries: { orderBy: { occurredAt: 'desc' }, select: { amountMinor: true, id: true, occurredAt: true, type: true }, take: 100 },
-        name: true, sessionCount: true, sessionDurationMinutes: true, status: true,
-        totalAmountMinor: true, validFrom: true, validUntil: true,
+        name: true,
+        sessionCount: true,
+        sessionDurationMinutes: true,
+        status: true,
+        totalAmountMinor: true,
+        validFrom: true,
+        validUntil: true,
       },
       take: 250,
     });

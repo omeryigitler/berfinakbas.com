@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 export const moduleSchema = z.enum([
+  'ana-panel',
+  'danisanlar',
   'randevular',
   'takvim-uygunluk',
   'talepler-iletisim',
@@ -29,6 +31,8 @@ export const settingKeys = [
 export const settingKeySchema = z.enum(settingKeys);
 
 export const actionSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('SEED_DEMO_DATA') }),
+  z.object({ action: z.literal('CLEAN_DEMO_DATA') }),
   z.object({
     action: z.literal('SAVE_AVAILABILITY_RULES'),
     rules: z.array(z.object({

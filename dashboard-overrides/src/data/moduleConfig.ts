@@ -1,32 +1,38 @@
-export interface ModuleItem {
-  id: string;
-  label: string;
-  description: string;
-}
-
-export interface ModuleGroup {
-  title: string;
-  items: ModuleItem[];
-}
-
-export interface ModuleConfig {
-  title: string;
-  subtitle: string;
-  groups: ModuleGroup[];
-}
+export interface ModuleItem { id: string; label: string; description: string }
+export interface ModuleGroup { title: string; items: ModuleItem[] }
+export interface ModuleConfig { title: string; subtitle: string; groups: ModuleGroup[] }
 
 const configs: Record<string, ModuleConfig> = {
+  'ana-panel': {
+    title: 'Ana Panel',
+    subtitle: 'Gerçek danışan, randevu, talep ve finans verilerinin operasyon özeti.',
+    groups: [{ title: 'Özetler', items: [
+      { id: 'genel-bakis', label: 'Genel Bakış', description: 'Güncel operasyon metrikleri.' },
+      { id: 'bugunun-ozeti', label: 'Bugünün Özeti', description: 'Bugünkü randevular ve aktif işlemler.' },
+      { id: 'bekleyen-islemler', label: 'Bekleyen İşlemler', description: 'Aksiyon bekleyen talepler ve kayıtlar.' },
+      { id: 'finans-ozeti', label: 'Finans Özeti', description: 'Plan, seans ve açık bakiye özeti.' },
+    ] }],
+  },
+  danisanlar: {
+    title: 'Danışanlar',
+    subtitle: 'Yetişkin, çocuk, potansiyel, aktif ve borçlu danışan kayıtları.',
+    groups: [{ title: 'Görünümler', items: [
+      { id: 'liste', label: 'Tüm Danışanlar', description: 'Tüm gerçek danışan kayıtları.' },
+      { id: 'aktif', label: 'Aktif Danışanlar', description: 'Aktif süreçteki danışanlar.' },
+      { id: 'potansiyel', label: 'Potansiyel Danışanlar', description: 'Henüz aktifleşmemiş kayıtlar.' },
+      { id: 'cocuklar', label: 'Çocuk Danışanlar', description: 'Veli bağlantılı çocuk kayıtları.' },
+      { id: 'borclular', label: 'Açık Bakiyesi Olanlar', description: 'Net açık bakiyesi bulunan danışanlar.' },
+    ] }],
+  },
   randevular: {
-    title: 'Randevular',
-    subtitle: 'Randevu kayıtlarını liste veya takvim üzerinden yönetin.',
+    title: 'Randevular', subtitle: 'Randevu kayıtlarını liste veya takvim üzerinden yönetin.',
     groups: [{ title: 'Görünümler', items: [
       { id: 'liste', label: 'Randevu Listesi', description: 'Talep, onay ve yaklaşan randevular.' },
       { id: 'takvim', label: 'Takvim', description: 'Randevuları günlere göre görüntüleyin.' },
     ] }],
   },
   'takvim-uygunluk': {
-    title: 'Takvim ve Uygunluk',
-    subtitle: 'Çalışma saatleri, istisnalar ve rezervasyon kuralları.',
+    title: 'Takvim ve Uygunluk', subtitle: 'Çalışma saatleri, istisnalar ve rezervasyon kuralları.',
     groups: [
       { title: 'Takvim', items: [
         { id: 'takvim', label: 'Takvim', description: 'Randevu ve uygunluk takvimi.' },
@@ -42,8 +48,7 @@ const configs: Record<string, ModuleConfig> = {
     ],
   },
   'talepler-iletisim': {
-    title: 'Talepler ve İletişim',
-    subtitle: 'Başvurular, iletişim izinleri ve mesaj operasyonları.',
+    title: 'Talepler ve İletişim', subtitle: 'Başvurular, iletişim izinleri ve mesaj operasyonları.',
     groups: [{ title: 'Talepler', items: [
       { id: 'talepler', label: 'Talepler', description: 'Yeni ve inceleme bekleyen başvurular.' },
       { id: 'mesaj-sablonlari', label: 'Mesaj Şablonları', description: 'Hazır iletişim metinleri.' },
@@ -52,15 +57,11 @@ const configs: Record<string, ModuleConfig> = {
     ] }],
   },
   hizmetler: {
-    title: 'Hizmetler',
-    subtitle: 'Hizmetleri, süreleri, görünürlüğü ve rezervasyon politikalarını yönetin.',
-    groups: [{ title: 'Hizmetler', items: [
-      { id: 'hizmetler', label: 'Hizmet Listesi', description: 'Aktif, taslak ve pasif hizmetler.' },
-    ] }],
+    title: 'Hizmetler', subtitle: 'Hizmetleri, süreleri, görünürlüğü ve rezervasyon politikalarını yönetin.',
+    groups: [{ title: 'Hizmetler', items: [{ id: 'hizmetler', label: 'Hizmet Listesi', description: 'Aktif, taslak ve pasif hizmetler.' }] }],
   },
   'odeme-planlar': {
-    title: 'Ödeme ve Planlar',
-    subtitle: 'Danışan planları, taksitler ve ödeme hareketleri.',
+    title: 'Ödeme ve Planlar', subtitle: 'Danışan planları, taksitler ve ödeme hareketleri.',
     groups: [{ title: 'Finans', items: [
       { id: 'finans-ozeti', label: 'Finans Özeti', description: 'Bakiye, tahsilat ve geciken ödemeler.' },
       { id: 'planlar', label: 'Planlar', description: 'Danışan planları ve seans hakları.' },
@@ -68,8 +69,7 @@ const configs: Record<string, ModuleConfig> = {
     ] }],
   },
   'pdf-kaynaklar': {
-    title: 'PDF ve Kaynaklar',
-    subtitle: 'Kaynak metadata, yayın durumu ve gönderim ayarları.',
+    title: 'PDF ve Kaynaklar', subtitle: 'Kaynak metadata, yayın durumu ve gönderim ayarları.',
     groups: [{ title: 'Kaynaklar', items: [
       { id: 'pdfler', label: 'PDF ve Kaynaklar', description: 'Yayınlanan ve taslak kaynaklar.' },
       { id: 'talep-kayitlari', label: 'Talep Kayıtları', description: 'Kaynak talep ve gönderim kayıtları.' },
@@ -77,15 +77,11 @@ const configs: Record<string, ModuleConfig> = {
     ] }],
   },
   'site-icerigi': {
-    title: 'İletişim ve Sosyal Medya',
-    subtitle: 'FAB menüsü, bağlantılar, görünürlük ve sıralama.',
-    groups: [{ title: 'Yönetim', items: [
-      { id: 'iletisim-ayarlari', label: 'Tüm İletişim Ayarları', description: 'WhatsApp, Instagram, telefon ve e-posta.' },
-    ] }],
+    title: 'İletişim ve Sosyal Medya', subtitle: 'FAB menüsü, bağlantılar, görünürlük ve sıralama.',
+    groups: [{ title: 'Yönetim', items: [{ id: 'iletisim-ayarlari', label: 'Tüm İletişim Ayarları', description: 'WhatsApp, Instagram, telefon ve e-posta.' }] }],
   },
   raporlar: {
-    title: 'Raporlar',
-    subtitle: 'Canlı verilerden üretilen operasyon ve finans raporları.',
+    title: 'Raporlar', subtitle: 'Canlı verilerden üretilen operasyon ve finans raporları.',
     groups: [{ title: 'Raporlar', items: [
       { id: 'finans', label: 'Finans', description: 'Tahsilat ve açık bakiye.' },
       { id: 'randevular', label: 'Randevular', description: 'Durum ve zaman dağılımı.' },
@@ -95,8 +91,7 @@ const configs: Record<string, ModuleConfig> = {
     ] }],
   },
   'kullanicilar-yetkiler': {
-    title: 'Kullanıcılar ve Yetkiler',
-    subtitle: 'Yönetim hesapları, roller ve erişim geçmişi.',
+    title: 'Kullanıcılar ve Yetkiler', subtitle: 'Yönetim hesapları, roller ve erişim geçmişi.',
     groups: [{ title: 'Erişim', items: [
       { id: 'kullanicilar', label: 'Kullanıcılar', description: 'Aktif ve askıya alınmış hesaplar.' },
       { id: 'roller', label: 'Roller ve Yetkiler', description: 'Rol atamaları ve yetki kapsamı.' },
@@ -104,8 +99,7 @@ const configs: Record<string, ModuleConfig> = {
     ] }],
   },
   ayarlar: {
-    title: 'Ayarlar',
-    subtitle: 'İşletme, randevu, bildirim ve veri politikaları.',
+    title: 'Ayarlar', subtitle: 'İşletme, randevu, bildirim ve veri politikaları.',
     groups: [{ title: 'Genel', items: [
       { id: 'isletme', label: 'İşletme', description: 'Terapist ve işletme bilgileri.' },
       { id: 'randevu', label: 'Randevu', description: 'Varsayılan randevu ayarları.' },
@@ -116,8 +110,7 @@ const configs: Record<string, ModuleConfig> = {
     ] }],
   },
   arsiv: {
-    title: 'Arşiv',
-    subtitle: 'Pasif kayıtlar, geri yükleme ve işlem geçmişi.',
+    title: 'Arşiv', subtitle: 'Pasif kayıtlar, geri yükleme ve işlem geçmişi.',
     groups: [{ title: 'Arşiv', items: [
       { id: 'arsivlenenler', label: 'Arşivlenen Kayıtlar', description: 'Pasif danışan ve hizmetler.' },
       { id: 'islem-gecmisi', label: 'İşlem Geçmişi', description: 'Son yönetim işlemleri.' },
@@ -125,16 +118,6 @@ const configs: Record<string, ModuleConfig> = {
   },
 };
 
-export function getModuleConfig(activeMenuItem: string): ModuleConfig | null {
-  return configs[activeMenuItem] ?? null;
-}
-
-export function getDefaultModuleItemId(activeMenuItem: string): string {
-  return getModuleConfig(activeMenuItem)?.groups[0]?.items[0]?.id ?? '';
-}
-
-export function findModuleItem(activeMenuItem: string, id: string): ModuleItem | null {
-  const config = getModuleConfig(activeMenuItem);
-  if (!config) return null;
-  return config.groups.flatMap((group) => group.items).find((item) => item.id === id) ?? null;
-}
+export function getModuleConfig(activeMenuItem: string): ModuleConfig | null { return configs[activeMenuItem] ?? null; }
+export function getDefaultModuleItemId(activeMenuItem: string): string { return getModuleConfig(activeMenuItem)?.groups[0]?.items[0]?.id ?? ''; }
+export function findModuleItem(activeMenuItem: string, id: string): ModuleItem | null { return getModuleConfig(activeMenuItem)?.groups.flatMap((group) => group.items).find((item) => item.id === id) ?? null; }

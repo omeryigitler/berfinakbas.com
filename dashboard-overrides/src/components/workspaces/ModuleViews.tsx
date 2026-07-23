@@ -1,6 +1,8 @@
 import AppointmentsView from './AppointmentsView';
 import AvailabilityView from './AvailabilityView';
+import DemoDataControls from './DemoDataControls';
 import { FinanceView, PdfView } from './FinancePdfViews';
+import { OverviewView, ClientsView } from './OverviewClientsViews';
 import { RequestsView, ServicesView } from './RequestsServicesViews';
 import { ArchiveView, ReportsView, SettingsView, UsersView } from './SystemViews';
 import { EmptyState, LoadingGrid, type ModuleViewsProps } from './shared';
@@ -8,6 +10,10 @@ import { EmptyState, LoadingGrid, type ModuleViewsProps } from './shared';
 export default function ModuleViews(props: ModuleViewsProps) {
   if (props.loading) return <LoadingGrid />;
   switch (props.activeMenuItem) {
+    case 'ana-panel':
+      return <>{props.selectedItemId === 'genel-bakis' ? <DemoDataControls {...props} /> : null}<OverviewView {...props} /></>;
+    case 'danisanlar':
+      return <ClientsView {...props} />;
     case 'randevular':
       return <AppointmentsView {...props} />;
     case 'takvim-uygunluk':
@@ -29,6 +35,6 @@ export default function ModuleViews(props: ModuleViewsProps) {
     case 'arsiv':
       return <ArchiveView {...props} />;
     default:
-      return <EmptyState title="Çalışma alanı bulunamadı" text="Bu modül yeni mimariye henüz kaydedilmedi." />;
+      return <EmptyState title="Çalışma alanı bulunamadı" text="Bu modül yönetim mimarisine kayıtlı değil." />;
   }
 }

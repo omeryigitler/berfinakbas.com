@@ -1,15 +1,13 @@
-import { cloneElement } from 'react';
+import { cloneElement, useEffect, useState } from 'react';
 import { FileText } from 'lucide-react';
-import type {
-  InputHTMLAttributes,
-  ReactElement,
-  SelectHTMLAttributes,
-} from 'react';
+import type { InputHTMLAttributes, ReactElement } from 'react';
+import { CustomDatePicker, CustomSelect } from '../CustomControls';
 import type { WorkspaceToast } from './WorkspaceFrame';
 
 export interface ModuleViewsProps {
   activeMenuItem: string;
   selectedItemId: string;
+  selectedRecordId: string | null;
   data: any;
   loading: boolean;
   filter: string;
@@ -26,7 +24,11 @@ export function normalized(value: unknown) {
   return text(value).toLocaleLowerCase('tr-TR');
 }
 
-export function formatDate(value: string | Date | null | undefined, withTime = false) {
+export function formatDate(
+  value: string | Date | null | undefined,
+  withTime = false,
+  timeZone = 'Europe/Malta',
+) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return text(value);
@@ -35,7 +37,7 @@ export function formatDate(value: string | Date | null | undefined, withTime = f
     month: 'short',
     year: 'numeric',
     ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}),
-    timeZone: 'Europe/Malta',
+    timeZone,
   }).format(date);
 }
 
@@ -52,6 +54,7 @@ export async function responseError(response: Response) {
 export async function postAction(body: unknown) {
   const response = await fetch('/api/admin/management-hub', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'content-type': 'application/json',
       'x-correlation-id': crypto.randomUUID(),
@@ -86,9 +89,7 @@ export const transitionLabels: Record<AppointmentTransition, string> = {
 export function allowedTransitions(status: string): AppointmentTransition[] {
   if (status === 'REQUESTED') return ['PENDING_REVIEW'];
   if (status === 'PENDING_REVIEW') return ['CONFIRMED', 'REJECTED', 'RESCHEDULE_PROPOSED'];
-  if (status === 'CONFIRMED') {
-    return ['COMPLETED', 'NO_SHOW', 'RESCHEDULE_PROPOSED', 'CANCELLED_BY_PRACTITIONER'];
-  }
+  if (status === 'CONFIRMED') return ['COMPLETED', 'NO_SHOW', 'RESCHEDULE_PROPOSED', 'CANCELLED_BY_PRACTITIONER'];
   if (status === 'RESCHEDULE_PROPOSED') return ['CONFIRMED', 'REJECTED', 'CANCELLED_BY_CLIENT'];
   return [];
 }
@@ -102,41 +103,22 @@ export async function transitionAppointment(
   try {
     const response = await fetch(`/api/admin/appointments/${appointment.id}/status`, {
       method: 'PATCH',
+      credentials: 'include',
       headers: {
         'content-type': 'application/json',
         'x-correlation-id': crypto.randomUUID(),
       },
-      body: JSON.stringify({
-        toStatus,
-        reasonCode: `ADMIN_${toStatus}`,
-        note: null,
-      }),
+      body: JSON.stringify({ toStatus, reasonCode: `ADMIN_${toStatus}`, note: null }),
     });
     if (!response.ok) throw new Error(await responseError(response));
-    notify({
-      kind: 'success',
-      title: 'Randevu durumu güncellendi',
-      message: `${appointment.publicReference} · ${transitionLabels[toStatus]}`,
-    });
+    notify({ kind: 'success', title: 'Randevu durumu güncellendi', message: `${appointment.publicReference} · ${transitionLabels[toStatus]}` });
     await refresh();
   } catch (error) {
-    notify({
-      kind: 'error',
-      title: 'Randevu güncellenemedi',
-      message: error instanceof Error ? error.message : 'Beklenmeyen hata.',
-    });
+    notify({ kind: 'error', title: 'Randevu güncellenemedi', message: error instanceof Error ? error.message : 'Beklenmeyen hata.' });
   }
 }
 
-export function AppointmentActions({
-  appointment,
-  refresh,
-  notify,
-}: {
-  appointment: any;
-  refresh: () => Promise<void>;
-  notify: (toast: Omit<WorkspaceToast, 'id'>) => void;
-}) {
+export function AppointmentActions({ appointment, refresh, notify }: { appointment: any; refresh: () => Promise<void>; notify: (toast: Omit<WorkspaceToast, 'id'>) => void }) {
   const actions = allowedTransitions(appointment.status);
   if (actions.length === 0) return null;
   return (
@@ -162,26 +144,16 @@ export function AppointmentActions({
 }
 
 export function LoadingGrid() {
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      {[0, 1, 2, 3].map((item) => (
-        <div key={item} className="h-40 animate-pulse rounded-[2rem] border border-black/[0.05] bg-white/65" />
-      ))}
-    </div>
-  );
+  return <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">{[0, 1, 2, 3].map((item) => <div key={item} className="h-40 animate-pulse rounded-[2rem] border border-black/[0.05] bg-white/65" />)}</div>;
 }
 
 export function EmptyState({ title, text: description }: { title: string; text: string }) {
   return (
     <div className="grid min-h-[280px] place-items-center rounded-[2rem] border border-dashed border-black/10 bg-white/60 p-8 text-center">
       <div>
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-black text-[#eafda8]">
-          <FileText className="h-5 w-5" />
-        </div>
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-black text-[#eafda8]"><FileText className="h-5 w-5" /></div>
         <h3 className="mt-4 text-[14px] font-black text-gray-950">{title}</h3>
-        <p className="mx-auto mt-2 max-w-md text-[10px] font-semibold leading-relaxed text-gray-500">
-          {description}
-        </p>
+        <p className="mx-auto mt-2 max-w-md text-[10px] font-semibold leading-relaxed text-gray-500">{description}</p>
       </div>
     </div>
   );
@@ -189,42 +161,21 @@ export function EmptyState({ title, text: description }: { title: string; text: 
 
 export function StatusPill({ value }: { value: string }) {
   const positive = ['ACTIVE', 'CONFIRMED', 'COMPLETED', 'PUBLISHED', 'SENT', 'GRANTED'].includes(value);
-  const warning = ['REQUESTED', 'PENDING_REVIEW', 'RESCHEDULE_PROPOSED', 'PENDING', 'DRAFT'].includes(value);
-  return (
-    <span
-      className={`rounded-full border px-2.5 py-1 text-[8px] font-black ${
-        positive
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-          : warning
-            ? 'border-amber-200 bg-amber-50 text-amber-700'
-            : 'border-gray-200 bg-gray-50 text-gray-600'
-      }`}
-    >
-      {value}
-    </span>
-  );
+  const warning = ['REQUESTED', 'PENDING_REVIEW', 'RESCHEDULE_PROPOSED', 'PENDING', 'DRAFT', 'PROSPECTIVE'].includes(value);
+  return <span className={`rounded-full border px-2.5 py-1 text-[8px] font-black ${positive ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : warning ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>{value}</span>;
 }
 
 export function Field({ label, children }: { label: string; children: ReactElement<any> }) {
   return (
     <label className="block rounded-[1.25rem] border border-black/[0.05] bg-[#faf9f6] p-3.5">
       <span className="mb-2 block text-[8px] font-black uppercase tracking-[0.12em] text-gray-400">{label}</span>
-      {cloneElement(children, {
-        className:
-          'w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold text-gray-800 outline-none focus:border-black/25',
-      })}
+      {cloneElement(children, { className: 'w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold text-gray-800 outline-none focus:border-black/25' })}
     </label>
   );
 }
 
 export function Metric({ title, value, text: detail }: { title: string; value: string | number; text: string }) {
-  return (
-    <article className="rounded-[2rem] border border-black/[0.07] bg-white/82 p-5">
-      <span className="text-[8px] font-black uppercase tracking-[0.12em] text-gray-400">{title}</span>
-      <strong className="mt-3 block text-xl font-black text-gray-950">{value}</strong>
-      <span className="mt-1 block text-[9px] font-semibold text-gray-400">{detail}</span>
-    </article>
-  );
+  return <article className="rounded-[2rem] border border-black/[0.07] bg-white/82 p-5"><span className="text-[8px] font-black uppercase tracking-[0.12em] text-gray-400">{title}</span><strong className="mt-3 block text-xl font-black text-gray-950">{value}</strong><span className="mt-1 block text-[9px] font-semibold text-gray-400">{detail}</span></article>;
 }
 
 export function SimpleInput(props: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
@@ -232,8 +183,53 @@ export function SimpleInput(props: InputHTMLAttributes<HTMLInputElement> & { lab
   return <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span><input {...inputProps} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>;
 }
 
-export function SimpleSelect({ label, options, ...props }: SelectHTMLAttributes<HTMLSelectElement> & { label: string; options: Array<[string, string]> }) {
-  return <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span><select {...props} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold">{options.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select></label>;
+export function SimpleSelect({
+  defaultValue,
+  disabled,
+  label,
+  name,
+  onChange,
+  options,
+  required,
+  value,
+}: {
+  defaultValue?: string;
+  disabled?: boolean;
+  label: string;
+  name?: string;
+  onChange?: (event: { target: { value: string } }) => void;
+  options: any[];
+  required?: boolean;
+  value?: string | number | readonly string[];
+}) {
+  const controlled = value !== undefined;
+  const externalValue = Array.isArray(value) ? String(value[0] ?? '') : String(value ?? '');
+  const [internalValue, setInternalValue] = useState(defaultValue ?? options[0]?.[0] ?? '');
+  useEffect(() => {
+    if (controlled || options.some(([optionValue]) => optionValue === internalValue)) return;
+    setInternalValue(options[0]?.[0] ?? '');
+  }, [controlled, internalValue, options]);
+  const currentValue = controlled ? externalValue : internalValue;
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span>
+      {name ? <input name={name} type="hidden" value={currentValue} /> : null}
+      {required ? <input aria-hidden="true" className="pointer-events-none absolute h-px w-px opacity-0" readOnly required tabIndex={-1} value={currentValue} /> : null}
+      <CustomSelect
+        disabled={disabled}
+        value={currentValue}
+        onChange={(next) => {
+          if (!controlled) setInternalValue(next);
+          onChange?.({ target: { value: next } });
+        }}
+        options={options.map(([optionValue, optionLabel]) => ({ value: optionValue, label: optionLabel }))}
+      />
+    </label>
+  );
+}
+
+export function SimpleDatePicker({ label, value, onChange, min, max, disabled, name, required }: { label: string; value: string; onChange: (value: string) => void; min?: string; max?: string; disabled?: boolean; name?: string; required?: boolean }) {
+  return <label className="block space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span>{name ? <input name={name} type="hidden" value={value} /> : null}{required ? <input aria-hidden="true" className="pointer-events-none absolute h-px w-px opacity-0" readOnly required tabIndex={-1} value={value} /> : null}<CustomDatePicker disabled={disabled} min={min} max={max} value={value} onChange={onChange} /></label>;
 }
 
 export function Mini({ label, value }: { label: string; value: string }) {
