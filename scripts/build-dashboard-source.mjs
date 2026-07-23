@@ -69,8 +69,109 @@ let patchedApp = replaceRequired(
   };`,
   "Module selection keeps workspace open",
 );
+patchedApp = replaceRequired(
+  patchedApp,
+  `  const handleToggleCat = () => {`,
+  `  const handleOpenWorkspace = (menuItem: string, itemId: string) => {
+    setActiveMenuItem(menuItem);
+    setSelectedLeadId(itemId);
+    setShowOrta(true);
+    setShowSag(true);
+  };
+
+  const handleToggleCat = () => {`,
+  "Dashboard summary navigation handler",
+);
+patchedApp = replaceRequired(
+  patchedApp,
+  `                  onDeleteClient={handleDeleteClient}
+                />`,
+  `                  onDeleteClient={handleDeleteClient}
+                  onOpenWorkspace={handleOpenWorkspace}
+                />`,
+  "Dashboard summary navigation prop",
+);
 patchedApp = patchedApp.replaceAll("Ömer Yiğitler", "Berfin Akbaş").replaceAll("Ömer YİĞİTLER", "Berfin Akbaş").replaceAll("ÖMER YİĞİTLER", "Berfin Akbaş");
 await writeFile(appPath, patchedApp, "utf-8");
+
+const workspacePanelPath = path.join(workspace, "src/components/WorkspacePanel.tsx");
+let workspacePanelSource = await readFile(workspacePanelPath, "utf-8");
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `  onUpdateClientDetails: (id: string, updatedClient: ClientDetails) => void;
+  onDeleteClient: (id: string) => void;
+}`,
+  `  onUpdateClientDetails: (id: string, updatedClient: ClientDetails) => void;
+  onDeleteClient: (id: string) => void;
+  onOpenWorkspace?: (menuItem: string, itemId: string) => void;
+}`,
+  "Workspace summary navigation interface",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `  onUpdateClientDetails,
+  onDeleteClient
+}: WorkspacePanelProps) {`,
+  `  onUpdateClientDetails,
+  onDeleteClient,
+  onOpenWorkspace
+}: WorkspacePanelProps) {`,
+  "Workspace summary navigation parameter",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `              <div className="px-3.5 py-1.5 rounded-full bg-black text-[#eafda8] text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#eafda8] animate-ping" />
+                CANLI VERİ AKIŞI
+              </div>`,
+  ``,
+  "Remove fake live data badge",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `            {/* AI Recommendation Banner */}
+            <div className="border border-dashed border-gray-300 rounded-[2rem] p-5 bg-white/30 flex items-center gap-4 mt-auto">
+              <Sparkles className="w-8 h-8 text-[#a9df20] shrink-0 animate-pulse" />
+              <div>
+                <h3 className="text-xs font-black text-gray-900 uppercase tracking-tight">Yapay Zeka Önerisi</h3>
+                <p className="text-[11px] text-gray-500 font-semibold mt-0.5 leading-relaxed">
+                  Bugün seans doluluğunuz %80 seviyesinde. Finansal akışta bekleyen 4,500 TL'lik tahsilatı tamamlamak ve potansiyel olan 5 yeni adayı kazanmak için hızlı işlemlerden iletişime geçebilirsiniz.
+                </p>
+              </div>
+            </div>`,
+  ``,
+  "Remove fake AI recommendation",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `        const todayAppointments = [
+          { name: 'Gabriela Christiansen', time: '09:30', service: 'Diyet ve Beslenme', duration: '50 dk', type: 'Online', status: 'Tamamlandı', payment: 'Ödendi', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face' },
+          { name: 'Halle Griffiths', time: '11:15', service: 'Bireysel Yaşam Koçluğu', duration: '60 dk', type: 'Yüz Yüze', status: 'Tamamlandı', payment: 'Ödendi', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face' },
+          { name: 'Kemal Sayar', time: '14:00', service: 'Bireysel Psikoterapi', duration: '50 dk', type: 'Online', status: 'Sıradaki', payment: 'Bekleniyor', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' },
+          { name: 'Ayşe Yılmaz', time: '16:30', service: 'Kariyer Mentorluğu', duration: '45 dk', type: 'Yüz Yüze', status: 'Gelmedi', payment: 'Gecikmiş', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face' }
+        ];`,
+  `        const todayAppointments = [
+          { clientId: 'gabriela', name: 'Gabriela Christiansen', time: '09:30', service: 'Diyet ve Beslenme', duration: '50 dk', type: 'Online', status: 'Tamamlandı', payment: 'Ödendi', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face' },
+          { clientId: 'halle', name: 'Halle Griffiths', time: '11:15', service: 'Bireysel Yaşam Koçluğu', duration: '60 dk', type: 'Yüz Yüze', status: 'Tamamlandı', payment: 'Ödendi', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face' },
+          { clientId: 'kemal_sayar', name: 'Kemal Sayar', time: '14:00', service: 'Bireysel Psikoterapi', duration: '50 dk', type: 'Online', status: 'Sıradaki', payment: 'Bekleniyor', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' },
+          { clientId: 'ayse_yilmaz', name: 'Ayşe Yılmaz', time: '16:30', service: 'Kariyer Mentorluğu', duration: '45 dk', type: 'Yüz Yüze', status: 'Gelmedi', payment: 'Gecikmiş', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face' }
+        ];`,
+  "Link summary appointments to clients",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `                      onClick={() => alert(\`${'${app.name}'} için Randevu Kartı Detayları Açılıyor...\`)}`,
+  `                      onClick={() => onOpenWorkspace?.('randevular', 'liste')}`,
+  "Open appointment workspace from summary",
+);
+workspacePanelSource = replaceRequired(
+  workspacePanelSource,
+  `                      onClick={() => alert(\`${'${app.name}'} için Danışan Profili Yükleniyor...\`)}`,
+  `                      onClick={() => onOpenWorkspace?.('danisanlar', app.clientId)}`,
+  "Open client workspace from summary",
+);
+workspacePanelSource = workspacePanelSource.replaceAll("Ömer Yiğitler", "Berfin Akbaş").replaceAll("Ömer YİĞİTLER", "Berfin Akbaş").replaceAll("ÖMER YİĞİTLER", "Berfin Akbaş");
+await writeFile(workspacePanelPath, workspacePanelSource, "utf-8");
 
 const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
 const sidebarSource = await readFile(sidebarPath, "utf-8");
