@@ -51,7 +51,9 @@ export default function WorkspaceOverview({
   const planRemainingSessions = activePlan ? Number(activePlan.remainingSessions) : 0;
   const planUsedSessions = Math.max(0, planTotalSessions - planRemainingSessions);
   const planProgress =
-    planTotalSessions > 0 ? Math.round((planUsedSessions / planTotalSessions) * 100) : 0;
+    planTotalSessions > 0
+      ? Math.min(100, Math.round((planUsedSessions / planTotalSessions) * 100))
+      : 0;
   const planProgressTitle = !activePlan
     ? "Aktif plan yok"
     : planProgress >= 100
