@@ -16,6 +16,7 @@ export interface SalesHubClientDetailView {
   displayName: string;
   hasOpenBalance: boolean;
   initials: string;
+  lastVisit: ClientDetail["appointments"][number] | null;
   nextAppointment: ClientDetail["nextAppointment"];
   openBalanceLabel: string;
   paidLabel: string;
@@ -53,11 +54,15 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
   const completedAppointments = detail.appointments.filter(
     (appointment) => appointment.status === "COMPLETED",
   ).length;
+  const now = Date.now();
   const createdAt = new Date(detail.createdAt).getTime();
   const activeDays = Number.isNaN(createdAt)
     ? 0
-    : Math.max(0, Math.floor((Date.now() - createdAt) / 86_400_000));
+    : Math.max(0, Math.floor((now - createdAt) / 86_400_000));
   const age = detail.birthYear ? Math.max(0, new Date().getFullYear() - detail.birthYear) : null;
+  const lastVisit =
+    detail.appointments.find((appointment) => new Date(appointment.startsAt).getTime() < now) ??
+    null;
   const processIndex =
     detail.status === "ACTIVE" ? (activePlan ? 2 : 1) : detail.status === "INACTIVE" ? 4 : 0;
 
@@ -70,6 +75,7 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
     displayName: `${detail.firstName} ${detail.lastName}`.trim(),
     hasOpenBalance: detail.financeSummary.hasOpenBalance,
     initials: getDashboardInitials(detail.firstName, detail.lastName),
+    lastVisit,
     nextAppointment: detail.nextAppointment,
     openBalanceLabel: detail.financeSummary.openBalanceLabel,
     paidLabel: detail.financeSummary.paidLabel,

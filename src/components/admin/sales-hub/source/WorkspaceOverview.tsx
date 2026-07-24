@@ -41,6 +41,24 @@ export default function WorkspaceOverview({
   const nextAppointment = detailView.nextAppointment;
   const guardian = detail.guardians[0]?.guardian;
   const canCompleteNext = nextAppointment?.status === "CONFIRMED";
+  const nextIsRequest =
+    nextAppointment?.status === "REQUESTED" || nextAppointment?.status === "PENDING_REVIEW";
+  const latestNote = detail.notes[0] ?? null;
+  const lastVisit = detailView.lastVisit;
+
+  const activePlan = detailView.activePlan;
+  const planTotalSessions = activePlan?.sessionCount ?? 0;
+  const planRemainingSessions = activePlan ? Number(activePlan.remainingSessions) : 0;
+  const planUsedSessions = Math.max(0, planTotalSessions - planRemainingSessions);
+  const planProgress =
+    planTotalSessions > 0 ? Math.round((planUsedSessions / planTotalSessions) * 100) : 0;
+  const planProgressTitle = !activePlan
+    ? "Aktif plan yok"
+    : planProgress >= 100
+      ? "Plan tamamlandı"
+      : planProgress > 0
+        ? "Devam ediyor"
+        : "Henüz seans işlenmedi";
 
   return (
     <div className={`${styles.contentGrid} ${styles.overviewGrid}`}>
@@ -106,8 +124,10 @@ export default function WorkspaceOverview({
 
       <article className={styles.card} id="sales-hub-next-appointment">
         <div className={`${styles.cardTitle} ${styles.upNextTitle}`}>
-          <h3>Up Next</h3>
-          <span>Sequence: New Lead Nurturing</span>
+          <h3>Sıradaki</h3>
+          <span>
+            {nextIsRequest ? "Bekleyen talep" : nextAppointment ? "Planlı randevu" : "Randevu yok"}
+          </span>
         </div>
         <div className={styles.nextCardBody}>
           <div className={`${styles.nextAction} ${styles.nextActionPrimary}`}>
@@ -115,18 +135,25 @@ export default function WorkspaceOverview({
               <SalesHubIcon name="phone" size={16} />
             </span>
             <span className={styles.nextActionText}>
-              <strong>First Customer Call</strong>
-              <span>{formatDashboardDate(nextAppointment?.startsAt, true)}</span>
+              <strong>
+                {nextIsRequest
+                  ? "Bekleyen Talep"
+                  : nextAppointment
+                    ? "Sıradaki Randevu"
+                    : "Randevu Yok"}
+              </strong>
+              <span>{nextAppointment ? formatDashboardDate(nextAppointment.startsAt, true) : emptyValue}</span>
               <span>Hizmet: {nextAppointment?.serviceNameSnapshot ?? emptyValue}</span>
             </span>
             <span className={styles.nextActionButtons}>
               <button
+                disabled={!detail.phone}
                 onClick={() => {
                   if (detail.phone) window.open(`tel:${detail.phone}`, "_self");
                 }}
                 type="button"
               >
-                Call
+                Ara
               </button>
               <button
                 disabled={!canCompleteNext || submitting}
@@ -140,7 +167,7 @@ export default function WorkspaceOverview({
                 }
                 type="button"
               >
-                Mark Complete
+                Tamamla
               </button>
             </span>
           </div>
@@ -149,19 +176,24 @@ export default function WorkspaceOverview({
               <SalesHubIcon name="mail" size={16} />
             </span>
             <span className={styles.nextActionText}>
-              <strong>Follow Up</strong>
-              <span>{detail.notes[0]?.note ?? emptyValue}</span>
+              <strong>Son Not</strong>
+              <span>{latestNote?.note ?? emptyValue}</span>
             </span>
-            <span className={styles.stepBadge}>Step 2</span>
+            <span className={styles.stepBadge}>
+              {latestNote ? formatDashboardDate(latestNote.createdAt) : emptyValue}
+            </span>
           </div>
           <div className={`${styles.nextAction} ${styles.nextActionMuted}`}>
             <span className={styles.nextActionIcon}>
-              <SalesHubIcon name="phone" size={16} />
+              <SalesHubIcon name="history" size={16} />
             </span>
             <span className={styles.nextActionText}>
-              <strong>Second Customer Call</strong>
+              <strong>Son Görüşme</strong>
+              <span>{lastVisit ? statusText(lastVisit.status) : "Kayıt yok"}</span>
             </span>
-            <span className={styles.stepBadge}>Step 3</span>
+            <span className={styles.stepBadge}>
+              {lastVisit ? formatDashboardDate(lastVisit.startsAt) : emptyValue}
+            </span>
           </div>
         </div>
       </article>
@@ -169,7 +201,7 @@ export default function WorkspaceOverview({
       <article className={styles.card} id="sales-hub-score">
         <div className={styles.cardTitle}>
           <h3>
-            <SalesHubIcon name="insight" size={16} /> Danışan Gelişim Skoru
+            <SalesHubIcon name="insight" size={16} /> Plan İlerlemesi
           </h3>
         </div>
         <div className={styles.scoreBody}>
@@ -177,25 +209,25 @@ export default function WorkspaceOverview({
             className={styles.scoreCircle}
             style={
               {
-                "--score": `${Math.max(0, Math.min(100, detail.score))}%`,
+                "--score": `${planProgress}%`,
               } as CSSProperties
             }
           >
-            <strong>{detail.score}%</strong>
+            <strong>{planProgress}%</strong>
           </span>
           <span className={styles.scoreCopy}>
-            <strong>{detailView.scoreTitle}</strong>
-            <p>Seans, iletişim ve kayıt bütünlüğü üzerinden hesaplanır.</p>
+            <strong>{planProgressTitle}</strong>
+            <p>Tamamlanan seansların aktif plandaki paya oranı.</p>
           </span>
         </div>
         <div className={styles.scoreMetrics}>
           <span>
-            <small>Hedef Dil</small>
-            <strong>{emptyValue}</strong>
+            <small>Tamamlanan Seans</small>
+            <strong>{activePlan ? planUsedSessions : emptyValue}</strong>
           </span>
           <span>
-            <small>Akıcılık</small>
-            <strong>{emptyValue}</strong>
+            <small>Kalan Seans</small>
+            <strong>{activePlan ? planRemainingSessions : emptyValue}</strong>
           </span>
         </div>
       </article>
