@@ -9,7 +9,6 @@ export interface SalesHubClientDetailView {
   completableAppointment: ClientDetail["appointments"][number] | null;
   completedAppointments: number;
   displayName: string;
-  hasOpenBalance: boolean;
   initials: string;
   lastVisit: ClientDetail["appointments"][number] | null;
   nextAppointment: ClientDetail["nextAppointment"];
@@ -17,7 +16,6 @@ export interface SalesHubClientDetailView {
   paidLabel: string;
   planTotalLabel: string;
   processIndex: number;
-  scoreTitle: string;
 }
 
 export function formatDashboardMoney(amountMinor: bigint, currency = "TRY"): string {
@@ -63,7 +61,6 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
     completableAppointment,
     completedAppointments,
     displayName: `${detail.firstName} ${detail.lastName}`.trim(),
-    hasOpenBalance: detail.financeSummary.hasOpenBalance,
     initials: getDashboardInitials(detail.firstName, detail.lastName),
     lastVisit,
     nextAppointment: detail.nextAppointment,
@@ -71,12 +68,6 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
     paidLabel: detail.financeSummary.paidLabel,
     planTotalLabel: detail.financeSummary.planTotalLabel,
     processIndex,
-    scoreTitle:
-      detail.score >= 80
-        ? "Kapsamlı Gelişim"
-        : detail.score >= 55
-          ? "Gelişmekte"
-          : "Geliştirilmeli",
   };
 }
 
