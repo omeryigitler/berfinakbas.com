@@ -117,11 +117,7 @@ describe("Sales Hub finance adapter", () => {
 
 type DetailAppointment = ClientDetail["appointments"][number];
 
-function makeAppointment(
-  id: string,
-  startsAt: string,
-  status: string,
-): DetailAppointment {
+function makeAppointment(id: string, startsAt: string, status: string): DetailAppointment {
   return {
     durationMinutesSnapshot: 60,
     endsAt: startsAt,

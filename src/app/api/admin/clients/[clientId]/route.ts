@@ -172,13 +172,14 @@ export async function GET(_request: Request, context: RouteContext) {
     where: { clientId, status: "COMPLETED" },
   });
 
-  const [client, pastAppointments, upcomingAppointments, completedAppointments] =
-    await Promise.all([
+  const [client, pastAppointments, upcomingAppointments, completedAppointments] = await Promise.all(
+    [
       clientPromise,
       pastAppointmentsPromise,
       upcomingAppointmentsPromise,
       completedAppointmentsPromise,
-    ]);
+    ],
+  );
 
   if (!client) return notFound();
 

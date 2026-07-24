@@ -46,8 +46,7 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
   const completableAppointment =
     detail.appointments.find(
       (appointment) =>
-        appointment.status === "CONFIRMED" &&
-        new Date(appointment.startsAt).getTime() <= now,
+        appointment.status === "CONFIRMED" && new Date(appointment.startsAt).getTime() <= now,
     ) ?? null;
   const processIndex =
     detail.status === "ACTIVE" ? (activePlan ? 2 : 1) : detail.status === "INACTIVE" ? 4 : 0;
