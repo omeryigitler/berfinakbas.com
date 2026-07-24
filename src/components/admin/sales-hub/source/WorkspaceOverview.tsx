@@ -287,8 +287,8 @@ export default function WorkspaceOverview({
             <span>Kalan Seans</span>
             <strong>
               {detailView.activePlan
-                ? `${detailView.remainingSessions} / ${detailView.activePlan.sessionCount}`
-                : detailView.remainingSessions}
+                ? `${planRemainingSessions} / ${planTotalSessions}`
+                : emptyValue}
             </strong>
           </div>
         </div>

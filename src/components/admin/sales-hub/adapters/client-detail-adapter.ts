@@ -17,7 +17,6 @@ export interface SalesHubClientDetailView {
   paidLabel: string;
   planTotalLabel: string;
   processIndex: number;
-  remainingSessions: number;
   scoreTitle: string;
 }
 
@@ -72,7 +71,6 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
     paidLabel: detail.financeSummary.paidLabel,
     planTotalLabel: detail.financeSummary.planTotalLabel,
     processIndex,
-    remainingSessions: detail.financeSummary.remainingSessions,
     scoreTitle:
       detail.score >= 80
         ? "Kapsamlı Gelişim"
