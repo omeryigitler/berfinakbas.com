@@ -3,7 +3,6 @@ import type { ClientDetail } from "@/components/admin/client-dashboard-types";
 import {
   adaptClientDetail,
   formatDashboardDate,
-  formatDashboardMoney,
   getDetailEmptyValue,
 } from "../adapters/client-detail-adapter";
 import styles from "../sales-hub-detail.module.css";
@@ -123,7 +122,7 @@ export default function WorkspacePanel({
               </div>
               <div className={styles.stat}>
                 <span>Kalan Bakiye</span>
-                <strong>{detailView ? formatDashboardMoney(detailView.balance.amountMinor, detailView.balance.currency) : emptyValue}</strong>
+                <strong>{detailView ? detailView.openBalanceLabel : emptyValue}</strong>
               </div>
               <div className={styles.stat}>
                 <span>Aktif Plan</span>

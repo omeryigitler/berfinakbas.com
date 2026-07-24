@@ -2,7 +2,7 @@ import type { ClientDetail, ClientListItem } from "@/components/admin/client-das
 
 import { describe, expect, it } from "vitest";
 
-import { adaptClientDetail, calculateClientBalance } from "./client-detail-adapter";
+import { adaptClientDetail } from "./client-detail-adapter";
 import { adaptClientListItem, filterAndSortClientList } from "./client-list-adapter";
 
 const client: ClientListItem = {
@@ -55,7 +55,7 @@ describe("Sales Hub client list adapter", () => {
 });
 
 describe("Sales Hub finance adapter", () => {
-  it("calculates the remaining balance from real finance entries", () => {
+  it("surfaces the server-computed open balance so panel and overview stay in sync", () => {
     const detail: ClientDetail = {
       appointments: [],
       birthYear: null,
@@ -107,7 +107,10 @@ describe("Sales Hub finance adapter", () => {
       updatedAt: "2026-07-02T10:00:00.000Z",
     };
 
-    expect(calculateClientBalance(detail)).toEqual({ amountMinor: 300000n, currency: "TRY" });
+    const view = adaptClientDetail(detail);
+    expect(view.openBalanceLabel).toBe("₺3.000,00");
+    expect(view.paidLabel).toBe("₺2.000,00");
+    expect(view.planTotalLabel).toBe("₺5.000,00");
   });
 });
 

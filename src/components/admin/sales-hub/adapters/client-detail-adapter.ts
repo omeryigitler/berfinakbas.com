@@ -2,16 +2,10 @@ import type { ClientDetail } from "@/components/admin/client-dashboard-types";
 
 import { formatDashboardDate, getDashboardInitials } from "./client-list-adapter";
 
-export interface SalesHubBalance {
-  amountMinor: bigint;
-  currency: string;
-}
-
 export interface SalesHubClientDetailView {
   activeDays: number;
   activePlan: ClientDetail["plans"][number] | null;
   age: number | null;
-  balance: SalesHubBalance;
   completableAppointment: ClientDetail["appointments"][number] | null;
   completedAppointments: number;
   displayName: string;
@@ -33,20 +27,6 @@ export function formatDashboardMoney(amountMinor: bigint, currency = "TRY"): str
     maximumFractionDigits: 0,
     style: "currency",
   }).format(Number(amountMinor) / 100);
-}
-
-export function calculateClientBalance(detail: ClientDetail): SalesHubBalance {
-  let amountMinor = 0n;
-  let currency = detail.financeEntries[0]?.currency ?? detail.plans[0]?.currency ?? "TRY";
-
-  // Ledger amounts are stored signed: accruals positive, payments negative.
-  // The open balance is therefore the plain signed sum, clamped at zero.
-  for (const entry of detail.financeEntries) {
-    currency = entry.currency || currency;
-    amountMinor += BigInt(entry.amountMinor);
-  }
-
-  return { amountMinor: amountMinor > 0n ? amountMinor : 0n, currency };
 }
 
 export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailView {
@@ -81,7 +61,6 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
     activeDays,
     activePlan,
     age,
-    balance: calculateClientBalance(detail),
     completableAppointment,
     completedAppointments,
     displayName: `${detail.firstName} ${detail.lastName}`.trim(),
