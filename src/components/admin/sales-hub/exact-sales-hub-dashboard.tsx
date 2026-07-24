@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 
 import type { ClientDetail, ClientListItem } from "@/components/admin/client-dashboard-types";
+import { createCorrelationId } from "@/lib/correlation-id";
 
 import { adaptClientDetail } from "./adapters/client-detail-adapter";
 import type { ClientGroupFilter, ClientSortMode } from "./adapters/client-list-adapter";
@@ -137,7 +138,7 @@ export default function ExactSalesHubDashboard({
         }),
         headers: {
           "content-type": "application/json",
-          "x-correlation-id": crypto.randomUUID(),
+          "x-correlation-id": createCorrelationId(),
         },
         method: "PATCH",
       });
@@ -167,7 +168,7 @@ export default function ExactSalesHubDashboard({
         }),
         headers: {
           "content-type": "application/json",
-          "x-correlation-id": crypto.randomUUID(),
+          "x-correlation-id": createCorrelationId(),
         },
         method: "POST",
       });
@@ -189,7 +190,7 @@ export default function ExactSalesHubDashboard({
 
     try {
       const response = await fetch(`/api/admin/clients/${detail.id}`, {
-        headers: { "x-correlation-id": crypto.randomUUID() },
+        headers: { "x-correlation-id": createCorrelationId() },
         method: "DELETE",
       });
       if (!response.ok) throw new Error(await readError(response));
@@ -212,7 +213,7 @@ export default function ExactSalesHubDashboard({
         body: JSON.stringify({ reasonCode: "APPOINTMENT_COMPLETED", toStatus: "COMPLETED" }),
         headers: {
           "content-type": "application/json",
-          "x-correlation-id": crypto.randomUUID(),
+          "x-correlation-id": createCorrelationId(),
         },
         method: "PATCH",
       });

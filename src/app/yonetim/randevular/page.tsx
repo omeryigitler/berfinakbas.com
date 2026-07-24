@@ -3,6 +3,8 @@
 import type { FormEvent } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { createCorrelationId } from '@/lib/correlation-id';
+
 interface AppointmentItem {
   client: { firstName: string; id: string; lastName: string; type: string };
   duplicateReview: { candidates: unknown[]; status: string };
@@ -63,6 +65,7 @@ export default function RandevularPage() {
   const [prerequisites, setPrerequisites] = useState<Prerequisites | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [pendingAppointmentId, setPendingAppointmentId] = useState<string | null>(null);
 
   const loadAppointments = useCallback(async () => {
     setLoading(true);
@@ -127,7 +130,7 @@ export default function RandevularPage() {
     setMessage('');
     try {
       const response = await fetch('/api/admin/appointment-prerequisites', {
-        headers: { 'x-correlation-id': crypto.randomUUID() },
+        headers: { 'x-correlation-id': createCorrelationId() },
         method: 'POST',
       });
       if (!response.ok) throw new Error(await readError(response));
@@ -160,7 +163,7 @@ export default function RandevularPage() {
         }),
         headers: {
           'content-type': 'application/json',
-          'x-correlation-id': crypto.randomUUID(),
+          'x-correlation-id': createCorrelationId(),
         },
         method: 'POST',
       });
@@ -176,13 +179,14 @@ export default function RandevularPage() {
 
   async function transitionStatus(appointmentId: string, toStatus: string, reasonCode: string) {
     setSubmitting(true);
+    setPendingAppointmentId(appointmentId);
     setMessage('');
     try {
       const response = await fetch(`/api/admin/appointments/${appointmentId}/status`, {
         body: JSON.stringify({ reasonCode, toStatus }),
         headers: {
           'content-type': 'application/json',
-          'x-correlation-id': crypto.randomUUID(),
+          'x-correlation-id': createCorrelationId(),
         },
         method: 'PATCH',
       });
@@ -192,6 +196,7 @@ export default function RandevularPage() {
       setMessage(error instanceof Error ? error.message : 'Randevu durumu güncellenemedi.');
     } finally {
       setSubmitting(false);
+      setPendingAppointmentId(null);
     }
   }
 
@@ -241,12 +246,14 @@ export default function RandevularPage() {
                   {appointment.status === 'REQUESTED' ? (
                     <div style={styles.rowActions}>
                       <button disabled={submitting} onClick={() => void transitionStatus(appointment.id, 'PENDING_REVIEW', 'ADMIN_REVIEW')} style={styles.reviewButton} type="button">İncelemeye al</button>
+                      {pendingAppointmentId === appointment.id ? <small style={styles.rowPending}>İşleniyor…</small> : null}
                     </div>
                   ) : null}
                   {['PENDING_REVIEW', 'RESCHEDULE_PROPOSED'].includes(appointment.status) ? (
                     <div style={styles.rowActions}>
                       <button disabled={submitting} onClick={() => void transitionStatus(appointment.id, 'CONFIRMED', 'ADMIN_CONFIRMED')} style={styles.approveButton} type="button">Onayla</button>
                       <button disabled={submitting} onClick={() => void transitionStatus(appointment.id, 'REJECTED', 'ADMIN_REJECTED')} style={styles.rejectButton} type="button">Reddet</button>
+                      {pendingAppointmentId === appointment.id ? <small style={styles.rowPending}>İşleniyor…</small> : null}
                     </div>
                   ) : null}
                 </div>
@@ -322,7 +329,8 @@ const styles = {
   statusPending: { background: '#fff7ed', color: '#9a3412' },
   statusActive: { background: '#efffc3', color: '#263000' },
   warning: { color: '#b45309' },
-  rowActions: { display: 'flex', gap: 6, marginTop: 2 },
+  rowActions: { display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 },
+  rowPending: { color: '#77727d', fontSize: 10, fontWeight: 600 },
   reviewButton: { minHeight: 28, border: '1px solid #050505', borderRadius: 999, background: '#050505', padding: '0 12px', color: '#fff', font: 'inherit', fontSize: 10, fontWeight: 750, cursor: 'pointer' },
   approveButton: { minHeight: 28, border: '1px solid #12897b', borderRadius: 999, background: '#12897b', padding: '0 12px', color: '#fff', font: 'inherit', fontSize: 10, fontWeight: 750, cursor: 'pointer' },
   rejectButton: { minHeight: 28, border: '1px solid rgba(50,49,48,.2)', borderRadius: 999, background: '#fff', padding: '0 12px', color: '#9a3412', font: 'inherit', fontSize: 10, fontWeight: 750, cursor: 'pointer' },
