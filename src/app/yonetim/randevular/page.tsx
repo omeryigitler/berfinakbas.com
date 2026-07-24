@@ -174,6 +174,27 @@ export default function RandevularPage() {
     }
   }
 
+  async function transitionStatus(appointmentId: string, toStatus: string, reasonCode: string) {
+    setSubmitting(true);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/admin/appointments/${appointmentId}/status`, {
+        body: JSON.stringify({ reasonCode, toStatus }),
+        headers: {
+          'content-type': 'application/json',
+          'x-correlation-id': crypto.randomUUID(),
+        },
+        method: 'PATCH',
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      await loadAppointments();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Randevu durumu güncellenemedi.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   const pendingCount = appointments.filter((appointment) => ['REQUESTED', 'PENDING_REVIEW'].includes(appointment.status)).length;
   const confirmedCount = appointments.filter((appointment) => appointment.status === 'CONFIRMED').length;
 
@@ -217,6 +238,17 @@ export default function RandevularPage() {
                   <strong>{formatDateTime(appointment.startsAt)}</strong>
                   <span style={{ ...styles.statusPill, ...(['REQUESTED', 'PENDING_REVIEW'].includes(appointment.status) ? styles.statusPending : styles.statusActive) }}>{statusLabels[appointment.status] ?? appointment.status}</span>
                   {appointment.duplicateReview.status === 'PENDING' ? <small style={styles.warning}>Olası mükerrer kayıt</small> : null}
+                  {appointment.status === 'REQUESTED' ? (
+                    <div style={styles.rowActions}>
+                      <button disabled={submitting} onClick={() => void transitionStatus(appointment.id, 'PENDING_REVIEW', 'ADMIN_REVIEW')} style={styles.reviewButton} type="button">İncelemeye al</button>
+                    </div>
+                  ) : null}
+                  {['PENDING_REVIEW', 'RESCHEDULE_PROPOSED'].includes(appointment.status) ? (
+                    <div style={styles.rowActions}>
+                      <button disabled={submitting} onClick={() => void transitionStatus(appointment.id, 'CONFIRMED', 'ADMIN_CONFIRMED')} style={styles.approveButton} type="button">Onayla</button>
+                      <button disabled={submitting} onClick={() => void transitionStatus(appointment.id, 'REJECTED', 'ADMIN_REJECTED')} style={styles.rejectButton} type="button">Reddet</button>
+                    </div>
+                  ) : null}
                 </div>
               </article>
             ))}
@@ -290,6 +322,10 @@ const styles = {
   statusPending: { background: '#fff7ed', color: '#9a3412' },
   statusActive: { background: '#efffc3', color: '#263000' },
   warning: { color: '#b45309' },
+  rowActions: { display: 'flex', gap: 6, marginTop: 2 },
+  reviewButton: { minHeight: 28, border: '1px solid #050505', borderRadius: 999, background: '#050505', padding: '0 12px', color: '#fff', font: 'inherit', fontSize: 10, fontWeight: 750, cursor: 'pointer' },
+  approveButton: { minHeight: 28, border: '1px solid #12897b', borderRadius: 999, background: '#12897b', padding: '0 12px', color: '#fff', font: 'inherit', fontSize: 10, fontWeight: 750, cursor: 'pointer' },
+  rejectButton: { minHeight: 28, border: '1px solid rgba(50,49,48,.2)', borderRadius: 999, background: '#fff', padding: '0 12px', color: '#9a3412', font: 'inherit', fontSize: 10, fontWeight: 750, cursor: 'pointer' },
   empty: { margin: 0, color: '#77727d', fontSize: 12 },
   message: { borderRadius: 12, background: '#fff7ed', padding: '10px 12px', color: '#9a3412', fontSize: 11 },
   modalBackdrop: { position: 'fixed' as const, inset: 0, zIndex: 120, display: 'grid', placeItems: 'center', background: 'rgba(5,5,5,.42)', padding: 24 },
