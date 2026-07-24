@@ -40,7 +40,7 @@ export default function WorkspaceOverview({
   const emptyValue = getDetailEmptyValue();
   const nextAppointment = detailView.nextAppointment;
   const guardian = detail.guardians[0]?.guardian;
-  const canCompleteNext = nextAppointment?.status === "CONFIRMED";
+  const completableAppointment = detailView.completableAppointment;
   const nextIsRequest =
     nextAppointment?.status === "REQUESTED" || nextAppointment?.status === "PENDING_REVIEW";
   const latestNote = detail.notes[0] ?? null;
@@ -155,20 +155,6 @@ export default function WorkspaceOverview({
               >
                 Ara
               </button>
-              <button
-                disabled={!canCompleteNext || submitting}
-                onClick={() => {
-                  if (nextAppointment && canCompleteNext) onCompleteAppointment(nextAppointment.id);
-                }}
-                title={
-                  canCompleteNext
-                    ? "Seansı tamamlandı olarak işaretle"
-                    : "Yalnızca onaylanmış randevu tamamlanabilir"
-                }
-                type="button"
-              >
-                Tamamla
-              </button>
             </span>
           </div>
           <div className={styles.nextAction}>
@@ -191,6 +177,21 @@ export default function WorkspaceOverview({
               <strong>Son Görüşme</strong>
               <span>{lastVisit ? statusText(lastVisit.status) : "Kayıt yok"}</span>
             </span>
+            {completableAppointment ? (
+              <button
+                className={styles.smallPillButton}
+                disabled={submitting}
+                onClick={() => onCompleteAppointment(completableAppointment.id)}
+                style={{ marginLeft: "auto" }}
+                title={`${formatDashboardDate(
+                  completableAppointment.startsAt,
+                  true,
+                )} tarihli onaylanmış seansı tamamlandı olarak işaretle`}
+                type="button"
+              >
+                Tamamla
+              </button>
+            ) : null}
             <span className={styles.stepBadge}>
               {lastVisit ? formatDashboardDate(lastVisit.startsAt) : emptyValue}
             </span>

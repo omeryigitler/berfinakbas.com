@@ -12,6 +12,7 @@ export interface SalesHubClientDetailView {
   activePlan: ClientDetail["plans"][number] | null;
   age: number | null;
   balance: SalesHubBalance;
+  completableAppointment: ClientDetail["appointments"][number] | null;
   completedAppointments: number;
   displayName: string;
   hasOpenBalance: boolean;
@@ -63,6 +64,16 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
   const lastVisit =
     detail.appointments.find((appointment) => new Date(appointment.startsAt).getTime() < now) ??
     null;
+  // A session can be marked complete only after it has actually started, so the
+  // completable appointment is the most recent CONFIRMED one at or before "now"
+  // (appointments arrive newest-first). This keeps future appointments out of
+  // reach of "Tamamla" while letting a past confirmed session still be closed.
+  const completableAppointment =
+    detail.appointments.find(
+      (appointment) =>
+        appointment.status === "CONFIRMED" &&
+        new Date(appointment.startsAt).getTime() <= now,
+    ) ?? null;
   const processIndex =
     detail.status === "ACTIVE" ? (activePlan ? 2 : 1) : detail.status === "INACTIVE" ? 4 : 0;
 
@@ -71,6 +82,7 @@ export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailVie
     activePlan,
     age,
     balance: calculateClientBalance(detail),
+    completableAppointment,
     completedAppointments,
     displayName: `${detail.firstName} ${detail.lastName}`.trim(),
     hasOpenBalance: detail.financeSummary.hasOpenBalance,
