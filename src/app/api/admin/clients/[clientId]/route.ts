@@ -9,6 +9,15 @@ import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
+// Statuses that still represent a live, upcoming appointment. Terminal outcomes
+// (rejected, cancelled, completed, no-show) must not surface as the next one.
+const UPCOMING_APPOINTMENT_STATUSES = new Set([
+  "REQUESTED",
+  "PENDING_REVIEW",
+  "CONFIRMED",
+  "RESCHEDULE_PROPOSED",
+]);
+
 const updateClientSchema = z
   .object({
     birthYear: z.number().int().min(1900).max(new Date().getFullYear()).nullable().optional(),
@@ -151,7 +160,11 @@ export async function GET(_request: Request, context: RouteContext) {
   const now = Date.now();
   const nextAppointment =
     [...client.appointments]
-      .filter((appointment) => appointment.startsAt.getTime() >= now)
+      .filter(
+        (appointment) =>
+          appointment.startsAt.getTime() >= now &&
+          UPCOMING_APPOINTMENT_STATUSES.has(appointment.status),
+      )
       .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())[0] ?? null;
   const completedAppointments = client.appointments.filter(
     (appointment) => appointment.status === "COMPLETED",
