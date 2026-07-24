@@ -34,6 +34,7 @@ export interface ClientDetail {
     status: string;
   }>;
   birthYear: number | null;
+  completedAppointments: number;
   createdAt: string;
   email: string | null;
   financeEntries: Array<{

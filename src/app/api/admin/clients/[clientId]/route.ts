@@ -18,6 +18,19 @@ const UPCOMING_APPOINTMENT_STATUSES = new Set([
   "RESCHEDULE_PROPOSED",
 ]);
 
+const clientAppointmentSelect = {
+  durationMinutesSnapshot: true,
+  endsAt: true,
+  id: true,
+  locationTypeSnapshot: true,
+  practitioner: { select: { displayName: true } },
+  publicReference: true,
+  requestNote: true,
+  serviceNameSnapshot: true,
+  startsAt: true,
+  status: true,
+};
+
 const updateClientSchema = z
   .object({
     birthYear: z.number().int().min(1900).max(new Date().getFullYear()).nullable().optional(),
@@ -63,24 +76,10 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!session) return forbidden();
 
   const { clientId } = await context.params;
-  const client = await getDatabase().client.findUnique({
+  const now = new Date();
+  const database = getDatabase();
+  const clientPromise = database.client.findUnique({
     select: {
-      appointments: {
-        orderBy: { startsAt: "desc" },
-        select: {
-          durationMinutesSnapshot: true,
-          endsAt: true,
-          id: true,
-          locationTypeSnapshot: true,
-          practitioner: { select: { displayName: true } },
-          publicReference: true,
-          requestNote: true,
-          serviceNameSnapshot: true,
-          startsAt: true,
-          status: true,
-        },
-        take: 20,
-      },
       birthYear: true,
       createdAt: true,
       email: true,
@@ -154,21 +153,42 @@ export async function GET(_request: Request, context: RouteContext) {
     },
     where: { id: clientId },
   });
+  // Derive the singular appointment views from targeted queries so a client
+  // with many future bookings can't push the recent past — or the true next
+  // appointment — out of a single capped window.
+  const pastAppointmentsPromise = database.appointment.findMany({
+    orderBy: { startsAt: "desc" },
+    select: clientAppointmentSelect,
+    take: 10,
+    where: { clientId, startsAt: { lt: now } },
+  });
+  const upcomingAppointmentsPromise = database.appointment.findMany({
+    orderBy: { startsAt: "asc" },
+    select: clientAppointmentSelect,
+    take: 10,
+    where: { clientId, startsAt: { gte: now } },
+  });
+  const completedAppointmentsPromise = database.appointment.count({
+    where: { clientId, status: "COMPLETED" },
+  });
+
+  const [client, pastAppointments, upcomingAppointments, completedAppointments] =
+    await Promise.all([
+      clientPromise,
+      pastAppointmentsPromise,
+      upcomingAppointmentsPromise,
+      completedAppointmentsPromise,
+    ]);
 
   if (!client) return notFound();
 
-  const now = Date.now();
+  // Newest-first for display, and so the adapter's lastVisit/completable finds
+  // resolve to the most recent match.
+  const appointments = [...upcomingAppointments].reverse().concat(pastAppointments);
   const nextAppointment =
-    [...client.appointments]
-      .filter(
-        (appointment) =>
-          appointment.startsAt.getTime() >= now &&
-          UPCOMING_APPOINTMENT_STATUSES.has(appointment.status),
-      )
-      .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())[0] ?? null;
-  const completedAppointments = client.appointments.filter(
-    (appointment) => appointment.status === "COMPLETED",
-  ).length;
+    upcomingAppointments.find((appointment) =>
+      UPCOMING_APPOINTMENT_STATUSES.has(appointment.status),
+    ) ?? null;
   const score = Math.min(
     100,
     35 +
@@ -200,6 +220,8 @@ export async function GET(_request: Request, context: RouteContext) {
     {
       data: {
         ...client,
+        appointments,
+        completedAppointments,
         financeEntries: client.financeEntries.map((entry) => ({
           ...entry,
           amountMinor: entry.amountMinor.toString(),

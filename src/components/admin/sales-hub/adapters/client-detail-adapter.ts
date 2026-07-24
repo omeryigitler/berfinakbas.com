@@ -29,9 +29,7 @@ export function formatDashboardMoney(amountMinor: bigint, currency = "TRY"): str
 export function adaptClientDetail(detail: ClientDetail): SalesHubClientDetailView {
   const activePlan =
     detail.plans.find((plan) => plan.status === "ACTIVE") ?? detail.plans[0] ?? null;
-  const completedAppointments = detail.appointments.filter(
-    (appointment) => appointment.status === "COMPLETED",
-  ).length;
+  const completedAppointments = detail.completedAppointments;
   const now = Date.now();
   const createdAt = new Date(detail.createdAt).getTime();
   const activeDays = Number.isNaN(createdAt)

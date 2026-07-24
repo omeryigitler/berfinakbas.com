@@ -59,6 +59,7 @@ describe("Sales Hub finance adapter", () => {
     const detail: ClientDetail = {
       appointments: [],
       birthYear: null,
+      completedAppointments: 0,
       createdAt: "2026-07-01T10:00:00.000Z",
       email: null,
       financeEntries: [
@@ -139,6 +140,7 @@ function makeDetail(appointments: DetailAppointment[]): ClientDetail {
   return {
     appointments,
     birthYear: null,
+    completedAppointments: 0,
     createdAt: "2020-01-01T10:00:00.000Z",
     email: null,
     financeEntries: [],
