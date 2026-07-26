@@ -65,172 +65,7 @@ const MENU_TITLES: Record<string, string> = {
   'arsiv': 'Arşivlenmiş Kayıtlar'
 };
 
-export const INITIAL_CLIENTS: Client[] = [
-  {
-    id: 'gabriela',
-    name: 'Gabriela Christiansen',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
-    phone: '0532-555-0149',
-    email: 'gabriela@e-posta.com',
-    status: 'Aktif',
-    ageGroup: 'Yetişkin',
-    service: 'Diyet ve Beslenme',
-    activePlan: '3 Aylık Takip',
-    paymentStatus: 'Ödendi',
-    registrationDate: '2026-04-10',
-    lastAppointment: '2026-07-15 10:00',
-    nextAppointment: '2026-07-22 09:30',
-    parentName: '',
-    source: 'Instagram',
-    planRemainingSessions: 1,
-  },
-  {
-    id: 'halle',
-    name: 'Halle Griffiths',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-    phone: '0532-555-0899',
-    email: 'h.griffiths@e-posta.com',
-    status: 'Aktif',
-    ageGroup: 'Yetişkin',
-    service: 'Bireysel Yaşam Koçluğu',
-    activePlan: 'Haftalık Seans',
-    paymentStatus: 'Borçlu',
-    registrationDate: '2026-05-18',
-    lastAppointment: '2026-07-18 11:15',
-    nextAppointment: '2026-07-25 11:15',
-    parentName: '',
-    source: 'Referans',
-    planRemainingSessions: 4,
-  },
-  {
-    id: 'josiah',
-    name: 'Josiah Love',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    phone: '0532-555-0723',
-    email: 'josiah.love@e-posta.com',
-    status: 'Aktif',
-    ageGroup: 'Yetişkin',
-    service: 'Bireysel Psikoterapi',
-    activePlan: 'Haftalık Seans',
-    paymentStatus: 'Ödendi',
-    registrationDate: '2026-07-05',
-    lastAppointment: '2026-07-17 14:00',
-    nextAppointment: '',
-    parentName: '',
-    source: 'Web Sitesi',
-    planRemainingSessions: 8,
-    isNew: true,
-  },
-  {
-    id: 'wyatt',
-    name: 'Wyatt Wetmore',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-    phone: '0532-555-0487',
-    email: 'wyatt@e-posta.com',
-    status: 'Arşivlenmiş',
-    ageGroup: 'Yetişkin',
-    service: 'Kariyer ve Yönetici Mentorluğu',
-    activePlan: 'Yok',
-    paymentStatus: 'Ödendi',
-    registrationDate: '2025-09-12',
-    lastAppointment: '2026-03-10 15:00',
-    nextAppointment: '',
-    parentName: '',
-    source: 'Referans',
-    planRemainingSessions: 0,
-  },
-  {
-    id: 'can_demir',
-    name: 'Can Demir',
-    avatar: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=150&h=150&fit=crop',
-    phone: '0532-555-0219',
-    email: 'veli.demir@e-posta.com',
-    status: 'Potansiyel',
-    ageGroup: 'Çocuk',
-    service: 'Çocuk Gelişimi ve Pedagoji',
-    activePlan: 'Yok',
-    paymentStatus: 'Bekleniyor',
-    registrationDate: '2026-07-12',
-    lastAppointment: '',
-    nextAppointment: '2026-07-21 16:00',
-    parentName: 'Ahmet Demir',
-    source: 'Web Sitesi',
-    planRemainingSessions: 0,
-    isNew: true,
-  },
-  {
-    id: 'melis_guney',
-    name: 'Melis Güney',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop',
-    phone: '0533-444-1122',
-    email: 'veli.guney@e-posta.com',
-    status: 'Pasif',
-    ageGroup: 'Çocuk',
-    service: 'Çocuk Gelişimi ve Pedagoji',
-    activePlan: 'Tek Seans',
-    paymentStatus: 'Ödendi',
-    registrationDate: '2026-06-01',
-    lastAppointment: '2026-06-15 14:00',
-    nextAppointment: '',
-    parentName: 'Selin Güney',
-    source: 'Instagram',
-    planRemainingSessions: 0,
-  },
-  {
-    id: 'baris_kartal',
-    name: 'Barış Kartal',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&h=150&fit=crop',
-    phone: '0544-333-2211',
-    email: 'baris@e-posta.com',
-    status: 'Aktif',
-    ageGroup: 'Yetişkin',
-    service: 'Bireysel Psikoterapi',
-    activePlan: '3 Aylık Takip',
-    paymentStatus: 'Borçlu',
-    registrationDate: '2026-05-20',
-    lastAppointment: '2026-07-14 10:00',
-    nextAppointment: '2026-07-21 14:30',
-    parentName: '',
-    source: 'Referans',
-    planRemainingSessions: 1,
-  },
-  {
-    id: 'kemal_sayar',
-    name: 'Kemal Sayar',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop',
-    phone: '0555-222-3344',
-    email: 'kemal.sayar@e-posta.com',
-    status: 'Aktif',
-    ageGroup: 'Yetişkin',
-    service: 'Bireysel Psikoterapi',
-    activePlan: '6 Aylık Takip',
-    paymentStatus: 'Ödendi',
-    registrationDate: '2026-02-15',
-    lastAppointment: '2026-07-19 14:00',
-    nextAppointment: '2026-07-26 14:00',
-    parentName: '',
-    source: 'Web Sitesi',
-    planRemainingSessions: 12,
-  },
-  {
-    id: 'ayse_yilmaz',
-    name: 'Ayşe Yılmaz',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
-    phone: '0531-111-2233',
-    email: 'ayse.yilmaz@e-posta.com',
-    status: 'Aktif',
-    ageGroup: 'Yetişkin',
-    service: 'Diyet ve Beslenme',
-    activePlan: 'Aylık Takip',
-    paymentStatus: 'Borçlu',
-    registrationDate: '2026-06-10',
-    lastAppointment: '2026-07-16 11:00',
-    nextAppointment: '',
-    parentName: '',
-    source: 'Instagram',
-    planRemainingSessions: 2,
-  }
-];
+export const INITIAL_CLIENTS: Client[] = [];
 
 const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
   'danisanlar': [], // Fallback if needed, we'll override for danisanlar tab!
@@ -238,7 +73,7 @@ const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
     {
       id: 'genel-bakis',
       name: 'Genel Bakış',
-      avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150&h=150&fit=crop',
+      avatar: '',
       role: 'Sistem Durumu ve Özet Bilgiler',
       score: 100,
       date: 'Canlı',
@@ -251,7 +86,7 @@ const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
     {
       id: 'bugunun-ozeti',
       name: 'Bugünün Özeti',
-      avatar: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=150&h=150&fit=crop',
+      avatar: '',
       role: 'Günlük Seanslar ve Randevular',
       score: 95,
       date: 'Bugün',
@@ -264,7 +99,7 @@ const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
     {
       id: 'finans-ozeti',
       name: 'Finans Özeti',
-      avatar: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=150&h=150&fit=crop',
+      avatar: '',
       role: 'Gelirler ve Beklenen Ödemeler',
       score: 92,
       date: 'Finans',
@@ -277,7 +112,7 @@ const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
     {
       id: 'bekleyen-islemler',
       name: 'Bekleyen İşlemler',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+      avatar: '',
       role: 'Onaylar, Yaklaşan İşler ve Eksikler',
       score: 74,
       date: 'Beklemede',
@@ -290,7 +125,7 @@ const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
     {
       id: 'hizli-islemler',
       name: 'Hızlı İşlemler',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+      avatar: '',
       role: 'Yeni Randevu, Danışan veya Hizmet',
       score: 100,
       date: 'Kısayol',
@@ -303,7 +138,7 @@ const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
     {
       id: 'son-islemler',
       name: 'Son İşlemler',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+      avatar: '',
       role: 'Sistemde Yapılan Son Değişiklikler',
       score: 80,
       date: 'Geçmiş',
@@ -314,210 +149,6 @@ const CATEGORY_ITEMS: Record<string, WorkItem[]> = {
       badgeBorder: 'border-gray-200'
     }
   ],
-  'randevular': [
-    {
-      id: 'gabriela',
-      name: 'Gabriela Christiansen (Online)',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
-      role: 'Saat: 09:30 - Klinik Takip',
-      score: 95,
-      date: 'Bugün',
-      type: 'phone',
-      category: 'Online',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    },
-    {
-      id: 'halle',
-      name: 'Halle Griffiths (Yüz Yüze)',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-      role: 'Saat: 11:15 - Ofis Görüşmesi',
-      score: 90,
-      date: 'Bugün',
-      type: 'phone',
-      category: 'Yüz Yüze',
-      scoreBg: 'bg-[#ecfdf5]',
-      scoreText: 'text-emerald-600',
-      badgeBorder: 'border-emerald-100'
-    }
-  ],
-  'takvim-uygunluk': [
-    {
-      id: 'gabriela',
-      name: 'Haftalık Planlama Şablonu',
-      avatar: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=150&h=150&fit=crop',
-      role: 'Pazartesi - Cuma: 09:00 - 18:00',
-      score: 100,
-      date: 'Aktif',
-      type: 'custom',
-      category: 'Çalışma',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    }
-  ],
-  'talepler-iletisim': [
-    {
-      id: 'josiah',
-      name: 'Can Demir (Başvuru)',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      role: 'Terapi paketi hakkında bilgi istiyor',
-      score: 80,
-      date: 'Bugün, 08:12',
-      type: 'mail',
-      category: 'Yeni Talep',
-      scoreBg: 'bg-[#fffbeb]',
-      scoreText: 'text-amber-600',
-      badgeBorder: 'border-amber-100'
-    }
-  ],
-  'hizmetler': [
-    {
-      id: 'gabriela',
-      name: 'Bireysel Seans',
-      avatar: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=150&h=150&fit=crop',
-      role: 'Tek Seans Danışmanlık Hizmeti',
-      score: 100,
-      date: 'Aktif Paket',
-      type: 'custom',
-      category: 'Hizmet',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    },
-    {
-      id: 'halle',
-      name: '3 Aylık Takip Programı',
-      avatar: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=150&h=150&fit=crop',
-      role: 'Periyodik Takip & Ödevlendirme',
-      score: 95,
-      date: 'Aktif Paket',
-      type: 'custom',
-      category: 'Hizmet',
-      scoreBg: 'bg-[#ecfdf5]',
-      scoreText: 'text-emerald-600',
-      badgeBorder: 'border-emerald-100'
-    }
-  ],
-  'odeme-planlar': [
-    {
-      id: 'gabriela',
-      name: 'Gabriela C. - Aylık Paket',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
-      role: 'Tutar: 4,500 TL (Kredi Kartı)',
-      score: 100,
-      date: 'Ödendi',
-      type: 'custom',
-      category: 'Ödeme',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    },
-    {
-      id: 'halle',
-      name: 'Halle G. - Ek Seans',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-      role: 'Tutar: 1,200 TL (Havale Bekleniyor)',
-      score: 10,
-      date: 'Beklemede',
-      type: 'custom',
-      category: 'Fatura',
-      scoreBg: 'bg-[#fffbeb]',
-      scoreText: 'text-amber-600',
-      badgeBorder: 'border-amber-100'
-    }
-  ],
-  'pdf-kaynaklar': [
-    {
-      id: 'gabriela',
-      name: 'Beslenme Takip Formu',
-      avatar: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=150&h=150&fit=crop',
-      role: 'Format: PDF - 2.4 MB',
-      score: 99,
-      date: 'Kaynak',
-      type: 'custom',
-      category: 'Döküman',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    }
-  ],
-  'site-icerigi': [
-    {
-      id: 'gabriela',
-      name: 'Hakkımda & Biyografi',
-      avatar: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=150&h=150&fit=crop',
-      role: 'Son Güncelleme: 14 Temmuz',
-      score: 100,
-      date: 'Yayınlandı',
-      type: 'custom',
-      category: 'Sayfa',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    }
-  ],
-  'raporlar': [
-    {
-      id: 'gabriela',
-      name: 'Aylık Ciro & Seans Grafiği',
-      avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150&h=150&fit=crop',
-      role: 'Haziran Sezonu Değerlendirmesi',
-      score: 98,
-      date: 'Rapor',
-      type: 'custom',
-      category: 'Analiz',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    }
-  ],
-  'kullanicilar-yetkiler': [
-    {
-      id: 'gabriela',
-      name: 'Berfin Akbaş',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      role: 'Kurucu / Süper Yönetici',
-      score: 100,
-      date: 'Sistem',
-      type: 'custom',
-      category: 'Yönetici',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    }
-  ],
-  'ayarlar': [
-    {
-      id: 'gabriela',
-      name: 'SMS ve E-posta Ayarları',
-      avatar: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=150&h=150&fit=crop',
-      role: 'Otomatik hatırlatıcılar aktif',
-      score: 100,
-      date: 'Sistem',
-      type: 'custom',
-      category: 'Ayar',
-      scoreBg: 'bg-black',
-      scoreText: 'text-white',
-      badgeBorder: 'border-white/40'
-    }
-  ],
-  'arsiv': [
-    {
-      id: 'wyatt',
-      name: 'Geçmiş Danışan - 2025',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-      role: 'Seans Serisi Başarıyla Tamamlandı',
-      score: 32,
-      date: 'Eski Arşiv',
-      type: 'mail',
-      category: 'Arşivlendi',
-      scoreBg: 'bg-[#fdf2f2]',
-      scoreText: 'text-rose-600',
-      badgeBorder: 'border-rose-100'
-    }
-  ]
 };
 
 const DANISAN_GRUPLARI = [
@@ -696,11 +327,11 @@ export default function MyWorkPanel({ selectedLeadId, onSelectLead, activeMenuIt
     status: 'Aktif' as Client['status'],
     ageGroup: 'Yetişkin' as Client['ageGroup'],
     service: '',
-    activePlan: '3 Aylık Takip',
+    activePlan: 'Yok',
     paymentStatus: 'Ödendi' as Client['paymentStatus'],
     parentName: '',
     source: 'Web Sitesi',
-    planRemainingSessions: 10
+    planRemainingSessions: 0
   });
 
   const handleClearFilters = () => {
@@ -816,7 +447,7 @@ export default function MyWorkPanel({ selectedLeadId, onSelectLead, activeMenuIt
     const newlyCreated: Client = {
       id: newId,
       name: newClient.name,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop', // default cute avatar
+      avatar: '', // initials avatar, consistent with API-loaded clients
       phone: newClient.phone || 'Girilmedi',
       email: newClient.email || 'Girilmedi',
       status: newClient.status,
@@ -845,11 +476,11 @@ export default function MyWorkPanel({ selectedLeadId, onSelectLead, activeMenuIt
       status: 'Aktif',
       ageGroup: 'Yetişkin',
       service: '',
-      activePlan: '3 Aylık Takip',
+      activePlan: 'Yok',
       paymentStatus: 'Ödendi',
       parentName: '',
       source: 'Web Sitesi',
-      planRemainingSessions: 10
+      planRemainingSessions: 0
     });
   };
 

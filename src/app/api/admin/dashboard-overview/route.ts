@@ -72,6 +72,38 @@ function fullName(person: { firstName: string; lastName: string }): string {
   return `${person.firstName} ${person.lastName}`.trim();
 }
 
+function relativeTime(date: Date, now: Date): string {
+  const diffMs = Math.max(0, now.getTime() - date.getTime());
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return "az önce";
+  if (minutes < 60) return `${minutes} dk önce`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} saat önce`;
+  const days = Math.floor(hours / 24);
+  return `${days} gün önce`;
+}
+
+const AUDIT_LABELS: Record<string, { desc: string; type: string }> = {
+  "client.contact.logged": { desc: "danışan için iletişim kaydı eklendi", type: "İletişim" },
+  "client.created": { desc: "yeni danışan kaydı oluşturuldu", type: "Danışan" },
+  "client.deactivated": { desc: "bir danışan arşive alındı", type: "Arşiv" },
+  "client.document.created": { desc: "danışana belge eklendi", type: "Belge" },
+  "client.note.created": { desc: "danışana not eklendi", type: "Not" },
+  "client.restored": { desc: "bir danışan arşivden geri yüklendi", type: "Danışan" },
+  "client.updated": { desc: "danışan bilgileri güncellendi", type: "Güncelleme" },
+};
+
+function describeAudit(action: string, actor: string | null | undefined): { desc: string; type: string } {
+  const mapped = AUDIT_LABELS[action];
+  const who = actor ? `${actor}, ` : "";
+  if (mapped) return { desc: `${who}${mapped.desc}.`, type: mapped.type };
+  if (action.startsWith("appointment")) return { desc: `${who}bir randevu işlemi gerçekleştirdi.`, type: "Randevu" };
+  if (action.startsWith("finance") || action.startsWith("payment")) {
+    return { desc: `${who}bir finans işlemi gerçekleştirdi.`, type: "Finans" };
+  }
+  return { desc: `${who}bir yönetim işlemi gerçekleştirdi.`, type: "İşlem" };
+}
+
 export async function GET() {
   const session = await auth();
   if (!session?.user || session.user.status !== "ACTIVE") return forbidden();
@@ -92,6 +124,8 @@ export async function GET() {
     pendingApprovals,
     prospectiveClients,
     incompleteClients,
+    recentPaymentsRaw,
+    recentActivityRaw,
   ] = await Promise.all([
     database.appointment.findMany({
       orderBy: { startsAt: "asc" },
@@ -159,6 +193,26 @@ export async function GET() {
         OR: [{ phone: null }, { email: null }],
         status: { in: ["ACTIVE", "PROSPECTIVE"] },
       },
+    }),
+    database.financeLedgerEntry.findMany({
+      orderBy: { occurredAt: "desc" },
+      select: {
+        amountMinor: true,
+        client: { select: { firstName: true, lastName: true } },
+        paymentMethod: { select: { name: true } },
+        plan: { select: { name: true } },
+      },
+      take: 6,
+      where: { type: "PAYMENT" },
+    }),
+    database.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        action: true,
+        actor: { select: { name: true } },
+        createdAt: true,
+      },
+      take: 8,
     }),
   ]);
 
@@ -281,6 +335,17 @@ export async function GET() {
     yanitBekleyen: prospectiveClients.map((client) => fullName(client)),
   };
 
+  const recentPayments = recentPaymentsRaw.map((entry) => ({
+    amountMinor: (entry.amountMinor < 0n ? -entry.amountMinor : entry.amountMinor).toString(),
+    label: entry.plan?.name ?? entry.paymentMethod?.name ?? "Ödeme",
+    name: fullName(entry.client),
+  }));
+
+  const recentActivity = recentActivityRaw.map((entry) => {
+    const described = describeAudit(entry.action, entry.actor?.name);
+    return { desc: described.desc, time: relativeTime(entry.createdAt, now), type: described.type };
+  });
+
   return NextResponse.json(
     {
       data: {
@@ -294,6 +359,8 @@ export async function GET() {
         },
         pending: pendingSummary,
         plans: { activeCount, consumptionRate, grantedSessions, remainingSessions },
+        recentActivity,
+        recentPayments,
         sessions: { cancelled, completed, completionRate, noShow, pending, total },
         todayAppointments,
       },

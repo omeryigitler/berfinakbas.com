@@ -76,6 +76,16 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
     else setCurrentStage(3); // Active therapy default
   }, [client.id, client.status]);
 
+  // Real "kayıtlı gün" count for the process capsule (replaces the demo "Active for 3 Days").
+  // registrationDate is a tr-TR display string (dd.MM.yyyy), so parse that shape too.
+  const registrationDays = (() => {
+    const raw = String(client.registrationDate || '');
+    const tr = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    const t = tr ? Date.parse(`${tr[3]}-${tr[2]}-${tr[1]}`) : Date.parse(raw);
+    if (Number.isNaN(t)) return null;
+    return Math.max(0, Math.floor((Date.now() - t) / 86_400_000));
+  })();
+
   const triggerToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -1006,8 +1016,8 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
           {/* Left Title Capsule (Opportunity Sales Process style) */}
           <div className="flex items-center shrink-0 bg-[#138e7d] text-white pl-4 pr-4 py-2.5 rounded-l-3xl rounded-r-xl shadow-sm gap-4 select-none min-w-[210px]">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-black uppercase tracking-wider text-white/90">Opportunity Sales Process</span>
-              <span className="text-[9px] text-white/70 font-medium">Active for 3 Days</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-white/90">Danışan Süreci</span>
+              <span className="text-[9px] text-white/70 font-medium">{registrationDays != null ? `${registrationDays} gündür kayıtlı` : 'Aktif danışan'}</span>
             </div>
           </div>
 
@@ -1019,11 +1029,11 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
           {/* Stepper Steps Wrapper Track */}
           <div className="flex-1 bg-[#efece3]/50 border border-[#e2decb]/50 rounded-[2rem] p-1 flex flex-wrap md:flex-nowrap items-center gap-1.5 overflow-x-auto">
             {[
-              { stage: 1, name: 'Ön Görüşme', label: 'First Contact' },
-              { stage: 2, name: 'Değerlendirme', label: 'Qualify' },
-              { stage: 3, name: 'Aktif Terapi', label: 'Develop' },
-              { stage: 4, name: 'Gelişim Takibi', label: 'Propose' },
-              { stage: 5, name: 'Mezuniyet', label: 'Close' },
+              { stage: 1, name: 'Ön Görüşme', label: 'İlk temas' },
+              { stage: 2, name: 'Değerlendirme', label: 'Uygunluk' },
+              { stage: 3, name: 'Aktif Terapi', label: 'Süreç' },
+              { stage: 4, name: 'Gelişim Takibi', label: 'İlerleme' },
+              { stage: 5, name: 'Mezuniyet', label: 'Kapanış' },
             ].map((item) => {
               const isActive = currentStage === item.stage;
               const isCompleted = currentStage > item.stage;

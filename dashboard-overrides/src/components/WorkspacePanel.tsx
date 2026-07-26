@@ -39,132 +39,7 @@ interface LeadData {
   contact: ContactInfo;
 }
 
-const DANISAN_DATABASE: Record<string, LeadData> = {
-  gabriela: {
-    id: 'gabriela',
-    name: 'Gabriela Christiansen',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
-    role: 'Diyet ve Beslenme Danışmanlığı',
-    leadSource: 'Webinar Katılımı',
-    rating: 'Yüksek',
-    status: 'Aktif Danışan',
-    owner: 'Berfin Akbaş',
-    ownerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    score: 90,
-    grade: 'Grup A',
-    scoreTrend: 'Kararlı İlerleme',
-    scoreInsights: [
-      'Beslenme günlüğü takibini günlük yapıyor',
-      'Seans katılım devamlılığı %100 seviyesindedir',
-      'Su tüketimi hedeflenen seviyeye ulaştı',
-      'Son 3 haftada 2.4 kg sağlıklı kayıp sağlandı'
-    ],
-    contact: {
-      topic: 'Kilo Yönetimi ve Sağlıklı Beslenme Planı',
-      firstName: 'Gabriela',
-      lastName: 'Christiansen',
-      jobTitle: 'Pazarlama Direktörü',
-      businessPhone: '0532-555-0168',
-      mobilePhone: '0532-555-0149',
-      email: 'gabriela@e-posta.com',
-      companyName: 'Bireysel Danışan',
-      website: 'www.gabriela-portfolio.com'
-    }
-  },
-  halle: {
-    id: 'halle',
-    name: 'Halle Griffiths',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-    role: 'Bireysel Yaşam Koçluğu',
-    leadSource: 'Tavsiye / Referans',
-    rating: 'Orta',
-    status: 'Aktif Danışan',
-    owner: 'Berfin Akbaş',
-    ownerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    score: 83,
-    grade: 'Grup A',
-    scoreTrend: 'Gelişiyor',
-    scoreInsights: [
-      'Girişimcilik hedefleri belirlendi',
-      'Zaman yönetimi ve odaklanma pratikleri yapılıyor',
-      'Haftalık planlama disiplini kazandı',
-      'Özgüven ve motivasyon çalışması yapıldı'
-    ],
-    contact: {
-      topic: 'Kariyer Geçişi ve Yaşam Koçluğu Programı',
-      firstName: 'Halle',
-      lastName: 'Griffiths',
-      jobTitle: 'Kıdemli Yazılım Mimarı',
-      businessPhone: '0532-555-0422',
-      mobilePhone: '0532-555-0899',
-      email: 'h.griffiths@e-posta.com',
-      companyName: 'Bireysel Danışan',
-      website: 'Yok'
-    }
-  },
-  josiah: {
-    id: 'josiah',
-    name: 'Josiah Love',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    role: 'Bireysel Psikoterapi Desteği',
-    leadSource: 'Organik Arama',
-    rating: 'Yüksek',
-    status: 'Yeni Başladı',
-    owner: 'Berfin Akbaş',
-    ownerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    score: 72,
-    grade: 'Grup B',
-    scoreTrend: 'Dengeli',
-    scoreInsights: [
-      'Anksiyete azaltma teknikleri uygulandı',
-      'Bilişsel Davranışçı Terapi metodları kullanılıyor',
-      'Sınır çizme pratikleri ödevlendirildi',
-      'Seans devamlılığı kararlı şekilde devam ediyor'
-    ],
-    contact: {
-      topic: 'Stres Yönetimi ve Duygusal Regülasyon',
-      firstName: 'Josiah',
-      lastName: 'Love',
-      jobTitle: 'Operasyon Koordinatörü',
-      businessPhone: '0532-555-0311',
-      mobilePhone: '0532-555-0723',
-      email: 'josiah.love@e-posta.com',
-      companyName: 'Bireysel Danışan',
-      website: 'Yok'
-    }
-  },
-  wyatt: {
-    id: 'wyatt',
-    name: 'Wyatt Wetmore',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-    role: 'Kariyer ve Yönetici Mentorluğu',
-    leadSource: 'Ortak Entegrasyon',
-    rating: 'Düşük',
-    status: 'Tamamlandı',
-    owner: 'Berfin Akbaş',
-    ownerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    score: 32,
-    grade: 'Grup C',
-    scoreTrend: 'Arşiv',
-    scoreInsights: [
-      'Liderlik becerileri gelişim planı tamamlandı',
-      'Ekip yönetimi ve delegasyon hedefleri tuttu',
-      '6 aylık süreç sonu başarıyla kapatıldı',
-      'İhtiyaç halinde tekrar aktif edilecek'
-    ],
-    contact: {
-      topic: 'C-Level Yönetici Liderlik Programı',
-      firstName: 'Wyatt',
-      lastName: 'Wetmore',
-      jobTitle: 'Genel Müdür',
-      businessPhone: '0532-555-0955',
-      mobilePhone: '0532-555-0487',
-      email: 'wyatt@e-posta.com',
-      companyName: 'Kurumsal Danışan',
-      website: 'Yok'
-    }
-  }
-};
+const DANISAN_DATABASE: Record<string, LeadData> = {};
 
 interface WorkspacePanelProps {
   selectedLeadId: string;
@@ -192,7 +67,7 @@ export default function WorkspacePanel({
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const lead = DANISAN_DATABASE[selectedLeadId] || DANISAN_DATABASE.gabriela;
+  const lead = DANISAN_DATABASE[selectedLeadId] || ({ id: '', name: '', avatar: '', role: '', scoreInsights: [], contact: {} } as any);
 
   // Ana Panel overview screens (Genel Bakış, Bugünün Özeti, Bekleyen İşlemler)
   // are fed from a single real aggregate endpoint; the layout below is unchanged
@@ -677,6 +552,8 @@ export default function WorkspacePanel({
 
       // Detailed views for the secondary list selections to ensure premium integration
       if (selectedLeadId === 'finans-ozeti') {
+        const f = overview?.finance ?? {};
+        const payments = (overview?.recentPayments ?? []) as Array<{ name: string; label: string; amountMinor: string }>;
         return (
           <div className="flex-1 bg-gradient-to-br from-[#eafda8]/65 via-white to-white rounded-[2.5rem] border border-gray-300/40 p-8 flex flex-col h-[calc(100vh-5rem)] shadow-sm overflow-y-auto select-none gap-6 transition-all duration-300 animate-fade-in">
             <div className="flex items-center gap-4 border-b border-black/[0.04] pb-5">
@@ -692,17 +569,17 @@ export default function WorkspacePanel({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-5 bg-white border border-gray-100 rounded-3xl">
                 <span className="text-[10px] text-gray-400 font-black block uppercase">Bugün Alınan</span>
-                <span className="text-2xl font-black text-emerald-600 block mt-1">6,000 TL</span>
+                <span className="text-2xl font-black text-emerald-600 block mt-1">{fmtMinor(f.todayCollectedMinor)}</span>
                 <span className="text-[9px] text-emerald-700 font-bold block mt-1">Tamamlanmış Tahsilat</span>
               </div>
               <div className="p-5 bg-white border border-gray-100 rounded-3xl">
                 <span className="text-[10px] text-gray-400 font-black block uppercase">Bugün Beklenen</span>
-                <span className="text-2xl font-black text-blue-600 block mt-1">4,500 TL</span>
+                <span className="text-2xl font-black text-blue-600 block mt-1">{fmtMinor(f.dueTodayOutstandingMinor)}</span>
                 <span className="text-[9px] text-blue-700 font-bold block mt-1">Günün Kalan Bakiyesi</span>
               </div>
               <div className="p-5 bg-white border border-gray-100 rounded-3xl">
                 <span className="text-[10px] text-gray-400 font-black block uppercase">Gecikmiş Ödeme</span>
-                <span className="text-2xl font-black text-rose-600 block mt-1">1,500 TL</span>
+                <span className="text-2xl font-black text-rose-600 block mt-1">{fmtMinor(f.overdueOutstandingMinor)}</span>
                 <span className="text-[9px] text-rose-700 font-bold block mt-1">Takip Edilen Tutar</span>
               </div>
             </div>
@@ -710,22 +587,16 @@ export default function WorkspacePanel({
             <div className="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col gap-4">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Finansal İşlemler</span>
               <div className="space-y-2">
-                <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Gabriela C. - Diyet ve Beslenme Seansı</span>
-                  <span className="text-emerald-600 font-black">+1,500 TL (Ödendi)</span>
-                </div>
-                <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Halle G. - Bireysel Yaşam Koçluğu Seansı</span>
-                  <span className="text-emerald-600 font-black">+4,500 TL (Ödendi)</span>
-                </div>
-                <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Kemal S. - Bireysel Psikoterapi Seansı</span>
-                  <span className="text-blue-600 font-black">4,500 TL (Bekleniyor)</span>
-                </div>
-                <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Ayşe Y. - Kariyer Mentorluğu Seansı</span>
-                  <span className="text-rose-600 font-black">1,500 TL (Gecikmiş)</span>
-                </div>
+                {payments.length === 0 ? (
+                  <div className="p-3.5 text-center text-gray-400 text-[11px] font-semibold">Henüz kaydedilmiş tahsilat bulunmuyor.</div>
+                ) : (
+                  payments.map((pay, idx) => (
+                    <div key={idx} className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
+                      <span>{pay.name} - {pay.label}</span>
+                      <span className="text-emerald-600 font-black">+{fmtMinor(pay.amountMinor)} (Ödendi)</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -786,12 +657,17 @@ export default function WorkspacePanel({
       }
 
       if (selectedLeadId === 'son-islemler') {
-        const logs = [
-          { time: '10 dk önce', desc: 'Berfin Akbaş, "Kemal Sayar" için randevuyu onayladı.', type: 'Randevu Onay', icon: CheckCircle, color: 'bg-emerald-50 text-emerald-600' },
-          { time: '1 saat önce', desc: 'Sistem, "Gabriela Christiansen" için e-arşiv faturasını oluşturdu.', type: 'Fatura', icon: FileText, color: 'bg-blue-50 text-blue-600' },
-          { time: '2 saat önce', desc: 'Web sitesi iletişim formundan yeni bir danışan adayı formu geldi.', type: 'Yeni Form', icon: Mail, color: 'bg-teal-50 text-teal-600' },
-          { time: '3 saat önce', desc: 'Halle Griffiths seansı "Tamamlandı" olarak güncellendi.', type: 'Seans Güncelleme', icon: Clock, color: 'bg-amber-50 text-amber-600' }
-        ];
+        const iconFor = (t: string) => {
+          if (t === 'Belge') return { icon: FileText, color: 'bg-blue-50 text-blue-600' };
+          if (t === 'Not') return { icon: FileText, color: 'bg-amber-50 text-amber-600' };
+          if (t === 'İletişim') return { icon: Mail, color: 'bg-teal-50 text-teal-600' };
+          if (t === 'Randevu') return { icon: CalendarCheck, color: 'bg-emerald-50 text-emerald-600' };
+          if (t === 'Finans') return { icon: CreditCard, color: 'bg-emerald-50 text-emerald-600' };
+          if (t === 'Danışan') return { icon: UserPlus, color: 'bg-indigo-50 text-indigo-600' };
+          if (t === 'Arşiv') return { icon: Clock, color: 'bg-gray-100 text-gray-600' };
+          return { icon: CheckCircle, color: 'bg-gray-50 text-gray-600' };
+        };
+        const logs = ((overview?.recentActivity ?? []) as Array<{ desc: string; time: string; type: string }>).map((a) => ({ ...a, ...iconFor(a.type) }));
 
         return (
           <div className="flex-1 bg-gradient-to-br from-[#eafda8]/65 via-white to-white rounded-[2.5rem] border border-gray-300/40 p-8 flex flex-col h-[calc(100vh-5rem)] shadow-sm overflow-y-auto select-none gap-6 transition-all duration-300 animate-fade-in">

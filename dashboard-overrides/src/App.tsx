@@ -11,13 +11,12 @@ import {
   writeDashboardCatVisibility,
 } from './components/KediDashboardKit';
 import { ClientDetails } from './types';
-import { DANISAN_DETAILS_DATABASE } from './data/clientDb';
 
 const createDetailsFromClient = (c: Client): ClientDetails => {
   return {
     id: c.id,
     name: c.name,
-    clientNumber: 'DNS-' + Math.floor(1000 + Math.random() * 9000),
+    clientNumber: 'DNS-' + (c.id || '').replace(/-/g, '').slice(0, 8).toUpperCase(),
     avatar: c.avatar,
     status: c.status,
     ageGroup: c.ageGroup,
@@ -30,10 +29,10 @@ const createDetailsFromClient = (c: Client): ClientDetails => {
     nextAppointment: c.nextAppointment || 'Yok',
     lastAppointment: c.lastAppointment || 'Yok',
     activePlan: c.activePlan,
-    remainingBalance: c.paymentStatus === 'Borçlu' ? 1500 : 0,
+    remainingBalance: 0,
     address: 'Girilmedi',
-    city: 'İstanbul',
-    district: 'Şişli',
+    city: 'Girilmedi',
+    district: 'Girilmedi',
     country: 'Türkiye',
     preferredContactMethod: 'WhatsApp',
     contactConsent: true,
@@ -312,7 +311,7 @@ export default function App() {
   const [isCatVisible, setIsCatVisible] = useState(() => readDashboardCatVisibility());
 
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
-  const [clientsDb, setClientsDb] = useState<Record<string, ClientDetails>>(DANISAN_DETAILS_DATABASE);
+  const [clientsDb, setClientsDb] = useState<Record<string, ClientDetails>>({});
 
   const loadClients = useCallback(async () => {
     try {
