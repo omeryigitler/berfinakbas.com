@@ -494,7 +494,7 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
     triggerToast(`${amt} TL ödeme başarıyla tahsil edildi!`);
   };
 
-  // Upload Document Mock
+  // Add a document (persists to the API; keeps an optimistic local copy).
   const handleAddDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     const newDoc: DocumentRecord = {
@@ -714,21 +714,28 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
     triggerToast('Seans tamamlandı olarak işaretlendi ve kullanım geçmişine eklendi!');
   };
 
-  // WhatsApp Message Mock
+  // Opens a real WhatsApp conversation with the client, pre-filled.
   const handleOpenWhatsApp = () => {
+    const digits = (client.phone || '').replace(/[^0-9]/g, '');
+    if (!digits) { triggerToast('Danışanın telefon numarası girilmemiş.', 'error'); return; }
     const text = encodeURIComponent(`Merhaba ${client.name}, nasılsınız? Randevu hatırlatması ve takibiniz için yazıyorum.`);
-    window.open(`https://wa.me/${client.phone.replace(/[^0-9]/g, '')}?text=${text}`, '_blank');
+    window.open(`https://wa.me/${digits}?text=${text}`, '_blank');
     triggerToast('WhatsApp mesajlaşma penceresi açıldı!', 'info');
   };
 
-  // Send Email Mock
+  // Opens the user's email client with a pre-filled reminder (real mailto compose).
   const handleSendEmail = () => {
-    triggerToast(`Randevu hatırlatma maili ${client.email} adresine iletildi!`);
+    if (!client.email) { triggerToast('Danışanın e-posta adresi girilmemiş.', 'error'); return; }
+    const subject = encodeURIComponent('Randevu Hatırlatması');
+    const body = encodeURIComponent(`Merhaba ${client.name},\n\nRandevu hatırlatması ve takibiniz için yazıyorum.`);
+    window.open(`mailto:${client.email}?subject=${subject}&body=${body}`, '_blank');
+    triggerToast('E-posta penceresi açıldı.', 'info');
   };
 
-  // PDF Export Mock
+  // Uses the browser print dialog (Save as PDF) — a real export, not a fake toast.
   const handlePdfExport = () => {
-    triggerToast('Danışan detay dosyası PDF formatında dışa aktarıldı ve indirildi.');
+    triggerToast('Yazdır / PDF penceresi açılıyor...', 'info');
+    setTimeout(() => window.print(), 300);
   };
 
   return (
