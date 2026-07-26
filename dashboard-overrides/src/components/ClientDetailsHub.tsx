@@ -388,10 +388,39 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   };
 
   // Add Payment
-  const handleAddPayment = (e: React.FormEvent) => {
+  const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = Number(payForm.amount);
-    
+    const payTarget = (client as any)._payTarget;
+    if (amt > 0 && payTarget) {
+      try {
+        const methodsRes = await fetch('/api/admin/finance', { headers: { accept: 'application/json' } });
+        const methodsData = methodsRes.ok ? (await methodsRes.json())?.data : null;
+        const methodId = methodsData?.paymentMethods?.[0]?.id;
+        if (methodId) {
+          const rid = crypto.randomUUID();
+          await fetch('/api/admin/finance', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-correlation-id': rid },
+            body: JSON.stringify({
+              action: 'RECORD_PAYMENT',
+              amountMinor: String(Math.round(amt * 100)),
+              clientId: client.id,
+              currency: 'TRY',
+              idempotencyKey: rid,
+              installmentId: payTarget.installmentId,
+              occurredAt: new Date().toISOString(),
+              paymentMethodId: methodId,
+              planId: payTarget.planId,
+              reason: 'Panelden ödeme tahsilatı yapıldı.',
+            }),
+          });
+        }
+      } catch {
+        /* keep the optimistic local payment when the API is unavailable */
+      }
+    }
+
     const newPayRecord: PaymentRecord = {
       date: new Date().toISOString().split('T')[0],
       amount: amt,

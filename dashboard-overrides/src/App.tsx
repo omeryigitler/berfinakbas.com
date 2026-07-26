@@ -278,6 +278,14 @@ const mapApiDetailToClientDetails = (d: any, base: ClientDetails): ClientDetails
       payment: '',
       plan: '',
     },
+    _payTarget: (() => {
+      for (const p of plansApi) {
+        for (const inst of p.installments ?? []) {
+          if (Number(inst.outstandingMinor ?? '0') > 0) return { planId: p.id, installmentId: inst.id };
+        }
+      }
+      return null;
+    })(),
   } as ClientDetails;
 };
 

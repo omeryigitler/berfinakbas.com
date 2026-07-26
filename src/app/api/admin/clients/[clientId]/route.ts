@@ -134,6 +134,15 @@ export async function GET(_request: Request, context: RouteContext) {
         select: {
           currency: true,
           id: true,
+          installments: {
+            orderBy: { sequence: "asc" },
+            select: {
+              amountDueMinor: true,
+              id: true,
+              ledgerEntries: { select: { amountMinor: true } },
+              sequence: true,
+            },
+          },
           ledgerEntries: { select: { amountMinor: true } },
           name: true,
           sessionCount: true,
@@ -199,9 +208,17 @@ export async function GET(_request: Request, context: RouteContext) {
       Math.min(client.notes.length * 3, 15),
   );
 
-  const plans = client.plans.map(({ ledgerEntries, sessionCreditEntries, ...plan }) => ({
+  const plans = client.plans.map(({ ledgerEntries, sessionCreditEntries, installments, ...plan }) => ({
     ...plan,
     balanceMinor: calculateLedgerBalance(ledgerEntries).toString(),
+    installments: installments.map((installment) => ({
+      id: installment.id,
+      sequence: installment.sequence,
+      amountDueMinor: installment.amountDueMinor.toString(),
+      outstandingMinor: (
+        installment.amountDueMinor + calculateLedgerBalance(installment.ledgerEntries)
+      ).toString(),
+    })),
     remainingSessions: sessionCreditEntries
       .reduce((total, entry) => total + entry.quantityDelta, 0)
       .toString(),
