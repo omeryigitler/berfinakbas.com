@@ -397,7 +397,25 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   };
 
   // Save Notes
-  const handleSaveNotes = () => {
+  const handleSaveNotes = async () => {
+    const noteCats: Array<[string, string, string]> = [
+      ['ADMIN', notesForm.admin, client.notes.admin],
+      ['APPOINTMENT', notesForm.appointment, client.notes.appointment],
+      ['PAYMENT', notesForm.payment, client.notes.payment],
+      ['PLAN', notesForm.plan, client.notes.plan],
+    ];
+    for (const [category, next, prev] of noteCats) {
+      if (!next || !next.trim() || next.trim() === (prev || '').trim()) continue;
+      try {
+        await fetch(`/api/admin/clients/${client.id}/notes`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-correlation-id': crypto.randomUUID() },
+          body: JSON.stringify({ category, note: next.trim() }),
+        });
+      } catch {
+        /* keep the optimistic local note when the API is unavailable */
+      }
+    }
     const updated: ClientDetails = {
       ...client,
       notes: {
