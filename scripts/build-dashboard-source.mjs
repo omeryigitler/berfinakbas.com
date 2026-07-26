@@ -58,47 +58,9 @@ await cp(overrides, path.join(workspace, "src"), { recursive: true, force: true 
 // already carrying every navigation patch plus the Ana Panel real-data wiring, so
 // no string patches are applied here (the override provides the finished file).
 
-const myWorkPanelPath = path.join(workspace, "src/components/MyWorkPanel.tsx");
-let myWorkPanelSource = await readFile(myWorkPanelPath, "utf-8");
-myWorkPanelSource = replaceRequired(
-  myWorkPanelSource,
-  `    {
-      id: 'siradaki-randevular',
-      name: 'Sıradaki Randevular',
-      avatar: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=150&h=150&fit=crop',
-      role: 'Yaklaşan Seans Zamanları',
-      score: 88,
-      date: 'Sıradaki',
-      type: 'custom',
-      category: 'Program',
-      scoreBg: 'bg-[#fffbeb]',
-      scoreText: 'text-amber-600',
-      badgeBorder: 'border-amber-100'
-    },
-`,
-  ``,
-  "Remove duplicate upcoming appointments navigation item",
-);
-myWorkPanelSource = replaceRequired(
-  myWorkPanelSource,
-  `    {
-      id: 'danisan-ozeti',
-      name: 'Danışan Özeti',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
-      role: 'Aktif, Yeni ve Potansiyel Durumları',
-      score: 85,
-      date: 'Genel',
-      type: 'custom',
-      category: 'Danışanlar',
-      scoreBg: 'bg-indigo-50',
-      scoreText: 'text-indigo-600',
-      badgeBorder: 'border-indigo-100'
-    },
-`,
-  ``,
-  "Remove hardcoded client summary navigation item",
-);
-await writeFile(myWorkPanelPath, myWorkPanelSource, "utf-8");
+// MyWorkPanel.tsx ships as a full override in dashboard-overrides/src/components,
+// carrying the navigation cleanup plus the real-service dropdown wiring, so no
+// string patches are applied here.
 
 const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
 const sidebarSource = await readFile(sidebarPath, "utf-8");
