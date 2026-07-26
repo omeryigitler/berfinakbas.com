@@ -97,7 +97,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await executeFinanceOperation(parsed.data, {
+    // executeFinanceOperation re-parses with the same schema, so hand it the raw
+    // body — passing parsed.data (already transformed, e.g. amountMinor -> bigint)
+    // would fail the second parse ("expected string, received bigint").
+    const result = await executeFinanceOperation(body, {
       actorUserId: session.user.id,
       correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
     });

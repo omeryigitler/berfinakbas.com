@@ -631,22 +631,25 @@ export async function updateInstallment(input: unknown, contextInput: FinanceMut
 }
 
 export async function executeFinanceOperation(input: unknown, context: FinanceMutationContext) {
+  // Only the discriminant is needed here; each handler re-parses with its own
+  // schema, so forward the RAW input (passing the parsed command would double-
+  // transform amountMinor string -> bigint and fail the second parse).
   const command = financeOperationPayloadSchema.parse(input);
   switch (command.action) {
     case "CREATE_PAYMENT_METHOD":
-      return createPaymentMethod(command, context);
+      return createPaymentMethod(input, context);
     case "CREATE_PLAN":
-      return createClientPlan(command, context);
+      return createClientPlan(input, context);
     case "RECORD_PAYMENT":
-      return recordPayment(command, context);
+      return recordPayment(input, context);
     case "REVERSE_PAYMENT":
-      return reversePayment(command, context);
+      return reversePayment(input, context);
     case "UPDATE_INVOICE_STATUS":
-      return updateInvoiceStatus(command, context);
+      return updateInvoiceStatus(input, context);
     case "UPDATE_PLAN_STATUS":
-      return updatePlanStatus(command, context);
+      return updatePlanStatus(input, context);
     case "UPDATE_INSTALLMENT":
-      return updateInstallment(command, context);
+      return updateInstallment(input, context);
   }
 }
 
