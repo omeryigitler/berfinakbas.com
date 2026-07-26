@@ -269,6 +269,7 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   // Add Appointment
   const handleAddAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!appForm.serviceId) return;
     const practitionerId = prereq.practitioners[0]?.id;
     if (appForm.serviceId && practitionerId) {
       try {
@@ -1633,11 +1634,13 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-gray-500 font-bold mb-1">Hizmet / Seans Türü</label>
-                    <select required value={appForm.serviceId} onChange={e => { const s = prereq.services.find((x: any) => x.id === e.target.value); setAppForm({...appForm, serviceId: e.target.value, service: s?.name ?? '', duration: s?.defaultDurationMinutes ? `${s.defaultDurationMinutes} dk` : appForm.duration}); }} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold text-gray-900 focus:outline-none focus:border-black">
-                      <option value="">Hizmet seçin</option>
-                      {prereq.services.map((s: any) => (<option key={s.id} value={s.id}>{s.name}</option>))}
-                    </select>
+                    <CustomSelect
+                      label="Hizmet / Seans Türü"
+                      placeholder="Hizmet seçin"
+                      options={prereq.services.map((s: any) => ({ value: s.id, label: s.name }))}
+                      value={appForm.serviceId}
+                      onChange={val => { const s = prereq.services.find((x: any) => x.id === val); setAppForm({...appForm, serviceId: val, service: s?.name ?? '', duration: s?.defaultDurationMinutes ? `${s.defaultDurationMinutes} dk` : appForm.duration}); }}
+                    />
                   </div>
                   <div>
                     <label className="block text-gray-500 font-bold mb-1">Seans Süresi</label>
