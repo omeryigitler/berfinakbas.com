@@ -81,7 +81,17 @@ export async function GET(_request: Request, context: RouteContext) {
   const clientPromise = database.client.findUnique({
     select: {
       birthYear: true,
+      contactLogs: {
+        orderBy: { occurredAt: "desc" },
+        select: { channel: true, id: true, occurredAt: true, result: true, summary: true },
+        take: 50,
+      },
       createdAt: true,
+      documents: {
+        orderBy: { createdAt: "desc" },
+        select: { category: true, createdAt: true, id: true, title: true, url: true },
+        take: 50,
+      },
       email: true,
       financeEntries: {
         orderBy: { occurredAt: "desc" },

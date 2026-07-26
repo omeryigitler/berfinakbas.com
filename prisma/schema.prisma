@@ -194,6 +194,8 @@ model User {
   financeEntriesCreated      FinanceLedgerEntry[]       @relation("FinanceEntryActor")
   sessionCreditsCreated      SessionCreditEntry[]       @relation("SessionCreditActor")
   clientNotesCreated         ClientNote[]               @relation("ClientNoteCreator")
+  clientDocumentsCreated     ClientDocument[]           @relation("ClientDocumentCreator")
+  clientContactLogsCreated   ClientContactLog[]         @relation("ClientContactLogCreator")
   operationalSettingsUpdated OperationalSetting[]       @relation("OperationalSettingUpdater")
 
   @@index([status], map: "users_status_idx")
@@ -283,6 +285,8 @@ model Client {
   plans                  ClientPlan[]
   financeEntries         FinanceLedgerEntry[]
   notes                  ClientNote[]
+  documents              ClientDocument[]
+  contactLogs            ClientContactLog[]
   duplicateReviewTargets Appointment[]        @relation("AppointmentDuplicateReviewTarget")
 
   emailNormalized String? @map("email_normalized") @db.VarChar(320)
@@ -742,6 +746,37 @@ model ClientNote {
 
   @@index([clientId, createdAt(sort: Desc)], map: "client_notes_client_created_idx")
   @@map("client_notes")
+}
+
+model ClientDocument {
+  id              String   @id @default(uuid()) @db.Uuid
+  clientId        String   @map("client_id") @db.Uuid
+  title           String   @db.VarChar(160)
+  category        String   @db.VarChar(40)
+  url             String?  @db.VarChar(1000)
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "client_documents_client_id_fkey")
+  createdBy       User     @relation("ClientDocumentCreator", fields: [createdByUserId], references: [id], onDelete: Restrict, map: "client_documents_created_by_user_id_fkey")
+
+  @@index([clientId, createdAt(sort: Desc)], map: "client_documents_client_created_idx")
+  @@map("client_documents")
+}
+
+model ClientContactLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  clientId        String   @map("client_id") @db.Uuid
+  channel         String   @db.VarChar(40)
+  summary         String   @db.VarChar(500)
+  result          String?  @db.VarChar(200)
+  occurredAt      DateTime @map("occurred_at") @db.Timestamptz(3)
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Restrict, map: "client_contact_logs_client_id_fkey")
+  createdBy       User     @relation("ClientContactLogCreator", fields: [createdByUserId], references: [id], onDelete: Restrict, map: "client_contact_logs_created_by_user_id_fkey")
+
+  @@index([clientId, occurredAt(sort: Desc)], map: "client_contact_logs_client_occurred_idx")
+  @@map("client_contact_logs")
 }
 
 model SettingChangeLog {

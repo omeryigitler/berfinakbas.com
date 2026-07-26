@@ -87,6 +87,7 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [isAddingContact, setIsAddingContact] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
 
   const togglePanelExclusive = (panelName: 'editing' | 'appointment' | 'plan' | 'payment' | 'document') => {
@@ -220,6 +221,7 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
     name: 'Gelişim Gözlem Formu.pdf',
     type: 'Yüklenen Belge' as 'Bilgi Formu' | 'Onam Formu' | 'Yüklenen Belge' | 'Paylaşılan PDF',
   });
+  const [contactForm, setContactForm] = useState({ channel: 'E-posta', content: '', result: '' });
 
   // Notes state
   const [notesForm, setNotesForm] = useState({
@@ -483,7 +485,7 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   };
 
   // Upload Document Mock
-  const handleAddDocument = (e: React.FormEvent) => {
+  const handleAddDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     const newDoc: DocumentRecord = {
       id: `doc-${Math.random().toString()}`,
@@ -512,6 +514,41 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
     onUpdateClient(client.id, updated);
     setIsUploadingDoc(false);
     triggerToast('Dosya başarıyla sisteme yüklendi!');
+    try {
+      await fetch(`/api/admin/clients/${client.id}/documents`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-correlation-id': crypto.randomUUID() },
+        body: JSON.stringify({ title: docForm.name, category: docForm.type }),
+      });
+    } catch {
+      /* keep the optimistic local document when the API is unavailable */
+    }
+  };
+
+  const handleAddContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactForm.content.trim()) return;
+    const newContact = {
+      id: `ch-${Math.random().toString()}`,
+      type: contactForm.channel,
+      date: new Date().toLocaleString('tr-TR'),
+      content: contactForm.content,
+      result: contactForm.result || '—',
+    };
+    onUpdateClient(client.id, { ...client, contactHistory: [newContact as any, ...client.contactHistory] });
+    setIsAddingContact(false);
+    const payload = { channel: contactForm.channel, summary: contactForm.content, result: contactForm.result || null };
+    setContactForm({ channel: 'E-posta', content: '', result: '' });
+    triggerToast('İletişim kaydı eklendi!');
+    try {
+      await fetch(`/api/admin/clients/${client.id}/contact-log`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-correlation-id': crypto.randomUUID() },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      /* keep the optimistic local contact entry when the API is unavailable */
+    }
   };
 
   // Save Notes
@@ -2028,10 +2065,47 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
         {/* TAB 8: İletişim Geçmişi */}
         {activeTab === 'iletisim-gecmisi' && (
           <div className="bg-white border border-gray-100 rounded-[1.8rem] p-6 flex flex-col gap-5 pb-12 animate-fade-in">
-            <h3 className="text-sm font-black text-gray-950 flex items-center gap-2 border-b border-gray-100 pb-3">
-              <History className="w-5 h-5 text-gray-500" />
-              <span>İletişim ve Randevu Hatırlatma Kayıtları</span>
-            </h3>
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-sm font-black text-gray-950 flex items-center gap-2">
+                <History className="w-5 h-5 text-gray-500" />
+                <span>İletişim ve Randevu Hatırlatma Kayıtları</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsAddingContact(v => !v)}
+                className="px-4 py-1.5 bg-black text-[#eafda8] text-xs font-black rounded-xl hover:bg-gray-800 transition-colors shadow-3xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{isAddingContact ? 'Vazgeç' : 'İletişim Ekle'}</span>
+              </button>
+            </div>
+
+            {isAddingContact && (
+              <form onSubmit={handleAddContact} className="bg-white border-2 border-black/10 rounded-[2rem] p-5 flex flex-col gap-4 shadow-lg animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+                  <div>
+                    <CustomSelect
+                      label="Kanal"
+                      options={[{ value: 'E-posta', label: 'E-posta' }, { value: 'WhatsApp', label: 'WhatsApp' }, { value: 'Hatırlatıcı', label: 'Hatırlatıcı' }]}
+                      value={contactForm.channel}
+                      onChange={val => setContactForm({ ...contactForm, channel: val })}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-gray-500 font-bold mb-1">Sonuç</label>
+                    <input type="text" value={contactForm.result} placeholder="Örn: Ulaşıldı, geri dönüş yapılacak" onChange={e => setContactForm({ ...contactForm, result: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold text-gray-900 focus:outline-none focus:border-black" />
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="block text-gray-500 font-bold mb-1">İçerik</label>
+                    <textarea required value={contactForm.content} placeholder="Görüşme / mesaj içeriği..." onChange={e => setContactForm({ ...contactForm, content: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold text-gray-900 focus:outline-none focus:border-black h-20 resize-none" />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                  <button type="button" onClick={() => setIsAddingContact(false)} className="px-4 py-2 bg-gray-100 rounded-xl text-gray-600 font-extrabold hover:bg-gray-200 transition-all">İptal</button>
+                  <button type="submit" className="px-5 py-2 bg-black text-[#eafda8] rounded-xl font-black shadow-md hover:bg-gray-900 transition-all">Kaydet</button>
+                </div>
+              </form>
+            )}
 
             <div className="space-y-3.5">
               {client.contactHistory.length === 0 ? (

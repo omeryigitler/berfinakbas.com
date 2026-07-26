@@ -278,6 +278,21 @@ const mapApiDetailToClientDetails = (d: any, base: ClientDetails): ClientDetails
       payment: '',
       plan: '',
     },
+    documents: (d.documents ?? []).map((doc: any) => ({
+      id: doc.id,
+      name: doc.title,
+      type: doc.category,
+      size: '—',
+      date: fmtDate(doc.createdAt),
+      status: 'Aktif',
+    })),
+    contactHistory: (d.contactLogs ?? []).map((ch: any) => ({
+      id: ch.id,
+      type: ch.channel,
+      date: fmtDateTime(ch.occurredAt),
+      content: ch.summary,
+      result: ch.result ?? '',
+    })),
     _payTarget: (() => {
       for (const p of plansApi) {
         for (const inst of p.installments ?? []) {
