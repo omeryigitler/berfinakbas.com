@@ -230,7 +230,7 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   });
 
   // Save general client details edit
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     const updated: ClientDetails = {
       ...client,
@@ -264,6 +264,28 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
     onUpdateClient(client.id, updated);
     setIsEditing(false);
     triggerToast('Danışan bilgileri başarıyla güncellendi!');
+    try {
+      const parts = editForm.name.trim().split(/\s+/);
+      const firstName = parts.shift() || editForm.name.trim() || 'Danışan';
+      const lastName = parts.join(' ') || '-';
+      const yearFromBirth = editForm.birthDate ? Number(String(editForm.birthDate).slice(0, 4)) : NaN;
+      const birthYear = Number.isFinite(yearFromBirth) && yearFromBirth > 1900
+        ? yearFromBirth
+        : (Number(editForm.age) ? new Date().getFullYear() - Number(editForm.age) : null);
+      await fetch(`/api/admin/clients/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json', 'x-correlation-id': crypto.randomUUID() },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          phone: editForm.phone || null,
+          email: editForm.email || null,
+          birthYear,
+        }),
+      });
+    } catch {
+      /* keep the optimistic local update when the API is unavailable */
+    }
   };
 
   // Add Appointment

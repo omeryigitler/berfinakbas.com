@@ -373,7 +373,7 @@ export default function App() {
     setClients(prev => prev.map(c => c.id === id ? syncClientFromDetails(updatedDetails, c) : c));
   };
 
-  const handleDeleteClient = (id: string) => {
+  const handleDeleteClient = async (id: string) => {
     setClientsDb(prev => {
       const updated = { ...prev };
       delete updated[id];
@@ -381,6 +381,15 @@ export default function App() {
     });
     setClients(prev => prev.filter(c => c.id !== id));
     setSelectedLeadId('');
+    try {
+      // Soft-delete (status -> INACTIVE) so the record moves to Arşiv and can be restored.
+      await fetch(`/api/admin/clients/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-correlation-id': crypto.randomUUID() },
+      });
+    } catch {
+      /* keep the optimistic local removal when the API is unavailable */
+    }
   };
 
   const handleAddClient = async (newlyCreated: Client) => {

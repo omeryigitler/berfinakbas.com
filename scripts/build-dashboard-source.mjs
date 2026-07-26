@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
@@ -48,14 +48,11 @@ await checkoutPinnedSource(SOURCE_REPOSITORY, SOURCE_COMMIT, workspace, "Dashboa
 await checkoutPinnedSource(KEDI_REPOSITORY, KEDI_COMMIT, kediWorkspace, "Kedi");
 await cp(overrides, path.join(workspace, "src"), { recursive: true, force: true });
 
-const appPath = path.join(workspace, "src/App.tsx");
-const appSource = await readFile(appPath, "utf-8");
-// App.tsx (and ClientDetailsHub.tsx) ship as full files in dashboard-overrides/src,
-// already carrying the real-data wiring plus the navigation patches below, so the
-// previous replaceRequired steps for App.tsx are provided by the override itself.
-let patchedApp = appSource;
-patchedApp = patchedApp.replaceAll("Ömer Yiğitler", "Berfin Akbaş").replaceAll("Ömer YİĞİTLER", "Berfin Akbaş").replaceAll("ÖMER YİĞİTLER", "Berfin Akbaş");
-await writeFile(appPath, patchedApp, "utf-8");
+// App.tsx, ClientDetailsHub.tsx and WorkspacePanel.tsx ship as full override files
+// that already carry their real-data wiring. Their mock representative/audit names
+// ("Ömer Yiğitler") — along with the same names baked into the cloned MyWorkPanel and
+// clientDb mock data — are rewritten to the site owner's identity by a single global
+// sweep run just before the build (see renameIdentityAcrossSource below).
 
 // WorkspacePanel.tsx ships as a full file in dashboard-overrides/src/components,
 // already carrying every navigation patch plus the Ana Panel real-data wiring, so
@@ -152,6 +149,26 @@ const dashboardKitSource = await readFile(path.join(kediWorkspace, "src/dashboar
 let patchedDashboardKit = replaceRequired(dashboardKitSource, "import CatWidget from '../components/CatWidget';", "import CatWidget from './KediCatWidget';", "Kedi dashboard integration import");
 patchedDashboardKit = replaceRequired(patchedDashboardKit, '    <div className="h-full overflow-y-auto bg-[#f6f5f1] p-5 text-[#292723] sm:p-6">', '    <div className="h-full overflow-y-auto overscroll-contain bg-[#f6f5f1] p-5 text-[#292723] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:p-6">', "Kedi hidden scrollbar");
 await writeFile(path.join(dashboardComponents, "KediDashboardKit.tsx"), patchedDashboardKit, "utf-8");
+
+// Single identity sweep across the whole source tree so no mock "Ömer Yiğitler"
+// (override files, cloned MyWorkPanel, clientDb mock data) leaks into the built panel.
+async function renameIdentityAcrossSource(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await renameIdentityAcrossSource(entryPath);
+    } else if (/\.(tsx?|jsx?)$/.test(entry.name)) {
+      const source = await readFile(entryPath, "utf-8");
+      const renamed = source
+        .replaceAll("Ömer Yiğitler", "Berfin Akbaş")
+        .replaceAll("Ömer YİĞİTLER", "Berfin Akbaş")
+        .replaceAll("ÖMER YİĞİTLER", "Berfin Akbaş");
+      if (renamed !== source) await writeFile(entryPath, renamed, "utf-8");
+    }
+  }
+}
+await renameIdentityAcrossSource(path.join(workspace, "src"));
 
 await run("npm", ["install", "--no-package-lock"], workspace);
 await run("npm", ["run", "build", "--", "--base=/yonetim/"], workspace);
