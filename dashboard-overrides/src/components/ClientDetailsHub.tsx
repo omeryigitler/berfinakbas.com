@@ -1018,9 +1018,9 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
           </div>
         </div>
 
-        {/* Embedded Interactive Horizontal Process Stepper (Dribbble Opportunity Sales Process Style) */}
+        {/* Danışan süreç adımları (yatay stepper) */}
         <div className="w-full border-t border-black/10 pt-4 mt-2 flex flex-col xl:flex-row items-stretch xl:items-center gap-2">
-          {/* Left Title Capsule (Opportunity Sales Process style) */}
+          {/* Sol başlık kapsülü */}
           <div className="flex items-center shrink-0 bg-[#138e7d] text-white pl-4 pr-4 py-2.5 rounded-l-3xl rounded-r-xl shadow-sm gap-4 select-none min-w-[210px]">
             <div className="flex flex-col gap-0.5">
               <span className="text-[11px] font-black uppercase tracking-wider text-white/90">Danışan Süreci</span>

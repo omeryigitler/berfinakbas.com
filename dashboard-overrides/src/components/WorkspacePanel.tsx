@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import ClientListView from './ClientListView';
 import ClientDetailsHub from './ClientDetailsHub';
-import { DANISAN_DETAILS_DATABASE } from '../data/clientDb';
 import { ClientDetails } from '../types';
 import { 
   Save, Plus, Trash2, RotateCw, Key, FileText, Award, GitBranch, MoreHorizontal,
