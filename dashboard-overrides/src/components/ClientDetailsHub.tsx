@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CustomSelect } from './CustomSelect';
 import { CustomDatePicker } from './CustomDatePicker';
 import { CustomTimePicker } from './CustomTimePicker';
@@ -176,11 +176,26 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   const [appForm, setAppForm] = useState({
     date: '2026-07-25',
     time: '11:00',
-    service: client.ageGroup === 'Çocuk' ? 'Çocuk Gelişimi ve Pedagoji' : 'Diyet ve Beslenme',
+    service: '',
+    serviceId: '',
     duration: '50 dk',
     type: 'Online' as 'Online' | 'Yüz Yüze',
     note: ''
   });
+  const [prereq, setPrereq] = useState<{ services: any[]; practitioners: any[] }>({ services: [], practitioners: [] });
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/appointment-prerequisites', { headers: { accept: 'application/json' } });
+        if (!res.ok) return;
+        const payload = await res.json();
+        const data = payload?.data ?? {};
+        setPrereq({ services: data.services ?? [], practitioners: data.practitioners ?? [] });
+      } catch {
+        /* ignore prerequisite load errors */
+      }
+    })();
+  }, []);
 
   // New Plan Form State
   const [planForm, setPlanForm] = useState({
@@ -250,8 +265,31 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   };
 
   // Add Appointment
-  const handleAddAppointment = (e: React.FormEvent) => {
+  const handleAddAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
+    const practitionerId = prereq.practitioners[0]?.id;
+    if (appForm.serviceId && practitionerId) {
+      try {
+        const durationMinutes = parseInt(String(appForm.duration).replace(/\D/g, ''), 10) || 50;
+        await fetch('/api/admin/appointments', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-correlation-id': crypto.randomUUID() },
+          body: JSON.stringify({
+            clientId: client.id,
+            serviceId: appForm.serviceId,
+            practitionerId,
+            appointmentDate: appForm.date,
+            appointmentTime: appForm.time,
+            durationMinutes,
+            locationType: appForm.type === 'Online' ? 'ONLINE' : 'IN_PERSON',
+            requestNote: appForm.note || null,
+            guardianId: null,
+          }),
+        });
+      } catch {
+        /* keep the optimistic local appointment when the API is unavailable */
+      }
+    }
     const newApp: Appointment = {
       id: Math.random().toString(),
       date: appForm.date,
@@ -1539,7 +1577,10 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-gray-500 font-bold mb-1">Hizmet / Seans Türü</label>
-                    <input type="text" required value={appForm.service} onChange={e => setAppForm({...appForm, service: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold text-gray-900 focus:outline-none focus:border-black" />
+                    <select required value={appForm.serviceId} onChange={e => { const s = prereq.services.find((x: any) => x.id === e.target.value); setAppForm({...appForm, serviceId: e.target.value, service: s?.name ?? '', duration: s?.defaultDurationMinutes ? `${s.defaultDurationMinutes} dk` : appForm.duration}); }} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold text-gray-900 focus:outline-none focus:border-black">
+                      <option value="">Hizmet seçin</option>
+                      {prereq.services.map((s: any) => (<option key={s.id} value={s.id}>{s.name}</option>))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-gray-500 font-bold mb-1">Seans Süresi</label>
