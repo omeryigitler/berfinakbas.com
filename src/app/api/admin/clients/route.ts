@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { hasPermission } from "@/domain/auth/permissions";
 import { matchesClientCreateReplay } from "@/domain/clients/client-create-idempotency";
 import { createClientPayloadSchema } from "@/domain/clients/client-management";
+import { calculateLedgerBalance } from "@/domain/finance/finance-operations";
 import { isRetryableTransactionError } from "@/lib/booking/appointment-hold-service";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
@@ -110,6 +111,17 @@ export async function GET(request: Request) {
         },
       },
       createdAt: true,
+      plans: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          currency: true,
+          ledgerEntries: { select: { amountMinor: true } },
+          name: true,
+          sessionCount: true,
+          sessionCreditEntries: { select: { quantityDelta: true } },
+          status: true,
+        },
+      },
       email: true,
       firstName: true,
       id: true,
@@ -149,8 +161,20 @@ export async function GET(request: Request) {
             Math.min(client._count.notes * 3, 15),
         );
 
+        const activePlan =
+          client.plans.find((plan) => plan.status === "ACTIVE") ?? client.plans[0] ?? null;
+        const remainingSessions = activePlan
+          ? activePlan.sessionCreditEntries.reduce((total, entry) => total + entry.quantityDelta, 0)
+          : 0;
+        const openBalanceMinor = client.plans.reduce((total, plan) => {
+          const balance = calculateLedgerBalance(plan.ledgerEntries);
+          return total + (balance > 0n ? balance : 0n);
+        }, 0n);
+
         return {
+          activePlanName: activePlan?.name ?? null,
           appointmentsCount: client._count.appointments,
+          currency: activePlan?.currency ?? client.plans[0]?.currency ?? "TRY",
           createdAt: client.createdAt,
           email: client.email,
           firstName: client.firstName,
@@ -159,9 +183,12 @@ export async function GET(request: Request) {
           nextAppointment,
           notesCount: client._count.notes,
           phone: client.phone,
+          openBalanceMinor: openBalanceMinor.toString(),
           plansCount: client._count.plans,
           preferredName: client.preferredName,
+          remainingSessions,
           score,
+          sessionCount: activePlan?.sessionCount ?? null,
           status: client.status,
           type: client.type,
           updatedAt: client.updatedAt,

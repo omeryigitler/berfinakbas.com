@@ -157,6 +157,20 @@ export default function WorkspaceOverview({
               >
                 Ara
               </button>
+              <button
+                disabled={!completableAppointment || submitting}
+                onClick={() => {
+                  if (completableAppointment) onCompleteAppointment(completableAppointment.id);
+                }}
+                title={
+                  completableAppointment
+                    ? "Son onaylanmış seansı tamamlandı olarak işaretle"
+                    : "Tamamlanacak onaylı seans yok"
+                }
+                type="button"
+              >
+                Tamamla
+              </button>
             </span>
           </div>
           <div className={styles.nextAction}>
@@ -173,27 +187,11 @@ export default function WorkspaceOverview({
           </div>
           <div className={`${styles.nextAction} ${styles.nextActionMuted}`}>
             <span className={styles.nextActionIcon}>
-              <SalesHubIcon name="history" size={16} />
+              <SalesHubIcon name="phone" size={16} />
             </span>
             <span className={styles.nextActionText}>
               <strong>Son Görüşme</strong>
-              <span>{lastVisit ? statusText(lastVisit.status) : "Kayıt yok"}</span>
             </span>
-            {completableAppointment ? (
-              <button
-                className={styles.smallPillButton}
-                disabled={submitting}
-                onClick={() => onCompleteAppointment(completableAppointment.id)}
-                style={{ marginLeft: "auto" }}
-                title={`${formatDashboardDate(
-                  completableAppointment.startsAt,
-                  true,
-                )} tarihli onaylanmış seansı tamamlandı olarak işaretle`}
-                type="button"
-              >
-                Tamamla
-              </button>
-            ) : null}
             <span className={styles.stepBadge}>
               {lastVisit ? formatDashboardDate(lastVisit.startsAt) : emptyValue}
             </span>
@@ -272,10 +270,6 @@ export default function WorkspaceOverview({
           <div className={styles.infoRow}>
             <span>Toplam Plan Tutarı</span>
             <strong>{detailView.planTotalLabel}</strong>
-          </div>
-          <div className={styles.infoRow}>
-            <span>Alınan Ödeme</span>
-            <strong>{detailView.paidLabel}</strong>
           </div>
           <div className={styles.infoRow}>
             <span>Kalan Borç Tutarı</span>

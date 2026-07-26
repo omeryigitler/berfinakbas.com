@@ -50,47 +50,10 @@ await cp(overrides, path.join(workspace, "src"), { recursive: true, force: true 
 
 const appPath = path.join(workspace, "src/App.tsx");
 const appSource = await readFile(appPath, "utf-8");
-let patchedApp = replaceRequired(
-  appSource,
-  `  const handleSelectLead = (leadId: string) => {
-    if (!showOrta) return;
-
-    if (selectedLeadId === leadId) {
-      setShowSag(prev => !prev);
-    } else {
-      setSelectedLeadId(leadId);
-      setShowSag(true);
-    }
-  };`,
-  `  const handleSelectLead = (leadId: string) => {
-    if (!showOrta) return;
-    setSelectedLeadId(leadId);
-    setShowSag(true);
-  };`,
-  "Module selection keeps workspace open",
-);
-patchedApp = replaceRequired(
-  patchedApp,
-  `  const handleToggleCat = () => {`,
-  `  const handleOpenWorkspace = (menuItem: string, itemId: string) => {
-    setActiveMenuItem(menuItem);
-    setSelectedLeadId(itemId);
-    setShowOrta(true);
-    setShowSag(true);
-  };
-
-  const handleToggleCat = () => {`,
-  "Dashboard summary navigation handler",
-);
-patchedApp = replaceRequired(
-  patchedApp,
-  `                  onDeleteClient={handleDeleteClient}
-                />`,
-  `                  onDeleteClient={handleDeleteClient}
-                  onOpenWorkspace={handleOpenWorkspace}
-                />`,
-  "Dashboard summary navigation prop",
-);
+// App.tsx (and ClientDetailsHub.tsx) ship as full files in dashboard-overrides/src,
+// already carrying the real-data wiring plus the navigation patches below, so the
+// previous replaceRequired steps for App.tsx are provided by the override itself.
+let patchedApp = appSource;
 patchedApp = patchedApp.replaceAll("Ömer Yiğitler", "Berfin Akbaş").replaceAll("Ömer YİĞİTLER", "Berfin Akbaş").replaceAll("ÖMER YİĞİTLER", "Berfin Akbaş");
 await writeFile(appPath, patchedApp, "utf-8");
 
