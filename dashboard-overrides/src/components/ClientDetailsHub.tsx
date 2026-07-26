@@ -201,6 +201,8 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   const [planForm, setPlanForm] = useState({
     name: client.ageGroup === 'Çocuk' ? 'Oyun Terapisi Seans Planı' : 'Detaylı Yaşam Koçluğu Planı',
     totalSessions: 10,
+    price: 5000,
+    sessionDuration: 50,
     startDate: '2026-07-20',
     endDate: '2026-10-20',
     note: ''
@@ -324,8 +326,34 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
   };
 
   // Add Plan
-  const handleAddPlan = (e: React.FormEvent) => {
+  const handleAddPlan = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (planForm.price > 0) {
+      try {
+        const rid = crypto.randomUUID();
+        const totalAmountMinor = String(Math.round(planForm.price * 100));
+        await fetch('/api/admin/finance', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-correlation-id': rid },
+          body: JSON.stringify({
+            action: 'CREATE_PLAN',
+            clientId: client.id,
+            currency: 'TRY',
+            idempotencyKey: rid,
+            installments: [{ amountMinor: totalAmountMinor, dueDate: planForm.startDate, sequence: 1 }],
+            name: planForm.name,
+            reason: 'Danışan planı panelden oluşturuldu.',
+            sessionCount: planForm.totalSessions,
+            sessionDurationMinutes: planForm.sessionDuration || 50,
+            totalAmountMinor,
+            validFrom: planForm.startDate,
+            validUntil: planForm.endDate || null,
+          }),
+        });
+      } catch {
+        /* keep the optimistic local plan when the API is unavailable */
+      }
+    }
     const newPlan: Plan = {
       name: planForm.name,
       status: 'Aktif',
@@ -1691,7 +1719,10 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
                     <label className="block text-gray-500 font-bold mb-1">Toplam Seans Adedi</label>
                     <input type="number" required value={planForm.totalSessions} onChange={e => setPlanForm({...planForm, totalSessions: Number(e.target.value)})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-bold text-gray-900 focus:outline-none focus:border-black" />
                   </div>
-                  <div className="hidden md:block"></div>
+                  <div>
+                    <label className="block text-gray-500 font-bold mb-1">Toplam Ücret (TL)</label>
+                    <input type="number" required value={planForm.price} onChange={e => setPlanForm({...planForm, price: Number(e.target.value)})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-bold text-gray-900 focus:outline-none focus:border-black" />
+                  </div>
                   <div>
                     <label className="block text-gray-500 font-bold mb-1">Başlangıç Tarihi</label>
                     <CustomDatePicker
