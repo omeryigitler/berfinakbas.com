@@ -4,6 +4,7 @@ import {
   EmptyState,
   Field,
   Metric,
+  SelectField,
   StatusPill,
   formatDate,
   normalized,
@@ -64,7 +65,7 @@ export function SettingsView({ data, selectedItemId, refresh, notify }: ModuleVi
     kvkk:[['retentionMonths','Saklama süresi (ay)','60'],['marketingDefault','Pazarlama varsayılanı','false'],['auditEnabled','Audit kaydı','true'],['exportEnabled','Veri dışa aktarımı','true']],
     gorunum:[['compactMode','Kompakt görünüm','false'],['reducedMotion','Azaltılmış hareket','false'],['showCat','Kedi varsayılanı','true'],['language','Panel dili','tr']],
   };
-  return <section className="rounded-[2rem] border border-black/[0.07] bg-white/88 p-5"><div className="flex justify-between gap-4"><div><h2 className="text-[13px] font-black">{selectedItemId==='isletme'?'İşletme ayarları':selectedItemId==='randevu'?'Randevu ayarları':selectedItemId==='bildirimler'?'Bildirim ayarları':selectedItemId==='kvkk'?'KVKK ve veri ayarları':'Görünüm ayarları'}</h2><p className="mt-1 text-[10px] font-semibold text-gray-400">Değişiklikler kalıcı olarak saklanır.</p></div><button type="button" onClick={()=>void save()} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">Kaydet</button></div><div className="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-3">{fields[selectedItemId]?.map(([key,label,defaultValue])=>{const boolean=['true','false'].includes(defaultValue);return <Field key={key} label={label}>{boolean?<select value={String(value[key]??defaultValue)} onChange={(event)=>setValue((current)=>({...current,[key]:event.target.value==='true'}))}><option value="true">Aktif</option><option value="false">Pasif</option></select>:<input value={value[key]??defaultValue} onChange={(event)=>setValue((current)=>({...current,[key]:/^\d+$/.test(defaultValue)?Number(event.target.value):event.target.value}))}/>}</Field>;})}</div></section>;
+  return <section className="rounded-[2rem] border border-black/[0.07] bg-white/88 p-5"><div className="flex justify-between gap-4"><div><h2 className="text-[13px] font-black">{selectedItemId==='isletme'?'İşletme ayarları':selectedItemId==='randevu'?'Randevu ayarları':selectedItemId==='bildirimler'?'Bildirim ayarları':selectedItemId==='kvkk'?'KVKK ve veri ayarları':'Görünüm ayarları'}</h2><p className="mt-1 text-[10px] font-semibold text-gray-400">Değişiklikler kalıcı olarak saklanır.</p></div><button type="button" onClick={()=>void save()} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">Kaydet</button></div><div className="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-3">{fields[selectedItemId]?.map(([key,label,defaultValue])=>{const boolean=['true','false'].includes(defaultValue);return boolean?<SelectField key={key} label={label} value={String(value[key]??defaultValue)} onChange={(val)=>setValue((current)=>({...current,[key]:val==='true'}))} options={[['true','Aktif'],['false','Pasif']]} />:<Field key={key} label={label}><input value={value[key]??defaultValue} onChange={(event)=>setValue((current)=>({...current,[key]:/^\d+$/.test(defaultValue)?Number(event.target.value):event.target.value}))}/></Field>;})}</div></section>;
 }
 
 export function ArchiveView({ data, selectedItemId, filter, sortDirection, refresh, notify }: ModuleViewsProps) {

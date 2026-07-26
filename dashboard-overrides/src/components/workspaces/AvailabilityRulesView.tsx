@@ -1,4 +1,6 @@
 import { weekdayLabels } from './availability-controller';
+import { CustomSelect } from '../CustomSelect';
+import { CustomTimePicker } from '../CustomTimePicker';
 
 export default function AvailabilityRulesView({ data, controller }: { data: any; controller: any }) {
   const { rules, setRules, saveRules, saving } = controller;
@@ -20,11 +22,20 @@ export default function AvailabilityRulesView({ data, controller }: { data: any;
             <button type="button" onClick={() => setRules((current: any[]) => current.map((item, itemIndex) => itemIndex === index ? { ...item, active: !item.active } : item))} className={`rounded-full px-3 py-1.5 text-[8px] font-black ${rule.active ? 'bg-black text-[#eafda8]' : 'bg-gray-200 text-gray-500'}`}>
               {rule.active ? 'Açık' : 'Kapalı'}
             </button>
-            <input type="time" value={rule.start} disabled={!rule.active} onChange={(event) => setRules((current: any[]) => current.map((item, itemIndex) => itemIndex === index ? { ...item, start: event.target.value } : item))} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-[10px] font-bold disabled:opacity-40" />
-            <input type="time" value={rule.end} disabled={!rule.active} onChange={(event) => setRules((current: any[]) => current.map((item, itemIndex) => itemIndex === index ? { ...item, end: event.target.value } : item))} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-[10px] font-bold disabled:opacity-40" />
-            <select value={rule.slotIncrementMinutes} disabled={!rule.active} onChange={(event) => setRules((current: any[]) => current.map((item, itemIndex) => itemIndex === index ? { ...item, slotIncrementMinutes: Number(event.target.value) } : item))} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-[10px] font-bold disabled:opacity-40">
-              {[5, 10, 15, 20, 30, 45, 60].map((value) => <option key={value} value={value}>{value} dk</option>)}
-            </select>
+            <div className={rule.active ? '' : 'pointer-events-none opacity-40'}>
+              <CustomTimePicker value={rule.start} onChange={(val) => setRules((current: any[]) => current.map((item, itemIndex) => itemIndex === index ? { ...item, start: val } : item))} />
+            </div>
+            <div className={rule.active ? '' : 'pointer-events-none opacity-40'}>
+              <CustomTimePicker value={rule.end} onChange={(val) => setRules((current: any[]) => current.map((item, itemIndex) => itemIndex === index ? { ...item, end: val } : item))} />
+            </div>
+            <div className={rule.active ? '' : 'pointer-events-none opacity-40'}>
+              <CustomSelect
+                className="py-2 text-[10px] border-black/10"
+                value={String(rule.slotIncrementMinutes)}
+                onChange={(val) => setRules((current: any[]) => current.map((item, itemIndex) => itemIndex === index ? { ...item, slotIncrementMinutes: Number(val) } : item))}
+                options={[5, 10, 15, 20, 30, 45, 60].map((value) => ({ value: String(value), label: `${value} dk` }))}
+              />
+            </div>
           </div>
         ))}
       </div>

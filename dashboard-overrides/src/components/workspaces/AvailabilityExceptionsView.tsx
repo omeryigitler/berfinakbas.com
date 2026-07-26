@@ -1,4 +1,4 @@
-import { EmptyState, formatDate, normalized, type ModuleViewsProps } from './shared';
+import { EmptyState, SimpleDate, SimpleSelect, SimpleTime, formatDate, normalized, type ModuleViewsProps } from './shared';
 
 export default function AvailabilityExceptionsView({ props, controller }: { props: ModuleViewsProps; controller: any }) {
   const { data, selectedItemId, filter, sortDirection } = props;
@@ -20,10 +20,10 @@ export default function AvailabilityExceptionsView({ props, controller }: { prop
       {exceptionOpen && (
         <form onSubmit={createException} className="rounded-[2rem] border border-black/[0.07] bg-white/92 p-5">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Tarih</span><input type="date" name="date" required className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
-            {selectedItemId === 'kapali-zamanlar' && <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Tür</span><select name="type" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold"><option value="CLOSED">Tam gün kapalı</option><option value="BLOCKED">Saat aralığı kapalı</option></select></label>}
-            <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Başlangıç</span><input type="time" name="start" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
-            <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Bitiş</span><input type="time" name="end" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
+            <SimpleDate label="Tarih" name="date" />
+            {selectedItemId === 'kapali-zamanlar' && <SimpleSelect label="Tür" name="type" options={[['CLOSED', 'Tam gün kapalı'], ['BLOCKED', 'Saat aralığı kapalı']]} />}
+            <SimpleTime label="Başlangıç" name="start" />
+            <SimpleTime label="Bitiş" name="end" />
             <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Sebep</span><input name="reasonCode" required defaultValue="MANUAL" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>
             <label className="space-y-1.5 xl:col-span-2"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">Özel not</span><textarea name="privateNote" maxLength={500} className="min-h-20 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-semibold" /></label>
           </div>

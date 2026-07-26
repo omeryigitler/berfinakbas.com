@@ -1,11 +1,13 @@
-import { cloneElement } from 'react';
+import { cloneElement, useState } from 'react';
 import { FileText } from 'lucide-react';
 import type {
   InputHTMLAttributes,
   ReactElement,
-  SelectHTMLAttributes,
 } from 'react';
 import type { WorkspaceToast } from './WorkspaceFrame';
+import { CustomSelect } from '../CustomSelect';
+import { CustomDatePicker } from '../CustomDatePicker';
+import { CustomTimePicker } from '../CustomTimePicker';
 
 export interface ModuleViewsProps {
   activeMenuItem: string;
@@ -232,8 +234,49 @@ export function SimpleInput(props: InputHTMLAttributes<HTMLInputElement> & { lab
   return <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span><input {...inputProps} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold" /></label>;
 }
 
-export function SimpleSelect({ label, options, ...props }: SelectHTMLAttributes<HTMLSelectElement> & { label: string; options: Array<[string, string]> }) {
-  return <label className="space-y-1.5"><span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span><select {...props} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-[10px] font-bold">{options.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select></label>;
+// Custom dropdown that stays FormData-compatible via a synced hidden input, so the
+// existing name-based form handlers keep working while the visual matches the design.
+export function SimpleSelect({ label, options, name, defaultValue }: { label: string; options: Array<[string, string]>; name?: string; defaultValue?: string }) {
+  const [value, setValue] = useState(defaultValue ?? options[0]?.[0] ?? '');
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span>
+      <CustomSelect className="py-2.5 text-[10px] border-black/10" options={options.map(([v, t]) => ({ value: v, label: t }))} value={value} onChange={setValue} />
+      {name && <input type="hidden" name={name} value={value} />}
+    </label>
+  );
+}
+
+export function SimpleDate({ label, name, defaultValue }: { label: string; name?: string; defaultValue?: string }) {
+  const [value, setValue] = useState(defaultValue ?? '');
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span>
+      <CustomDatePicker value={value} onChange={setValue} />
+      {name && <input type="hidden" name={name} value={value} />}
+    </label>
+  );
+}
+
+export function SimpleTime({ label, name, defaultValue }: { label: string; name?: string; defaultValue?: string }) {
+  const [value, setValue] = useState(defaultValue ?? '');
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{label}</span>
+      <CustomTimePicker value={value} onChange={setValue} />
+      {name && <input type="hidden" name={name} value={value} />}
+    </label>
+  );
+}
+
+// Controlled variant of Field for enum/boolean values, rendered with the design's CustomSelect.
+export function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]> }) {
+  return (
+    <div className="block rounded-[1.25rem] border border-black/[0.05] bg-[#faf9f6] p-3.5">
+      <span className="mb-2 block text-[8px] font-black uppercase tracking-[0.12em] text-gray-400">{label}</span>
+      <CustomSelect className="py-2.5 text-[10px] border-black/10" options={options.map(([v, t]) => ({ value: v, label: t }))} value={value} onChange={onChange} />
+    </div>
+  );
 }
 
 export function Mini({ label, value }: { label: string; value: string }) {

@@ -1,5 +1,5 @@
 import { Link2 } from 'lucide-react';
-import { Field, Metric, StatusPill, type ModuleViewsProps } from './shared';
+import { Field, Metric, SelectField, StatusPill, type ModuleViewsProps } from './shared';
 
 export default function AvailabilitySettingsView({ props, controller }: { props: ModuleViewsProps; controller: any }) {
   const { data, selectedItemId } = props;
@@ -14,12 +14,12 @@ export default function AvailabilitySettingsView({ props, controller }: { props:
         </div>
         <div className="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-3">
           {firstMeeting ? <>
-            <Field label="Aktif"><select value={settingsValue.enabled === false ? 'false' : 'true'} onChange={(event) => setSettingsValue((current: any) => ({ ...current, enabled: event.target.value === 'true' }))}><option value="true">Aktif</option><option value="false">Pasif</option></select></Field>
+            <SelectField label="Aktif" value={settingsValue.enabled === false ? 'false' : 'true'} onChange={(val) => setSettingsValue((current: any) => ({ ...current, enabled: val === 'true' }))} options={[['true', 'Aktif'], ['false', 'Pasif']]} />
             <Field label="Yetişkin süresi (dk)"><input type="number" min={5} max={240} value={settingsValue.adultDurationMinutes ?? 15} onChange={(event) => setSettingsValue((current: any) => ({ ...current, adultDurationMinutes: Number(event.target.value) }))} /></Field>
             <Field label="Çocuk süresi (dk)"><input type="number" min={5} max={240} value={settingsValue.childDurationMinutes ?? 15} onChange={(event) => setSettingsValue((current: any) => ({ ...current, childDurationMinutes: Number(event.target.value) }))} /></Field>
-            <Field label="Ücretli / ücretsiz"><select value={settingsValue.pricing ?? 'FREE'} onChange={(event) => setSettingsValue((current: any) => ({ ...current, pricing: event.target.value }))}><option value="FREE">Ücretsiz</option><option value="PAID">Ücretli</option></select></Field>
-            <Field label="Görüşme türü"><select value={settingsValue.locationType ?? 'IN_PERSON'} onChange={(event) => setSettingsValue((current: any) => ({ ...current, locationType: event.target.value }))}><option value="IN_PERSON">Yüz yüze</option><option value="ONLINE">Online</option><option value="HYBRID">Hibrit</option></select></Field>
-            <Field label="Varsayılan hizmet"><select value={settingsValue.serviceId ?? ''} onChange={(event) => setSettingsValue((current: any) => ({ ...current, serviceId: event.target.value }))}><option value="">Seçiniz</option>{(data.services ?? []).map((service: any) => <option key={service.id} value={service.id}>{service.name}</option>)}</select></Field>
+            <SelectField label="Ücretli / ücretsiz" value={settingsValue.pricing ?? 'FREE'} onChange={(val) => setSettingsValue((current: any) => ({ ...current, pricing: val }))} options={[['FREE', 'Ücretsiz'], ['PAID', 'Ücretli']]} />
+            <SelectField label="Görüşme türü" value={settingsValue.locationType ?? 'IN_PERSON'} onChange={(val) => setSettingsValue((current: any) => ({ ...current, locationType: val }))} options={[['IN_PERSON', 'Yüz yüze'], ['ONLINE', 'Online'], ['HYBRID', 'Hibrit']]} />
+            <SelectField label="Varsayılan hizmet" value={settingsValue.serviceId ?? ''} onChange={(val) => setSettingsValue((current: any) => ({ ...current, serviceId: val }))} options={[['', 'Seçiniz'] as [string, string], ...(data.services ?? []).map((service: any) => [service.id, service.name] as [string, string])]} />
           </> : <>
             <Field label="Minimum bildirim (saat)"><input type="number" min={0} value={settingsValue.minimumNoticeHours ?? 24} onChange={(event) => setSettingsValue((current: any) => ({ ...current, minimumNoticeHours: Number(event.target.value) }))} /></Field>
             <Field label="İleri rezervasyon (gün)"><input type="number" min={1} value={settingsValue.maximumAdvanceDays ?? 60} onChange={(event) => setSettingsValue((current: any) => ({ ...current, maximumAdvanceDays: Number(event.target.value) }))} /></Field>
