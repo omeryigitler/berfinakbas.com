@@ -10,37 +10,6 @@ import {
   Globe, History, Settings, LayoutDashboard, Clock, Users, CheckSquare, Zap, TrendingUp, ArrowRight, AlertCircle, ThumbsUp, CheckCircle, Ban, CalendarCheck, ArrowUpRight, UserPlus
 } from 'lucide-react';
 
-interface ContactInfo {
-  topic: string;
-  firstName: string;
-  lastName: string;
-  jobTitle: string;
-  businessPhone: string;
-  mobilePhone: string;
-  email: string;
-  companyName: string;
-  website: string;
-}
-
-interface LeadData {
-  id: string;
-  name: string;
-  avatar: string;
-  role: string;
-  leadSource: string;
-  rating: string;
-  status: string;
-  owner: string;
-  ownerAvatar: string;
-  score: number;
-  grade: string;
-  scoreTrend: string;
-  scoreInsights: string[];
-  contact: ContactInfo;
-}
-
-const DANISAN_DATABASE: Record<string, LeadData> = {};
-
 interface WorkspacePanelProps {
   selectedLeadId: string;
   activeMenuItem: string;
@@ -66,8 +35,6 @@ export default function WorkspacePanel({
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
-
-  const lead = DANISAN_DATABASE[selectedLeadId] || ({ id: '', name: '', avatar: '', role: '', scoreInsights: [], contact: {} } as any);
 
   // Ana Panel overview screens (Genel Bakış, Bugünün Özeti, Bekleyen İşlemler)
   // are fed from a single real aggregate endpoint; the layout below is unchanged
@@ -603,58 +570,6 @@ export default function WorkspacePanel({
         );
       }
 
-      if (selectedLeadId === 'danisan-ozeti') {
-        return (
-          <div className="flex-1 bg-gradient-to-br from-[#eafda8]/65 via-white to-white rounded-[2.5rem] border border-gray-300/40 p-8 flex flex-col h-[calc(100vh-5rem)] shadow-sm overflow-y-auto select-none gap-6 transition-all duration-300 animate-fade-in">
-            <div className="flex items-center gap-4 border-b border-black/[0.04] pb-5">
-              <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white shrink-0 shadow-md">
-                <Users className="w-6 h-6 text-[#eafda8]" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Danışan Özeti</h1>
-                <p className="text-xs text-gray-500 font-semibold mt-1">Aktif, yeni katılan ve potansiyel danışan dağılım listesi.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-5 bg-white border border-gray-100 rounded-3xl text-center">
-                <span className="text-3xl font-black text-gray-950 block">28</span>
-                <span className="text-[10px] text-gray-400 font-black uppercase mt-1 block">Aktif Danışan</span>
-              </div>
-              <div className="p-5 bg-white border border-gray-100 rounded-3xl text-center">
-                <span className="text-3xl font-black text-indigo-600 block">3</span>
-                <span className="text-[10px] text-gray-400 font-black uppercase mt-1 block">Yeni Danışan (Haftalık)</span>
-              </div>
-              <div className="p-5 bg-white border border-gray-100 rounded-3xl text-center">
-                <span className="text-3xl font-black text-teal-600 block">5</span>
-                <span className="text-[10px] text-gray-400 font-black uppercase mt-1 block">Potansiyel Danışan</span>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col gap-4">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Aktif Danışan Dağılım Kırılımı</span>
-              <div className="space-y-2">
-                <div className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Diyet ve Beslenme Danışmanlığı</span>
-                  <span className="px-3 py-1 bg-black text-[#eafda8] text-[10px] rounded-full font-black">12 Danışan</span>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Bireysel Yaşam Koçluğu</span>
-                  <span className="px-3 py-1 bg-black text-[#eafda8] text-[10px] rounded-full font-black">8 Danışan</span>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Bireysel Psikoterapi Desteği</span>
-                  <span className="px-3 py-1 bg-black text-[#eafda8] text-[10px] rounded-full font-black">5 Danışan</span>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700">
-                  <span>Kariyer ve Yönetici Mentorluğu</span>
-                  <span className="px-3 py-1 bg-black text-[#eafda8] text-[10px] rounded-full font-black">3 Danışan</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
 
       if (selectedLeadId === 'son-islemler') {
         const iconFor = (t: string) => {
@@ -707,119 +622,7 @@ export default function WorkspacePanel({
       }
     }
 
-    // Default details fallback for other sections (not ana-panel)
-    const defaultData: Record<string, { title: string; desc: string; icon: any; details: string[] }> = {
-      'ana-panel': {
-        title: 'Ana Panel Özeti',
-        desc: 'Sisteminizin genel durumunu, aktif danışan hareketlerini ve günlük operasyonları buradan izleyebilirsiniz.',
-        icon: Activity,
-        details: ['Bugün planlanan seans sayısı: 4', 'Toplam kayıtlı danışan: 28', 'Onay bekleyen randevular: 2', 'Aylık doluluk oranı: %88']
-      },
-      'randevular': {
-        title: 'Randevu Detayları',
-        desc: 'Seçili randevuya dair tüm bilgilere, katılım durumuna ve toplantı linkine buradan erişebilirsiniz.',
-        icon: Calendar,
-        details: ['Danışan: ' + lead.name, 'Görüşme Tipi: ' + (selectedLeadId === 'gabriela' ? 'Online Seans' : 'Yüz Yüze Görüşme'), 'Seans Süresi: 50 Dakika', 'Tarih / Saat: Bugün planlandı']
-      },
-      'takvim-uygunluk': {
-        title: 'Takvim ve Uygunluk Saatleri',
-        desc: 'Haftalık çalışma takviminizi ve danışanların randevu alabileceği boş saat dilimlerini buradan düzenleyebilirsiniz.',
-        icon: Calendar,
-        details: ['Haftalık Çalışma Günleri: Pazartesi - Cuma', 'Seans Aralığı: 60 Dakika', 'Çevrimiçi Rezervasyona Açık Saatler: 09:00 - 18:00', 'Öğle Arası: 12:30 - 13:30']
-      },
-      'talepler-iletisim': {
-        title: 'Talep ve İletişim Detayı',
-        desc: 'Web sitenizden veya sosyal medya kanallarından gelen yeni üyelik ve bilgi taleplerini görüntüleyebilirsiniz.',
-        icon: Mail,
-        details: ['Başvuran: ' + lead.name, 'Durum: Yanıt Bekliyor', 'İlgilendiği Alan: ' + lead.role, 'İletişim Kanalı: E-posta / Telefon']
-      },
-      'hizmetler': {
-        title: 'Hizmet ve Paket Detayları',
-        desc: 'Oluşturduğunuz danışmanlık hizmetlerinin, seans adetlerinin ve paket içeriklerinin yapılandırması.',
-        icon: Award,
-        details: ['Hizmet İsmi: ' + lead.role, 'Seans Başı Ücret: 1,500 TL', 'Paket Kapsamı: Haftalık Takip & Canlı Destek', 'Durum: Aktif Satışta']
-      },
-      'odeme-planlar': {
-        title: 'Finansal İşlemler ve Faturalar',
-        desc: 'Danışanlarınızın seans paketleri için gerçekleştirdiği ödemeleri, fatura durumlarını ve abonelikleri takip edin.',
-        icon: CreditCard,
-        details: ['Danışan: ' + lead.name, 'İşlem Tutarı: 4,500 TL', 'Ödeme Durumu: Tamamlandı', 'Fatura No: INV-2026-089']
-      },
-      'pdf-kaynaklar': {
-        title: 'Dosya ve Kaynak Detayı',
-        desc: 'Danışanlarınızla paylaştığınız makaleler, kılavuzlar, egzersiz planları ve PDF dökümanları kitaplığı.',
-        icon: FileText,
-        details: ['Dosya Adı: Beslenme ve Sağlık Takip Formu.pdf', 'Boyut: 2.4 MB', 'Erişim İzni: Tüm Aktif Danışanlar', 'Yüklenme Tarihi: 10.06.2026']
-      },
-      'site-icerigi': {
-        title: 'Web Sitesi İçerik Editörü',
-        desc: 'Sitenizin ana sayfası, hakkımda bölümü, blog yazıları ve referans yorumlarını buradan güncelleyin.',
-        icon: Globe,
-        details: ['Aktif Sayfa: Hakkımda & Kariyer Yolculuğu', 'SEO Kelimeleri: Sağlıklı Yaşam Koçu, Bireysel Mentor', 'Durum: Yayında (Arama motorlarına açık)', 'Son Güncelleme: Geçen Hafta']
-      },
-      'raporlar': {
-        title: 'Gelişmiş Analiz Raporları',
-        desc: 'Finansal performansınızı, danışan memnuniyet oranlarını ve seans doluluk grafiklerini detaylıca inceleyin.',
-        icon: Landmark,
-        details: ['Haziran Dönemi Ciro Gelişimi: +%12 artış', 'Danışan Memnuniyet Skoru: 4.9 / 5.0', 'Tavsiye Edilme Oranı: %96', 'Ortalama Seans Süresi: 52 dk']
-      },
-      'kullanicilar-yetkiler': {
-        title: 'Kullanıcı ve Rol Yönetimi',
-        desc: 'Sisteme erişimi olan diğer uzmanların, asistanların veya yöneticilerin yetki derecelerini sınırlandırın.',
-        icon: ShieldCheck,
-        details: ['Kullanıcı: Berfin Akbaş', 'Yetki Seviyesi: Sistem Sahibi / Kurucu', 'Son Giriş: Aktif Oturum', 'Güvenlik Durumu: 2FA Aktif']
-      },
-      'ayarlar': {
-        title: 'Sistem ve Entegrasyon Ayarları',
-        desc: 'E-posta şablonları, otomatik SMS hatırlatıcılar, sanal pos entegrasyonu ve genel tercihler.',
-        icon: Settings,
-        details: ['SMS Entegrasyonu: Aktif (NetGSM)', 'Ödeme Kanalı: Aktif (Iyzico API)', 'Yedekleme: Günlük Otomatik', 'Sistem Saati: UTC+3']
-      },
-      'arsiv': {
-        title: 'Arşivlenmiş Eski Kayıtlar',
-        desc: 'Eski sezonlara ait tamamlanmış danışan dosyalarını, geçmiş faturaları ve arşiv dökümanlarını inceleyin.',
-        icon: History,
-        details: ['Arşivlenen Danışan: Wyatt Wetmore', 'Tamamlanma Tarihi: Nisan 2025', 'Toplam Seans: 12 Seans', 'Durum: Salt Okunur Arşiv']
-      }
-    };
-
-    const tabData = defaultData[activeMenuItem] || defaultData['ana-panel'];
-    const IconComponent = tabData.icon;
-
-    return (
-      <div 
-        id="workspace-panel-fallback"
-        className="flex-1 bg-gradient-to-br from-[#eafda8]/75 via-white/80 to-white/95 rounded-[2.5rem] border border-gray-300/40 p-10 flex flex-col h-[calc(100vh-5rem)] shadow-sm overflow-y-auto select-none gap-6 transition-all duration-300 animate-fade-in"
-      >
-        <div className="flex items-center gap-4 border-b border-black/[0.04] pb-6">
-          <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white shrink-0 shadow-md">
-            <IconComponent className="w-6 h-6 stroke-[1.8]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{tabData.title}</h1>
-            <p className="text-xs text-gray-500 font-semibold mt-1 leading-relaxed">{tabData.desc}</p>
-          </div>
-        </div>
-
-        <div className="bg-white/40 border border-white/60 rounded-3xl p-6 shadow-xs flex flex-col gap-4 mt-2">
-          <h2 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest">Sistem Detay Bilgileri</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tabData.details.map((detail, idx) => (
-              <div key={idx} className="bg-white/70 border border-gray-100 p-4 rounded-2xl shadow-xs flex items-center gap-3">
-                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="text-xs text-gray-800 font-bold">{detail}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-gray-400/20 rounded-[2rem] p-10 mt-2 text-center text-gray-400">
-          <Sparkles className="w-8 h-8 text-[#a9df20] mb-3 animate-pulse" />
-          <p className="text-xs font-bold text-gray-600">Bu sekme için tüm modüller aktiftir.</p>
-          <p className="text-[10px] text-gray-400 mt-1 max-w-sm">Sol veya orta kısımdaki seçimlerinize bağlı olarak veriler gerçek zamanlı olarak senkronize edilir.</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
 

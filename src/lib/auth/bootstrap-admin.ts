@@ -1,9 +1,7 @@
 import type { PrismaClient } from "@/generated/prisma/client";
 
 const SUPER_ADMIN_ROLE = {
-  description: "Tüm yönetim izinleri",
   key: "SUPER_ADMIN" as const,
-  name: "Süper yönetici",
 };
 
 export async function activateBootstrapAdmin(
@@ -11,32 +9,16 @@ export async function activateBootstrapAdmin(
   userId: string,
 ): Promise<void> {
   await database.$transaction(async (transaction) => {
-    const user = await transaction.user.findUnique({
-      select: { status: true },
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new Error("Etkinleştirilecek yönetici hesabı bulunamadı.");
-    }
-
-    const superAdminRole = await transaction.role.upsert({
-      create: SUPER_ADMIN_ROLE,
-      update: {
-        description: SUPER_ADMIN_ROLE.description,
-        name: SUPER_ADMIN_ROLE.name,
-      },
+    // Fail closed: the SUPER_ADMIN role must already be seeded. We never
+    // auto-create it inside the sign-in bootstrap flow, so a missing seed
+    // aborts activation instead of minting an admin role on the fly.
+    const superAdminRole = await transaction.role.findUnique({
+      select: { id: true },
       where: { key: SUPER_ADMIN_ROLE.key },
     });
-    const existingAssignment = await transaction.userRole.findUnique({
-      select: { userId: true },
-      where: {
-        userId_roleId: {
-          roleId: superAdminRole.id,
-          userId,
-        },
-      },
-    });
+    if (!superAdminRole) {
+      throw new Error("SUPER_ADMIN rolü bulunamadı");
+    }
 
     await transaction.user.update({
       data: { status: "ACTIVE" },
@@ -47,23 +29,16 @@ export async function activateBootstrapAdmin(
       update: {},
       where: { userId_roleId: { roleId: superAdminRole.id, userId } },
     });
-
-    if (user.status !== "ACTIVE" || !existingAssignment) {
-      await transaction.auditLog.create({
-        data: {
-          action: "user.bootstrap_admin_activated",
-          actorType: "SYSTEM",
-          afterSummary: { roles: ["SUPER_ADMIN"], status: "ACTIVE" },
-          beforeSummary: {
-            roles: existingAssignment ? ["SUPER_ADMIN"] : [],
-            status: user.status,
-          },
-          correlationId: `auth-bootstrap:${userId}`,
-          entityId: userId,
-          entityType: "USER",
-          reason: "ALLOWLISTED_GOOGLE_SIGN_IN",
-        },
-      });
-    }
+    await transaction.auditLog.create({
+      data: {
+        action: "user.bootstrap_admin_activated",
+        actorType: "SYSTEM",
+        afterSummary: { roles: ["SUPER_ADMIN"], status: "ACTIVE" },
+        correlationId: `auth-bootstrap:${userId}`,
+        entityId: userId,
+        entityType: "USER",
+        reason: "ALLOWLISTED_GOOGLE_SIGN_IN",
+      },
+    });
   });
 }

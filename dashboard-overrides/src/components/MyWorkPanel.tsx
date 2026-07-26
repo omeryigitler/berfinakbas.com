@@ -438,11 +438,13 @@ export default function MyWorkPanel({ selectedLeadId, onSelectLead, activeMenuIt
     return 0;
   });
 
+  const [nameError, setNameError] = useState(false);
   const handleSaveNewClient = () => {
     if (!newClient.name.trim()) {
-      alert('Lütfen danışanın adını ve soyadını girin.');
+      setNameError(true);
       return;
     }
+    setNameError(false);
     const newId = newClient.name.toLowerCase().replace(/\s+/g, '_');
     const newlyCreated: Client = {
       id: newId,
@@ -1006,13 +1008,14 @@ export default function MyWorkPanel({ selectedLeadId, onSelectLead, activeMenuIt
                 {/* Name */}
                 <div className="space-y-1">
                   <label className="text-[9.5px] font-black text-gray-500 uppercase tracking-wider block">Adı ve Soyadı *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Adı Soyadı"
                     value={newClient.name}
-                    onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
-                    className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-black/30"
+                    onChange={(e) => { setNewClient({ ...newClient, name: e.target.value }); if (nameError) setNameError(false); }}
+                    className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-gray-900 focus:outline-none ${nameError ? 'border-rose-400 focus:border-rose-500' : 'border-gray-200 focus:border-black/30'}`}
                   />
+                  {nameError && <span className="text-[10px] text-rose-600 font-bold block mt-1">Lütfen danışanın adını ve soyadını girin.</span>}
                 </div>
 
                 {/* Phone */}
