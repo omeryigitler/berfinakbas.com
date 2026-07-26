@@ -354,7 +354,11 @@ export default function App() {
   }, [loadClients]);
 
   useEffect(() => {
-    if (!selectedLeadId) return;
+    // selectedLeadId is also used for Ana Panel screen ids (genel-bakis, son-islemler…)
+    // and freshly-created local clients (name-based ids); only fetch a client detail
+    // when it is a real client UUID, otherwise the API rejects it as an invalid uuid.
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedLeadId);
+    if (!selectedLeadId || !isUuid) return;
     let cancelled = false;
     (async () => {
       try {
