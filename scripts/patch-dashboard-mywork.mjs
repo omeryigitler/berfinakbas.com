@@ -1,7 +1,14 @@
-import { patchFile, replaceRequired, replaceRegexRequired } from "./dashboard-patch-utils.mjs";
+import { patchFile, replaceRequired } from "./dashboard-patch-utils.mjs";
 
 await patchFile("components/MyWorkPanel.tsx", (initialSource) => {
   let source = initialSource;
+  source = replaceRequired(
+    source,
+    `import { CustomSelect } from './CustomSelect';`,
+    `import { CustomSelect } from './CustomSelect';
+import { createCorrelationId } from '../lib/correlation-id';`,
+    "MyWork correlation id import",
+  );
   source = replaceRequired(
     source,
     `  onAddClient: (newClient: Client) => void;`,
@@ -17,6 +24,12 @@ await patchFile("components/MyWorkPanel.tsx", (initialSource) => {
   source = source.replace(
     "    const newId = newClient.name.toLowerCase().replace(/\\s+/g, '_');\n",
     "",
+  );
+  source = replaceRequired(
+    source,
+    `      id: newId,`,
+    `      id: createCorrelationId(),`,
+    "Temporary client id",
   );
   source = replaceRequired(
     source,

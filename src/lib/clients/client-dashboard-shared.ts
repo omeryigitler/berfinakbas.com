@@ -4,7 +4,6 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { hasPermission } from "@/domain/auth/permissions";
 
-
 export const UPCOMING_APPOINTMENT_STATUSES = [
   "REQUESTED",
   "PENDING_REVIEW",
@@ -44,7 +43,9 @@ export const updateClientSchema = z
 
 export type RouteContext = { params: Promise<{ clientId: string }> };
 
-export type JsonRecord = Record<string, unknown>;
+// Values pass through strict schemas or originate from an existing Prisma JSON field.
+// Keeping the record JSON-compatible avoids output JsonValue/InputJsonValue friction on upsert.
+export type JsonRecord = Record<string, any>;
 
 export function forbidden() {
   return NextResponse.json(
@@ -108,9 +109,9 @@ export const clientAppointmentSelect = {
   status: true,
 } as const;
 
-export function serializeAppointment<T extends {
-  financeEntries: Array<{ amountMinor: bigint; type: string }>;
-}>(appointment: T) {
+export function serializeAppointment<
+  T extends { financeEntries: Array<{ amountMinor: bigint; type: string }> },
+>(appointment: T) {
   const paymentBalance = appointment.financeEntries.reduce(
     (total, entry) => total + entry.amountMinor,
     0n,
@@ -121,4 +122,3 @@ export function serializeAppointment<T extends {
     paymentStatus: paymentBalance < 0n ? "PAID" : "PENDING",
   };
 }
-

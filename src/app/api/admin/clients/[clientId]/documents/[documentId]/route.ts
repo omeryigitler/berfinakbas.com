@@ -9,7 +9,7 @@ import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 const DOCUMENT_PREFIX = "client-document:";
 
 type RouteContext = { params: Promise<{ clientId: string; documentId: string }> };
-type JsonRecord = Record<string, unknown>;
+type JsonRecord = Record<string, any>;
 
 function asJsonRecord(value: unknown): JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -25,11 +25,12 @@ function forbidden() {
 }
 
 function contentDisposition(fileName: string, download: boolean): string {
-  const safeAscii = fileName
-    .normalize("NFKD")
-    .replace(/[^\x20-\x7E]/g, "_")
-    .replace(/["\\]/g, "_")
-    .slice(0, 160) || "belge";
+  const safeAscii =
+    fileName
+      .normalize("NFKD")
+      .replace(/[^\x20-\x7E]/g, "_")
+      .replace(/["\\]/g, "_")
+      .slice(0, 160) || "belge";
   return `${download ? "attachment" : "inline"}; filename="${safeAscii}"; filename*=UTF-8''${encodeURIComponent(fileName)}`;
 }
 
@@ -79,7 +80,9 @@ export async function GET(request: Request, context: RouteContext) {
         ? metadata.fileName
         : document.title;
     const download = new URL(request.url).searchParams.get("download") === "1";
-    return new NextResponse(new Uint8Array(bytes), {
+    const body = new Uint8Array(bytes.byteLength);
+    body.set(bytes);
+    return new NextResponse(body.buffer, {
       headers: {
         "Cache-Control": "private, no-store",
         "Content-Disposition": contentDisposition(fileName, download),
