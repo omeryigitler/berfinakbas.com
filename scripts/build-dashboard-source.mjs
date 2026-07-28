@@ -22,7 +22,11 @@ function run(command, args, cwd = process.cwd()) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd, env: process.env, stdio: "inherit" });
     child.once("error", reject);
-    child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`${command} ${args.join(" ")} failed with exit code ${code}`)));
+    child.once("exit", (code) =>
+      code === 0
+        ? resolve()
+        : reject(new Error(`${command} ${args.join(" ")} failed with exit code ${code}`)),
+    );
   });
 }
 
@@ -36,17 +40,28 @@ async function checkoutPinnedSource(repository, commit, target, label) {
   const resolvedCommit = await new Promise((resolve, reject) => {
     const child = spawn("git", ["rev-parse", "HEAD"], { cwd: target });
     let output = "";
-    child.stdout.on("data", (chunk) => { output += chunk; });
+    child.stdout.on("data", (chunk) => {
+      output += chunk;
+    });
     child.once("error", reject);
-    child.once("exit", (code) => code === 0 ? resolve(output.trim()) : reject(new Error(`git rev-parse HEAD failed with exit code ${code}`)));
+    child.once("exit", (code) =>
+      code === 0
+        ? resolve(output.trim())
+        : reject(new Error(`git rev-parse HEAD failed with exit code ${code}`)),
+    );
   });
-  if (resolvedCommit !== commit) throw new Error(`${label} source commit mismatch: expected ${commit}, received ${resolvedCommit}`);
+  if (resolvedCommit !== commit) {
+    throw new Error(
+      `${label} source commit mismatch: expected ${commit}, received ${resolvedCommit}`,
+    );
+  }
 }
 
 await rm(publicTarget, { force: true, recursive: true });
 await checkoutPinnedSource(SOURCE_REPOSITORY, SOURCE_COMMIT, workspace, "Dashboard");
 await checkoutPinnedSource(KEDI_REPOSITORY, KEDI_COMMIT, kediWorkspace, "Kedi");
 await cp(overrides, path.join(workspace, "src"), { recursive: true, force: true });
+await run("node", ["scripts/patch-dashboard-runtime.mjs"]);
 
 // App.tsx, ClientDetailsHub.tsx and WorkspacePanel.tsx ship as full override files
 // that already carry their real-data wiring. Their mock representative/audit names
@@ -64,8 +79,13 @@ await cp(overrides, path.join(workspace, "src"), { recursive: true, force: true 
 
 const sidebarPath = path.join(workspace, "src/components/Sidebar.tsx");
 const sidebarSource = await readFile(sidebarPath, "utf-8");
-const sidebarWithoutGridImport = sidebarSource.replace("  ArrowRightFromLine,\n  Grid\n} from 'lucide-react';", "  ArrowRightFromLine\n} from 'lucide-react';");
-if (sidebarWithoutGridImport === sidebarSource) throw new Error("Dashboard sidebar Grid import could not be replaced.");
+const sidebarWithoutGridImport = sidebarSource.replace(
+  "  ArrowRightFromLine,\n  Grid\n} from 'lucide-react';",
+  "  ArrowRightFromLine\n} from 'lucide-react';",
+);
+if (sidebarWithoutGridImport === sidebarSource) {
+  throw new Error("Dashboard sidebar Grid import could not be replaced.");
+}
 const oldBrandIcon = `        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0">
           <Grid className="w-5 h-5 text-gray-700" />
         </div>`;
@@ -77,7 +97,9 @@ const newBrandIcon = `        <a
           <img src="/logo-mark.png" alt="" className="w-[78%] h-[78%] object-contain" />
         </a>`;
 const patchedSidebar = sidebarWithoutGridImport.replace(oldBrandIcon, newBrandIcon);
-if (patchedSidebar === sidebarWithoutGridImport) throw new Error("Dashboard sidebar brand icon could not be replaced with the site logo.");
+if (patchedSidebar === sidebarWithoutGridImport) {
+  throw new Error("Dashboard sidebar brand icon could not be replaced with the site logo.");
+}
 await writeFile(sidebarPath, patchedSidebar, "utf-8");
 
 const dashboardComponents = path.join(workspace, "src/components");
@@ -101,16 +123,53 @@ const catLayoutTarget = `      const currentScale = propsRef.current.scale;
         const minX = halfSize + sidePadding;
         const maxX = Math.max(minX, window.innerWidth - halfSize - sidePadding);
         const constrainedX = Math.max(minX, Math.min(maxX, s.x));`;
-let patchedCatWidget = replaceRequired(catWidgetSource, catLayoutSource, catLayoutTarget, "Kedi floor layout");
-patchedCatWidget = replaceRequired(patchedCatWidget, "          const bubbleBottom = Math.floor(140 * (currentScale / 1.3));", "          const bubbleBottom = Math.max(72, Math.floor(140 * (currentScale / 1.3) - floorShift));", "Kedi speech bubble floor offset");
-patchedCatWidget = replaceRequired(patchedCatWidget, "            if (leftEdge < 10) shift = 10 - leftEdge;\n            else if (rightEdge > window.innerWidth - 10) shift = (window.innerWidth - 10) - rightEdge;", "            if (leftEdge < sidePadding) shift = sidePadding - leftEdge;\n            else if (rightEdge > window.innerWidth - sidePadding) shift = (window.innerWidth - sidePadding) - rightEdge;", "Kedi speech bubble side margins");
-patchedCatWidget = replaceRequired(patchedCatWidget, "          drawCat(ctx, halfSize, halfSize, walkCycle, pose, elapsed, s.direction, currentScale, propsRef.current.isDarkMode, propsRef.current.colorTheme, propsRef.current.accessory, propsRef.current.catType);", "          const walkFloorAdjustment = pose === 'WALK' ? Math.max(0, Math.sin(walkCycle) * 5) : 0;\n          const catCenterY = baseCatCenterY - walkFloorAdjustment * currentScale;\n          drawCat(ctx, halfSize, catCenterY, walkCycle, pose, elapsed, s.direction, currentScale, propsRef.current.isDarkMode, propsRef.current.colorTheme, propsRef.current.accessory, propsRef.current.catType);", "Kedi canvas floor baseline");
+let patchedCatWidget = replaceRequired(
+  catWidgetSource,
+  catLayoutSource,
+  catLayoutTarget,
+  "Kedi floor layout",
+);
+patchedCatWidget = replaceRequired(
+  patchedCatWidget,
+  "          const bubbleBottom = Math.floor(140 * (currentScale / 1.3));",
+  "          const bubbleBottom = Math.max(72, Math.floor(140 * (currentScale / 1.3) - floorShift));",
+  "Kedi speech bubble floor offset",
+);
+patchedCatWidget = replaceRequired(
+  patchedCatWidget,
+  "            if (leftEdge < 10) shift = 10 - leftEdge;\n            else if (rightEdge > window.innerWidth - 10) shift = (window.innerWidth - 10) - rightEdge;",
+  "            if (leftEdge < sidePadding) shift = sidePadding - leftEdge;\n            else if (rightEdge > window.innerWidth - sidePadding) shift = (window.innerWidth - sidePadding) - rightEdge;",
+  "Kedi speech bubble side margins",
+);
+patchedCatWidget = replaceRequired(
+  patchedCatWidget,
+  "          drawCat(ctx, halfSize, halfSize, walkCycle, pose, elapsed, s.direction, currentScale, propsRef.current.isDarkMode, propsRef.current.colorTheme, propsRef.current.accessory, propsRef.current.catType);",
+  "          const walkFloorAdjustment = pose === 'WALK' ? Math.max(0, Math.sin(walkCycle) * 5) : 0;\n          const catCenterY = baseCatCenterY - walkFloorAdjustment * currentScale;\n          drawCat(ctx, halfSize, catCenterY, walkCycle, pose, elapsed, s.direction, currentScale, propsRef.current.isDarkMode, propsRef.current.colorTheme, propsRef.current.accessory, propsRef.current.catType);",
+  "Kedi canvas floor baseline",
+);
 await writeFile(catWidgetPath, patchedCatWidget, "utf-8");
 
-const dashboardKitSource = await readFile(path.join(kediWorkspace, "src/dashboard/DashboardKit.tsx"), "utf-8");
-let patchedDashboardKit = replaceRequired(dashboardKitSource, "import CatWidget from '../components/CatWidget';", "import CatWidget from './KediCatWidget';", "Kedi dashboard integration import");
-patchedDashboardKit = replaceRequired(patchedDashboardKit, '    <div className="h-full overflow-y-auto bg-[#f6f5f1] p-5 text-[#292723] sm:p-6">', '    <div className="h-full overflow-y-auto overscroll-contain bg-[#f6f5f1] p-5 text-[#292723] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:p-6">', "Kedi hidden scrollbar");
-await writeFile(path.join(dashboardComponents, "KediDashboardKit.tsx"), patchedDashboardKit, "utf-8");
+const dashboardKitSource = await readFile(
+  path.join(kediWorkspace, "src/dashboard/DashboardKit.tsx"),
+  "utf-8",
+);
+let patchedDashboardKit = replaceRequired(
+  dashboardKitSource,
+  "import CatWidget from '../components/CatWidget';",
+  "import CatWidget from './KediCatWidget';",
+  "Kedi dashboard integration import",
+);
+patchedDashboardKit = replaceRequired(
+  patchedDashboardKit,
+  '    <div className="h-full overflow-y-auto bg-[#f6f5f1] p-5 text-[#292723] sm:p-6">',
+  '    <div className="h-full overflow-y-auto overscroll-contain bg-[#f6f5f1] p-5 text-[#292723] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:p-6">',
+  "Kedi hidden scrollbar",
+);
+await writeFile(
+  path.join(dashboardComponents, "KediDashboardKit.tsx"),
+  patchedDashboardKit,
+  "utf-8",
+);
 
 // Single identity sweep across the whole source tree so no mock "Ömer Yiğitler"
 // (override files, cloned MyWorkPanel, clientDb mock data) leaks into the built panel.
@@ -135,14 +194,30 @@ await renameIdentityAcrossSource(path.join(workspace, "src"));
 await run("npm", ["install", "--no-package-lock"], workspace);
 await run("npm", ["run", "build", "--", "--base=/yonetim/"], workspace);
 const sourceIndex = await readFile(path.join(workspace, "dist/index.html"), "utf-8");
-if (!sourceIndex.includes("/yonetim/assets/")) throw new Error("Dashboard build does not use the required /yonetim asset base.");
+if (!sourceIndex.includes("/yonetim/assets/")) {
+  throw new Error("Dashboard build does not use the required /yonetim asset base.");
+}
 await mkdir(publicTarget, { recursive: true });
 await cp(path.join(workspace, "dist"), publicTarget, { recursive: true });
-await writeFile(path.join(publicTarget, "source-manifest.json"), JSON.stringify({
-  repository: SOURCE_REPOSITORY,
-  commit: SOURCE_COMMIT,
-  architecture: "source-level-real-workspaces-v2",
-  overrides: "dashboard-overrides/src",
-  kedi: { repository: KEDI_REPOSITORY, commit: KEDI_COMMIT, integration: "native" },
-}, null, 2), "utf-8");
-console.log(`Dashboard source ${SOURCE_COMMIT} built with source-level real workspaces and native Kedi source ${KEDI_COMMIT}.`);
+await writeFile(
+  path.join(publicTarget, "source-manifest.json"),
+  JSON.stringify(
+    {
+      repository: SOURCE_REPOSITORY,
+      commit: SOURCE_COMMIT,
+      architecture: "source-level-real-workspaces-v2",
+      overrides: "dashboard-overrides/src",
+      kedi: {
+        repository: KEDI_REPOSITORY,
+        commit: KEDI_COMMIT,
+        integration: "native",
+      },
+    },
+    null,
+    2,
+  ),
+  "utf-8",
+);
+console.log(
+  `Dashboard source ${SOURCE_COMMIT} built with source-level real workspaces and native Kedi source ${KEDI_COMMIT}.`,
+);
