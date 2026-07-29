@@ -15,7 +15,7 @@ import {
   type ModuleViewsProps,
 } from './shared';
 
-export function FinanceView({ data, selectedItemId, filter, sortDirection }: ModuleViewsProps) {
+export function FinanceView({ data, selectedItemId, filter, sortDirection, onOpenWorkspace }: ModuleViewsProps) {
   const plans = useMemo(() => {
     const query = normalized(filter);
     return [...(data?.plans ?? [])]
@@ -35,7 +35,7 @@ export function FinanceView({ data, selectedItemId, filter, sortDirection }: Mod
           <Metric title="Kaydedilen ödeme" value={money(paid, currency)} text={`${entries.filter((entry) => entry.type === 'PAYMENT').length} hareket`} />
           <Metric title="Açık fark" value={money(total - paid, currency)} text="Plan toplamı eksi ödemeler" />
         </div>
-        <div className="flex justify-end"><button type="button" onClick={() => window.location.assign('/yonetim/odemeler')} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">Finans işlemlerini aç</button></div>
+        <div className="flex justify-end"><button type="button" onClick={() => onOpenWorkspace?.('odeme-planlar', 'odemeler')} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">Finans işlemlerini aç</button></div>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export function FinanceView({ data, selectedItemId, filter, sortDirection }: Mod
 
   return plans.length === 0 ? <EmptyState title="Plan bulunamadı" text="Yeni plan oluşturarak finans takibini başlatın." /> : (
     <div className="space-y-3">
-      <div className="flex justify-end"><button type="button" onClick={() => window.location.assign('/yonetim/odemeler')} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">+ Plan veya ödeme işlemi</button></div>
+      <div className="flex justify-end"><button type="button" onClick={() => onOpenWorkspace?.('odeme-planlar', 'odemeler')} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">+ Plan veya ödeme işlemi</button></div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {plans.map((plan) => <article key={plan.id} className="rounded-[2rem] border border-black/[0.07] bg-white/88 p-5"><div className="flex justify-between gap-4"><div><h2 className="text-[12px] font-black">{plan.name}</h2><p className="mt-1 text-[9px] font-semibold text-gray-400">{plan.client.firstName} {plan.client.lastName}</p></div><StatusPill value={plan.status} /></div><div className="mt-4 grid grid-cols-3 gap-2"><Mini label="Tutar" value={money(plan.totalAmountMinor, plan.currency)} /><Mini label="Seans" value={String(plan.sessionCount)} /><Mini label="Süre" value={`${plan.sessionDurationMinutes} dk`} /></div></article>)}
       </div>

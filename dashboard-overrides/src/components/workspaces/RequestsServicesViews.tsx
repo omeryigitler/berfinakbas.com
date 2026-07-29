@@ -22,6 +22,7 @@ export function RequestsView({
   sortDirection,
   refresh,
   notify,
+  onOpenWorkspace,
 }: ModuleViewsProps) {
   const appointments = useMemo(() => {
     const query = normalized(filter);
@@ -127,7 +128,7 @@ export function RequestsView({
   return (
     <div className="space-y-3 pb-4">
       <div className="flex justify-end">
-        <button type="button" onClick={() => window.location.assign('/yonetim/randevular')} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">Randevularda yönet</button>
+        <button type="button" onClick={() => onOpenWorkspace?.('randevular', 'liste')} className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]">Randevularda yönet</button>
       </div>
       {appointments.length === 0 ? (
         <EmptyState title="Bekleyen talep yok" text="Yeni başvurular ve inceleme bekleyen randevular burada görünür." />

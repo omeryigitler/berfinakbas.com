@@ -18,6 +18,7 @@ export interface ModuleViewsProps {
   sortDirection: 'asc' | 'desc';
   refresh: () => Promise<void>;
   notify: (toast: Omit<WorkspaceToast, 'id'>) => void;
+  onOpenWorkspace?: (module: string, view: string) => void;
 }
 
 export function text(value: unknown) {

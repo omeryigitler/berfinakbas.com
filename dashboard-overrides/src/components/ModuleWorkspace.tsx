@@ -8,6 +8,7 @@ import WorkspaceFrame, { type WorkspaceToast } from './workspaces/WorkspaceFrame
 interface ModuleWorkspaceProps {
   activeMenuItem: string;
   selectedItemId: string;
+  onOpenWorkspace?: (module: string, view: string) => void;
 }
 
 async function readError(response: Response) {
@@ -165,6 +166,7 @@ function exportRows(activeMenuItem: string, selectedItemId: string, data: any) {
 export default function ModuleWorkspace({
   activeMenuItem,
   selectedItemId,
+  onOpenWorkspace,
 }: ModuleWorkspaceProps) {
   const effectiveSelectedId = selectedItemId || getDefaultModuleItemId(activeMenuItem);
   const config = getModuleConfig(activeMenuItem);
@@ -241,6 +243,7 @@ export default function ModuleWorkspace({
       <ModuleViews
         activeMenuItem={activeMenuItem}
         selectedItemId={effectiveSelectedId}
+        onOpenWorkspace={onOpenWorkspace}
         data={data}
         loading={loading}
         filter={filter}

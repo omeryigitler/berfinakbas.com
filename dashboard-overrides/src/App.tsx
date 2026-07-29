@@ -583,6 +583,7 @@ export default function App() {
                 <ModuleWorkspace
                   activeMenuItem={activeMenuItem}
                   selectedItemId={selectedLeadId}
+                  onOpenWorkspace={handleOpenWorkspace}
                 />
               )}
             </div>
