@@ -10,6 +10,7 @@ const patches = [
   "./patch-client-details-6.mjs",
   "./patch-client-details-7.mjs",
   "./patch-dashboard-data-integrity.mjs",
+  "./patch-dashboard-finalize.mjs",
 ];
 
 for (const patch of patches) await import(patch);
