@@ -273,10 +273,8 @@ export async function transitionAppointment(
             });
             const eligiblePlans = plans.filter(
               (plan) =>
-                plan.sessionCreditEntries.reduce(
-                  (total, entry) => total + entry.quantityDelta,
-                  0,
-                ) > 0,
+                plan.sessionCreditEntries.reduce((total, entry) => total + entry.quantityDelta, 0) >
+                0,
             );
             if (eligiblePlans.length > 0 && !command.completionPlanId) {
               throw new AppointmentCompletionPlanRequiredError();

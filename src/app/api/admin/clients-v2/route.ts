@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { GET as getClients } from "@/app/api/admin/clients/route";
-import { PROFILE_PREFIX, asJsonRecord, booleanOrDefault } from "@/lib/clients/client-dashboard-shared";
+import {
+  PROFILE_PREFIX,
+  asJsonRecord,
+  booleanOrDefault,
+} from "@/lib/clients/client-dashboard-shared";
 import { getDatabase } from "@/lib/db";
 
 export async function GET(request: Request) {

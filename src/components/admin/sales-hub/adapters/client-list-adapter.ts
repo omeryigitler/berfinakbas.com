@@ -24,10 +24,7 @@ const statusLabels: Record<ClientListItem["status"], string> = {
   PROSPECTIVE: "Potansiyel",
 };
 
-export function formatDashboardDate(
-  value: string | null | undefined,
-  withTime = false,
-): string {
+export function formatDashboardDate(value: string | null | undefined, withTime = false): string {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";

@@ -95,8 +95,7 @@ describe("validateDocumentUpload", () => {
     expect(
       validateDocumentUpload({
         bytes,
-        declaredMimeType:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        declaredMimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         fileName: "rapor.docx",
       }),
     ).toEqual({
@@ -108,8 +107,7 @@ describe("validateDocumentUpload", () => {
   it("rejects a ZIP renamed as docx when the Word document entry is missing", () => {
     const result = validateDocumentUpload({
       bytes: makeZipCentralDirectory(["[Content_Types].xml", "_rels/.rels", "xl/workbook.xml"]),
-      declaredMimeType:
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      declaredMimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       fileName: "rapor.docx",
     });
     expect(result.ok).toBe(false);

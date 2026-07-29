@@ -45,10 +45,7 @@ function locationToTr(location: string): string {
   }
 }
 
-function getCurrencyTotals(
-  map: Map<string, CurrencyTotals>,
-  currency: string,
-): CurrencyTotals {
+function getCurrencyTotals(map: Map<string, CurrencyTotals>, currency: string): CurrencyTotals {
   const key = currency || "TRY";
   const existing = map.get(key);
   if (existing) return existing;
@@ -149,8 +146,7 @@ export async function GET() {
     }
   }
   for (const totals of currencyTotals.values()) {
-    totals.expectedTotalMinor =
-      totals.todayCollectedMinor + totals.dueTodayOutstandingMinor;
+    totals.expectedTotalMinor = totals.todayCollectedMinor + totals.dueTodayOutstandingMinor;
   }
 
   const financeRows = [...currencyTotals.values()]

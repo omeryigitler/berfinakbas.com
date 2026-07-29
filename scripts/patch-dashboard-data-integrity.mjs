@@ -65,9 +65,9 @@ const syncClientFromDetails`,
   source = replaceRequired(
     source,
     `    age: d.birthYear ? new Date().getFullYear() - d.birthYear : base.age,
-    birthDate: d.birthYear ? \`${'${d.birthYear}-01-01'}\` : base.birthDate,`,
+    birthDate: d.birthYear ? \`${"${d.birthYear}-01-01"}\` : base.birthDate,`,
     `    age: d.birthYear ? new Date().getFullYear() - d.birthYear : 0,
-    birthDate: d.birthYear ? \`${'${d.birthYear}-01-01'}\` : '',`,
+    birthDate: d.birthYear ? \`${"${d.birthYear}-01-01"}\` : '',`,
     "Remove fabricated age fallback",
   );
   source = replaceRequired(

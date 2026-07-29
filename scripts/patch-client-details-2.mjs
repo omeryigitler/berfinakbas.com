@@ -116,7 +116,7 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
       };
       onUpdateClient(client.id, {
         ...client,
-        nextAppointment: \`${'${appForm.date} ${appForm.time}'}\`,
+        nextAppointment: \`${"${appForm.date} ${appForm.time}"}\`,
         appointments: [newApp, ...client.appointments],
       });
       setIsAddingAppointment(false);

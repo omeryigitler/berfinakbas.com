@@ -110,14 +110,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     archived: isArchived,
     ...(input.address !== undefined ? { address: input.address } : {}),
     ...(input.city !== undefined ? { city: input.city } : {}),
-    ...(input.contactConsent !== undefined
-      ? { contactConsent: input.contactConsent }
-      : {}),
+    ...(input.contactConsent !== undefined ? { contactConsent: input.contactConsent } : {}),
     ...(input.country !== undefined ? { country: input.country } : {}),
     ...(input.district !== undefined ? { district: input.district } : {}),
-    ...(input.emergencyContact !== undefined
-      ? { emergencyContact: input.emergencyContact }
-      : {}),
+    ...(input.emergencyContact !== undefined ? { emergencyContact: input.emergencyContact } : {}),
     ...(input.preferredContactMethod !== undefined
       ? { preferredContactMethod: input.preferredContactMethod }
       : {}),
@@ -188,9 +184,7 @@ export async function PATCH(request: Request, context: RouteContext) {
             };
       await transaction.guardian.update({
         data: {
-          ...(input.parentPrimaryEmail !== undefined
-            ? { email: input.parentPrimaryEmail }
-            : {}),
+          ...(input.parentPrimaryEmail !== undefined ? { email: input.parentPrimaryEmail } : {}),
           firstName: guardianName.firstName,
           lastName: guardianName.lastName,
           ...(input.parentPrimaryPhone !== undefined
@@ -212,11 +206,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
-    const action = input.archived === true
-      ? "client.archived"
-      : input.archived === false && wasArchived
-        ? "client.restored"
-        : "client.updated";
+    const action =
+      input.archived === true
+        ? "client.archived"
+        : input.archived === false && wasArchived
+          ? "client.restored"
+          : "client.updated";
     await transaction.auditLog.create({
       data: {
         action,

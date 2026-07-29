@@ -55,7 +55,10 @@ export default function ServicesPage() {
 
       <section className="service-page-grid service-page-grid-visual" aria-label="Destek alanları">
         {serviceAreas.map((service, index) => (
-          <article className={`service-visual-card service-visual-card-${service.accent}`} key={service.label}>
+          <article
+            className={`service-visual-card service-visual-card-${service.accent}`}
+            key={service.label}
+          >
             <span>{String(index + 1).padStart(2, "0")}</span>
             <div className="service-visual-copy">
               <h2>{service.label}</h2>

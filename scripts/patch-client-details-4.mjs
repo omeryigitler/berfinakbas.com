@@ -28,7 +28,7 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
         name: stored.title,
         type: stored.category,
         size: Number(stored.sizeBytes) > 0
-          ? \`${'${Math.max(1, Math.round(Number(stored.sizeBytes) / 1024))} KB'}\`
+          ? \`${"${Math.max(1, Math.round(Number(stored.sizeBytes) / 1024))} KB"}\`
           : '—',
         date: new Date(stored.createdAt ?? Date.now()).toISOString().split('T')[0],
         status: 'Aktif',

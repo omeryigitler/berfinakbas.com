@@ -83,10 +83,10 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
           ? ['nakit', 'cash']
           : ['havale', 'eft', 'banktransfer'];
       const method = methods.find((entry) => {
-        const haystack = \`${'${normalize(entry.name)}${normalize(entry.key)}'}\`;
+        const haystack = \`${"${normalize(entry.name)}${normalize(entry.key)}"}\`;
         return aliases.some((alias) => haystack.includes(alias));
       });
-      if (!method?.id) throw new Error(\`${'${payForm.type}'} ödeme yöntemi sistemde aktif değil.\`);
+      if (!method?.id) throw new Error(\`${"${payForm.type}"} ödeme yöntemi sistemde aktif değil.\`);
 
       const requestId = createCorrelationId();
       const response = await fetch('/api/admin/finance', {
@@ -125,7 +125,7 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
         },
       });
       setIsAddingPayment(false);
-      triggerToast(\`${'${amount} TL'} ödeme başarıyla tahsil edildi!\`);
+      triggerToast(\`${"${amount} TL"} ödeme başarıyla tahsil edildi!\`);
     } catch (error) {
       triggerToast(error instanceof Error ? error.message : 'Ödeme kaydedilemedi.', 'error');
     }

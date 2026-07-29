@@ -105,8 +105,12 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const title = String(form.get("title") ?? file.name).trim().slice(0, 160);
-    const category = String(form.get("category") ?? "Yüklenen Belge").trim().slice(0, 40);
+    const title = String(form.get("title") ?? file.name)
+      .trim()
+      .slice(0, 160);
+    const category = String(form.get("category") ?? "Yüklenen Belge")
+      .trim()
+      .slice(0, 40);
     if (!title || !category) {
       return NextResponse.json(
         { code: "INVALID_REQUEST", error: "Belge adı ve kategorisi zorunludur." },

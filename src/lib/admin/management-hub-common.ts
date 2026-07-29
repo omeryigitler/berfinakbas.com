@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
-import type { Session } from 'next-auth';
-import type { Prisma } from '@/generated/prisma/client';
-import type { Permission } from '@/domain/auth/permissions';
-import { hasPermission } from '@/domain/auth/permissions';
-import { getDatabase } from '@/lib/db';
-import { settingKeys } from './management-hub-schema';
+import { NextResponse } from "next/server";
+import type { Session } from "next-auth";
+import type { Prisma } from "@/generated/prisma/client";
+import type { Permission } from "@/domain/auth/permissions";
+import { hasPermission } from "@/domain/auth/permissions";
+import { getDatabase } from "@/lib/db";
+import { settingKeys } from "./management-hub-schema";
 
 export type ActiveSession = Session;
 
 export function forbidden() {
-  return NextResponse.json({ error: 'Bu işlem için yetkiniz yok.' }, { status: 403 });
+  return NextResponse.json({ error: "Bu işlem için yetkiniz yok." }, { status: 403 });
 }
 
 export function can(session: ActiveSession, permission: Permission) {
@@ -25,15 +25,17 @@ export async function readSettings(keys: readonly string[]) {
     select: { key: true, updatedAt: true, value: true },
     where: { key: { in: [...keys] } },
   });
-  return Object.fromEntries(rows.map((row) => [row.key, { value: row.value, updatedAt: row.updatedAt.toISOString() }]));
+  return Object.fromEntries(
+    rows.map((row) => [row.key, { value: row.value, updatedAt: row.updatedAt.toISOString() }]),
+  );
 }
 
 export async function resolvePractitioner(session: ActiveSession) {
-  const isSuperAdmin = session.user.roles.includes('SUPER_ADMIN');
+  const isSuperAdmin = session.user.roles.includes("SUPER_ADMIN");
   return getDatabase().practitioner.findFirst({
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: "asc" },
     select: { displayName: true, id: true, timeZone: true, userId: true },
-    where: { status: 'ACTIVE', ...(isSuperAdmin ? {} : { userId: session.user.id }) },
+    where: { status: "ACTIVE", ...(isSuperAdmin ? {} : { userId: session.user.id }) },
   });
 }
 
@@ -45,7 +47,10 @@ export async function saveSetting(
 ) {
   const database = getDatabase();
   return database.$transaction(async (transaction) => {
-    const previous = await transaction.operationalSetting.findUnique({ select: { value: true }, where: { key } });
+    const previous = await transaction.operationalSetting.findUnique({
+      select: { value: true },
+      where: { key },
+    });
     const saved = await transaction.operationalSetting.upsert({
       create: { key, updatedByUserId: session.user.id, value: serializeJson(value) },
       update: { updatedByUserId: session.user.id, value: serializeJson(value) },
@@ -56,7 +61,7 @@ export async function saveSetting(
       data: {
         actorUserId: session.user.id,
         entityId: key,
-        entityType: 'OPERATIONAL_SETTING',
+        entityType: "OPERATIONAL_SETTING",
         newValue: serializeJson(value),
         oldValue: previous?.value ? serializeJson(previous.value) : undefined,
         reason,

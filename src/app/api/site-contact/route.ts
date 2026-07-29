@@ -13,7 +13,10 @@ const channelIds = ["whatsapp", "instagram", "phone", "email"] as const;
 const channelIdSchema = z.enum(channelIds);
 const emptyOrHttpsUrl = z.union([
   z.literal(""),
-  z.url().max(500).refine((value) => new URL(value).protocol === "https:", "HTTPS bağlantısı gereklidir."),
+  z
+    .url()
+    .max(500)
+    .refine((value) => new URL(value).protocol === "https:", "HTTPS bağlantısı gereklidir."),
 ]);
 const emptyOrEmail = z.union([z.literal(""), z.email().max(320)]);
 const labelsSchema = z.object({
@@ -31,7 +34,10 @@ const enabledSchema = z.object({
 const orderSchema = z
   .array(channelIdSchema)
   .length(channelIds.length)
-  .refine((value) => new Set(value).size === channelIds.length, "Her iletişim kanalı bir kez sıralanmalıdır.");
+  .refine(
+    (value) => new Set(value).size === channelIds.length,
+    "Her iletişim kanalı bir kez sıralanmalıdır.",
+  );
 
 const settingsSchema = z.object({
   fabEnabled: z.boolean(),

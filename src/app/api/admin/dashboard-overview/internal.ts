@@ -93,11 +93,15 @@ const AUDIT_LABELS: Record<string, { desc: string; type: string }> = {
   "client.updated": { desc: "danışan bilgileri güncellendi", type: "Güncelleme" },
 };
 
-function describeAudit(action: string, actor: string | null | undefined): { desc: string; type: string } {
+function describeAudit(
+  action: string,
+  actor: string | null | undefined,
+): { desc: string; type: string } {
   const mapped = AUDIT_LABELS[action];
   const who = actor ? `${actor}, ` : "";
   if (mapped) return { desc: `${who}${mapped.desc}.`, type: mapped.type };
-  if (action.startsWith("appointment")) return { desc: `${who}bir randevu işlemi gerçekleştirdi.`, type: "Randevu" };
+  if (action.startsWith("appointment"))
+    return { desc: `${who}bir randevu işlemi gerçekleştirdi.`, type: "Randevu" };
   if (action.startsWith("finance") || action.startsWith("payment")) {
     return { desc: `${who}bir finans işlemi gerçekleştirdi.`, type: "Finans" };
   }
@@ -244,10 +248,8 @@ export async function GET() {
   }));
 
   // Client distribution.
-  const active =
-    clientCounts.find((row) => row.status === "ACTIVE")?._count._all ?? 0;
-  const prospective =
-    clientCounts.find((row) => row.status === "PROSPECTIVE")?._count._all ?? 0;
+  const active = clientCounts.find((row) => row.status === "ACTIVE")?._count._all ?? 0;
+  const prospective = clientCounts.find((row) => row.status === "PROSPECTIVE")?._count._all ?? 0;
 
   // Plan and session progress.
   const activeCount = activePlans.length;

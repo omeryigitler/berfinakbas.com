@@ -3,13 +3,34 @@ import { patchFile, replaceRequired, replaceRegexRequired } from "./dashboard-pa
 await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
   let source = initialSource;
   source = source
-    .replaceAll("client.parentPrimaryName || 'Ahmet Demir'", "client.parentPrimaryName || 'Girilmedi'")
-    .replaceAll("client.parentPrimaryRelation || 'Baba'", "client.parentPrimaryRelation || 'Girilmedi'")
-    .replaceAll("client.parentPrimaryEmail || 'veli.demir@e-posta.com'", "client.parentPrimaryEmail || 'Girilmedi'")
-    .replaceAll("client.parentSecondaryName || 'Ayşe Demir'", "client.parentSecondaryName || 'Girilmedi'")
-    .replaceAll("client.parentSecondaryRelation || 'Anne'", "client.parentSecondaryRelation || 'Girilmedi'")
-    .replaceAll("client.parentSecondaryPhone || '0532-555-0220'", "client.parentSecondaryPhone || 'Girilmedi'")
-    .replaceAll("client.emergencyContact || 'Ahmet Demir (0532-555-0219)'", "client.emergencyContact || 'Girilmedi'");
+    .replaceAll(
+      "client.parentPrimaryName || 'Ahmet Demir'",
+      "client.parentPrimaryName || 'Girilmedi'",
+    )
+    .replaceAll(
+      "client.parentPrimaryRelation || 'Baba'",
+      "client.parentPrimaryRelation || 'Girilmedi'",
+    )
+    .replaceAll(
+      "client.parentPrimaryEmail || 'veli.demir@e-posta.com'",
+      "client.parentPrimaryEmail || 'Girilmedi'",
+    )
+    .replaceAll(
+      "client.parentSecondaryName || 'Ayşe Demir'",
+      "client.parentSecondaryName || 'Girilmedi'",
+    )
+    .replaceAll(
+      "client.parentSecondaryRelation || 'Anne'",
+      "client.parentSecondaryRelation || 'Girilmedi'",
+    )
+    .replaceAll(
+      "client.parentSecondaryPhone || '0532-555-0220'",
+      "client.parentSecondaryPhone || 'Girilmedi'",
+    )
+    .replaceAll(
+      "client.emergencyContact || 'Ahmet Demir (0532-555-0219)'",
+      "client.emergencyContact || 'Girilmedi'",
+    );
 
   source = replaceRequired(
     source,
@@ -48,7 +69,7 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
 
   source = replaceRequired(
     source,
-    `                          onClick={() => triggerToast(\`${'${doc.name}'} başarıyla görüntülendi.\`)}`,
+    `                          onClick={() => triggerToast(\`${"${doc.name}"} başarıyla görüntülendi.\`)}`,
     `                          onClick={() => {
                             const url = (doc as any).url;
                             if (!url) return triggerToast('Belge bağlantısı bulunamadı.', 'error');
@@ -58,17 +79,17 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
   );
   source = replaceRequired(
     source,
-    `                          onClick={() => triggerToast(\`${'${doc.name}'} indirme işlemi tamamlandı.\`)}`,
+    `                          onClick={() => triggerToast(\`${"${doc.name}"} indirme işlemi tamamlandı.\`)}`,
     `                          onClick={() => {
                             const url = (doc as any).url;
                             if (!url) return triggerToast('Belge bağlantısı bulunamadı.', 'error');
-                            window.open(\`${'${url}${url.includes(\'?\') ? \'&\' : \'?\'}download=1'}\`, '_blank', 'noopener,noreferrer');
+                            window.open(\`${"${url}${url.includes('?') ? '&' : '?'}download=1"}\`, '_blank', 'noopener,noreferrer');
                           }}`,
     "Real document download action",
   );
   source = replaceRequired(
     source,
-    `                          onClick={() => triggerToast(\`${'${doc.name}'} arşive taşındı.\`)}`,
+    `                          onClick={() => triggerToast(\`${"${doc.name}"} arşive taşındı.\`)}`,
     `                          onClick={() => void handleArchiveDocument(doc)}`,
     "Real document archive action",
   );

@@ -64,17 +64,14 @@ function context() {
 }
 
 function request(method: "PATCH" | "POST", body: unknown) {
-  return new Request(
-    `https://admin.example.test/api/admin/appointments/${APPOINTMENT_ID}`,
-    {
-      body: JSON.stringify(body),
-      headers: {
-        "content-type": "application/json",
-        origin: "https://admin.example.test",
-      },
-      method,
+  return new Request(`https://admin.example.test/api/admin/appointments/${APPOINTMENT_ID}`, {
+    body: JSON.stringify(body),
+    headers: {
+      "content-type": "application/json",
+      origin: "https://admin.example.test",
     },
-  );
+    method,
+  });
 }
 
 beforeEach(() => {
@@ -133,10 +130,7 @@ describe("appointment completion route responses", () => {
   });
 
   it("rejects a plan id supplied by an assistant before the transition service runs", async () => {
-    const response = await POST(
-      request("POST", { planId: PLAN_ID }),
-      context(),
-    );
+    const response = await POST(request("POST", { planId: PLAN_ID }), context());
     const payload = await response.json();
 
     expect(response.status).toBe(403);

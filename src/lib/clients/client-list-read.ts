@@ -19,9 +19,7 @@ function getListParameters(request: Request) {
   const params = new URL(request.url).searchParams;
   const query = params.get("q")?.trim() ?? "";
   const rawTake = Number(params.get("take") ?? "100");
-  const take = Number.isFinite(rawTake)
-    ? Math.min(Math.max(Math.trunc(rawTake), 1), 100)
-    : 100;
+  const take = Number.isFinite(rawTake) ? Math.min(Math.max(Math.trunc(rawTake), 1), 100) : 100;
   const rawStatus = params.get("status");
   const status = clientStatuses.find((value) => value === rawStatus);
 
@@ -184,14 +182,9 @@ export async function GET(request: Request) {
             Math.min(client._count.notes * 3, 15),
         );
         const activePlan =
-          client.plans.find((plan) => plan.status === "ACTIVE") ??
-          client.plans[0] ??
-          null;
+          client.plans.find((plan) => plan.status === "ACTIVE") ?? client.plans[0] ?? null;
         const remainingSessions = activePlan
-          ? activePlan.sessionCreditEntries.reduce(
-              (total, entry) => total + entry.quantityDelta,
-              0,
-            )
+          ? activePlan.sessionCreditEntries.reduce((total, entry) => total + entry.quantityDelta, 0)
           : 0;
         const openBalanceMinor = client.plans.reduce((total, plan) => {
           const balance = calculateLedgerBalance(plan.ledgerEntries);

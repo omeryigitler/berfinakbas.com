@@ -15,8 +15,7 @@ const DOCUMENT_MIME_TYPES = {
 type SupportedDocumentMime = (typeof DOCUMENT_MIME_TYPES)[keyof typeof DOCUMENT_MIME_TYPES];
 
 type ValidationResult =
-  | { mimeType: SupportedDocumentMime; ok: true }
-  | { error: string; ok: false };
+  { mimeType: SupportedDocumentMime; ok: true } | { error: string; ok: false };
 
 function startsWith(bytes: Uint8Array, signature: readonly number[]): boolean {
   return signature.every((value, index) => bytes[index] === value);
@@ -30,9 +29,7 @@ function isLegacyWordDocument(bytes: Uint8Array): boolean {
 function isWordOpenXmlDocument(bytes: Uint8Array): boolean {
   const names = readZipCentralDirectoryNames(bytes);
   return (
-    names.has("[Content_Types].xml") &&
-    names.has("_rels/.rels") &&
-    names.has("word/document.xml")
+    names.has("[Content_Types].xml") && names.has("_rels/.rels") && names.has("word/document.xml")
   );
 }
 

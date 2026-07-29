@@ -24,7 +24,12 @@ function readSector(bytes: Uint8Array, sectorId: number, sectorSize: number): Ui
 function collectDirectorySectors(bytes: Uint8Array): Uint8Array[] {
   const sectorShift = readUint16(bytes, 30);
   const firstDirectorySector = readUint32(bytes, 48);
-  if (sectorShift === null || firstDirectorySector === null || sectorShift < 9 || sectorShift > 12) {
+  if (
+    sectorShift === null ||
+    firstDirectorySector === null ||
+    sectorShift < 9 ||
+    sectorShift > 12
+  ) {
     return [];
   }
 
@@ -69,11 +74,18 @@ export function readCompoundDocumentStreamNames(bytes: Uint8Array): ReadonlySet<
     for (let offset = 0; offset + 128 <= sector.length; offset += 128) {
       const nameLength = readUint16(sector, offset + 64);
       const objectType = sector[offset + 66];
-      if (!nameLength || nameLength < 2 || nameLength > 64 || (objectType !== 1 && objectType !== 2 && objectType !== 5)) {
+      if (
+        !nameLength ||
+        nameLength < 2 ||
+        nameLength > 64 ||
+        (objectType !== 1 && objectType !== 2 && objectType !== 5)
+      ) {
         continue;
       }
       const nameBytes = sector.subarray(offset, offset + nameLength - 2);
-      const name = Buffer.from(nameBytes).toString("utf16le").replace(/\u0000+$/g, "");
+      const name = Buffer.from(nameBytes)
+        .toString("utf16le")
+        .replace(/\u0000+$/g, "");
       if (name) names.add(name);
     }
   }

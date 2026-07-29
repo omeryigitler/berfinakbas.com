@@ -50,12 +50,7 @@ function forbidden() {
 }
 
 function isUniqueConflict(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "P2002"
-  );
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
 async function findStoredClient(clientId: string) {
@@ -149,10 +144,7 @@ export async function POST(request: Request) {
         if (!matchesClientCreateReplay(existing, payload)) {
           throw new ClientCreateConflictError();
         }
-        return NextResponse.json(
-          { data: { id: existing.id }, replayed: true },
-          { status: 200 },
-        );
+        return NextResponse.json({ data: { id: existing.id }, replayed: true }, { status: 200 });
       }
 
       try {
@@ -248,10 +240,7 @@ export async function POST(request: Request) {
             if (!matchesClientCreateReplay(replay, payload)) {
               throw new ClientCreateConflictError();
             }
-            return NextResponse.json(
-              { data: { id: replay.id }, replayed: true },
-              { status: 200 },
-            );
+            return NextResponse.json({ data: { id: replay.id }, replayed: true }, { status: 200 });
           }
           if (attempt < MAX_TRANSACTION_ATTEMPTS) continue;
           throw new ClientCreateConflictError();

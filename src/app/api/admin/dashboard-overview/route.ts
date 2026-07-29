@@ -16,9 +16,7 @@ export async function GET() {
   if (
     !session?.user ||
     session.user.status !== "ACTIVE" ||
-    !REQUIRED_PERMISSIONS.every((permission) =>
-      hasPermission(session.user.roles, permission),
-    )
+    !REQUIRED_PERMISSIONS.every((permission) => hasPermission(session.user.roles, permission))
   ) {
     return NextResponse.json(
       { code: "FORBIDDEN", error: "Dashboard özetini görüntüleme yetkiniz yok." },

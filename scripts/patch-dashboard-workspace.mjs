@@ -11,10 +11,10 @@ await patchFile("components/WorkspacePanel.tsx", (initialSource) => {
   source = replaceRequired(
     source,
     `  const fmtMinor = (minor: string | number | undefined) =>
-    \`${'${new Intl.NumberFormat(\'tr-TR\').format(Math.round(Number(minor ?? 0) / 100))} TL'}\`;`,
+    \`${"${new Intl.NumberFormat('tr-TR').format(Math.round(Number(minor ?? 0) / 100))} TL"}\`;`,
     `  const fmtMinor = (minor: string | number | undefined, currency = 'TRY') => {
     const amount = new Intl.NumberFormat('tr-TR').format(Math.round(Number(minor ?? 0) / 100));
-    return \`${'${amount} ${currency === \'TRY\' ? \'TL\' : currency}'}\`;
+    return \`${"${amount} ${currency === 'TRY' ? 'TL' : currency}"}\`;
   };
   const fmtFinance = (finance: any, field: string) => {
     const rows = Array.isArray(finance?.rows) ? finance.rows : [];

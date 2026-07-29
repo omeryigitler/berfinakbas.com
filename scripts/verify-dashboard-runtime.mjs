@@ -40,10 +40,7 @@ const clientRead = await readFile(
   path.resolve("src/lib/clients/client-dashboard-read.ts"),
   "utf-8",
 );
-const clientListRead = await readFile(
-  path.resolve("src/lib/clients/client-list-read.ts"),
-  "utf-8",
-);
+const clientListRead = await readFile(path.resolve("src/lib/clients/client-list-read.ts"), "utf-8");
 
 requireContains(app, "/api/admin/clients-v2?take=100", "archive-aware client endpoint");
 requireContains(app, "ARCHIVED: 'Arşivlenmiş'", "archived client mapping");
@@ -70,13 +67,9 @@ requireAbsent(myWork, "Kariyer ve Yönetici Mentorluğu", "mentoring service fal
 requireContains(details, "await requireSuccess(response)", "API response validation");
 requireContains(details, "/completion-options", "authorized completion options request");
 requireContains(details, "Seans Düşülecek Plan", "completion plan selector");
-requireContains(
-  details,
-  "Seans düşülecek planı seçin.",
-  "explicit completion plan validation",
-);
+requireContains(details, "Seans düşülecek planı seçin.", "explicit completion plan validation");
 requireContains(details, "status: apiStatus, archived", "archive persistence");
-requireContains(details, "type=\"file\"", "real document input");
+requireContains(details, 'type="file"', "real document input");
 requireAbsent(details, "_completionPlanId", "hidden automatic plan choice");
 requireAbsent(details, "2026-07-25", "fixed appointment date");
 requireAbsent(details, "2026-10-20", "fixed plan end date");
@@ -86,7 +79,7 @@ requireAbsent(details, "1.2 MB", "fabricated document size");
 requireContains(documentRoute, "validateDocumentUpload", "document content validation");
 requireAbsent(documentRoute, "ALLOWED_MIME_TYPES", "declared-MIME-only validation");
 requireAbsent(documentRoute, "DATABASE_JSON", "JSON document storage");
-requireAbsent(documentRoute, "toString(\"base64\")", "base64 document storage");
+requireAbsent(documentRoute, 'toString("base64")', "base64 document storage");
 requireContains(documentRoute, '"content_bytes" = ${bytes}', "binary document storage");
 requireContains(uploadValidation, "if (!declaredMimeType)", "required MIME declaration");
 requireContains(

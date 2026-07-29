@@ -57,7 +57,7 @@ await patchFile("App.tsx", (initialSource) => {
   source = replaceRequired(
     source,
     `    remainingBalance: money(openBalance),
-    parentPrimaryName: guardian ? \`${'${guardian.firstName} ${guardian.lastName}'}\`.trim() : base.parentPrimaryName,
+    parentPrimaryName: guardian ? \`${"${guardian.firstName} ${guardian.lastName}"}\`.trim() : base.parentPrimaryName,
     parentPrimaryPhone: guardian?.phone ?? base.parentPrimaryPhone,
     parentPrimaryEmail: guardian?.email ?? base.parentPrimaryEmail,`,
     `    remainingBalance: money(openBalance),
@@ -68,7 +68,7 @@ await patchFile("App.tsx", (initialSource) => {
     preferredContactMethod: d.preferredContactMethod ?? 'WhatsApp',
     contactConsent: Boolean(d.contactConsent),
     emergencyContact: d.emergencyContact ?? '',
-    parentPrimaryName: guardian ? \`${'${guardian.firstName} ${guardian.lastName}'}\`.trim() : undefined,
+    parentPrimaryName: guardian ? \`${"${guardian.firstName} ${guardian.lastName}"}\`.trim() : undefined,
     parentPrimaryRelation: (d.guardians ?? [])[0]?.relationship ?? undefined,
     parentPrimaryPhone: guardian?.phone ?? undefined,
     parentPrimaryEmail: guardian?.email ?? undefined,`,
@@ -105,7 +105,7 @@ await patchFile("App.tsx", (initialSource) => {
       name: doc.title,
       type: doc.category,
       size: Number(doc.sizeBytes) > 0
-        ? \`${'${Math.max(1, Math.round(Number(doc.sizeBytes) / 1024))} KB'}\`
+        ? \`${"${Math.max(1, Math.round(Number(doc.sizeBytes) / 1024))} KB"}\`
         : 'Bağlantı',
       date: fmtDate(doc.createdAt),
       status: 'Aktif',

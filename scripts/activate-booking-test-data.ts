@@ -224,9 +224,7 @@ async function main() {
     await ensureConsentDocuments();
     await ensureAvailability(practitioner.id);
 
-    console.log(
-      `Randevu test verisi etkin: practitioner=${practitioner.id} service=${service.id}`,
-    );
+    console.log(`Randevu test verisi etkin: practitioner=${practitioner.id} service=${service.id}`);
   } finally {
     await database.$disconnect();
   }

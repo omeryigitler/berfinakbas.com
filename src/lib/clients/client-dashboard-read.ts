@@ -191,24 +191,22 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const financeEntriesRaw = financeData?.financeEntries ?? [];
   const plansRaw = financeData?.plans ?? [];
-  const plans = plansRaw.map(
-    ({ ledgerEntries, sessionCreditEntries, installments, ...plan }) => ({
-      ...plan,
-      balanceMinor: calculateLedgerBalance(ledgerEntries).toString(),
-      installments: installments.map((installment) => ({
-        id: installment.id,
-        sequence: installment.sequence,
-        amountDueMinor: installment.amountDueMinor.toString(),
-        outstandingMinor: (
-          installment.amountDueMinor + calculateLedgerBalance(installment.ledgerEntries)
-        ).toString(),
-      })),
-      remainingSessions: sessionCreditEntries
-        .reduce((total, entry) => total + entry.quantityDelta, 0)
-        .toString(),
-      totalAmountMinor: plan.totalAmountMinor.toString(),
-    }),
-  );
+  const plans = plansRaw.map(({ ledgerEntries, sessionCreditEntries, installments, ...plan }) => ({
+    ...plan,
+    balanceMinor: calculateLedgerBalance(ledgerEntries).toString(),
+    installments: installments.map((installment) => ({
+      id: installment.id,
+      sequence: installment.sequence,
+      amountDueMinor: installment.amountDueMinor.toString(),
+      outstandingMinor: (
+        installment.amountDueMinor + calculateLedgerBalance(installment.ledgerEntries)
+      ).toString(),
+    })),
+    remainingSessions: sessionCreditEntries
+      .reduce((total, entry) => total + entry.quantityDelta, 0)
+      .toString(),
+    totalAmountMinor: plan.totalAmountMinor.toString(),
+  }));
   const financeSummary = canReadFinance
     ? buildClientProfileFinanceSummary(
         plans.map((plan) => ({

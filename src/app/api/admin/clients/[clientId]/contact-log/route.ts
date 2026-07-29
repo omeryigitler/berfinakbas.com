@@ -59,7 +59,10 @@ export async function POST(request: Request, context: RouteContext) {
 
   const { clientId } = await context.params;
   const database = getDatabase();
-  const client = await database.client.findUnique({ select: { id: true }, where: { id: clientId } });
+  const client = await database.client.findUnique({
+    select: { id: true },
+    where: { id: clientId },
+  });
   if (!client) {
     return NextResponse.json(
       { code: "CLIENT_NOT_FOUND", error: "Danışan kaydı bulunamadı." },

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import type { FormEvent } from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import type { FormEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import type { ClientListItem } from '@/components/admin/client-dashboard-types';
+import type { ClientListItem } from "@/components/admin/client-dashboard-types";
 
-import ExactSalesHubDashboard from './exact-sales-hub-dashboard';
-import styles from './sales-hub-dashboard.module.css';
-import { SalesHubIcon } from './source/sales-hub-icon';
+import ExactSalesHubDashboard from "./exact-sales-hub-dashboard";
+import styles from "./sales-hub-dashboard.module.css";
+import { SalesHubIcon } from "./source/sales-hub-icon";
 
 interface SalesHubPageProps {
   currentUserEmail?: string | null;
@@ -16,7 +16,7 @@ interface SalesHubPageProps {
 
 async function readError(response: Response) {
   const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-  return payload?.error ?? 'İşlem tamamlanamadı.';
+  return payload?.error ?? "İşlem tamamlanamadı.";
 }
 
 export default function SalesHubPage({
@@ -26,28 +26,28 @@ export default function SalesHubPage({
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [selectedDanisanId, setSelectedDanisanId] = useState('');
+  const [message, setMessage] = useState("");
+  const [selectedDanisanId, setSelectedDanisanId] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [type, setType] = useState<'ADULT' | 'CHILD'>('ADULT');
+  const [type, setType] = useState<"ADULT" | "CHILD">("ADULT");
 
   const loadClients = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/clients?take=100', {
-        cache: 'no-store',
-        headers: { accept: 'application/json' },
+      const response = await fetch("/api/admin/clients?take=100", {
+        cache: "no-store",
+        headers: { accept: "application/json" },
       });
       if (!response.ok) throw new Error(await readError(response));
       const payload = (await response.json()) as { data: ClientListItem[] };
       setClients(payload.data);
       setSelectedDanisanId((current) => {
         if (current && payload.data.some((client) => client.id === current)) return current;
-        return payload.data[0]?.id ?? '';
+        return payload.data[0]?.id ?? "";
       });
-      setMessage('');
+      setMessage("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Danışanlar yüklenemedi.');
+      setMessage(error instanceof Error ? error.message : "Danışanlar yüklenemedi.");
     } finally {
       setLoading(false);
     }
@@ -61,61 +61,59 @@ export default function SalesHubPage({
   async function createClient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const birthYearValue = String(formData.get('birthYear') ?? '').trim();
+    const birthYearValue = String(formData.get("birthYear") ?? "").trim();
 
     setSubmitting(true);
-    setMessage('');
+    setMessage("");
     try {
-      const response = await fetch('/api/admin/clients', {
+      const response = await fetch("/api/admin/clients", {
         body: JSON.stringify({
           birthYear: birthYearValue ? Number(birthYearValue) : null,
-          email: String(formData.get('email') ?? '').trim() || null,
-          firstName: String(formData.get('firstName') ?? '').trim(),
+          email: String(formData.get("email") ?? "").trim() || null,
+          firstName: String(formData.get("firstName") ?? "").trim(),
           guardianEmail:
-            type === 'CHILD' ? String(formData.get('guardianEmail') ?? '').trim() || null : null,
+            type === "CHILD" ? String(formData.get("guardianEmail") ?? "").trim() || null : null,
           guardianFirstName:
-            type === 'CHILD'
-              ? String(formData.get('guardianFirstName') ?? '').trim() || null
+            type === "CHILD"
+              ? String(formData.get("guardianFirstName") ?? "").trim() || null
               : null,
           guardianId: null,
           guardianLastName:
-            type === 'CHILD'
-              ? String(formData.get('guardianLastName') ?? '').trim() || null
-              : null,
-          guardianMode: type === 'CHILD' ? 'NEW' : null,
+            type === "CHILD" ? String(formData.get("guardianLastName") ?? "").trim() || null : null,
+          guardianMode: type === "CHILD" ? "NEW" : null,
           guardianPhone:
-            type === 'CHILD' ? String(formData.get('guardianPhone') ?? '').trim() || null : null,
-          lastName: String(formData.get('lastName') ?? '').trim(),
-          phone: String(formData.get('phone') ?? '').trim() || null,
-          preferredName: String(formData.get('preferredName') ?? '').trim() || null,
+            type === "CHILD" ? String(formData.get("guardianPhone") ?? "").trim() || null : null,
+          lastName: String(formData.get("lastName") ?? "").trim(),
+          phone: String(formData.get("phone") ?? "").trim() || null,
+          preferredName: String(formData.get("preferredName") ?? "").trim() || null,
           relationship:
-            type === 'CHILD' ? String(formData.get('relationship') ?? '').trim() || null : null,
+            type === "CHILD" ? String(formData.get("relationship") ?? "").trim() || null : null,
           requestId: crypto.randomUUID(),
-          status: String(formData.get('status') ?? 'PROSPECTIVE'),
+          status: String(formData.get("status") ?? "PROSPECTIVE"),
           type,
         }),
         headers: {
-          'content-type': 'application/json',
-          'x-correlation-id': crypto.randomUUID(),
+          "content-type": "application/json",
+          "x-correlation-id": crypto.randomUUID(),
         },
-        method: 'POST',
+        method: "POST",
       });
       if (!response.ok) throw new Error(await readError(response));
       const payload = (await response.json()) as { data: { id: string } };
       setCreateOpen(false);
-      setType('ADULT');
+      setType("ADULT");
       await loadClients();
       setSelectedDanisanId(payload.data.id);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Danışan oluşturulamadı.');
+      setMessage(error instanceof Error ? error.message : "Danışan oluşturulamadı.");
     } finally {
       setSubmitting(false);
     }
   }
 
   function openCreate() {
-    setMessage('');
-    setType('ADULT');
+    setMessage("");
+    setType("ADULT");
     setCreateOpen(true);
   }
 
@@ -161,7 +159,7 @@ export default function SalesHubPage({
                 <label className={styles.field}>
                   Danışan tipi
                   <select
-                    onChange={(event) => setType(event.target.value as 'ADULT' | 'CHILD')}
+                    onChange={(event) => setType(event.target.value as "ADULT" | "CHILD")}
                     value={type}
                   >
                     <option value="ADULT">Yetişkin</option>
@@ -190,12 +188,7 @@ export default function SalesHubPage({
                 </label>
                 <label className={styles.field}>
                   Doğum yılı
-                  <input
-                    max={new Date().getFullYear()}
-                    min="1900"
-                    name="birthYear"
-                    type="number"
-                  />
+                  <input max={new Date().getFullYear()} min="1900" name="birthYear" type="number" />
                 </label>
                 <label className={styles.field}>
                   Telefon
@@ -205,7 +198,7 @@ export default function SalesHubPage({
                   E-posta
                   <input name="email" type="email" />
                 </label>
-                {type === 'CHILD' ? (
+                {type === "CHILD" ? (
                   <>
                     <label className={styles.field}>
                       Veli adı
@@ -240,7 +233,7 @@ export default function SalesHubPage({
                   Vazgeç
                 </button>
                 <button className={styles.primaryAction} disabled={submitting} type="submit">
-                  {submitting ? 'Oluşturuluyor...' : 'Danışanı oluştur'}
+                  {submitting ? "Oluşturuluyor..." : "Danışanı oluştur"}
                 </button>
               </div>
             </form>

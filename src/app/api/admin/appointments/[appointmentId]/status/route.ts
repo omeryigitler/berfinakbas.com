@@ -86,10 +86,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({
       data: {
         ...transition,
-        consumedPlanId: getVisibleConsumedPlanId(
-          session.user.roles,
-          transition.consumedPlanId,
-        ),
+        consumedPlanId: getVisibleConsumedPlanId(session.user.roles, transition.consumedPlanId),
       },
     });
   } catch (error) {
@@ -110,7 +107,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     if (error instanceof AppointmentCompletionPlanRequiredError) {
       if (!canReadFinance) {
-        return forbidden("Bu randevuyu tamamlamak için finans yetkili bir kullanıcı plan seçmelidir.");
+        return forbidden(
+          "Bu randevuyu tamamlamak için finans yetkili bir kullanıcı plan seçmelidir.",
+        );
       }
       return NextResponse.json({ code: error.code, error: error.message }, { status: 409 });
     }

@@ -21,9 +21,7 @@ import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
 const routeParamsSchema = z.object({ appointmentId: z.uuid() });
-const completionSchema = z
-  .object({ planId: z.uuid().nullable().optional() })
-  .strict();
+const completionSchema = z.object({ planId: z.uuid().nullable().optional() }).strict();
 
 type RouteContext = { params: Promise<{ appointmentId: string }> };
 
@@ -109,10 +107,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     return NextResponse.json({
       data: {
-        consumedPlanId: getVisibleConsumedPlanId(
-          session.user.roles,
-          transition.consumedPlanId,
-        ),
+        consumedPlanId: getVisibleConsumedPlanId(session.user.roles, transition.consumedPlanId),
         id: transition.appointmentId,
         replayed: transition.replayed,
         status: transition.toStatus,
@@ -130,7 +125,9 @@ export async function POST(request: Request, context: RouteContext) {
     }
     if (error instanceof AppointmentCompletionPlanRequiredError) {
       if (!canReadFinance) {
-        return forbidden("Bu randevuyu tamamlamak için finans yetkili bir kullanıcı plan seçmelidir.");
+        return forbidden(
+          "Bu randevuyu tamamlamak için finans yetkili bir kullanıcı plan seçmelidir.",
+        );
       }
       return NextResponse.json({ code: error.code, error: error.message }, { status: 409 });
     }

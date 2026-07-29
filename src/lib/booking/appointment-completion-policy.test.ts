@@ -18,10 +18,7 @@ describe("appointment completion finance policy", () => {
 
   it("masks consumed plan ids from assistants, including replay responses", () => {
     expect(
-      getVisibleConsumedPlanId(
-        ["ASSISTANT"],
-        "11111111-1111-4111-8111-111111111111",
-      ),
+      getVisibleConsumedPlanId(["ASSISTANT"], "11111111-1111-4111-8111-111111111111"),
     ).toBeNull();
   });
 

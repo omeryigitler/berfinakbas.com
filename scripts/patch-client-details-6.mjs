@@ -32,7 +32,7 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
             {
               date: new Date().toISOString().split('T')[0],
               sessionNumber: usedSessions,
-              note: \`${'${appointment.service}'} seansı tamamlandı.\`,
+              note: \`${"${appointment.service}"} seansı tamamlandı.\`,
               specialist: 'Berfin Akbaş',
             },
             ...activePlan.usageHistory,
@@ -41,7 +41,7 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
       }
       onUpdateClient(client.id, {
         ...client,
-        lastAppointment: \`${'${appointment.date} ${appointment.time}'}\`,
+        lastAppointment: \`${"${appointment.date} ${appointment.time}"}\`,
         nextAppointment: 'Planlanmadı',
         appointments,
         plans,
