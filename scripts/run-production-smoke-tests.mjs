@@ -70,15 +70,30 @@ async function runSmokeChecks() {
     "CSP frame-ancestors koruması bulunmalıdır.",
   );
 
+  // /yonetim is auth-gated: an unauthenticated request must redirect to /giris.
   const adminResponse = await fetch(`${baseUrl}/yonetim`, {
     redirect: "manual",
   });
-  const adminHtml = await adminResponse.text();
 
-  assert(adminResponse.status === 200, "Test modunda /yonetim 200 dönmelidir.");
   assert(
-    adminHtml.includes("/yonetim/assets/"),
-    "Test modunda /yonetim exact Dashboard build'ini sunmalıdır.",
+    adminResponse.status >= 300 && adminResponse.status < 400,
+    "/yonetim kimlik doğrulaması olmadan yönlendirmelidir.",
+  );
+  assert(
+    (adminResponse.headers.get("location") ?? "").endsWith("/giris"),
+    "/yonetim yetkisiz istekte /giris'e yönlendirmelidir.",
+  );
+
+  // The exact Dashboard build must be wired and served under /yonetim-static.
+  const dashboardResponse = await fetch(`${baseUrl}/yonetim-static/index.html`, {
+    redirect: "manual",
+  });
+  const dashboardHtml = await dashboardResponse.text();
+
+  assert(dashboardResponse.status === 200, "/yonetim-static/index.html 200 dönmelidir.");
+  assert(
+    dashboardHtml.includes("/yonetim/assets/"),
+    "/yonetim-static exact Dashboard build'ini sunmalıdır.",
   );
 }
 
