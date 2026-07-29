@@ -135,7 +135,10 @@ describe("PATCH /api/admin/appointments/[appointmentId]/status", () => {
     const response = await PATCH(request(JSON.stringify(validMutation)), context());
 
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: "Randevu bulunamadı." });
+    await expect(response.json()).resolves.toEqual({
+      code: "APPOINTMENT_NOT_FOUND",
+      error: "Randevu bulunamadı.",
+    });
   });
 
   it("maps an invalid or raced transition to a safe conflict response", async () => {
@@ -146,6 +149,7 @@ describe("PATCH /api/admin/appointments/[appointmentId]/status", () => {
 
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toEqual({
+      code: "APPOINTMENT_TRANSITION_CONFLICT",
       error: "Randevu durumu değişti veya istenen geçişe izin verilmiyor.",
     });
   });

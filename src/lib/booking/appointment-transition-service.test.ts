@@ -117,7 +117,9 @@ describe("transitionAppointment", () => {
 
     await expect(transitionAppointment(command)).resolves.toEqual({
       appointmentId: command.appointmentId,
+      consumedPlanId: null,
       fromStatus: "REQUESTED",
+      replayed: false,
       toStatus: "PENDING_REVIEW",
     });
     expect(transaction.appointment.updateMany).toHaveBeenCalledWith({
@@ -139,7 +141,7 @@ describe("transitionAppointment", () => {
         action: "appointment.status_changed",
         actorType: "USER",
         actorUserId: command.actorUserId,
-        afterSummary: { status: "PENDING_REVIEW" },
+        afterSummary: { consumedPlanId: null, status: "PENDING_REVIEW" },
         beforeSummary: { status: "REQUESTED" },
         correlationId: command.correlationId,
         entityId: command.appointmentId,
@@ -244,6 +246,7 @@ describe("transitionAppointment", () => {
 
     await transitionAppointment({
       ...command,
+      completionPlanId: "55555555-5555-4555-8555-555555555555",
       reasonCode: "ADMIN_COMPLETED",
       toStatus: "COMPLETED",
     });
