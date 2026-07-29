@@ -4,7 +4,10 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { BookingConsentGateError } from "@/domain/consent/booking-consent";
 import { canManageAppointmentApi } from "@/lib/booking/appointment-api-access";
-import { canAccessAppointmentCompletionPlans } from "@/lib/booking/appointment-completion-policy";
+import {
+  canAccessAppointmentCompletionPlans,
+  getVisibleConsumedPlanId,
+} from "@/lib/booking/appointment-completion-policy";
 import {
   AppointmentCompletionPlanInvalidError,
   AppointmentCompletionPlanRequiredError,
@@ -80,7 +83,15 @@ export async function PATCH(request: Request, context: RouteContext) {
       appointmentId: parsedAppointmentId.data,
       correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
     });
-    return NextResponse.json({ data: transition });
+    return NextResponse.json({
+      data: {
+        ...transition,
+        consumedPlanId: getVisibleConsumedPlanId(
+          session.user.roles,
+          transition.consumedPlanId,
+        ),
+      },
+    });
   } catch (error) {
     if (error instanceof AppointmentNotFoundError) {
       return NextResponse.json({ code: error.code, error: error.message }, { status: 404 });

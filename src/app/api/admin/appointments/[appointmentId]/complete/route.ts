@@ -3,7 +3,10 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { canManageAppointmentApi } from "@/lib/booking/appointment-api-access";
-import { canAccessAppointmentCompletionPlans } from "@/lib/booking/appointment-completion-policy";
+import {
+  canAccessAppointmentCompletionPlans,
+  getVisibleConsumedPlanId,
+} from "@/lib/booking/appointment-completion-policy";
 import {
   AppointmentCompletionPlanInvalidError,
   AppointmentCompletionPlanRequiredError,
@@ -106,7 +109,10 @@ export async function POST(request: Request, context: RouteContext) {
 
     return NextResponse.json({
       data: {
-        consumedPlanId: transition.consumedPlanId,
+        consumedPlanId: getVisibleConsumedPlanId(
+          session.user.roles,
+          transition.consumedPlanId,
+        ),
         id: transition.appointmentId,
         replayed: transition.replayed,
         status: transition.toStatus,

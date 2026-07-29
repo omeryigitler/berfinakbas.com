@@ -1,8 +1,14 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
-import { canAccessAppointmentCompletionPlans } from "./appointment-completion-policy";
+import {
+  canAccessAppointmentCompletionPlans,
+  getVisibleConsumedPlanId,
+} from "./appointment-completion-policy";
 
-describe("canAccessAppointmentCompletionPlans", () => {
+describe("appointment completion finance policy", () => {
   it("does not expose plan data to assistants", () => {
     expect(canAccessAppointmentCompletionPlans(["ASSISTANT"])).toBe(false);
   });
@@ -11,5 +17,41 @@ describe("canAccessAppointmentCompletionPlans", () => {
     expect(canAccessAppointmentCompletionPlans(["THERAPIST"])).toBe(true);
     expect(canAccessAppointmentCompletionPlans(["FINANCE"])).toBe(true);
     expect(canAccessAppointmentCompletionPlans(["SUPER_ADMIN"])).toBe(true);
+  });
+
+  it("masks consumed plan ids from assistants, including replay responses", () => {
+    expect(
+      getVisibleConsumedPlanId(
+        ["ASSISTANT"],
+        "11111111-1111-4111-8111-111111111111",
+      ),
+    ).toBeNull();
+  });
+
+  it("keeps consumed plan ids visible for finance-authorized roles", () => {
+    const planId = "11111111-1111-4111-8111-111111111111";
+    expect(getVisibleConsumedPlanId(["THERAPIST"], planId)).toBe(planId);
+    expect(getVisibleConsumedPlanId(["FINANCE"], planId)).toBe(planId);
+    expect(getVisibleConsumedPlanId(["SUPER_ADMIN"], planId)).toBe(planId);
+  });
+
+  it("applies the plan-id mask in both completion response routes", async () => {
+    const [completeRoute, statusRoute] = await Promise.all([
+      readFile(
+        path.resolve(
+          "src/app/api/admin/appointments/[appointmentId]/complete/route.ts",
+        ),
+        "utf8",
+      ),
+      readFile(
+        path.resolve(
+          "src/app/api/admin/appointments/[appointmentId]/status/route.ts",
+        ),
+        "utf8",
+      ),
+    ]);
+
+    expect(completeRoute).toContain("getVisibleConsumedPlanId");
+    expect(statusRoute).toContain("getVisibleConsumedPlanId");
   });
 });

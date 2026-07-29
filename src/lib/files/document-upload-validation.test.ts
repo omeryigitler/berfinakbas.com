@@ -22,6 +22,31 @@ function makeOleDocument(streamNames: string[]): Uint8Array {
   return bytes;
 }
 
+function makeZipCentralDirectory(fileNames: string[]): Uint8Array {
+  const encodedNames = fileNames.map((fileName) => Buffer.from(fileName, "utf8"));
+  const centralDirectorySize = encodedNames.reduce(
+    (total, fileName) => total + 46 + fileName.length,
+    0,
+  );
+  const bytes = new Uint8Array(centralDirectorySize + 22);
+  const view = new DataView(bytes.buffer);
+
+  let offset = 0;
+  for (const fileName of encodedNames) {
+    view.setUint32(offset, 0x02014b50, true);
+    view.setUint16(offset + 28, fileName.length, true);
+    bytes.set(fileName, offset + 46);
+    offset += 46 + fileName.length;
+  }
+
+  view.setUint32(offset, 0x06054b50, true);
+  view.setUint16(offset + 8, encodedNames.length, true);
+  view.setUint16(offset + 10, encodedNames.length, true);
+  view.setUint32(offset + 12, centralDirectorySize, true);
+  view.setUint32(offset + 16, 0, true);
+  return bytes;
+}
+
 describe("validateDocumentUpload", () => {
   it("requires an explicit matching MIME type", () => {
     const bytes = Uint8Array.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37]);
@@ -57,6 +82,35 @@ describe("validateDocumentUpload", () => {
       bytes: makeOleDocument(["Root Entry", "Workbook"]),
       declaredMimeType: "application/msword",
       fileName: "rapor.doc",
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts DOCX only when required Word entries exist in the ZIP central directory", () => {
+    const bytes = makeZipCentralDirectory([
+      "[Content_Types].xml",
+      "_rels/.rels",
+      "word/document.xml",
+    ]);
+    expect(
+      validateDocumentUpload({
+        bytes,
+        declaredMimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        fileName: "rapor.docx",
+      }),
+    ).toEqual({
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ok: true,
+    });
+  });
+
+  it("rejects a ZIP renamed as docx when the Word document entry is missing", () => {
+    const result = validateDocumentUpload({
+      bytes: makeZipCentralDirectory(["[Content_Types].xml", "_rels/.rels", "xl/workbook.xml"]),
+      declaredMimeType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      fileName: "rapor.docx",
     });
     expect(result.ok).toBe(false);
   });
