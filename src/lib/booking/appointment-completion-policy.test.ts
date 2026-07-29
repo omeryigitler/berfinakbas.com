@@ -1,6 +1,3 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import {
@@ -33,25 +30,5 @@ describe("appointment completion finance policy", () => {
     expect(getVisibleConsumedPlanId(["THERAPIST"], planId)).toBe(planId);
     expect(getVisibleConsumedPlanId(["FINANCE"], planId)).toBe(planId);
     expect(getVisibleConsumedPlanId(["SUPER_ADMIN"], planId)).toBe(planId);
-  });
-
-  it("applies the plan-id mask in both completion response routes", async () => {
-    const [completeRoute, statusRoute] = await Promise.all([
-      readFile(
-        path.resolve(
-          "src/app/api/admin/appointments/[appointmentId]/complete/route.ts",
-        ),
-        "utf8",
-      ),
-      readFile(
-        path.resolve(
-          "src/app/api/admin/appointments/[appointmentId]/status/route.ts",
-        ),
-        "utf8",
-      ),
-    ]);
-
-    expect(completeRoute).toContain("getVisibleConsumedPlanId");
-    expect(statusRoute).toContain("getVisibleConsumedPlanId");
   });
 });

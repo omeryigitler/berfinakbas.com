@@ -18,7 +18,7 @@
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:critical": "vitest run src/lib/files/document-upload-validation.test.ts src/lib/booking/appointment-completion-policy.test.ts",
+    "test:critical": "vitest run src/lib/files/document-upload-validation.test.ts src/lib/booking/appointment-completion-policy.test.ts src/app/api/admin/appointments/completion-routes.test.ts",
     "test:integration": "node scripts/run-postgres-integration-tests.mjs",
     "test:visual": "python3 tests/visual/prepare-reference.py && pnpm dlx @playwright/test@1.61.1 test --config tests/visual/playwright.config.mjs",
     "test:visual:compare": "python3 tests/visual/prepare-reference.py && python3 tests/visual/compare.py",
