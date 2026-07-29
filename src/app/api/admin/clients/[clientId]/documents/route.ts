@@ -7,18 +7,10 @@ import { auth } from "@/auth";
 import { hasPermission } from "@/domain/auth/permissions";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
+import { validateDocumentUpload } from "@/lib/files/document-upload-validation";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/octet-stream",
-]);
 
 const linkDocumentSchema = z
   .object({
@@ -100,10 +92,15 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const mimeType = file.type || "application/octet-stream";
-    if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const validation = validateDocumentUpload({
+      bytes,
+      declaredMimeType: file.type,
+      fileName: file.name,
+    });
+    if (!validation.ok) {
       return NextResponse.json(
-        { code: "UNSUPPORTED_FILE_TYPE", error: "Bu belge türü desteklenmiyor." },
+        { code: "INVALID_FILE_CONTENT", error: validation.error },
         { status: 415 },
       );
     }
@@ -119,7 +116,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const documentId = randomUUID();
     const fileName = safeFileName(file.name);
-    const bytes = Buffer.from(await file.arrayBuffer());
+    const mimeType = validation.mimeType;
     const documentUrl = `/api/admin/clients/${clientId}/documents/${documentId}`;
 
     const created = await database.$transaction(async (transaction) => {

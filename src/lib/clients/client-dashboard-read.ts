@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { hasPermission } from "@/domain/auth/permissions";
 import { buildClientProfileFinanceSummary } from "@/domain/clients/client-profile-summary";
 import { calculateLedgerBalance } from "@/domain/finance/finance-operations";
 import { listStoredClientDocuments } from "@/lib/clients/client-document-store";
@@ -22,6 +23,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const session = await requireClientAccess("clients:read");
   if (!session) return forbidden();
 
+  const canReadFinance = hasPermission(session.user.roles, "finance:read");
   const { clientId } = await context.params;
   const now = new Date();
   const database = getDatabase();
@@ -36,22 +38,6 @@ export async function GET(_request: Request, context: RouteContext) {
       },
       createdAt: true,
       email: true,
-      financeEntries: {
-        orderBy: { occurredAt: "desc" },
-        select: {
-          amountMinor: true,
-          currency: true,
-          externalReference: true,
-          id: true,
-          note: true,
-          occurredAt: true,
-          paymentMethod: { select: { name: true } },
-          plan: { select: { name: true } },
-          reversedBy: { select: { id: true } },
-          type: true,
-        },
-        take: 50,
-      },
       firstName: true,
       guardians: {
         orderBy: { isPrimary: "desc" },
@@ -83,32 +69,6 @@ export async function GET(_request: Request, context: RouteContext) {
         take: 50,
       },
       phone: true,
-      plans: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          currency: true,
-          id: true,
-          installments: {
-            orderBy: { sequence: "asc" },
-            select: {
-              amountDueMinor: true,
-              id: true,
-              ledgerEntries: { select: { amountMinor: true } },
-              sequence: true,
-            },
-          },
-          ledgerEntries: { select: { amountMinor: true } },
-          name: true,
-          sessionCount: true,
-          sessionCreditEntries: { select: { quantityDelta: true } },
-          sessionDurationMinutes: true,
-          status: true,
-          totalAmountMinor: true,
-          validFrom: true,
-          validUntil: true,
-        },
-        take: 20,
-      },
       preferredName: true,
       status: true,
       type: true,
@@ -119,31 +79,88 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (!client) return notFound();
 
-  const [profileSetting, documentsRaw, pastAppointments, upcomingAppointments, completedAppointments] =
-    await Promise.all([
-      database.operationalSetting.findUnique({
-        select: { value: true },
-        where: { key: `${PROFILE_PREFIX}${clientId}` },
-      }),
-      listStoredClientDocuments(clientId),
-      database.appointment.findMany({
-        orderBy: { startsAt: "desc" },
-        select: clientAppointmentSelect,
-        take: 10,
-        where: { clientId, startsAt: { lt: now } },
-      }),
-      database.appointment.findMany({
-        orderBy: { startsAt: "asc" },
-        select: clientAppointmentSelect,
-        take: 10,
-        where: {
-          clientId,
-          startsAt: { gte: now },
-          status: { in: [...UPCOMING_APPOINTMENT_STATUSES] },
+  const financeDataPromise = canReadFinance
+    ? database.client.findUnique({
+        select: {
+          financeEntries: {
+            orderBy: { occurredAt: "desc" },
+            select: {
+              amountMinor: true,
+              currency: true,
+              externalReference: true,
+              id: true,
+              note: true,
+              occurredAt: true,
+              paymentMethod: { select: { name: true } },
+              plan: { select: { name: true } },
+              reversedBy: { select: { id: true } },
+              type: true,
+            },
+            take: 50,
+          },
+          plans: {
+            orderBy: { createdAt: "desc" },
+            select: {
+              currency: true,
+              id: true,
+              installments: {
+                orderBy: { sequence: "asc" },
+                select: {
+                  amountDueMinor: true,
+                  id: true,
+                  ledgerEntries: { select: { amountMinor: true } },
+                  sequence: true,
+                },
+              },
+              ledgerEntries: { select: { amountMinor: true } },
+              name: true,
+              sessionCount: true,
+              sessionCreditEntries: { select: { quantityDelta: true } },
+              sessionDurationMinutes: true,
+              status: true,
+              totalAmountMinor: true,
+              validFrom: true,
+              validUntil: true,
+            },
+            take: 20,
+          },
         },
-      }),
-      database.appointment.count({ where: { clientId, status: "COMPLETED" } }),
-    ]);
+        where: { id: clientId },
+      })
+    : Promise.resolve(null);
+
+  const [
+    profileSetting,
+    documentsRaw,
+    pastAppointments,
+    upcomingAppointments,
+    completedAppointments,
+    financeData,
+  ] = await Promise.all([
+    database.operationalSetting.findUnique({
+      select: { value: true },
+      where: { key: `${PROFILE_PREFIX}${clientId}` },
+    }),
+    listStoredClientDocuments(clientId),
+    database.appointment.findMany({
+      orderBy: { startsAt: "desc" },
+      select: clientAppointmentSelect,
+      take: 10,
+      where: { clientId, startsAt: { lt: now } },
+    }),
+    database.appointment.findMany({
+      orderBy: { startsAt: "asc" },
+      select: clientAppointmentSelect,
+      take: 10,
+      where: {
+        clientId,
+        startsAt: { gte: now },
+        status: { in: [...UPCOMING_APPOINTMENT_STATUSES] },
+      },
+    }),
+    database.appointment.count({ where: { clientId, status: "COMPLETED" } }),
+    financeDataPromise,
+  ]);
 
   const profile = asJsonRecord(profileSetting?.value);
   const archived = booleanOrDefault(profile.archived, false);
@@ -172,7 +189,9 @@ export async function GET(_request: Request, context: RouteContext) {
     ? serializeAppointment(lastCompletedAppointment)
     : null;
 
-  const plans = client.plans.map(
+  const financeEntriesRaw = financeData?.financeEntries ?? [];
+  const plansRaw = financeData?.plans ?? [];
+  const plans = plansRaw.map(
     ({ ledgerEntries, sessionCreditEntries, installments, ...plan }) => ({
       ...plan,
       balanceMinor: calculateLedgerBalance(ledgerEntries).toString(),
@@ -190,15 +209,17 @@ export async function GET(_request: Request, context: RouteContext) {
       totalAmountMinor: plan.totalAmountMinor.toString(),
     }),
   );
-  const financeSummary = buildClientProfileFinanceSummary(
-    plans.map((plan) => ({
-      balanceMinor: plan.balanceMinor,
-      currency: plan.currency,
-      remainingSessions: plan.remainingSessions,
-      status: plan.status,
-      totalAmountMinor: plan.totalAmountMinor,
-    })),
-  );
+  const financeSummary = canReadFinance
+    ? buildClientProfileFinanceSummary(
+        plans.map((plan) => ({
+          balanceMinor: plan.balanceMinor,
+          currency: plan.currency,
+          remainingSessions: plan.remainingSessions,
+          status: plan.status,
+          totalAmountMinor: plan.totalAmountMinor,
+        })),
+      )
+    : null;
 
   const score = Math.min(
     100,
@@ -223,16 +244,19 @@ export async function GET(_request: Request, context: RouteContext) {
         district: textOrNull(profile.district),
         documents,
         emergencyContact: textOrNull(profile.emergencyContact),
-        financeEntries: client.financeEntries.map((entry) => ({
-          ...entry,
-          amountMinor: entry.amountMinor.toString(),
-          isReversed: Boolean(entry.reversedBy),
-          reversedBy: undefined,
-        })),
+        financeAccess: canReadFinance,
+        financeEntries: canReadFinance
+          ? financeEntriesRaw.map((entry) => ({
+              ...entry,
+              amountMinor: entry.amountMinor.toString(),
+              isReversed: Boolean(entry.reversedBy),
+              reversedBy: undefined,
+            }))
+          : [],
         financeSummary,
         lastVisit,
         nextAppointment,
-        plans,
+        plans: canReadFinance ? plans : [],
         preferredContactMethod: textOrNull(profile.preferredContactMethod),
         score,
         status: archived ? "ARCHIVED" : client.status,

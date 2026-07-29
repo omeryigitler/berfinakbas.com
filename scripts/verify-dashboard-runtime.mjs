@@ -15,38 +15,79 @@ const details = await readFile(
   path.join(dashboardRoot, "components/ClientDetailsHub.tsx"),
   "utf-8",
 );
+const myWork = await readFile(
+  path.join(dashboardRoot, "components/MyWorkPanel.tsx"),
+  "utf-8",
+);
 const documentRoute = await readFile(
   path.resolve("src/app/api/admin/clients/[clientId]/documents/route.ts"),
+  "utf-8",
+);
+const uploadValidation = await readFile(
+  path.resolve("src/lib/files/document-upload-validation.ts"),
   "utf-8",
 );
 const completionRoute = await readFile(
   path.resolve("src/app/api/admin/appointments/[appointmentId]/complete/route.ts"),
   "utf-8",
 );
+const completionOptionsRoute = await readFile(
+  path.resolve("src/app/api/admin/appointments/[appointmentId]/completion-options/route.ts"),
+  "utf-8",
+);
+const clientRead = await readFile(
+  path.resolve("src/lib/clients/client-dashboard-read.ts"),
+  "utf-8",
+);
 
 requireContains(app, "/api/admin/clients-v2?take=100", "archive-aware client endpoint");
 requireContains(app, "ARCHIVED: 'Arşivlenmiş'", "archived client mapping");
-requireContains(app, "_completionPlanId", "completion plan mapping");
+requireContains(app, "guardianPhone: isChild ? newlyCreated.parentPhone", "separate guardian phone mapping");
 requireContains(app, "_detailLoaded: true", "real detail load marker");
+requireAbsent(app, "_completionPlanId", "automatic completion plan selection");
 requireAbsent(app, "Otomatik tanımlanan plan paketi", "fabricated plan fallback");
 requireAbsent(app, "totalPlanAmount: c.paymentStatus", "fabricated payment fallback");
 requireAbsent(app, "age: c.ageGroup === 'Çocuk' ? 10 : 35", "fabricated age fallback");
 requireAbsent(app, "keep mock data", "silent mock fallback");
 
+requireContains(myWork, "parentPhone?: string", "guardian phone type");
+requireContains(myWork, "Veli Telefonu *", "guardian phone input");
+requireContains(myWork, "setRealServiceOptions([])", "empty service failure state");
+requireAbsent(myWork, "Diyet ve Beslenme", "diet service fallback");
+requireAbsent(myWork, "Yaşam Koçluğu", "coaching service fallback");
+requireAbsent(myWork, "Psikoterapi", "psychotherapy service fallback");
+requireAbsent(myWork, "Kariyer ve Yönetici Mentorluğu", "mentoring service fallback");
+requireAbsent(myWork, "demo fallback", "demo service fallback comment");
+
 requireContains(details, "await requireSuccess(response)", "API response validation");
-requireContains(details, "body: JSON.stringify({ planId: completionPlanId })", "explicit plan completion");
+requireContains(details, "/completion-options", "authorized completion options request");
+requireContains(details, "Seans Düşülecek Plan", "completion plan selector");
+requireContains(details, "Seans düşülecek planı seçin.", "explicit completion plan validation");
 requireContains(details, "status: apiStatus, archived", "archive persistence");
 requireContains(details, "type=\"file\"", "real document input");
+requireAbsent(details, "_completionPlanId", "hidden automatic plan choice");
 requireAbsent(details, "2026-07-25", "fixed appointment date");
 requireAbsent(details, "2026-10-20", "fixed plan end date");
 requireAbsent(details, "keep the optimistic", "optimistic success fallback");
 requireAbsent(details, "1.2 MB", "fabricated document size");
 
+requireContains(documentRoute, "validateDocumentUpload", "document content validation");
+requireAbsent(documentRoute, "ALLOWED_MIME_TYPES", "declared-MIME-only validation");
 requireAbsent(documentRoute, "DATABASE_JSON", "JSON document storage");
 requireAbsent(documentRoute, "toString(\"base64\")", "base64 document storage");
 requireContains(documentRoute, '"content_bytes" = ${bytes}', "binary document storage");
+requireContains(uploadValidation, "application/octet-stream", "octet-stream rejection");
+requireContains(uploadValidation, "[0x25, 0x50, 0x44, 0x46, 0x2d]", "PDF signature validation");
+requireContains(uploadValidation, "[Content_Types].xml", "DOCX container validation");
+
+requireContains(completionRoute, "canManageAppointmentApi", "practitioner appointment scope guard");
 requireContains(completionRoute, 'appointment.status !== "CONFIRMED"', "completion status guard");
 requireContains(completionRoute, "PLAN_SELECTION_REQUIRED", "explicit plan selection guard");
 requireContains(completionRoute, "appointment.startsAt > now", "future appointment guard");
+requireContains(completionOptionsRoute, "canManageAppointmentApi", "completion options scope guard");
+requireContains(clientRead, 'hasPermission(session.user.roles, "finance:read")', "finance read authorization");
+requireContains(clientRead, "financeDataPromise", "conditional finance query");
+requireContains(clientRead, "financeAccess: canReadFinance", "finance access response marker");
+requireContains(clientRead, "plans: canReadFinance ? plans : []", "finance plan response filtering");
 
-console.log("Dashboard runtime data-integrity verification passed.");
+console.log("Dashboard runtime data-integrity and authorization verification passed.");

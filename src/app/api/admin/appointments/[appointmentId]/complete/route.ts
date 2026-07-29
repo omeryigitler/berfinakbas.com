@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/auth";
-import { hasPermission } from "@/domain/auth/permissions";
+import { canManageAppointmentApi } from "@/lib/booking/appointment-api-access";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
@@ -23,13 +23,7 @@ function forbidden() {
 
 export async function POST(request: Request, context: RouteContext) {
   const session = await auth();
-  if (
-    !session?.user ||
-    session.user.status !== "ACTIVE" ||
-    !hasPermission(session.user.roles, "appointments:manage")
-  ) {
-    return forbidden();
-  }
+  if (!session?.user || session.user.status !== "ACTIVE") return forbidden();
 
   const environment = getServerEnvironment();
   if (!hasTrustedOrigin(request.headers.get("origin"), environment.APP_URL)) {
@@ -45,6 +39,17 @@ export async function POST(request: Request, context: RouteContext) {
       { code: "INVALID_APPOINTMENT_ID", error: "Randevu kimliği geçersiz." },
       { status: 400 },
     );
+  }
+
+  const appointmentId = parsedParams.data.appointmentId;
+  if (
+    !(await canManageAppointmentApi({
+      appointmentId,
+      roles: session.user.roles,
+      userId: session.user.id,
+    }))
+  ) {
+    return forbidden();
   }
 
   let rawBody = "";
@@ -75,7 +80,6 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  const appointmentId = parsedParams.data.appointmentId;
   const requestedPlanId = parsedBody.data.planId ?? null;
   const database = getDatabase();
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
