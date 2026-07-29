@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { validateDocumentUpload } from "@/lib/files/document-upload-validation";
+import { validateDocumentUpload } from "./document-upload-validation";
 
 function makeOleDocument(streamNames: string[]): Uint8Array {
   const sectorSize = 512;
@@ -10,13 +10,14 @@ function makeOleDocument(streamNames: string[]): Uint8Array {
   view.setUint16(28, 0xfffe, true);
   view.setUint16(30, 9, true);
   view.setUint32(48, 0, true);
+  for (let index = 0; index < 109; index += 1) view.setUint32(76 + index * 4, 0xffffffff, true);
 
   streamNames.slice(0, 4).forEach((name, index) => {
     const offset = sectorSize + index * 128;
     const encoded = Buffer.from(`${name}\u0000`, "utf16le");
     bytes.set(encoded.subarray(0, 64), offset);
     view.setUint16(offset + 64, Math.min(encoded.length, 64), true);
-    bytes[offset + 66] = 2;
+    bytes[offset + 66] = index === 0 ? 5 : 2;
   });
   return bytes;
 }
@@ -42,12 +43,13 @@ describe("validateDocumentUpload", () => {
   });
 
   it("accepts a compound Word document with Word streams", () => {
-    const result = validateDocumentUpload({
-      bytes: makeOleDocument(["Root Entry", "WordDocument", "1Table"]),
-      declaredMimeType: "application/msword",
-      fileName: "rapor.doc",
-    });
-    expect(result).toEqual({ mimeType: "application/msword", ok: true });
+    expect(
+      validateDocumentUpload({
+        bytes: makeOleDocument(["Root Entry", "WordDocument", "1Table"]),
+        declaredMimeType: "application/msword",
+        fileName: "rapor.doc",
+      }),
+    ).toEqual({ mimeType: "application/msword", ok: true });
   });
 
   it("rejects an Excel compound file renamed as doc", () => {

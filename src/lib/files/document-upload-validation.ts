@@ -1,3 +1,8 @@
+import {
+  readCompoundDocumentStreamNames,
+  readZipCentralDirectoryNames,
+} from "./document-signatures";
+
 const DOCUMENT_MIME_TYPES = {
   doc: "application/msword",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -17,6 +22,20 @@ function startsWith(bytes: Uint8Array, signature: readonly number[]): boolean {
   return signature.every((value, index) => bytes[index] === value);
 }
 
+function isLegacyWordDocument(bytes: Uint8Array): boolean {
+  const names = readCompoundDocumentStreamNames(bytes);
+  return names.has("WordDocument") && (names.has("0Table") || names.has("1Table"));
+}
+
+function isWordOpenXmlDocument(bytes: Uint8Array): boolean {
+  const names = readZipCentralDirectoryNames(bytes);
+  return (
+    names.has("[Content_Types].xml") &&
+    names.has("_rels/.rels") &&
+    names.has("word/document.xml")
+  );
+}
+
 function detectMimeType(bytes: Uint8Array): SupportedDocumentMime | null {
   if (startsWith(bytes, [0x25, 0x50, 0x44, 0x46, 0x2d])) return DOCUMENT_MIME_TYPES.pdf;
   if (startsWith(bytes, [0xff, 0xd8, 0xff])) return DOCUMENT_MIME_TYPES.jpeg;
@@ -32,14 +51,14 @@ function detectMimeType(bytes: Uint8Array): SupportedDocumentMime | null {
   ) {
     return DOCUMENT_MIME_TYPES.webp;
   }
-  if (startsWith(bytes, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])) {
+  if (
+    startsWith(bytes, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) &&
+    isLegacyWordDocument(bytes)
+  ) {
     return DOCUMENT_MIME_TYPES.doc;
   }
-  if (startsWith(bytes, [0x50, 0x4b, 0x03, 0x04])) {
-    const archiveText = Buffer.from(bytes).toString("latin1");
-    if (archiveText.includes("[Content_Types].xml") && archiveText.includes("word/")) {
-      return DOCUMENT_MIME_TYPES.docx;
-    }
+  if (startsWith(bytes, [0x50, 0x4b]) && isWordOpenXmlDocument(bytes)) {
+    return DOCUMENT_MIME_TYPES.docx;
   }
   return null;
 }
@@ -58,16 +77,19 @@ export function validateDocumentUpload(input: {
   declaredMimeType: string;
   fileName: string;
 }): ValidationResult {
+  const declaredMimeType = input.declaredMimeType.trim().toLowerCase();
+  if (!declaredMimeType) {
+    return { error: "Dosyanın MIME türü gönderilmelidir.", ok: false };
+  }
+  if (declaredMimeType === "application/octet-stream") {
+    return { error: "Genel binary MIME türü kabul edilmiyor.", ok: false };
+  }
+
   const detectedMimeType = detectMimeType(input.bytes);
   if (!detectedMimeType) {
     return { error: "Dosyanın gerçek içeriği desteklenen bir belge türü değil.", ok: false };
   }
-
-  const declaredMimeType = input.declaredMimeType.trim().toLowerCase();
-  if (
-    declaredMimeType === "application/octet-stream" ||
-    (declaredMimeType && declaredMimeType !== detectedMimeType)
-  ) {
+  if (declaredMimeType !== detectedMimeType) {
     return { error: "Dosyanın bildirilen türü gerçek içeriğiyle eşleşmiyor.", ok: false };
   }
 

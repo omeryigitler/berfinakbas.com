@@ -8,13 +8,20 @@ import {
   assertBookingConsentGate,
   type BookingConsentRecord,
 } from "@/domain/consent/booking-consent";
+import {
+  AppointmentCompletionPlanInvalidError,
+  AppointmentCompletionPlanRequiredError,
+  AppointmentNotStartedError,
+} from "@/lib/booking/appointment-transition-errors";
 import { isRetryableTransactionError } from "@/lib/booking/appointment-hold-service";
+import { findPotentialDuplicateClients } from "@/lib/clients/client-duplicate-review";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { enqueueAppointmentStatusChangedEvent } from "@/lib/integrations/appointment-outbox";
-import { findPotentialDuplicateClients } from "@/lib/clients/client-duplicate-review";
 
 const MAX_TRANSACTION_ATTEMPTS = 3;
+const completionCreditIdempotencyKey = (appointmentId: string) =>
+  `appointment:${appointmentId}:session-consume`;
 
 export const databaseAppointmentStatuses = [
   "REQUESTED",
@@ -45,28 +52,40 @@ const domainStatusByDatabaseStatus = {
 const allocationReleasingStatuses = new Set<DatabaseAppointmentStatus>([
   "CANCELLED_BY_CLIENT",
   "CANCELLED_BY_PRACTITIONER",
+  "COMPLETED",
   "REJECTED",
 ]);
 
-export const transitionAppointmentSchema = z.object({
-  actorUserId: z.uuid(),
-  appointmentId: z.uuid(),
-  correlationId: z.string().trim().min(1).max(80),
-  note: z.string().trim().min(1).max(500).nullable().optional(),
-  reasonCode: z
-    .string()
-    .trim()
-    .regex(/^[A-Z0-9_]+$/)
-    .min(3)
-    .max(80),
-  toStatus: z.enum(databaseAppointmentStatuses),
-});
+export const transitionAppointmentSchema = z
+  .object({
+    actorUserId: z.uuid(),
+    appointmentId: z.uuid(),
+    completionPlanId: z.uuid().nullable().optional(),
+    correlationId: z.string().trim().min(1).max(80),
+    note: z.string().trim().min(1).max(500).nullable().optional(),
+    reasonCode: z
+      .string()
+      .trim()
+      .regex(/^[A-Z0-9_]+$/)
+      .min(3)
+      .max(80),
+    toStatus: z.enum(databaseAppointmentStatuses),
+  })
+  .strict();
 
-export const transitionAppointmentRequestSchema = transitionAppointmentSchema.pick({
-  note: true,
-  reasonCode: true,
-  toStatus: true,
-});
+export const transitionAppointmentRequestSchema = z
+  .object({
+    completionPlanId: z.uuid().nullable().optional(),
+    note: z.string().trim().min(1).max(500).nullable().optional(),
+    reasonCode: z
+      .string()
+      .trim()
+      .regex(/^[A-Z0-9_]+$/)
+      .min(3)
+      .max(80),
+    toStatus: z.enum(databaseAppointmentStatuses),
+  })
+  .strict();
 
 export class AppointmentNotFoundError extends Error {
   readonly code = "APPOINTMENT_NOT_FOUND";
@@ -97,7 +116,9 @@ export class AppointmentDuplicateReviewRequiredError extends Error {
 
 export type TransitionedAppointment = Readonly<{
   appointmentId: string;
+  consumedPlanId: string | null;
   fromStatus: DatabaseAppointmentStatus;
+  replayed: boolean;
   toStatus: DatabaseAppointmentStatus;
 }>;
 
@@ -106,6 +127,10 @@ export async function transitionAppointment(
   now = new Date(),
 ): Promise<TransitionedAppointment> {
   const command = transitionAppointmentSchema.parse(input);
+  if (command.toStatus !== "COMPLETED" && command.completionPlanId) {
+    throw new AppointmentCompletionPlanInvalidError();
+  }
+
   const database = getDatabase();
   const requiredExplicitConsentDocumentTypes =
     getServerEnvironment().BOOKING_REQUIRED_EXPLICIT_CONSENT_DOCUMENT_TYPES;
@@ -134,16 +159,36 @@ export async function transitionAppointment(
                   },
                 },
               },
+              duplicateReviewStatus: true,
               guardianId: true,
               id: true,
-              duplicateReviewStatus: true,
               source: true,
+              startsAt: true,
               status: true,
             },
             where: { id: command.appointmentId },
           });
 
           if (!appointment) throw new AppointmentNotFoundError();
+
+          if (appointment.status === "COMPLETED" && command.toStatus === "COMPLETED") {
+            const consumedCredit = await transaction.sessionCreditEntry.findFirst({
+              orderBy: { createdAt: "desc" },
+              select: { planId: true },
+              where: {
+                appointmentId: appointment.id,
+                reasonCode: "APPOINTMENT_COMPLETED",
+                type: "CONSUME",
+              },
+            });
+            return Object.freeze({
+              appointmentId: appointment.id,
+              consumedPlanId: consumedCredit?.planId ?? null,
+              fromStatus: "COMPLETED" as const,
+              replayed: true,
+              toStatus: "COMPLETED" as const,
+            });
+          }
 
           try {
             assertAppointmentTransition(
@@ -155,6 +200,9 @@ export async function transitionAppointment(
           }
           if (command.toStatus === "CONFIRMED" && appointment.allocation?.status !== "ACTIVE") {
             throw new AppointmentTransitionConflictError();
+          }
+          if (command.toStatus === "COMPLETED" && appointment.startsAt > now) {
+            throw new AppointmentNotStartedError(appointment.startsAt);
           }
 
           if (command.toStatus === "CONFIRMED" && appointment.source === "WEB") {
@@ -207,6 +255,39 @@ export async function transitionAppointment(
             );
           }
 
+          let selectedPlan: { id: string; name: string } | null = null;
+          if (command.toStatus === "COMPLETED") {
+            const plans = await transaction.clientPlan.findMany({
+              orderBy: [{ createdAt: "desc" }],
+              select: {
+                id: true,
+                name: true,
+                sessionCreditEntries: { select: { quantityDelta: true } },
+              },
+              where: {
+                clientId: appointment.clientId,
+                status: "ACTIVE",
+                validFrom: { lte: now },
+                OR: [{ validUntil: null }, { validUntil: { gte: now } }],
+              },
+            });
+            const eligiblePlans = plans.filter(
+              (plan) =>
+                plan.sessionCreditEntries.reduce(
+                  (total, entry) => total + entry.quantityDelta,
+                  0,
+                ) > 0,
+            );
+            if (eligiblePlans.length > 0 && !command.completionPlanId) {
+              throw new AppointmentCompletionPlanRequiredError();
+            }
+            if (command.completionPlanId) {
+              selectedPlan =
+                eligiblePlans.find((plan) => plan.id === command.completionPlanId) ?? null;
+              if (!selectedPlan) throw new AppointmentCompletionPlanInvalidError();
+            }
+          }
+
           const isCancellation =
             command.toStatus === "CANCELLED_BY_CLIENT" ||
             command.toStatus === "CANCELLED_BY_PRACTITIONER";
@@ -225,32 +306,18 @@ export async function transitionAppointment(
 
           if (transition.count !== 1) throw new AppointmentTransitionConflictError();
 
-          if (command.toStatus === "COMPLETED") {
-            const plans = await transaction.clientPlan.findMany({
-              include: { sessionCreditEntries: { select: { quantityDelta: true } } },
-              orderBy: [{ createdAt: "desc" }],
-              where: { clientId: appointment.clientId, status: "ACTIVE" },
+          if (selectedPlan) {
+            await transaction.sessionCreditEntry.create({
+              data: {
+                actorUserId: command.actorUserId,
+                appointmentId: appointment.id,
+                idempotencyKey: completionCreditIdempotencyKey(appointment.id),
+                planId: selectedPlan.id,
+                quantityDelta: -1,
+                reasonCode: "APPOINTMENT_COMPLETED",
+                type: "CONSUME",
+              },
             });
-            const plan = plans.find(
-              (candidate) =>
-                candidate.sessionCreditEntries.reduce(
-                  (total, entry) => total + entry.quantityDelta,
-                  0,
-                ) > 0,
-            );
-            if (plan) {
-              await transaction.sessionCreditEntry.create({
-                data: {
-                  actorUserId: command.actorUserId,
-                  appointmentId: appointment.id,
-                  idempotencyKey: `appointment:${appointment.id}:session-consume`,
-                  planId: plan.id,
-                  quantityDelta: -1,
-                  reasonCode: "APPOINTMENT_COMPLETED",
-                  type: "CONSUME",
-                },
-              });
-            }
           }
 
           const statusLog = await transaction.appointmentStatusLog.create({
@@ -259,7 +326,11 @@ export async function transitionAppointment(
               actorUserId: command.actorUserId,
               appointmentId: appointment.id,
               fromStatus: appointment.status,
-              note: command.note ?? null,
+              note:
+                command.note ??
+                (selectedPlan
+                  ? `Seans tamamlandı ve ${selectedPlan.name} planından bir kullanım düşüldü.`
+                  : null),
               reasonCode: command.reasonCode,
               toStatus: command.toStatus,
             },
@@ -278,7 +349,10 @@ export async function transitionAppointment(
               action: "appointment.status_changed",
               actorType: "USER",
               actorUserId: command.actorUserId,
-              afterSummary: { status: command.toStatus },
+              afterSummary: {
+                consumedPlanId: selectedPlan?.id ?? null,
+                status: command.toStatus,
+              },
               beforeSummary: { status: appointment.status },
               correlationId: command.correlationId,
               entityId: appointment.id,
@@ -297,7 +371,9 @@ export async function transitionAppointment(
 
           return Object.freeze({
             appointmentId: appointment.id,
+            consumedPlanId: selectedPlan?.id ?? null,
             fromStatus: appointment.status,
+            replayed: false,
             toStatus: command.toStatus,
           });
         },

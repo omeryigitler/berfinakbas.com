@@ -4,6 +4,12 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { BookingConsentGateError } from "@/domain/consent/booking-consent";
 import { canManageAppointmentApi } from "@/lib/booking/appointment-api-access";
+import { canAccessAppointmentCompletionPlans } from "@/lib/booking/appointment-completion-policy";
+import {
+  AppointmentCompletionPlanInvalidError,
+  AppointmentCompletionPlanRequiredError,
+  AppointmentNotStartedError,
+} from "@/lib/booking/appointment-transition-errors";
 import {
   AppointmentDuplicateReviewRequiredError,
   AppointmentNotFoundError,
@@ -20,8 +26,8 @@ type RouteContext = Readonly<{
   params: Promise<{ appointmentId: string }>;
 }>;
 
-function forbidden() {
-  return NextResponse.json({ error: "Bu işlem için yetkiniz yok." }, { status: 403 });
+function forbidden(message = "Bu işlem için yetkiniz yok.") {
+  return NextResponse.json({ code: "FORBIDDEN", error: message }, { status: 403 });
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -58,8 +64,14 @@ export async function PATCH(request: Request, context: RouteContext) {
       roles: session.user.roles,
       userId: session.user.id,
     }))
-  )
+  ) {
     return forbidden();
+  }
+
+  const canReadFinance = canAccessAppointmentCompletionPlans(session.user.roles);
+  if (parsed.data.completionPlanId && !canReadFinance) {
+    return forbidden("Seans planı kullanmak için finans görüntüleme yetkisi gerekir.");
+  }
 
   try {
     const transition = await transitionAppointment({
@@ -71,13 +83,29 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ data: transition });
   } catch (error) {
     if (error instanceof AppointmentNotFoundError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
+      return NextResponse.json({ code: error.code, error: error.message }, { status: 404 });
     }
     if (error instanceof AppointmentTransitionConflictError) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
+      return NextResponse.json({ code: error.code, error: error.message }, { status: 409 });
     }
     if (error instanceof AppointmentDuplicateReviewRequiredError) {
       return NextResponse.json({ code: error.code, error: error.message }, { status: 409 });
+    }
+    if (error instanceof AppointmentNotStartedError) {
+      return NextResponse.json(
+        { code: error.code, error: error.message, startsAt: error.startsAt.toISOString() },
+        { status: 409 },
+      );
+    }
+    if (error instanceof AppointmentCompletionPlanRequiredError) {
+      if (!canReadFinance) {
+        return forbidden("Bu randevuyu tamamlamak için finans yetkili bir kullanıcı plan seçmelidir.");
+      }
+      return NextResponse.json({ code: error.code, error: error.message }, { status: 409 });
+    }
+    if (error instanceof AppointmentCompletionPlanInvalidError) {
+      if (!canReadFinance) return forbidden();
+      return NextResponse.json({ code: error.code, error: error.message }, { status: 422 });
     }
     if (error instanceof BookingConsentGateError) {
       return NextResponse.json(

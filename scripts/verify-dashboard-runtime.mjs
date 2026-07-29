@@ -11,14 +11,8 @@ function requireAbsent(source, text, label) {
 
 const dashboardRoot = path.resolve(".dashboard-source/src");
 const app = await readFile(path.join(dashboardRoot, "App.tsx"), "utf-8");
-const details = await readFile(
-  path.join(dashboardRoot, "components/ClientDetailsHub.tsx"),
-  "utf-8",
-);
-const myWork = await readFile(
-  path.join(dashboardRoot, "components/MyWorkPanel.tsx"),
-  "utf-8",
-);
+const details = await readFile(path.join(dashboardRoot, "components/ClientDetailsHub.tsx"), "utf-8");
+const myWork = await readFile(path.join(dashboardRoot, "components/MyWorkPanel.tsx"), "utf-8");
 const documentRoute = await readFile(
   path.resolve("src/app/api/admin/clients/[clientId]/documents/route.ts"),
   "utf-8",
@@ -33,6 +27,10 @@ const completionRoute = await readFile(
 );
 const completionOptionsRoute = await readFile(
   path.resolve("src/app/api/admin/appointments/[appointmentId]/completion-options/route.ts"),
+  "utf-8",
+);
+const transitionService = await readFile(
+  path.resolve("src/lib/booking/appointment-transition-service.ts"),
   "utf-8",
 );
 const clientRead = await readFile(
@@ -57,7 +55,6 @@ requireAbsent(myWork, "Diyet ve Beslenme", "diet service fallback");
 requireAbsent(myWork, "Yaşam Koçluğu", "coaching service fallback");
 requireAbsent(myWork, "Psikoterapi", "psychotherapy service fallback");
 requireAbsent(myWork, "Kariyer ve Yönetici Mentorluğu", "mentoring service fallback");
-requireAbsent(myWork, "demo fallback", "demo service fallback comment");
 
 requireContains(details, "await requireSuccess(response)", "API response validation");
 requireContains(details, "/completion-options", "authorized completion options request");
@@ -76,15 +73,33 @@ requireAbsent(documentRoute, "ALLOWED_MIME_TYPES", "declared-MIME-only validatio
 requireAbsent(documentRoute, "DATABASE_JSON", "JSON document storage");
 requireAbsent(documentRoute, "toString(\"base64\")", "base64 document storage");
 requireContains(documentRoute, '"content_bytes" = ${bytes}', "binary document storage");
+requireContains(uploadValidation, "if (!declaredMimeType)", "required MIME declaration");
+requireContains(uploadValidation, "readCompoundDocumentStreamNames", "compound Word stream validation");
+requireContains(uploadValidation, "readZipCentralDirectoryNames", "DOCX central-directory validation");
 requireContains(uploadValidation, "application/octet-stream", "octet-stream rejection");
-requireContains(uploadValidation, "[0x25, 0x50, 0x44, 0x46, 0x2d]", "PDF signature validation");
-requireContains(uploadValidation, "[Content_Types].xml", "DOCX container validation");
 
 requireContains(completionRoute, "canManageAppointmentApi", "practitioner appointment scope guard");
-requireContains(completionRoute, 'appointment.status !== "CONFIRMED"', "completion status guard");
-requireContains(completionRoute, "PLAN_SELECTION_REQUIRED", "explicit plan selection guard");
-requireContains(completionRoute, "appointment.startsAt > now", "future appointment guard");
+requireContains(completionRoute, "canAccessAppointmentCompletionPlans", "completion finance policy");
+requireContains(completionRoute, "transitionAppointment({", "central completion transition");
+requireAbsent(completionRoute, ".$transaction(", "parallel completion transaction");
+requireAbsent(completionRoute, "appointment-complete:", "legacy completion idempotency key");
 requireContains(completionOptionsRoute, "canManageAppointmentApi", "completion options scope guard");
+requireContains(
+  completionOptionsRoute,
+  "canAccessAppointmentCompletionPlans",
+  "completion options finance authorization",
+);
+requireContains(transitionService, "completionPlanId", "central completion plan selection");
+requireContains(
+  transitionService,
+  "appointment:${appointmentId}:session-consume",
+  "central completion idempotency key",
+);
+requireContains(
+  transitionService,
+  "enqueueAppointmentStatusChangedEvent",
+  "completion integration outbox",
+);
 requireContains(clientRead, 'hasPermission(session.user.roles, "finance:read")', "finance read authorization");
 requireContains(clientRead, "financeDataPromise", "conditional finance query");
 requireContains(clientRead, "financeAccess: canReadFinance", "finance access response marker");

@@ -3,22 +3,23 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { canManageAppointmentApi } from "@/lib/booking/appointment-api-access";
+import { canAccessAppointmentCompletionPlans } from "@/lib/booking/appointment-completion-policy";
 import { getDatabase } from "@/lib/db";
 
 type RouteContext = { params: Promise<{ appointmentId: string }> };
 
 const appointmentIdSchema = z.uuid();
 
-function forbidden() {
-  return NextResponse.json(
-    { code: "FORBIDDEN", error: "Bu işlem için yetkiniz yok." },
-    { status: 403 },
-  );
+function forbidden(message = "Bu işlem için yetkiniz yok.") {
+  return NextResponse.json({ code: "FORBIDDEN", error: message }, { status: 403 });
 }
 
 export async function GET(_request: Request, context: RouteContext) {
   const session = await auth();
   if (!session?.user || session.user.status !== "ACTIVE") return forbidden();
+  if (!canAccessAppointmentCompletionPlans(session.user.roles)) {
+    return forbidden("Seans planlarını görüntülemek için finans yetkisi gerekir.");
+  }
 
   const parsedId = appointmentIdSchema.safeParse((await context.params).appointmentId);
   if (!parsedId.success) {
@@ -59,6 +60,8 @@ export async function GET(_request: Request, context: RouteContext) {
         },
       },
       id: true,
+      startsAt: true,
+      status: true,
     },
     where: { id: parsedId.data },
   });
@@ -82,7 +85,13 @@ export async function GET(_request: Request, context: RouteContext) {
     .filter((plan) => plan.remainingSessions > 0);
 
   return NextResponse.json(
-    { data: { plans } },
+    {
+      data: {
+        appointmentStatus: appointment.status,
+        plans,
+        startsAt: appointment.startsAt,
+      },
+    },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 }
