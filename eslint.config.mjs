@@ -18,5 +18,13 @@ export default defineConfig([
     // pipeline (scripts/build-dashboard-source.mjs), not the Next.js app, so it is
     // not typechecked/linted with the app's config.
     "dashboard-overrides/**",
+    // Build-generated artifacts from scripts/build-dashboard-source.mjs: the two
+    // external clones and the compiled Dashboard bundle. All gitignored and never
+    // hand-authored, so they must not be linted with the app's config. (CI never
+    // sees them during lint because the build step runs last, but a local build
+    // followed by `eslint .` would otherwise fail on this generated output.)
+    ".dashboard-source/**",
+    ".kedi-source/**",
+    "public/yonetim-static/**",
   ]),
 ]);

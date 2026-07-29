@@ -10,6 +10,7 @@ src/generated/prisma/
 
 # Generated exact Dashboard build
 .dashboard-source/
+.kedi-source/
 public/yonetim-static/
 
 # Tests and coverage
