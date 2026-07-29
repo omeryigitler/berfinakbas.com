@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { BookingDatePicker, BookingSelect } from "./booking-fields";
+
 type ConsentDocument = {
   content: string;
   id: string;
@@ -121,6 +123,7 @@ export function PublicBookingFlow({ initiallyEnabled }: { initiallyEnabled: bool
   const [selectedStartsAt, setSelectedStartsAt] = useState("");
   const [hold, setHold] = useState<Hold | null>(null);
   const [subjectType, setSubjectType] = useState<"ADULT" | "CHILD">("ADULT");
+  const [guardianRelationship, setGuardianRelationship] = useState("PARENT_DECLARED");
   const [acknowledgedIds, setAcknowledgedIds] = useState<string[]>([]);
   const [busyAction, setBusyAction] = useState<"slots" | "hold" | "submit" | null>(null);
   const [message, setMessage] = useState("");
@@ -325,45 +328,52 @@ export function PublicBookingFlow({ initiallyEnabled }: { initiallyEnabled: bool
               </div>
             </div>
             <div className="booking-field-grid">
-              <label className="booking-field">
+              <div className="booking-field">
                 <span>Uzman</span>
-                <select value={bootstrap.practitioner.id} disabled>
-                  <option>{bootstrap.practitioner.displayName}</option>
-                </select>
-              </label>
-              <label className="booking-field">
+                <BookingSelect
+                  disabled
+                  label="Uzman"
+                  options={[
+                    {
+                      label: bootstrap.practitioner.displayName,
+                      value: bootstrap.practitioner.id,
+                    },
+                  ]}
+                  value={bootstrap.practitioner.id}
+                />
+              </div>
+              <div className="booking-field">
                 <span>Hizmet</span>
-                <select
-                  value={serviceId}
-                  onChange={(event) => {
-                    setServiceId(event.target.value);
+                <BookingSelect
+                  label="Hizmet"
+                  onChange={(next) => {
+                    setServiceId(next);
                     setSlots([]);
                     setHold(null);
                   }}
+                  options={bootstrap.services.map((service) => ({
+                    label: service.name,
+                    value: service.id,
+                  }))}
                   required
-                >
-                  {bootstrap.services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="booking-field">
+                  value={serviceId}
+                />
+              </div>
+              <div className="booking-field">
                 <span>Tarih</span>
-                <input
+                <BookingDatePicker
+                  label="Tarih"
                   min={todayForDateInput()}
                   name="localDate"
-                  onChange={(event) => {
-                    setLocalDate(event.target.value);
+                  onChange={(next) => {
+                    setLocalDate(next);
                     setSlots([]);
                     setHold(null);
                   }}
                   required
-                  type="date"
                   value={localDate}
                 />
-              </label>
+              </div>
             </div>
             {selectedService && (
               <p className="booking-service-detail">
@@ -541,14 +551,21 @@ export function PublicBookingFlow({ initiallyEnabled }: { initiallyEnabled: bool
                         type="email"
                       />
                     </label>
-                    <label className="booking-field">
+                    <div className="booking-field">
                       <span>Yakınlık / temsil ilişkisi</span>
-                      <select name="guardianRelationship" required>
-                        <option value="PARENT_DECLARED">Anne / baba</option>
-                        <option value="LEGAL_REPRESENTATIVE_DECLARED">Yasal temsilci</option>
-                        <option value="OTHER_DECLARED">Diğer</option>
-                      </select>
-                    </label>
+                      <BookingSelect
+                        label="Yakınlık / temsil ilişkisi"
+                        name="guardianRelationship"
+                        onChange={setGuardianRelationship}
+                        options={[
+                          { label: "Anne / baba", value: "PARENT_DECLARED" },
+                          { label: "Yasal temsilci", value: "LEGAL_REPRESENTATIVE_DECLARED" },
+                          { label: "Diğer", value: "OTHER_DECLARED" },
+                        ]}
+                        required
+                        value={guardianRelationship}
+                      />
+                    </div>
                   </div>
                 </fieldset>
               )}

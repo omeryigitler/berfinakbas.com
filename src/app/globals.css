@@ -2037,6 +2037,225 @@ summary:focus-visible {
   outline-offset: 1px;
 }
 
+/* Custom themed select + date picker: the closed trigger mirrors the native
+   field above; the popups replace the browser's OS chrome with the site palette. */
+.booking-control {
+  position: relative;
+}
+
+.booking-control-trigger {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 47px;
+  border: 1px solid rgb(88 62 49 / 20%);
+  border-radius: 13px;
+  background: #fffdf9;
+  padding: 10px 13px;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 550;
+  text-align: left;
+  cursor: pointer;
+}
+
+.booking-control-trigger:disabled {
+  background: #f5eee7;
+  color: #6e5e55;
+  cursor: default;
+}
+
+.booking-control-trigger:focus-visible {
+  border-color: var(--coral);
+  outline: 3px solid rgb(217 111 77 / 18%);
+  outline-offset: 1px;
+}
+
+.booking-control-placeholder {
+  color: var(--muted);
+}
+
+.booking-control-caret {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #8a6f60;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.booking-control-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  max-height: 264px;
+  margin: 0;
+  overflow-y: auto;
+  border: 1px solid rgb(88 62 49 / 14%);
+  border-radius: 14px;
+  background: rgb(255 250 244 / 98%);
+  padding: 6px;
+  box-shadow: 0 22px 54px rgb(54 37 28 / 20%);
+  list-style: none;
+  backdrop-filter: blur(18px);
+}
+
+.booking-option {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  padding: 10px 12px;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 550;
+  text-align: left;
+  cursor: pointer;
+}
+
+.booking-option:hover,
+.booking-option:focus-visible {
+  background: rgb(217 111 77 / 12%);
+  outline: none;
+}
+
+.booking-option--active {
+  background: rgb(217 111 77 / 10%);
+  color: var(--coral-dark);
+  font-weight: 650;
+}
+
+.booking-option-check {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--coral);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.booking-calendar {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 296px;
+  max-width: calc(100vw - 48px);
+  border: 1px solid rgb(88 62 49 / 14%);
+  border-radius: 18px;
+  background: rgb(255 250 244 / 98%);
+  padding: 14px;
+  box-shadow: 0 24px 60px rgb(54 37 28 / 22%);
+  backdrop-filter: blur(18px);
+}
+
+.booking-calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.booking-calendar-head strong {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.booking-calendar-nav {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgb(88 62 49 / 14%);
+  border-radius: 9px;
+  background: #fffdf9;
+  color: #8a6f60;
+  cursor: pointer;
+}
+
+.booking-calendar-nav:hover {
+  border-color: var(--coral);
+  color: var(--coral-dark);
+}
+
+.booking-calendar-nav svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.booking-calendar-weekdays,
+.booking-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.booking-calendar-weekdays {
+  margin-bottom: 4px;
+}
+
+.booking-calendar-weekdays span {
+  padding: 4px 0;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.booking-day {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.booking-day:hover:not(:disabled) {
+  background: rgb(217 111 77 / 12%);
+}
+
+.booking-day:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 1px;
+}
+
+.booking-day--selected,
+.booking-day--selected:hover {
+  background: var(--coral);
+  color: #fff;
+  font-weight: 700;
+}
+
+.booking-day:disabled {
+  color: rgb(120 100 90 / 42%);
+  cursor: default;
+}
+
 .booking-service-detail {
   display: flex;
   flex-wrap: wrap;
