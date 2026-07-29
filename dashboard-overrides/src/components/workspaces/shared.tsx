@@ -131,6 +131,18 @@ export async function transitionAppointment(
   }
 }
 
+type CompletionPlan = { id: string; name: string; remainingSessions: number };
+
+async function completeAppointment(appointmentId: string, planId: string | null) {
+  const response = await fetch(`/api/admin/appointments/${appointmentId}/complete`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-correlation-id': crypto.randomUUID() },
+    body: JSON.stringify({ planId }),
+  });
+  if (!response.ok) throw new Error(await responseError(response));
+  return response.json();
+}
+
 export function AppointmentActions({
   appointment,
   refresh,
@@ -141,26 +153,133 @@ export function AppointmentActions({
   notify: (toast: Omit<WorkspaceToast, 'id'>) => void;
 }) {
   const actions = allowedTransitions(appointment.status);
+  const [busy, setBusy] = useState(false);
+  const [planOptions, setPlanOptions] = useState<CompletionPlan[] | null>(null);
+
   if (actions.length === 0) return null;
+
+  async function finishCompletion(planId: string | null) {
+    setBusy(true);
+    try {
+      await completeAppointment(appointment.id, planId);
+      notify({
+        kind: 'success',
+        title: 'Randevu tamamlandı',
+        message: `${appointment.publicReference} · Tamamlandı`,
+      });
+      setPlanOptions(null);
+      await refresh();
+    } catch (error) {
+      notify({
+        kind: 'error',
+        title: 'Randevu tamamlanamadı',
+        message: error instanceof Error ? error.message : 'Beklenmeyen hata.',
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function beginCompletion() {
+    setBusy(true);
+    try {
+      const response = await fetch(
+        `/api/admin/appointments/${appointment.id}/completion-options`,
+        { headers: { 'x-correlation-id': crypto.randomUUID() } },
+      );
+      // A user without finance access cannot see plans; fall back to completing
+      // without one (works for clients that have no active plan, and returns a
+      // clear "finance required" error otherwise).
+      if (response.status === 403) {
+        await finishCompletion(null);
+        return;
+      }
+      if (!response.ok) throw new Error(await responseError(response));
+      const { data } = (await response.json()) as { data: { plans: CompletionPlan[] } };
+      if (!data.plans || data.plans.length === 0) {
+        await finishCompletion(null);
+      } else {
+        setPlanOptions(data.plans);
+      }
+    } catch (error) {
+      notify({
+        kind: 'error',
+        title: 'Randevu tamamlanamadı',
+        message: error instanceof Error ? error.message : 'Beklenmeyen hata.',
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="mt-2 flex flex-wrap justify-end gap-1.5">
-      {actions.map((status) => (
-        <button
-          key={status}
-          type="button"
-          onClick={() => void transitionAppointment(appointment, status, refresh, notify)}
-          className={`rounded-full border px-2.5 py-1.5 text-[7.5px] font-black ${
-            status === 'CONFIRMED' || status === 'COMPLETED'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-              : status === 'REJECTED' || status === 'CANCELLED_BY_PRACTITIONER'
-                ? 'border-red-200 bg-red-50 text-red-700'
-                : 'border-black/10 bg-white text-gray-600'
-          }`}
+    <>
+      <div className="mt-2 flex flex-wrap justify-end gap-1.5">
+        {actions.map((status) => (
+          <button
+            key={status}
+            type="button"
+            disabled={busy}
+            onClick={() =>
+              status === 'COMPLETED'
+                ? void beginCompletion()
+                : void transitionAppointment(appointment, status, refresh, notify)
+            }
+            className={`rounded-full border px-2.5 py-1.5 text-[7.5px] font-black disabled:opacity-50 ${
+              status === 'CONFIRMED' || status === 'COMPLETED'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : status === 'REJECTED' || status === 'CANCELLED_BY_PRACTITIONER'
+                  ? 'border-red-200 bg-red-50 text-red-700'
+                  : 'border-black/10 bg-white text-gray-600'
+            }`}
+          >
+            {transitionLabels[status]}
+          </button>
+        ))}
+      </div>
+
+      {planOptions && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => !busy && setPlanOptions(null)}
         >
-          {transitionLabels[status]}
-        </button>
-      ))}
-    </div>
+          <div
+            className="w-full max-w-[380px] rounded-[2rem] border border-black/10 bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="text-[13px] font-black text-gray-950">Hangi plandan seans düşülsün?</h3>
+            <p className="mt-1 text-[10px] font-semibold text-gray-400">
+              {appointment.client?.firstName} {appointment.client?.lastName} ·{' '}
+              {appointment.publicReference}
+            </p>
+            <div className="mt-4 space-y-2">
+              {planOptions.map((plan) => (
+                <button
+                  key={plan.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void finishCompletion(plan.id)}
+                  className="flex w-full items-center justify-between gap-3 rounded-[1.2rem] border border-black/10 bg-[#faf9f6] px-4 py-3 text-left hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-50"
+                >
+                  <span className="text-[11px] font-black text-gray-950">{plan.name}</span>
+                  <span className="text-[9px] font-black text-emerald-700">
+                    {plan.remainingSessions} seans kaldı
+                  </span>
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setPlanOptions(null)}
+              className="mt-4 w-full rounded-full border border-black/10 bg-white px-4 py-2.5 text-[10px] font-black text-gray-600 disabled:opacity-50"
+            >
+              Vazgeç
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
