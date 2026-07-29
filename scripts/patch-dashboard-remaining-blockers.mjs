@@ -140,7 +140,7 @@ const serviceFilterOptions = [
   );
   source = replaceRegexRequired(
     source,
-    /                \/\* Conditional Veli input if age group is Kid \*\/[\s\S]*?\n                \}\)\}\n\n                \/\* Service type \*\//,
+    /                \{\/\* Conditional Veli input if age group is Kid \*\/\}[\s\S]*?                \{\/\* Service type \*\/\}/,
     `                {/* Conditional guardian fields for child clients */}
                 {newClient.ageGroup === 'Çocuk' && (
                   <div className="space-y-3 animate-fade-in bg-indigo-50/40 p-3 rounded-2xl border border-indigo-100/30">
