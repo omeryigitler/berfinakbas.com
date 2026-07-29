@@ -3,7 +3,14 @@ import { NextResponse } from "next/server";
 import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
-import { type RouteContext, forbidden, notFound, requireClientAccess } from "@/lib/clients/client-dashboard-shared";
+import {
+  PROFILE_PREFIX,
+  type RouteContext,
+  asJsonRecord,
+  forbidden,
+  notFound,
+  requireClientAccess,
+} from "@/lib/clients/client-dashboard-shared";
 
 export async function DELETE(request: Request, context: RouteContext) {
   const session = await requireClientAccess("clients:manage");
@@ -25,25 +32,47 @@ export async function DELETE(request: Request, context: RouteContext) {
   });
   if (!existing) return notFound();
 
+  const setting = await database.operationalSetting.findUnique({
+    select: { value: true },
+    where: { key: `${PROFILE_PREFIX}${clientId}` },
+  });
+  const currentProfile = asJsonRecord(setting?.value);
+  if (currentProfile.archived === true) {
+    return NextResponse.json({ data: { archived: true, id: clientId, replayed: true } });
+  }
+
+  const archivedAt = new Date().toISOString();
   await database.$transaction(async (transaction) => {
     await transaction.client.update({
       data: { status: "INACTIVE" },
       where: { id: clientId },
     });
+    await transaction.operationalSetting.upsert({
+      create: {
+        key: `${PROFILE_PREFIX}${clientId}`,
+        updatedByUserId: session.user.id,
+        value: { ...currentProfile, archived: true, archivedAt },
+      },
+      update: {
+        updatedByUserId: session.user.id,
+        value: { ...currentProfile, archived: true, archivedAt },
+      },
+      where: { key: `${PROFILE_PREFIX}${clientId}` },
+    });
     await transaction.auditLog.create({
       data: {
-        action: "client.deactivated",
+        action: "client.archived",
         actorType: "USER",
         actorUserId: session.user.id,
-        afterSummary: { status: "INACTIVE" },
-        beforeSummary: existing,
+        afterSummary: { archived: true, archivedAt, status: "INACTIVE" },
+        beforeSummary: { archived: false, status: existing.status },
         correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
         entityId: clientId,
         entityType: "CLIENT",
-        reason: "CLIENT_DEACTIVATED_FROM_DASHBOARD",
+        reason: "CLIENT_ARCHIVED_FROM_DASHBOARD",
       },
     });
   });
 
-  return NextResponse.json({ data: { id: clientId, status: "INACTIVE" } });
+  return NextResponse.json({ data: { archived: true, id: clientId, replayed: false } });
 }

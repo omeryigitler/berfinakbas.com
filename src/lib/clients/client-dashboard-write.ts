@@ -87,6 +87,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   });
   const currentProfile = asJsonRecord(currentProfileSetting?.value);
   const input = parsed.data;
+  const wasArchived = booleanOrDefault(currentProfile.archived, false);
+  const isArchived = input.archived ?? wasArchived;
 
   const clientData = {
     ...(input.birthYear !== undefined ? { birthYear: input.birthYear } : {}),
@@ -95,13 +97,17 @@ export async function PATCH(request: Request, context: RouteContext) {
     ...(input.lastName !== undefined ? { lastName: input.lastName } : {}),
     ...(input.phone !== undefined ? { phone: input.phone } : {}),
     ...(input.preferredName !== undefined ? { preferredName: input.preferredName } : {}),
-    ...(input.status !== undefined ? { status: input.status } : {}),
+    ...(input.archived === true
+      ? { status: "INACTIVE" as const }
+      : input.status !== undefined
+        ? { status: input.status }
+        : {}),
   };
 
   const hasClientData = Object.keys(clientData).length > 0;
-
   const nextProfile = {
     ...currentProfile,
+    archived: isArchived,
     ...(input.address !== undefined ? { address: input.address } : {}),
     ...(input.city !== undefined ? { city: input.city } : {}),
     ...(input.contactConsent !== undefined
@@ -206,16 +212,18 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
+    const action = input.archived === true
+      ? "client.archived"
+      : input.archived === false && wasArchived
+        ? "client.restored"
+        : "client.updated";
     await transaction.auditLog.create({
       data: {
-        action: "client.updated",
+        action,
         actorType: "USER",
         actorUserId: session.user.id,
         afterSummary: {
-          client: {
-            ...record,
-            updatedAt: record.updatedAt.toISOString(),
-          },
+          client: { ...record, updatedAt: record.updatedAt.toISOString() },
           profile: nextProfile,
         },
         beforeSummary: {
@@ -235,7 +243,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
         entityId: clientId,
         entityType: "CLIENT",
-        reason: "CLIENT_UPDATED_FROM_DASHBOARD",
+        reason: action.toUpperCase().replaceAll(".", "_"),
       },
     });
 
@@ -246,14 +254,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     data: {
       ...updated,
       address: textOrNull(nextProfile.address),
+      archived: isArchived,
       city: textOrNull(nextProfile.city),
       contactConsent: booleanOrDefault(nextProfile.contactConsent, false),
       country: textOrNull(nextProfile.country),
       district: textOrNull(nextProfile.district),
       emergencyContact: textOrNull(nextProfile.emergencyContact),
       preferredContactMethod: textOrNull(nextProfile.preferredContactMethod),
+      status: isArchived ? "ARCHIVED" : updated.status,
       whatsapp: textOrNull(nextProfile.whatsapp) ?? updated.phone,
     },
   });
 }
-

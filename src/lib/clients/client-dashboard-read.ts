@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 
 import { buildClientProfileFinanceSummary } from "@/domain/clients/client-profile-summary";
 import { calculateLedgerBalance } from "@/domain/finance/finance-operations";
+import { listStoredClientDocuments } from "@/lib/clients/client-document-store";
 import { getDatabase } from "@/lib/db";
 import {
   UPCOMING_APPOINTMENT_STATUSES,
   PROFILE_PREFIX,
-  DOCUMENT_PREFIX,
-  type JsonRecord,
   type RouteContext,
   asJsonRecord,
   booleanOrDefault,
@@ -36,11 +35,6 @@ export async function GET(_request: Request, context: RouteContext) {
         take: 50,
       },
       createdAt: true,
-      documents: {
-        orderBy: { createdAt: "desc" },
-        select: { category: true, createdAt: true, id: true, title: true, url: true },
-        take: 50,
-      },
       email: true,
       financeEntries: {
         orderBy: { occurredAt: "desc" },
@@ -125,74 +119,49 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (!client) return notFound();
 
-  const [
-    profileSetting,
-    documentSettings,
-    pastAppointments,
-    upcomingAppointments,
-    completedAppointments,
-  ] = await Promise.all([
-    database.operationalSetting.findUnique({
-      select: { value: true },
-      where: { key: `${PROFILE_PREFIX}${clientId}` },
-    }),
-    client.documents.length
-      ? database.operationalSetting.findMany({
-          select: { key: true, value: true },
-          where: {
-            key: {
-              in: client.documents.map((document) => `${DOCUMENT_PREFIX}${document.id}`),
-            },
-          },
-        })
-      : Promise.resolve([]),
-    database.appointment.findMany({
-      orderBy: { startsAt: "desc" },
-      select: clientAppointmentSelect,
-      take: 10,
-      where: { clientId, startsAt: { lt: now } },
-    }),
-    database.appointment.findMany({
-      orderBy: { startsAt: "asc" },
-      select: clientAppointmentSelect,
-      take: 10,
-      where: {
-        clientId,
-        startsAt: { gte: now },
-        status: { in: [...UPCOMING_APPOINTMENT_STATUSES] },
-      },
-    }),
-    database.appointment.count({
-      where: { clientId, status: "COMPLETED" },
-    }),
-  ]);
+  const [profileSetting, documentsRaw, pastAppointments, upcomingAppointments, completedAppointments] =
+    await Promise.all([
+      database.operationalSetting.findUnique({
+        select: { value: true },
+        where: { key: `${PROFILE_PREFIX}${clientId}` },
+      }),
+      listStoredClientDocuments(clientId),
+      database.appointment.findMany({
+        orderBy: { startsAt: "desc" },
+        select: clientAppointmentSelect,
+        take: 10,
+        where: { clientId, startsAt: { lt: now } },
+      }),
+      database.appointment.findMany({
+        orderBy: { startsAt: "asc" },
+        select: clientAppointmentSelect,
+        take: 10,
+        where: {
+          clientId,
+          startsAt: { gte: now },
+          status: { in: [...UPCOMING_APPOINTMENT_STATUSES] },
+        },
+      }),
+      database.appointment.count({ where: { clientId, status: "COMPLETED" } }),
+    ]);
 
   const profile = asJsonRecord(profileSetting?.value);
-  const documentMetadata = new Map<string, JsonRecord>(
-    documentSettings.map(
-      (entry): [string, JsonRecord] => [entry.key, asJsonRecord(entry.value)],
-    ),
-  );
-  const documents = client.documents
-    .map((document) => {
-      const metadata = documentMetadata.get(`${DOCUMENT_PREFIX}${document.id}`) ?? {};
-      if (typeof metadata.archivedAt === "string" && metadata.archivedAt) return null;
-      return {
-        ...document,
-        downloadUrl: document.url,
-        mimeType: textOrNull(metadata.mimeType),
-        sizeBytes:
-          typeof metadata.sizeBytes === "number" && Number.isFinite(metadata.sizeBytes)
-            ? metadata.sizeBytes
-            : null,
-      };
-    })
-    .filter((document): document is NonNullable<typeof document> => document !== null);
+  const archived = booleanOrDefault(profile.archived, false);
+  const documents = documentsRaw.map((document) => ({
+    category: document.category,
+    createdAt: document.createdAt,
+    downloadUrl: document.hasContent
+      ? `/api/admin/clients/${clientId}/documents/${document.id}`
+      : document.url,
+    fileName: document.fileName,
+    id: document.id,
+    mimeType: document.mimeType,
+    sizeBytes: document.sizeBytes,
+    title: document.title,
+    url: document.url,
+  }));
 
-  const appointments = [...upcomingAppointments]
-    .reverse()
-    .concat(pastAppointments)
-    .map(serializeAppointment);
+  const appointments = [...upcomingAppointments, ...pastAppointments].map(serializeAppointment);
   const nextAppointment = upcomingAppointments[0]
     ? serializeAppointment(upcomingAppointments[0])
     : null;
@@ -246,6 +215,7 @@ export async function GET(_request: Request, context: RouteContext) {
         ...client,
         address: textOrNull(profile.address),
         appointments,
+        archived,
         city: textOrNull(profile.city),
         completedAppointments,
         contactConsent: booleanOrDefault(profile.contactConsent, false),
@@ -265,10 +235,10 @@ export async function GET(_request: Request, context: RouteContext) {
         plans,
         preferredContactMethod: textOrNull(profile.preferredContactMethod),
         score,
+        status: archived ? "ARCHIVED" : client.status,
         whatsapp: textOrNull(profile.whatsapp) ?? client.phone,
       },
     },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
-

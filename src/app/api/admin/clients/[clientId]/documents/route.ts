@@ -9,8 +9,7 @@ import { getDatabase } from "@/lib/db";
 import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
-const MAX_FILE_BYTES = 4 * 1024 * 1024;
-const DOCUMENT_PREFIX = "client-document:";
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
   "image/jpeg",
@@ -74,19 +73,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
-  let title: string;
-  let category: string;
-  let url: string;
-  let storedPayload:
-    | {
-        archivedAt: null;
-        base64: string;
-        fileName: string;
-        mimeType: string;
-        sizeBytes: number;
-        storage: "DATABASE_JSON";
-      }
-    | null = null;
+  const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
 
   if (contentType.startsWith("multipart/form-data")) {
     let form: FormData;
@@ -108,10 +95,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
     if (file.size > MAX_FILE_BYTES) {
       return NextResponse.json(
-        { code: "FILE_TOO_LARGE", error: "Belge boyutu en fazla 4 MB olabilir." },
+        { code: "FILE_TOO_LARGE", error: "Belge boyutu en fazla 10 MB olabilir." },
         { status: 413 },
       );
     }
+
     const mimeType = file.type || "application/octet-stream";
     if (!ALLOWED_MIME_TYPES.has(mimeType)) {
       return NextResponse.json(
@@ -120,8 +108,8 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    title = String(form.get("title") ?? file.name).trim().slice(0, 160);
-    category = String(form.get("category") ?? "Yüklenen Belge").trim().slice(0, 40);
+    const title = String(form.get("title") ?? file.name).trim().slice(0, 160);
+    const category = String(form.get("category") ?? "Yüklenen Belge").trim().slice(0, 40);
     if (!title || !category) {
       return NextResponse.json(
         { code: "INVALID_REQUEST", error: "Belge adı ve kategorisi zorunludur." },
@@ -130,61 +118,55 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const documentId = randomUUID();
-    url = `/api/admin/clients/${clientId}/documents/${documentId}`;
+    const fileName = safeFileName(file.name);
     const bytes = Buffer.from(await file.arrayBuffer());
-    storedPayload = {
-      archivedAt: null,
-      base64: bytes.toString("base64"),
-      fileName: safeFileName(file.name),
-      mimeType,
-      sizeBytes: file.size,
-      storage: "DATABASE_JSON",
-    };
+    const documentUrl = `/api/admin/clients/${clientId}/documents/${documentId}`;
 
-    const document = await database.$transaction(async (transaction) => {
-      const created = await transaction.clientDocument.create({
+    const created = await database.$transaction(async (transaction) => {
+      const document = await transaction.clientDocument.create({
         data: {
           category,
           clientId,
           createdByUserId: session.user.id,
           id: documentId,
           title,
-          url,
+          url: documentUrl,
         },
         select: { category: true, createdAt: true, id: true, title: true, url: true },
       });
-      await transaction.operationalSetting.create({
-        data: {
-          key: `${DOCUMENT_PREFIX}${documentId}`,
-          updatedByUserId: session.user.id,
-          value: storedPayload!,
-        },
-      });
+
+      await transaction.$executeRaw`
+        UPDATE "client_documents"
+        SET
+          "file_name" = ${fileName},
+          "mime_type" = ${mimeType},
+          "size_bytes" = ${file.size},
+          "content_bytes" = ${bytes},
+          "archived_at" = NULL
+        WHERE "id" = ${documentId}::uuid
+      `;
+
       await transaction.auditLog.create({
         data: {
           action: "client.document.created",
           actorType: "USER",
           actorUserId: session.user.id,
-          afterSummary: {
-            category: created.category,
-            mimeType,
-            sizeBytes: file.size,
-            title: created.title,
-          },
-          correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
+          afterSummary: { category, fileName, mimeType, sizeBytes: file.size, title },
+          correlationId,
           entityId: clientId,
           entityType: "CLIENT",
           reason: "CLIENT_DOCUMENT_UPLOADED_FROM_DASHBOARD",
         },
       });
-      return created;
+      return document;
     });
 
     return NextResponse.json(
       {
         data: {
-          ...document,
-          downloadUrl: document.url,
+          ...created,
+          downloadUrl: created.url,
+          fileName,
           mimeType,
           sizeBytes: file.size,
         },
@@ -216,16 +198,15 @@ export async function POST(request: Request, context: RouteContext) {
       { status: 400 },
     );
   }
-  ({ title, category, url } = parsed.data);
 
   const document = await database.$transaction(async (transaction) => {
     const created = await transaction.clientDocument.create({
       data: {
-        category,
+        category: parsed.data.category,
         clientId,
         createdByUserId: session.user.id,
-        title,
-        url,
+        title: parsed.data.title,
+        url: parsed.data.url,
       },
       select: { category: true, createdAt: true, id: true, title: true, url: true },
     });
@@ -234,8 +215,12 @@ export async function POST(request: Request, context: RouteContext) {
         action: "client.document.created",
         actorType: "USER",
         actorUserId: session.user.id,
-        afterSummary: { category: created.category, title: created.title, url: created.url },
-        correlationId: getSafeCorrelationId(request.headers.get("x-correlation-id")),
+        afterSummary: {
+          category: created.category,
+          title: created.title,
+          url: created.url,
+        },
+        correlationId,
         entityId: clientId,
         entityType: "CLIENT",
         reason: "CLIENT_DOCUMENT_LINKED_FROM_DASHBOARD",

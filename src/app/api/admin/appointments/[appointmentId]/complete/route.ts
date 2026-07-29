@@ -8,12 +8,9 @@ import { getServerEnvironment } from "@/lib/env";
 import { getSafeCorrelationId, hasTrustedOrigin } from "@/lib/request-security";
 
 const routeParamsSchema = z.object({ appointmentId: z.uuid() });
-const COMPLETABLE_STATUSES = new Set([
-  "REQUESTED",
-  "PENDING_REVIEW",
-  "CONFIRMED",
-  "RESCHEDULE_PROPOSED",
-]);
+const completionSchema = z
+  .object({ planId: z.uuid().nullable().optional() })
+  .strict();
 
 type RouteContext = { params: Promise<{ appointmentId: string }> };
 
@@ -50,10 +47,40 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
+  let rawBody = "";
+  try {
+    rawBody = await request.text();
+  } catch {
+    return NextResponse.json(
+      { code: "INVALID_REQUEST", error: "İstek gövdesi okunamadı." },
+      { status: 400 },
+    );
+  }
+  let body: unknown = {};
+  if (rawBody.trim()) {
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { code: "INVALID_JSON", error: "İstek gövdesi geçerli JSON olmalıdır." },
+        { status: 400 },
+      );
+    }
+  }
+  const parsedBody = completionSchema.safeParse(body);
+  if (!parsedBody.success) {
+    return NextResponse.json(
+      { code: "INVALID_REQUEST", error: "Tamamlama bilgilerini kontrol edin." },
+      { status: 400 },
+    );
+  }
+
   const appointmentId = parsedParams.data.appointmentId;
+  const requestedPlanId = parsedBody.data.planId ?? null;
   const database = getDatabase();
   const correlationId = getSafeCorrelationId(request.headers.get("x-correlation-id"));
   const idempotencyKey = `appointment-complete:${appointmentId}`;
+  const now = new Date();
 
   const result = await database.$transaction(
     async (transaction) => {
@@ -62,13 +89,13 @@ export async function POST(request: Request, context: RouteContext) {
           allocation: { select: { id: true, status: true } },
           clientId: true,
           id: true,
+          startsAt: true,
           status: true,
         },
         where: { id: appointmentId },
       });
-      if (!appointment) {
-        return { kind: "NOT_FOUND" as const };
-      }
+      if (!appointment) return { kind: "NOT_FOUND" as const };
+
       if (appointment.status === "COMPLETED") {
         const credit = await transaction.sessionCreditEntry.findUnique({
           select: { planId: true },
@@ -80,25 +107,47 @@ export async function POST(request: Request, context: RouteContext) {
           replayed: true,
         };
       }
-      if (!COMPLETABLE_STATUSES.has(appointment.status)) {
+      if (appointment.status !== "CONFIRMED") {
         return { kind: "INVALID_STATUS" as const, status: appointment.status };
+      }
+      if (appointment.startsAt > now) {
+        return { kind: "NOT_STARTED" as const, startsAt: appointment.startsAt };
       }
 
       const plans = await transaction.clientPlan.findMany({
-        orderBy: [{ validFrom: "asc" }, { createdAt: "asc" }],
+        orderBy: [{ createdAt: "desc" }],
         select: {
           id: true,
+          name: true,
           sessionCreditEntries: { select: { quantityDelta: true } },
         },
-        where: { clientId: appointment.clientId, status: "ACTIVE" },
+        where: {
+          clientId: appointment.clientId,
+          status: "ACTIVE",
+          validFrom: { lte: now },
+          OR: [{ validUntil: null }, { validUntil: { gte: now } }],
+        },
       });
-      const plan = plans.find(
-        (candidate) =>
-          candidate.sessionCreditEntries.reduce(
+      const eligiblePlans = plans
+        .map((plan) => ({
+          id: plan.id,
+          name: plan.name,
+          remainingSessions: plan.sessionCreditEntries.reduce(
             (total, entry) => total + entry.quantityDelta,
             0,
-          ) > 0,
-      );
+          ),
+        }))
+        .filter((plan) => plan.remainingSessions > 0);
+
+      if (!requestedPlanId && eligiblePlans.length > 0) {
+        return { kind: "PLAN_REQUIRED" as const, plans: eligiblePlans };
+      }
+      const selectedPlan = requestedPlanId
+        ? eligiblePlans.find((plan) => plan.id === requestedPlanId) ?? null
+        : null;
+      if (requestedPlanId && !selectedPlan) {
+        return { kind: "INVALID_PLAN" as const, plans: eligiblePlans };
+      }
 
       await transaction.appointment.update({
         data: { status: "COMPLETED" },
@@ -106,18 +155,18 @@ export async function POST(request: Request, context: RouteContext) {
       });
       if (appointment.allocation?.status === "ACTIVE") {
         await transaction.bookingAllocation.update({
-          data: { releasedAt: new Date(), status: "RELEASED" },
+          data: { releasedAt: now, status: "RELEASED" },
           where: { id: appointment.allocation.id },
         });
       }
 
-      if (plan) {
+      if (selectedPlan) {
         await transaction.sessionCreditEntry.create({
           data: {
             actorUserId: session.user.id,
             appointmentId,
             idempotencyKey,
-            planId: plan.id,
+            planId: selectedPlan.id,
             quantityDelta: -1,
             reasonCode: "APPOINTMENT_COMPLETED",
             type: "CONSUME",
@@ -131,9 +180,9 @@ export async function POST(request: Request, context: RouteContext) {
           actorUserId: session.user.id,
           appointmentId,
           fromStatus: appointment.status,
-          note: plan
-            ? "Seans tamamlandı ve plandan bir kullanım düşüldü."
-            : "Seans tamamlandı; kullanılabilir aktif plan bulunamadı.",
+          note: selectedPlan
+            ? `Seans tamamlandı ve ${selectedPlan.name} planından bir kullanım düşüldü.`
+            : "Seans tamamlandı; kullanılabilir aktif plan bulunmadığı için kredi düşülmedi.",
           reasonCode: "ADMIN_MARKED_COMPLETED",
           toStatus: "COMPLETED",
         },
@@ -144,7 +193,7 @@ export async function POST(request: Request, context: RouteContext) {
           actorType: "USER",
           actorUserId: session.user.id,
           afterSummary: {
-            consumedPlanId: plan?.id ?? null,
+            consumedPlanId: selectedPlan?.id ?? null,
             status: "COMPLETED",
           },
           beforeSummary: { status: appointment.status },
@@ -157,7 +206,7 @@ export async function POST(request: Request, context: RouteContext) {
 
       return {
         kind: "OK" as const,
-        consumedPlanId: plan?.id ?? null,
+        consumedPlanId: selectedPlan?.id ?? null,
         replayed: false,
       };
     },
@@ -174,9 +223,39 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json(
       {
         code: "INVALID_APPOINTMENT_STATUS",
-        error: `Bu randevu ${result.status} durumundayken tamamlanamaz.`,
+        error: `Yalnız onaylanmış randevu tamamlanabilir. Mevcut durum: ${result.status}.`,
       },
       { status: 409 },
+    );
+  }
+  if (result.kind === "NOT_STARTED") {
+    return NextResponse.json(
+      {
+        code: "APPOINTMENT_NOT_STARTED",
+        error: "Başlangıç zamanı gelmemiş bir randevu tamamlanamaz.",
+        startsAt: result.startsAt.toISOString(),
+      },
+      { status: 409 },
+    );
+  }
+  if (result.kind === "PLAN_REQUIRED") {
+    return NextResponse.json(
+      {
+        code: "PLAN_SELECTION_REQUIRED",
+        error: "Seans düşülecek aktif planı seçin.",
+        plans: result.plans,
+      },
+      { status: 409 },
+    );
+  }
+  if (result.kind === "INVALID_PLAN") {
+    return NextResponse.json(
+      {
+        code: "INVALID_PLAN",
+        error: "Seçilen plan bu danışana ait aktif ve kredili bir plan değil.",
+        plans: result.plans,
+      },
+      { status: 422 },
     );
   }
 

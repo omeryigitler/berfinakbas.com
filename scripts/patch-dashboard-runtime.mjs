@@ -1,12 +1,18 @@
-import "./patch-dashboard-app.mjs";
-import "./patch-dashboard-mywork.mjs";
-import "./patch-dashboard-workspace.mjs";
-import "./patch-client-details-1.mjs";
-import "./patch-client-details-2.mjs";
-import "./patch-client-details-3.mjs";
-import "./patch-client-details-4.mjs";
-import "./patch-client-details-5.mjs";
-import "./patch-client-details-6.mjs";
-import "./patch-client-details-7.mjs";
+const patches = [
+  "./patch-dashboard-app.mjs",
+  "./patch-dashboard-mywork.mjs",
+  "./patch-dashboard-workspace.mjs",
+  "./patch-client-details-1.mjs",
+  "./patch-client-details-2.mjs",
+  "./patch-client-details-3.mjs",
+  "./patch-client-details-4.mjs",
+  "./patch-client-details-5.mjs",
+  "./patch-client-details-6.mjs",
+  "./patch-client-details-7.mjs",
+  "./patch-dashboard-data-integrity.mjs",
+];
 
-console.log("Dashboard runtime persistence and error handling patches applied.");
+for (const patch of patches) await import(patch);
+await import("./verify-dashboard-runtime.mjs");
+
+console.log("Dashboard runtime persistence, authorization and data-integrity patches applied.");

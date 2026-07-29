@@ -12,7 +12,6 @@ export const UPCOMING_APPOINTMENT_STATUSES = [
 ] as const;
 
 export const PROFILE_PREFIX = "client-profile:";
-export const DOCUMENT_PREFIX = "client-document:";
 
 const nullableText = (maximum: number) =>
   z.string().trim().max(maximum).nullable().optional();
@@ -20,6 +19,7 @@ const nullableText = (maximum: number) =>
 export const updateClientSchema = z
   .object({
     address: nullableText(500),
+    archived: z.boolean().optional(),
     birthYear: z.number().int().min(1900).max(new Date().getFullYear()).nullable().optional(),
     city: nullableText(120),
     contactConsent: z.boolean().optional(),
@@ -43,8 +43,6 @@ export const updateClientSchema = z
 
 export type RouteContext = { params: Promise<{ clientId: string }> };
 
-// Values pass through strict schemas or originate from an existing Prisma JSON field.
-// Keeping the record JSON-compatible avoids output JsonValue/InputJsonValue friction on upsert.
 export type JsonRecord = Record<string, any>;
 
 export function forbidden() {
