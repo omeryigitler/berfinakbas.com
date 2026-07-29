@@ -13,8 +13,7 @@ export const UPCOMING_APPOINTMENT_STATUSES = [
 
 export const PROFILE_PREFIX = "client-profile:";
 
-const nullableText = (maximum: number) =>
-  z.string().trim().max(maximum).nullable().optional();
+const nullableText = (maximum: number) => z.string().trim().max(maximum).nullable().optional();
 
 export const updateClientSchema = z
   .object({
@@ -43,6 +42,9 @@ export const updateClientSchema = z
 
 export type RouteContext = { params: Promise<{ clientId: string }> };
 
+// Arbitrary JSON blob from an operational-setting value; `any` keeps it assignable
+// to Prisma's InputJsonValue at write sites.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type JsonRecord = Record<string, any>;
 
 export function forbidden() {

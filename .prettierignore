@@ -5,6 +5,7 @@ outputs/
 src/generated/prisma/
 work/
 pnpm-lock.yaml
+dashboard-overrides/
 src/app/yonetim/danisanlar/**/page.tsx
 src/app/api/admin/finance/route.ts
 src/components/admin/finance-action-panel.tsx

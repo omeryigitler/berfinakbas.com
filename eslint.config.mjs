@@ -14,5 +14,9 @@ export default defineConfig([
     "coverage/**",
     "src/generated/prisma/**",
     "next-env.d.ts",
+    // Override source for the external dashboard clone; built by a separate Vite
+    // pipeline (scripts/build-dashboard-source.mjs), not the Next.js app, so it is
+    // not typechecked/linted with the app's config.
+    "dashboard-overrides/**",
   ]),
 ]);

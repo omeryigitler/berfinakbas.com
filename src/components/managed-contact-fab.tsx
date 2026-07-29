@@ -134,11 +134,16 @@ export default function ManagedContactFab() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- close the menu when the route changes
     setIsOpen(false);
   }, [pathname]);
 
   const orderIndex = useMemo(
-    () => Object.fromEntries(settings.order.map((id, index) => [id, index + 1])) as Record<ChannelId, number>,
+    () =>
+      Object.fromEntries(settings.order.map((id, index) => [id, index + 1])) as Record<
+        ChannelId,
+        number
+      >,
     [settings.order],
   );
 

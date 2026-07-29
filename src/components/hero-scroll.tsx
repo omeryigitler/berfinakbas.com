@@ -161,6 +161,7 @@ export default function HeroScroll() {
   const [contactLinks, setContactLinks] = useState<ContactLinks>(defaultContactLinks);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
     setIsMounted(true);
   }, []);
 
@@ -178,7 +179,8 @@ export default function HeroScroll() {
         const phone = hrefs.find((href) => href.startsWith("tel:"));
         const email = hrefs.find((href) => href.startsWith("mailto:"));
         const whatsapp = hrefs.find(
-          (href) => href.includes("wa.me") || href.includes("whatsapp.com") || href.includes("WhatsApp"),
+          (href) =>
+            href.includes("wa.me") || href.includes("whatsapp.com") || href.includes("WhatsApp"),
         );
         const instagram = hrefs.find((href) => href.includes("instagram.com"));
         const phoneDigits = phone?.replace(/\D/g, "");
@@ -296,60 +298,81 @@ export default function HeroScroll() {
     };
   }, []);
 
-  const mobileMenu = isMounted && isMenuOpen
-    ? createPortal(
-        <div className="hero-mobile-menu-backdrop" onMouseDown={() => setIsMenuOpen(false)}>
-          <div
-            aria-label="Mobil menü"
-            aria-modal="true"
-            className="hero-mobile-menu-panel"
-            onMouseDown={(event) => event.stopPropagation()}
-            role="dialog"
-          >
-            <button
-              aria-label="Menüyü kapat"
-              className="hero-mobile-menu-close"
-              onClick={() => setIsMenuOpen(false)}
-              type="button"
+  const mobileMenu =
+    isMounted && isMenuOpen
+      ? createPortal(
+          <div className="hero-mobile-menu-backdrop" onMouseDown={() => setIsMenuOpen(false)}>
+            <div
+              aria-label="Mobil menü"
+              aria-modal="true"
+              className="hero-mobile-menu-panel"
+              onMouseDown={(event) => event.stopPropagation()}
+              role="dialog"
             >
-              <span />
-              <span />
-            </button>
+              <button
+                aria-label="Menüyü kapat"
+                className="hero-mobile-menu-close"
+                onClick={() => setIsMenuOpen(false)}
+                type="button"
+              >
+                <span />
+                <span />
+              </button>
 
-            <Link
-              className="hero-mobile-menu-brand"
-              href="/"
-              onClick={() => setIsMenuOpen(false)}
-              aria-label="Berfin Akbaş ana sayfa"
-            >
-              <BrandMark />
-            </Link>
+              <Link
+                className="hero-mobile-menu-brand"
+                href="/"
+                onClick={() => setIsMenuOpen(false)}
+                aria-label="Berfin Akbaş ana sayfa"
+              >
+                <BrandMark />
+              </Link>
 
-            <nav aria-label="Mobil menü bağlantıları">
-              <Link href="/hizmetler" onClick={() => setIsMenuOpen(false)}>Hizmetler</Link>
-              <Link href="/hakkimda" onClick={() => setIsMenuOpen(false)}>Hakkımda</Link>
-              <Link href="/surec" onClick={() => setIsMenuOpen(false)}>Terapi Yaklaşımı</Link>
-              <Link className="hero-mobile-menu-booking" href="/randevu" onClick={() => setIsMenuOpen(false)}>
-                Randevu Talebi
-              </Link>
-              <Link href="/iletisim" onClick={() => setIsMenuOpen(false)}>İletişim</Link>
-            </nav>
+              <nav aria-label="Mobil menü bağlantıları">
+                <Link href="/hizmetler" onClick={() => setIsMenuOpen(false)}>
+                  Hizmetler
+                </Link>
+                <Link href="/hakkimda" onClick={() => setIsMenuOpen(false)}>
+                  Hakkımda
+                </Link>
+                <Link href="/surec" onClick={() => setIsMenuOpen(false)}>
+                  Terapi Yaklaşımı
+                </Link>
+                <Link
+                  className="hero-mobile-menu-booking"
+                  href="/randevu"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Randevu Talebi
+                </Link>
+                <Link href="/iletisim" onClick={() => setIsMenuOpen(false)}>
+                  İletişim
+                </Link>
+              </nav>
 
-            <div className="hero-mobile-menu-actions">
-              <Link className="primary-button" href="/randevu" onClick={() => setIsMenuOpen(false)}>
-                Online Randevu Talebi Oluştur
-              </Link>
-              <Link className="secondary-button" href="/hizmetler" onClick={() => setIsMenuOpen(false)}>
-                Hizmetleri İncele
-              </Link>
+              <div className="hero-mobile-menu-actions">
+                <Link
+                  className="primary-button"
+                  href="/randevu"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Online Randevu Talebi Oluştur
+                </Link>
+                <Link
+                  className="secondary-button"
+                  href="/hizmetler"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Hizmetleri İncele
+                </Link>
+              </div>
+
+              <small>© Berfin Akbaş 2026</small>
             </div>
-
-            <small>© Berfin Akbaş 2026</small>
-          </div>
-        </div>,
-        document.body,
-      )
-    : null;
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <section className={styles.scrollHero} ref={heroRef} aria-labelledby="hero-scroll-title">
@@ -921,8 +944,7 @@ export default function HeroScroll() {
         }
 
         @media (max-width: 420px) {
-          .${styles.scrollHero},
-          .${styles.scrollHeroSticky} {
+          .${styles.scrollHero}, .${styles.scrollHeroSticky} {
             height: 855px;
             min-height: 855px;
           }

@@ -8,8 +8,14 @@ function createDatabase(roleId: string | null) {
   const transaction = {
     auditLog: { create: vi.fn().mockResolvedValue({}) },
     role: { findUnique: vi.fn().mockResolvedValue(roleId ? { id: roleId } : null) },
-    user: { update: vi.fn().mockResolvedValue({}) },
-    userRole: { upsert: vi.fn().mockResolvedValue({}) },
+    user: {
+      findUnique: vi.fn().mockResolvedValue({ status: "INVITED" }),
+      update: vi.fn().mockResolvedValue({}),
+    },
+    userRole: {
+      create: vi.fn().mockResolvedValue({}),
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
   };
   const database = {
     $transaction: vi.fn(async (callback: (value: typeof transaction) => Promise<void>) =>
@@ -30,17 +36,10 @@ describe("activateBootstrapAdmin", () => {
       data: { status: "ACTIVE" },
       where: { id: "11111111-1111-4111-8111-111111111111" },
     });
-    expect(transaction.userRole.upsert).toHaveBeenCalledWith({
-      create: {
+    expect(transaction.userRole.create).toHaveBeenCalledWith({
+      data: {
         roleId: "super-admin-role-id",
         userId: "11111111-1111-4111-8111-111111111111",
-      },
-      update: {},
-      where: {
-        userId_roleId: {
-          roleId: "super-admin-role-id",
-          userId: "11111111-1111-4111-8111-111111111111",
-        },
       },
     });
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
@@ -60,7 +59,7 @@ describe("activateBootstrapAdmin", () => {
       activateBootstrapAdmin(database, "11111111-1111-4111-8111-111111111111"),
     ).rejects.toThrow("SUPER_ADMIN rolü bulunamadı");
     expect(transaction.user.update).not.toHaveBeenCalled();
-    expect(transaction.userRole.upsert).not.toHaveBeenCalled();
+    expect(transaction.userRole.create).not.toHaveBeenCalled();
     expect(transaction.auditLog.create).not.toHaveBeenCalled();
   });
 });
