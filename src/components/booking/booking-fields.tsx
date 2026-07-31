@@ -227,7 +227,12 @@ export function BookingDatePicker({
       </button>
 
       {open && (
-        <div className="booking-calendar" role="dialog" aria-label={label}>
+        <div
+          className="booking-calendar"
+          role="dialog"
+          aria-label={label}
+          style={{ width: "100%" }}
+        >
           <div className="booking-calendar-head">
             <button
               aria-label="Önceki ay"
