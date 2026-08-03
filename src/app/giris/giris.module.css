@@ -1,31 +1,105 @@
 .shell {
   display: grid;
-  place-items: center;
+  grid-template-columns: 1.08fr 1fr;
   min-height: 100vh;
   min-height: 100svh;
-  padding: 28px;
-  background:
-    radial-gradient(120% 78% at 50% -12%, rgb(217 111 77 / 15%), transparent 58%),
-    radial-gradient(88% 60% at 50% 118%, rgb(246 237 227 / 92%), transparent 68%),
-    var(--paper, #fffaf4);
+  background: var(--paper, #fffaf4);
   color: var(--ink, #45352f);
   font-family: var(--sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
 }
 
-.card {
+/* ---- left: warm brand panel ---- */
+.brand {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  overflow: hidden;
+  padding: clamp(34px, 5vw, 66px);
+  background:
+    radial-gradient(88% 58% at 12% 10%, rgb(255 255 255 / 38%), transparent 56%),
+    linear-gradient(158deg, #fbe7d9 0%, #f0ccb4 46%, #e2a888 100%);
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgb(120 70 45 / 12%);
+  border-radius: 19px;
+  background: rgb(255 253 249 / 92%);
+  box-shadow: 0 14px 30px rgb(120 70 45 / 16%);
+}
+
+.brandMark img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.brandLede {
+  display: grid;
+  gap: 16px;
+  max-width: 15ch;
+}
+
+.brandRole {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--coral-dark, #b95336);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.brandRole::before {
+  content: "";
+  width: 16px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--coral, #d96f4d);
+}
+
+.wordmark {
+  color: var(--ink, #45352f);
+  font-family: var(--serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif);
+  font-size: clamp(2.1rem, 4.4vw, 3rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+}
+
+.tagline {
+  max-width: 30ch;
+  margin: 0;
+  color: rgb(69 53 47 / 82%);
+  font-size: clamp(0.92rem, 1.4vw, 1.04rem);
+  line-height: 1.62;
+}
+
+.brandFoot {
+  color: rgb(69 53 47 / 62%);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+/* ---- right: sign-in panel ---- */
+.panel {
+  display: grid;
+  place-items: center;
+  padding: clamp(30px, 5vw, 56px);
+}
+
+.signin {
   display: grid;
   justify-items: start;
   gap: 15px;
-  width: min(100%, 424px);
-  border: 1px solid rgb(88 62 49 / 12%);
-  border-radius: 30px;
-  background: linear-gradient(180deg, #fffdfa, #fff7f0);
-  padding: 34px 34px 26px;
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 80%) inset,
-    0 30px 70px rgb(84 54 38 / 14%),
-    0 6px 18px rgb(84 54 38 / 8%);
+  width: min(100%, 384px);
   animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
@@ -51,29 +125,11 @@
   color: var(--coral-dark, #b95336);
 }
 
-.brand {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  margin-top: 6px;
-  border: 1px solid rgb(88 62 49 / 10%);
-  border-radius: 18px;
-  background: #fffdf9;
-  box-shadow: 0 10px 24px rgb(84 54 38 / 10%);
-}
-
-.brand img {
-  width: 72%;
-  height: 72%;
-  object-fit: contain;
-}
-
 .kicker {
   display: inline-flex;
   gap: 8px;
   align-items: center;
-  margin-top: 4px;
+  margin-top: 6px;
   color: var(--coral-dark, #b95336);
   font-size: 0.62rem;
   font-weight: 800;
@@ -93,35 +149,37 @@
   margin: 2px 0 0;
   color: var(--ink, #45352f);
   font-family: var(--serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif);
-  font-size: clamp(1.7rem, 5vw, 2.1rem);
+  font-size: clamp(1.85rem, 3vw, 2.3rem);
   font-weight: 600;
-  line-height: 1.06;
-  letter-spacing: -0.01em;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
 }
 
 .copy {
+  max-width: 34ch;
   margin: 0;
-  max-width: 33ch;
   color: var(--muted, #78665d);
-  font-size: 0.86rem;
-  line-height: 1.6;
+  font-size: 0.88rem;
+  line-height: 1.62;
 }
 
 .google {
-  display: flex;
-  gap: 12px;
+  display: inline-flex;
+  gap: 13px;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 54px;
-  margin-top: 9px;
+  min-height: 56px;
+  margin-top: 12px;
+  padding: 0 22px;
   border: 0;
   border-radius: 16px;
   background: #2a201b;
   color: #fff;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 650;
+  white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 14px 30px rgb(42 32 27 / 26%);
   transition:
@@ -147,6 +205,7 @@
 
 .googleMark {
   display: grid;
+  flex: 0 0 auto;
   place-items: center;
   width: 30px;
   height: 30px;
@@ -163,6 +222,7 @@
 
 .notice {
   width: 100%;
+  margin-top: 12px;
   border: 1px solid rgb(184 83 54 / 22%);
   border-radius: 14px;
   background: rgb(217 111 77 / 8%);
@@ -176,7 +236,7 @@
   display: inline-flex;
   gap: 7px;
   align-items: center;
-  margin: 9px 0 0;
+  margin: 10px 0 0;
   color: rgb(120 102 93 / 78%);
   font-size: 0.68rem;
   font-weight: 600;
@@ -190,15 +250,45 @@
   stroke-width: 1.8;
 }
 
-@media (max-width: 480px) {
-  .card {
-    padding: 26px 22px 22px;
-    border-radius: 26px;
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .brand {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    padding: 22px clamp(20px, 6vw, 40px);
+  }
+
+  .brandMark {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .brandLede {
+    gap: 3px;
+    max-width: none;
+  }
+
+  .wordmark {
+    font-size: 1.4rem;
+  }
+
+  .tagline,
+  .brandFoot {
+    display: none;
+  }
+
+  .panel {
+    padding: 34px 22px 48px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card {
+  .signin {
     animation: none;
   }
 

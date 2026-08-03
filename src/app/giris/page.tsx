@@ -44,43 +44,58 @@ function LockIcon() {
 export default function AdminSignInPage() {
   return (
     <main className={styles.shell}>
-      <section aria-labelledby="giris-basligi" className={styles.card}>
-        <Link href="/" className={styles.back}>
-          ← Ana sayfaya dön
-        </Link>
-
-        <span className={styles.brand} aria-hidden="true">
+      <aside className={styles.brand}>
+        <span className={styles.brandMark} aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.png" alt="" width={40} height={40} />
+          <img src="/logo-mark.png" alt="" width={42} height={42} />
         </span>
 
-        <span className={styles.kicker}>Güvenli yönetim alanı</span>
-        <h1 id="giris-basligi" className={styles.title}>
-          Yönetim paneline giriş
-        </h1>
-        <p className={styles.copy}>
-          Erişim yalnızca önceden yetkilendirilmiş Google hesaplarına açıktır.
-        </p>
+        <div className={styles.brandLede}>
+          <span className={styles.brandRole}>Dil ve konuşma terapisi</span>
+          <p className={styles.wordmark}>Berfin Akbaş</p>
+          <p className={styles.tagline}>
+            Çocuklar, ergenler ve yetişkinler için sıcak, güven veren ve kişiye özel dil ve konuşma
+            terapisi.
+          </p>
+        </div>
 
-        {isGoogleAuthConfigured ? (
-          <form action={signInWithGoogle}>
-            <button className={styles.google} type="submit">
-              <span className={styles.googleMark}>
-                <GoogleLogo />
-              </span>
-              Google ile güvenli giriş
-            </button>
-          </form>
-        ) : (
-          <div role="status" className={styles.notice}>
-            Google giriş bilgileri henüz yapılandırılmadı.
-          </div>
-        )}
+        <span className={styles.brandFoot}>Yönetim paneli · Yalnızca yetkili erişim</span>
+      </aside>
 
-        <p className={styles.foot}>
-          <LockIcon />
-          Berfin Akbaş yönetim paneli
-        </p>
+      <section aria-labelledby="giris-basligi" className={styles.panel}>
+        <div className={styles.signin}>
+          <Link href="/" className={styles.back}>
+            ← Ana sayfaya dön
+          </Link>
+
+          <span className={styles.kicker}>Güvenli yönetim alanı</span>
+          <h1 id="giris-basligi" className={styles.title}>
+            Yönetim paneline giriş
+          </h1>
+          <p className={styles.copy}>
+            Erişim yalnızca önceden yetkilendirilmiş Google hesaplarına açıktır.
+          </p>
+
+          {isGoogleAuthConfigured ? (
+            <form action={signInWithGoogle}>
+              <button className={styles.google} type="submit">
+                <span className={styles.googleMark}>
+                  <GoogleLogo />
+                </span>
+                Google ile güvenli giriş
+              </button>
+            </form>
+          ) : (
+            <div role="status" className={styles.notice}>
+              Google giriş bilgileri henüz yapılandırılmadı.
+            </div>
+          )}
+
+          <p className={styles.foot}>
+            <LockIcon />
+            Bağlantı güvenli · Berfin Akbaş yönetim paneli
+          </p>
+        </div>
       </section>
     </main>
   );
