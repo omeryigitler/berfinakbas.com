@@ -15,6 +15,19 @@ import {
   type ModuleViewsProps,
 } from './shared';
 
+function slugify(value: string): string {
+  const map: Record<string, string> = {
+    ç: 'c', Ç: 'c', ğ: 'g', Ğ: 'g', ı: 'i', İ: 'i',
+    ö: 'o', Ö: 'o', ş: 's', Ş: 's', ü: 'u', Ü: 'u',
+  };
+  return value
+    .trim()
+    .replace(/[çÇğĞıİöÖşŞüÜ]/g, (char) => map[char] ?? char)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export function RequestsView({
   data,
   selectedItemId,
@@ -180,9 +193,19 @@ export function ServicesView({ data, filter, sortDirection, refresh, notify }: M
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const rawSlug = String(form.get('slug') ?? '').trim() || String(form.get('name') ?? '');
+    const slug = slugify(rawSlug);
+    if (slug.length < 2) {
+      notify({
+        kind: 'error',
+        title: 'Hizmet oluşturulamadı',
+        message: 'Slug en az 2 harf/rakam içermeli. Örn: ilk-gorusme',
+      });
+      return;
+    }
     const body = {
       name: String(form.get('name') ?? ''),
-      slug: String(form.get('slug') ?? ''),
+      slug,
       publicDescription: String(form.get('publicDescription') ?? '') || null,
       status: String(form.get('status') ?? 'DRAFT'),
       publicVisible: form.get('publicVisible') === 'on',
