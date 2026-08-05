@@ -427,33 +427,72 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
     e.preventDefault();
     const amt = Number(payForm.amount);
     const payTarget = (client as any)._payTarget;
-    if (amt > 0 && payTarget) {
-      try {
-        const methodsRes = await fetch('/api/admin/finance', { headers: { accept: 'application/json' } });
-        const methodsData = methodsRes.ok ? (await methodsRes.json())?.data : null;
-        const methodId = methodsData?.paymentMethods?.[0]?.id;
-        if (methodId) {
-          const rid = crypto.randomUUID();
-          await fetch('/api/admin/finance', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', 'x-correlation-id': rid },
-            body: JSON.stringify({
-              action: 'RECORD_PAYMENT',
-              amountMinor: String(Math.round(amt * 100)),
-              clientId: client.id,
-              currency: 'TRY',
-              idempotencyKey: rid,
-              installmentId: payTarget.installmentId,
-              occurredAt: new Date().toISOString(),
-              paymentMethodId: methodId,
-              planId: payTarget.planId,
-              reason: 'Panelden ödeme tahsilatı yapıldı.',
-            }),
-          });
-        }
-      } catch {
-        /* keep the optimistic local payment when the API is unavailable */
+    if (!(amt > 0)) {
+      triggerToast('Geçerli bir ödeme tutarı girin.', 'error');
+      return;
+    }
+    if (!payTarget) {
+      triggerToast('Ödeme almak için önce bir plan ve taksit oluşturun.', 'error');
+      return;
+    }
+
+    // The catalog stores payment methods as real records; map the chosen
+    // label to a method, creating it on first use so "yöntem ekli değil"
+    // can no longer block a payment.
+    const methodByType: Record<string, { key: string; name: string }> = {
+      Nakit: { key: 'CASH', name: 'Nakit' },
+      'Kredi Kartı': { key: 'CARD', name: 'Kredi Kartı' },
+      Havale: { key: 'BANK_TRANSFER', name: 'Havale / EFT' },
+    };
+    const desired = methodByType[payForm.type] ?? methodByType.Nakit;
+    const readApiError = async (res: Response, fallback: string) => {
+      const payload = await res.json().catch(() => null);
+      return (payload && payload.error) || fallback;
+    };
+
+    try {
+      const overviewRes = await fetch('/api/admin/finance', { headers: { accept: 'application/json' } });
+      if (!overviewRes.ok) throw new Error(await readApiError(overviewRes, 'Finans verileri okunamadı.'));
+      const methods = (await overviewRes.json())?.data?.paymentMethods ?? [];
+      let method = methods.find((m: any) => m.key === desired.key || m.name === desired.name);
+
+      if (!method) {
+        const createRes = await fetch('/api/admin/finance', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-correlation-id': crypto.randomUUID() },
+          body: JSON.stringify({
+            action: 'CREATE_PAYMENT_METHOD',
+            key: desired.key,
+            name: desired.name,
+            reason: `Ödeme kaydı için ${desired.name} yöntemi kataloğa eklendi.`,
+          }),
+        });
+        if (!createRes.ok) throw new Error(await readApiError(createRes, 'Ödeme yöntemi eklenemedi.'));
+        method = (await createRes.json())?.data;
       }
+      if (!method?.id) throw new Error('Ödeme yöntemi bulunamadı.');
+
+      const rid = crypto.randomUUID();
+      const recordRes = await fetch('/api/admin/finance', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-correlation-id': rid },
+        body: JSON.stringify({
+          action: 'RECORD_PAYMENT',
+          amountMinor: String(Math.round(amt * 100)),
+          clientId: client.id,
+          currency: 'TRY',
+          idempotencyKey: rid,
+          installmentId: payTarget.installmentId,
+          occurredAt: new Date().toISOString(),
+          paymentMethodId: method.id,
+          planId: payTarget.planId,
+          reason: 'Panelden ödeme tahsilatı yapıldı.',
+        }),
+      });
+      if (!recordRes.ok) throw new Error(await readApiError(recordRes, 'Ödeme kaydedilemedi.'));
+    } catch (error) {
+      triggerToast(error instanceof Error ? error.message : 'Ödeme kaydedilemedi.', 'error');
+      return;
     }
 
     const newPayRecord: PaymentRecord = {
@@ -743,8 +782,16 @@ export default function ClientDetailsHub({ client, onUpdateClient, onDeselect, o
       
       {/* Toast Alert */}
       {toast && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black text-[#eafda8] border border-[#eafda8]/20 px-5 py-3 rounded-2xl flex items-center gap-2.5 shadow-xl animate-bounce">
-          <Sparkles className="w-4 h-4 text-yellow-300 fill-yellow-300 shrink-0" />
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl flex items-center gap-2.5 shadow-xl border ${
+            toast.type === 'error'
+              ? 'bg-[#7a1f1f] text-white border-white/25'
+              : 'bg-black text-[#eafda8] border-[#eafda8]/20'
+          }`}
+        >
+          <Sparkles
+            className={`w-4 h-4 shrink-0 ${toast.type === 'error' ? 'text-white' : 'text-yellow-300 fill-yellow-300'}`}
+          />
           <span className="text-xs font-black uppercase tracking-tight">{toast.message}</span>
         </div>
       )}
