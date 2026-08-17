@@ -62,31 +62,6 @@ async function applySpeechTherapyDomainCleanup() {
   let myWork = await readFile(myWorkPath, "utf-8");
   myWork = replaceRequired(
     myWork,
-    `const serviceOptions = [
-  { value: 'Diyet ve Beslenme', label: 'Diyet ve Beslenme' },
-  { value: 'Bireysel Yaşam Koçluğu', label: 'Bireysel Yaşam Koçluğu' },
-  { value: 'Bireysel Psikoterapi', label: 'Bireysel Psikoterapi' },
-  { value: 'Çocuk Gelişimi ve Pedagoji', label: 'Çocuk Gelişimi ve Pedagoji' },
-  { value: 'Kariyer ve Yönetici Mentorluğu', label: 'Kariyer ve Yönetici Mentorluğu' }
-];
-
-const serviceFilterOptions = [
-  { value: 'Tüm', label: 'Tüm Hizmetler' },
-  { value: 'Diyet ve Beslenme', label: 'Diyet ve Beslenme' },
-  { value: 'Bireysel Yaşam Koçluğu', label: 'Bireysel Yaşam Koçluğu' },
-  { value: 'Bireysel Psikoterapi', label: 'Bireysel Psikoterapi' },
-  { value: 'Çocuk Gelişimi ve Pedagoji', label: 'Çocuk Gelişimi ve Pedagoji' },
-  { value: 'Kariyer ve Yönetici Mentorluğu', label: 'Kariyer ve Yönetici Mentorluğu' }
-];`,
-    `const serviceOptions: { value: string; label: string }[] = [];
-
-const serviceFilterOptions = [
-  { value: 'Tüm', label: 'Tüm Hizmetler' }
-];`,
-    "Speech therapy service fallback cleanup",
-  );
-  myWork = replaceRequired(
-    myWork,
     "'raporlar': 'Performans Raporları',",
     "'raporlar': 'Raporlar',",
     "Reports terminology cleanup",
@@ -121,16 +96,6 @@ const serviceFilterOptions = [
   );
   await writeFile(detailsPath, details, "utf-8");
 
-  const appPath = path.join(workspace, "src/App.tsx");
-  let appSource = await readFile(appPath, "utf-8");
-  appSource = replaceRequired(
-    appSource,
-    "    service: originalClient?.service || (details.appointments.length > 0 ? details.appointments[0].service : 'Diyet ve Beslenme'),",
-    "    service: originalClient?.service || (details.appointments.length > 0 ? details.appointments[0].service : ''),",
-    "Client service fallback cleanup",
-  );
-  await writeFile(appPath, appSource, "utf-8");
-
   const workspacePath = path.join(workspace, "src/components/WorkspacePanel.tsx");
   let workspaceSource = await readFile(workspacePath, "utf-8");
   workspaceSource = replaceRequired(
@@ -163,10 +128,11 @@ const serviceFilterOptions = [
   );
   await writeFile(moduleConfigPath, moduleConfig, "utf-8");
 
+  const appPath = path.join(workspace, "src/App.tsx");
   const forbiddenByFile = new Map([
     [myWorkPath, ['Diyet ve Beslenme', 'Bireysel Yaşam Koçluğu', 'Bireysel Psikoterapi', 'Çocuk Gelişimi ve Pedagoji', 'Kariyer ve Yönetici Mentorluğu', 'Danışan Portföyü', 'Performans Raporları']],
     [detailsPath, ['Oyun Terapisi Seans Planı', 'Detaylı Yaşam Koçluğu Planı', 'yağ-kas analizi']],
-    [appPath, ["'Diyet ve Beslenme'"]],
+    [appPath, ['Diyet ve Beslenme']],
     [workspacePath, ['Aktif portföy verileri', '>Portföy</span>', 'PLAN & SEANS GELİŞİMİ']],
     [moduleConfigPath, ['Talep ve Dönüşüm', 'Talep ve onay dönüşümleri.']],
   ]);
