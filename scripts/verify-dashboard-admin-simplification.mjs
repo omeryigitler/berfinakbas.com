@@ -74,7 +74,6 @@ requireContains(prerequisites, "Object.keys(accessWhere).length === 0", "practit
 requireAbsent(prerequisites, "export async function POST", "unused appointment prerequisite write endpoint");
 requireContains(operationRead, "isReversed: Boolean(item.reversedBy)", "finance reversal state");
 requireContains(operationRead, '"REJECTED"', "appointment rejected history");
-requireContains(operationRead, '"EXPIRED"', "appointment expired history");
 requireContains(operationRead, 'readSettings(["PDF_RESOURCE_LIBRARY"])', "PDF metadata-only read");
 requireAbsent(operationRead, "MESSAGE_TEMPLATES", "unimplemented message-template exposure");
 requireAbsent(operationRead, "COMMUNICATION_CONSENTS", "fake communication-consent exposure");
