@@ -41,7 +41,7 @@ export default function AppointmentsView({ data, selectedItemId, filter, sortDir
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => onOpenWorkspace?.('randevular', 'liste')}
+            onClick={() => onOpenWorkspace?.('randevular', 'yeni')}
             className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]"
           >
             + Yeni randevu
@@ -85,7 +85,7 @@ export default function AppointmentsView({ data, selectedItemId, filter, sortDir
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => onOpenWorkspace?.('randevular', 'liste')}
+          onClick={() => onOpenWorkspace?.('randevular', 'yeni')}
           className="rounded-full bg-black px-4 py-2.5 text-[10px] font-black text-[#eafda8]"
         >
           + Yeni randevu

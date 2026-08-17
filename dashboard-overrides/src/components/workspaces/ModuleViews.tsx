@@ -1,3 +1,4 @@
+import AppointmentCreateView from './AppointmentCreateView';
 import AppointmentsView from './AppointmentsView';
 import AvailabilityView from './AvailabilityView';
 import { FinanceView, PdfView } from './FinancePdfViews';
@@ -9,7 +10,7 @@ export default function ModuleViews(props: ModuleViewsProps) {
   if (props.loading) return <LoadingGrid />;
   switch (props.activeMenuItem) {
     case 'randevular':
-      return <AppointmentsView {...props} />;
+      return props.selectedItemId === 'yeni' ? <AppointmentCreateView {...props} /> : <AppointmentsView {...props} />;
     case 'takvim-uygunluk':
       return <AvailabilityView {...props} />;
     case 'talepler-iletisim':

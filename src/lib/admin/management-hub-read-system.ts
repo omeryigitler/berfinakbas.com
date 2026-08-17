@@ -1,18 +1,41 @@
 import { NextResponse } from "next/server";
+import { rolePermissions } from "@/domain/auth/permissions";
+import { getAppointmentAccessWhere } from "@/lib/booking/appointment-api-access";
 import { getDatabase } from "@/lib/db";
 import { can, forbidden, readSettings, type ActiveSession } from "./management-hub-common";
+
+function integrationStatus() {
+  return {
+    googleAuth: Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET),
+    googleCalendar: false,
+    email: Boolean(process.env.RESEND_API_KEY),
+    storage: Boolean(
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ),
+  };
+}
 
 export async function readSystemModule(session: ActiveSession, module: string) {
   const database = getDatabase();
 
   if (module === "raporlar") {
-    const canReadAppointments = can(session, "appointments:read");
+    const appointmentAccessWhere = getAppointmentAccessWhere({
+      mode: "read",
+      roles: session.user.roles,
+      userId: session.user.id,
+    });
     const canReadClients = can(session, "clients:read");
     const canReadFinance = can(session, "finance:read");
     const canReadServices = can(session, "services:read");
     const [appointments, clients, plans, services, finance] = await Promise.all([
-      canReadAppointments
-        ? database.appointment.groupBy({ by: ["status"], _count: { _all: true } })
+      appointmentAccessWhere !== null
+        ? database.appointment.groupBy({
+            by: ["status"],
+            _count: { _all: true },
+            where: appointmentAccessWhere,
+          })
         : [],
       canReadClients ? database.client.groupBy({ by: ["status"], _count: { _all: true } }) : [],
       canReadFinance ? database.clientPlan.groupBy({ by: ["status"], _count: { _all: true } }) : [],
@@ -53,7 +76,12 @@ export async function readSystemModule(session: ActiveSession, module: string) {
         status: true,
       },
     });
-    return NextResponse.json({ data: { users, currentUserId: session.user.id } });
+    const rolePermissionMatrix = Object.fromEntries(
+      Object.entries(rolePermissions).map(([role, permissions]) => [role, [...permissions]]),
+    );
+    return NextResponse.json({
+      data: { users, currentUserId: session.user.id, rolePermissions: rolePermissionMatrix },
+    });
   }
 
   if (module === "ayarlar") {
@@ -66,21 +94,7 @@ export async function readSystemModule(session: ActiveSession, module: string) {
       "PRIVACY_SETTINGS",
       "APPEARANCE_SETTINGS",
     ]);
-    return NextResponse.json({
-      data: {
-        settings,
-        integrations: {
-          googleAuth: true,
-          googleCalendar: false,
-          email: Boolean(process.env.RESEND_API_KEY),
-          storage: Boolean(
-            process.env.SUPABASE_URL ||
-            process.env.NEXT_PUBLIC_SUPABASE_URL ||
-            process.env.SUPABASE_SERVICE_ROLE_KEY,
-          ),
-        },
-      },
-    });
+    return NextResponse.json({ data: { settings, integrations: integrationStatus() } });
   }
 
   if (module === "arsiv") {

@@ -10,6 +10,19 @@ import {
   type ActiveSession,
 } from "./management-hub-common";
 
+function integrationStatus() {
+  return {
+    googleAuth: Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET),
+    googleCalendar: false,
+    email: Boolean(process.env.RESEND_API_KEY),
+    storage: Boolean(
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ),
+  };
+}
+
 export async function readOperationModule(session: ActiveSession, module: string) {
   const database = getDatabase();
 
@@ -29,10 +42,12 @@ export async function readOperationModule(session: ActiveSession, module: string
             "PENDING_REVIEW",
             "CONFIRMED",
             "RESCHEDULE_PROPOSED",
+            "REJECTED",
             "COMPLETED",
             "NO_SHOW",
             "CANCELLED_BY_CLIENT",
             "CANCELLED_BY_PRACTITIONER",
+            "EXPIRED",
           ] as const);
     const appointments = await database.appointment.findMany({
       orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
@@ -40,26 +55,12 @@ export async function readOperationModule(session: ActiveSession, module: string
       take: 250,
       where: { ...accessWhere, status: { in: [...statuses] } },
     });
-    const settings =
-      module === "talepler-iletisim"
-        ? await readSettings(["MESSAGE_TEMPLATES", "COMMUNICATION_CONSENTS"])
-        : {};
-    return NextResponse.json({ data: { appointments, settings } });
+    return NextResponse.json({ data: { appointments } });
   }
 
   if (module === "takvim-uygunluk") {
     if (!can(session, "availability:read")) return forbidden();
     const practitioner = await resolvePractitioner(session);
-    const integrationStatus = {
-      googleAuth: true,
-      googleCalendar: false,
-      email: Boolean(process.env.RESEND_API_KEY),
-      storage: Boolean(
-        process.env.SUPABASE_URL ||
-        process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-      ),
-    };
     const settings = await readSettings(["BOOKING_RULES", "FIRST_MEETING_SETTINGS"]);
     if (!practitioner)
       return NextResponse.json({
@@ -69,7 +70,7 @@ export async function readOperationModule(session: ActiveSession, module: string
           exceptions: [],
           services: [],
           settings,
-          integrations: integrationStatus,
+          integrations: integrationStatus(),
         },
       });
     const [rules, exceptions, services] = await Promise.all([
@@ -100,7 +101,7 @@ export async function readOperationModule(session: ActiveSession, module: string
         exceptions,
         services,
         settings,
-        integrations: integrationStatus,
+        integrations: integrationStatus(),
       },
     });
   }
@@ -129,8 +130,14 @@ export async function readOperationModule(session: ActiveSession, module: string
         },
         ledgerEntries: {
           orderBy: { occurredAt: "desc" },
-          select: { amountMinor: true, id: true, occurredAt: true, type: true },
-          take: 100,
+          select: {
+            amountMinor: true,
+            id: true,
+            note: true,
+            occurredAt: true,
+            reversedBy: { select: { id: true } },
+            type: true,
+          },
         },
         name: true,
         sessionCount: true,
@@ -156,6 +163,8 @@ export async function readOperationModule(session: ActiveSession, module: string
             ...item,
             amountMinor: item.amountMinor.toString(),
             occurredAt: item.occurredAt.toISOString(),
+            isReversed: Boolean(item.reversedBy),
+            reversedBy: undefined,
           })),
         })),
       },
@@ -164,26 +173,8 @@ export async function readOperationModule(session: ActiveSession, module: string
 
   if (module === "pdf-kaynaklar") {
     if (!can(session, "services:read")) return forbidden();
-    const [settings, outbox] = await Promise.all([
-      readSettings(["PDF_RESOURCE_LIBRARY", "PDF_DELIVERY_SETTINGS"]),
-      database.outboxEvent.findMany({
-        orderBy: { createdAt: "desc" },
-        select: {
-          aggregateId: true,
-          aggregateType: true,
-          attemptCount: true,
-          createdAt: true,
-          eventType: true,
-          id: true,
-          lastErrorCode: true,
-          processedAt: true,
-          status: true,
-        },
-        take: 100,
-        where: { eventType: { contains: "PDF", mode: "insensitive" } },
-      }),
-    ]);
-    return NextResponse.json({ data: { settings, outbox } });
+    const settings = await readSettings(["PDF_RESOURCE_LIBRARY"]);
+    return NextResponse.json({ data: { settings } });
   }
 
   return null;
