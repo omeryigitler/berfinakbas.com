@@ -60,78 +60,42 @@ async function checkoutPinnedSource(repository, commit, target, label) {
 async function applySpeechTherapyDomainCleanup() {
   const myWorkPath = path.join(workspace, "src/components/MyWorkPanel.tsx");
   let myWork = await readFile(myWorkPath, "utf-8");
-  myWork = replaceRequired(
-    myWork,
-    "'raporlar': 'Performans Raporları',",
-    "'raporlar': 'Raporlar',",
-    "Reports terminology cleanup",
-  );
-  myWork = replaceRequired(
-    myWork,
-    '<h2 className="text-lg font-black text-gray-900 tracking-tight leading-none">Danışan Portföyü</h2>',
-    '<h2 className="text-lg font-black text-gray-900 tracking-tight leading-none">Danışanlar</h2>',
-    "Client portfolio heading cleanup",
-  );
-  myWork = replaceRequired(
-    myWork,
-    '<span className="text-[10px] text-gray-400 font-bold mt-1.5">Sistemdeki danışanların akıllı listesi.</span>',
-    '<span className="text-[10px] text-gray-400 font-bold mt-1.5">Kayıtlı danışanları görüntüleyin ve yönetin.</span>',
-    "Client portfolio subtitle cleanup",
-  );
+  myWork = myWork
+    .replaceAll("'raporlar': 'Performans Raporları',", "'raporlar': 'Raporlar',")
+    .replaceAll('>Danışan Portföyü</h2>', '>Danışanlar</h2>')
+    .replaceAll('>Sistemdeki danışanların akıllı listesi.</span>', '>Kayıtlı danışanları görüntüleyin ve yönetin.</span>');
   await writeFile(myWorkPath, myWork, "utf-8");
 
   const detailsPath = path.join(workspace, "src/components/ClientDetailsHub.tsx");
   let details = await readFile(detailsPath, "utf-8");
-  details = replaceRequired(
-    details,
-    "    name: client.ageGroup === 'Çocuk' ? 'Oyun Terapisi Seans Planı' : 'Detaylı Yaşam Koçluğu Planı',",
-    "    name: 'Dil ve Konuşma Terapisi Seans Planı',",
-    "Plan name domain cleanup",
-  );
-  details = replaceRequired(
-    details,
-    'placeholder="Örn: Haftalık düzenli takip, aylık yağ-kas analizi ve gelişim takibi içerir"',
-    'placeholder="Örn: Haftalık seans planı, dil ve konuşma hedefleri, ev çalışmaları ve gelişim değerlendirmelerini içerir"',
-    "Plan note placeholder domain cleanup",
-  );
+  details = details
+    .replaceAll("Oyun Terapisi Seans Planı", "Dil ve Konuşma Terapisi Seans Planı")
+    .replaceAll("Detaylı Yaşam Koçluğu Planı", "Dil ve Konuşma Terapisi Seans Planı")
+    .replaceAll(
+      "Örn: Haftalık düzenli takip, aylık yağ-kas analizi ve gelişim takibi içerir",
+      "Örn: Haftalık seans planı, dil ve konuşma hedefleri, ev çalışmaları ve gelişim değerlendirmelerini içerir",
+    );
   await writeFile(detailsPath, details, "utf-8");
 
   const workspacePath = path.join(workspace, "src/components/WorkspacePanel.tsx");
   let workspaceSource = await readFile(workspacePath, "utf-8");
-  workspaceSource = replaceRequired(
-    workspaceSource,
-    '<p className="text-[10px] text-gray-400 font-bold">Aktif portföy verileri</p>',
-    '<p className="text-[10px] text-gray-400 font-bold">Aktif danışan verileri</p>',
-    "Client portfolio card subtitle cleanup",
-  );
-  workspaceSource = replaceRequired(
-    workspaceSource,
-    '<span className="px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 text-[10px] font-black">Portföy</span>',
-    '<span className="px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 text-[10px] font-black">Danışanlar</span>',
-    "Client portfolio badge cleanup",
-  );
-  workspaceSource = replaceRequired(
-    workspaceSource,
-    '<h3 className="text-xs font-black text-gray-900 tracking-tight uppercase">PLAN & SEANS GELİŞİMİ</h3>',
-    '<h3 className="text-xs font-black text-gray-900 tracking-tight uppercase">PLAN VE SEANS KULLANIMI</h3>',
-    "Plan usage terminology cleanup",
-  );
+  workspaceSource = workspaceSource
+    .replaceAll("Aktif portföy verileri", "Aktif danışan verileri")
+    .replaceAll(">Portföy</span>", ">Danışanlar</span>")
+    .replaceAll("PLAN & SEANS GELİŞİMİ", "PLAN VE SEANS KULLANIMI");
   await writeFile(workspacePath, workspaceSource, "utf-8");
 
   const moduleConfigPath = path.join(workspace, "src/data/moduleConfig.ts");
   let moduleConfig = await readFile(moduleConfigPath, "utf-8");
-  moduleConfig = replaceRequired(
-    moduleConfig,
-    "      { id: 'talepler', label: 'Talep ve Dönüşüm', description: 'Talep ve onay dönüşümleri.' },",
-    "      { id: 'talepler', label: 'Başvuru ve Randevu Sonuçları', description: 'Başvuru, onay ve randevu sonuçları.' },",
-    "Request conversion terminology cleanup",
-  );
+  moduleConfig = moduleConfig
+    .replaceAll("label: 'Talep ve Dönüşüm'", "label: 'Başvuru ve Randevu Sonuçları'")
+    .replaceAll("description: 'Talep ve onay dönüşümleri.'", "description: 'Başvuru, onay ve randevu sonuçları.'");
   await writeFile(moduleConfigPath, moduleConfig, "utf-8");
 
   const appPath = path.join(workspace, "src/App.tsx");
   const forbiddenByFile = new Map([
     [myWorkPath, ['Diyet ve Beslenme', 'Bireysel Yaşam Koçluğu', 'Bireysel Psikoterapi', 'Çocuk Gelişimi ve Pedagoji', 'Kariyer ve Yönetici Mentorluğu', 'Danışan Portföyü', 'Performans Raporları']],
-    [detailsPath, ['Oyun Terapisi Seans Planı', 'Detaylı Yaşam Koçluğu Planı', 'yağ-kas analizi']],
+    [detailsPath, ['Oyun Terapisi', 'Yaşam Koçluğu', 'yağ-kas']],
     [appPath, ['Diyet ve Beslenme']],
     [workspacePath, ['Aktif portföy verileri', '>Portföy</span>', 'PLAN & SEANS GELİŞİMİ']],
     [moduleConfigPath, ['Talep ve Dönüşüm', 'Talep ve onay dönüşümleri.']],
