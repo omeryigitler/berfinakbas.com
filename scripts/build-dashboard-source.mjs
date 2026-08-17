@@ -57,16 +57,165 @@ async function checkoutPinnedSource(repository, commit, target, label) {
   }
 }
 
+async function applySpeechTherapyDomainCleanup() {
+  const myWorkPath = path.join(workspace, "src/components/MyWorkPanel.tsx");
+  let myWork = await readFile(myWorkPath, "utf-8");
+  myWork = replaceRequired(
+    myWork,
+    `const serviceOptions = [
+  { value: 'Diyet ve Beslenme', label: 'Diyet ve Beslenme' },
+  { value: 'Bireysel Yaşam Koçluğu', label: 'Bireysel Yaşam Koçluğu' },
+  { value: 'Bireysel Psikoterapi', label: 'Bireysel Psikoterapi' },
+  { value: 'Çocuk Gelişimi ve Pedagoji', label: 'Çocuk Gelişimi ve Pedagoji' },
+  { value: 'Kariyer ve Yönetici Mentorluğu', label: 'Kariyer ve Yönetici Mentorluğu' }
+];
+
+const serviceFilterOptions = [
+  { value: 'Tüm', label: 'Tüm Hizmetler' },
+  { value: 'Diyet ve Beslenme', label: 'Diyet ve Beslenme' },
+  { value: 'Bireysel Yaşam Koçluğu', label: 'Bireysel Yaşam Koçluğu' },
+  { value: 'Bireysel Psikoterapi', label: 'Bireysel Psikoterapi' },
+  { value: 'Çocuk Gelişimi ve Pedagoji', label: 'Çocuk Gelişimi ve Pedagoji' },
+  { value: 'Kariyer ve Yönetici Mentorluğu', label: 'Kariyer ve Yönetici Mentorluğu' }
+];`,
+    `const serviceOptions: { value: string; label: string }[] = [];
+
+const serviceFilterOptions = [
+  { value: 'Tüm', label: 'Tüm Hizmetler' }
+];`,
+    "Speech therapy service fallback cleanup",
+  );
+  myWork = replaceRequired(
+    myWork,
+    "'raporlar': 'Performans Raporları',",
+    "'raporlar': 'Raporlar',",
+    "Reports terminology cleanup",
+  );
+  myWork = replaceRequired(
+    myWork,
+    '<h2 className="text-lg font-black text-gray-900 tracking-tight leading-none">Danışan Portföyü</h2>',
+    '<h2 className="text-lg font-black text-gray-900 tracking-tight leading-none">Danışanlar</h2>',
+    "Client portfolio heading cleanup",
+  );
+  myWork = replaceRequired(
+    myWork,
+    '<span className="text-[10px] text-gray-400 font-bold mt-1.5">Sistemdeki danışanların akıllı listesi.</span>',
+    '<span className="text-[10px] text-gray-400 font-bold mt-1.5">Kayıtlı danışanları görüntüleyin ve yönetin.</span>',
+    "Client portfolio subtitle cleanup",
+  );
+  await writeFile(myWorkPath, myWork, "utf-8");
+
+  const detailsPath = path.join(workspace, "src/components/ClientDetailsHub.tsx");
+  let details = await readFile(detailsPath, "utf-8");
+  details = replaceRequired(
+    details,
+    "    name: client.ageGroup === 'Çocuk' ? 'Oyun Terapisi Seans Planı' : 'Detaylı Yaşam Koçluğu Planı',",
+    "    name: 'Dil ve Konuşma Terapisi Seans Planı',",
+    "Plan name domain cleanup",
+  );
+  details = replaceRequired(
+    details,
+    'placeholder="Örn: Haftalık düzenli takip, aylık yağ-kas analizi ve gelişim takibi içerir"',
+    'placeholder="Örn: Haftalık seans planı, dil ve konuşma hedefleri, ev çalışmaları ve gelişim değerlendirmelerini içerir"',
+    "Plan note placeholder domain cleanup",
+  );
+  await writeFile(detailsPath, details, "utf-8");
+
+  const appPath = path.join(workspace, "src/App.tsx");
+  let appSource = await readFile(appPath, "utf-8");
+  appSource = replaceRequired(
+    appSource,
+    "    service: originalClient?.service || (details.appointments.length > 0 ? details.appointments[0].service : 'Diyet ve Beslenme'),",
+    "    service: originalClient?.service || (details.appointments.length > 0 ? details.appointments[0].service : ''),",
+    "Client service fallback cleanup",
+  );
+  await writeFile(appPath, appSource, "utf-8");
+
+  const workspacePath = path.join(workspace, "src/components/WorkspacePanel.tsx");
+  let workspaceSource = await readFile(workspacePath, "utf-8");
+  workspaceSource = replaceRequired(
+    workspaceSource,
+    '<p className="text-[10px] text-gray-400 font-bold">Aktif portföy verileri</p>',
+    '<p className="text-[10px] text-gray-400 font-bold">Aktif danışan verileri</p>',
+    "Client portfolio card subtitle cleanup",
+  );
+  workspaceSource = replaceRequired(
+    workspaceSource,
+    '<span className="px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 text-[10px] font-black">Portföy</span>',
+    '<span className="px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 text-[10px] font-black">Danışanlar</span>',
+    "Client portfolio badge cleanup",
+  );
+  workspaceSource = replaceRequired(
+    workspaceSource,
+    '<h3 className="text-xs font-black text-gray-900 tracking-tight uppercase">PLAN & SEANS GELİŞİMİ</h3>',
+    '<h3 className="text-xs font-black text-gray-900 tracking-tight uppercase">PLAN VE SEANS KULLANIMI</h3>',
+    "Plan usage terminology cleanup",
+  );
+  await writeFile(workspacePath, workspaceSource, "utf-8");
+
+  const moduleConfigPath = path.join(workspace, "src/data/moduleConfig.ts");
+  let moduleConfig = await readFile(moduleConfigPath, "utf-8");
+  moduleConfig = replaceRequired(
+    moduleConfig,
+    "      { id: 'talepler', label: 'Talep ve Dönüşüm', description: 'Talep ve onay dönüşümleri.' },",
+    "      { id: 'talepler', label: 'Başvuru ve Randevu Sonuçları', description: 'Başvuru, onay ve randevu sonuçları.' },",
+    "Request conversion terminology cleanup",
+  );
+  await writeFile(moduleConfigPath, moduleConfig, "utf-8");
+
+  const forbiddenByFile = new Map([
+    [myWorkPath, ['Diyet ve Beslenme', 'Bireysel Yaşam Koçluğu', 'Bireysel Psikoterapi', 'Çocuk Gelişimi ve Pedagoji', 'Kariyer ve Yönetici Mentorluğu', 'Danışan Portföyü', 'Performans Raporları']],
+    [detailsPath, ['Oyun Terapisi Seans Planı', 'Detaylı Yaşam Koçluğu Planı', 'yağ-kas analizi']],
+    [appPath, ["'Diyet ve Beslenme'"]],
+    [workspacePath, ['Aktif portföy verileri', '>Portföy</span>', 'PLAN & SEANS GELİŞİMİ']],
+    [moduleConfigPath, ['Talep ve Dönüşüm', 'Talep ve onay dönüşümleri.']],
+  ]);
+
+  for (const [filePath, forbiddenTerms] of forbiddenByFile) {
+    const source = await readFile(filePath, "utf-8");
+    for (const term of forbiddenTerms) {
+      if (source.includes(term)) {
+        throw new Error(`Speech therapy domain cleanup failed for ${path.relative(workspace, filePath)}: ${term}`);
+      }
+    }
+  }
+}
+
+async function disableLegacyMockClientDatabase() {
+  const legacyClientDbPath = path.join(workspace, "src/data/clientDb.ts");
+  const references = [];
+
+  async function collectReferences(directory) {
+    const entries = await readdir(directory, { withFileTypes: true });
+    for (const entry of entries) {
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        await collectReferences(entryPath);
+      } else if (/\.(tsx?|jsx?)$/.test(entry.name) && entryPath !== legacyClientDbPath) {
+        const source = await readFile(entryPath, "utf-8");
+        if (source.includes("clientDb")) references.push(path.relative(workspace, entryPath));
+      }
+    }
+  }
+
+  await collectReferences(path.join(workspace, "src"));
+  if (references.length > 0) {
+    throw new Error(`Legacy clientDb is still referenced by: ${references.join(", ")}`);
+  }
+  await rm(legacyClientDbPath, { force: true });
+}
+
 await rm(publicTarget, { force: true, recursive: true });
 await checkoutPinnedSource(SOURCE_REPOSITORY, SOURCE_COMMIT, workspace, "Dashboard");
 await checkoutPinnedSource(KEDI_REPOSITORY, KEDI_COMMIT, kediWorkspace, "Kedi");
 await cp(overrides, path.join(workspace, "src"), { recursive: true, force: true });
 await run("node", ["scripts/patch-dashboard-runtime.mjs"]);
+await applySpeechTherapyDomainCleanup();
+await disableLegacyMockClientDatabase();
 
 // App.tsx, ClientDetailsHub.tsx and WorkspacePanel.tsx ship as full override files
-// that already carry their real-data wiring. Their mock representative/audit names
-// ("Ömer Yiğitler") — along with the same names baked into the cloned MyWorkPanel and
-// clientDb mock data — are rewritten to the site owner's identity by a single global
+// that already carry their real-data wiring. Mock representative/audit names
+// ("Ömer Yiğitler") are rewritten to the site owner's identity by a single global
 // sweep run just before the build (see renameIdentityAcrossSource below).
 
 // WorkspacePanel.tsx ships as a full file in dashboard-overrides/src/components,
@@ -172,7 +321,7 @@ await writeFile(
 );
 
 // Single identity sweep across the whole source tree so no mock "Ömer Yiğitler"
-// (override files, cloned MyWorkPanel, clientDb mock data) leaks into the built panel.
+// leaks into the built panel.
 async function renameIdentityAcrossSource(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   for (const entry of entries) {
