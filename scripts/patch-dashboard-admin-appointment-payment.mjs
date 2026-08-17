@@ -22,7 +22,7 @@ await patchFile("components/ClientDetailsHub.tsx", (initialSource) => {
   source = replaceRequired(
     source,
     `
-                          <span className={\`px-2.5 py-1 rounded-full text-[9px] font-black uppercase ${
+                          <span className={\`px-2.5 py-1 rounded-full text-[9px] font-black uppercase \${
                             appt.payment === 'Ödendi' ? 'bg-lime-50 text-lime-900 border border-lime-200' : 'bg-rose-50 text-rose-700'
                           }\`}>
                             {appt.payment}
