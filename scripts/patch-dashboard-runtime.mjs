@@ -21,7 +21,7 @@ const patches = [
   "./patch-dashboard-admin-payment-idempotency.mjs",
   "./patch-dashboard-admin-plan-status.mjs",
   "./patch-dashboard-admin-payment-currency.mjs",
-  "./patch-dashboard-admin-simple-workspaces.mjs",
+  "./patch-dashboard-admin-safe-workspaces.mjs",
   "./patch-dashboard-admin-overview-currency.mjs",
 ];
 
