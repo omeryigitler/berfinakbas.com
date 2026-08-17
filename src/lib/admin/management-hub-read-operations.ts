@@ -47,7 +47,6 @@ export async function readOperationModule(session: ActiveSession, module: string
             "NO_SHOW",
             "CANCELLED_BY_CLIENT",
             "CANCELLED_BY_PRACTITIONER",
-            "EXPIRED",
           ] as const);
     const appointments = await database.appointment.findMany({
       orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
