@@ -15,7 +15,9 @@ const details = await readFile(path.join(dashboardRoot, "components/ClientDetail
 const workspace = await readFile(path.join(dashboardRoot, "components/WorkspacePanel.tsx"), "utf-8");
 const moduleViews = await readFile(path.join(dashboardRoot, "components/workspaces/ModuleViews.tsx"), "utf-8");
 const financeView = await readFile(path.join(dashboardRoot, "components/workspaces/FinancePdfViews.tsx"), "utf-8");
+const controlView = await readFile(path.join(dashboardRoot, "components/workspaces/ControlPrintView.tsx"), "utf-8");
 const moduleConfig = await readFile(path.join(dashboardRoot, "data/moduleConfig.ts"), "utf-8");
+const sidebar = await readFile(path.join(dashboardRoot, "components/Sidebar.tsx"), "utf-8");
 const paymentRoute = await readFile(path.resolve("src/app/api/admin/payments/route.ts"), "utf-8");
 const paymentService = await readFile(path.resolve("src/lib/finance/simple-plan-payment-service.ts"), "utf-8");
 const overview = await readFile(path.resolve("src/app/api/admin/dashboard-overview-v3/route.ts"), "utf-8");
@@ -48,7 +50,15 @@ requireAbsent(details, "payment: 'Bekleniyor'", "new appointment payment placeho
 
 requireContains(workspace, "/api/admin/dashboard-overview-v3", "permission-aware dashboard overview");
 requireContains(moduleViews, "AppointmentCreateView", "new appointment view routing");
+requireContains(moduleViews, "ControlPrintView", "control print view routing");
 requireContains(moduleConfig, "id: 'yeni'", "new appointment navigation item");
+requireContains(moduleConfig, "id: 'gunluk'", "daily control navigation item");
+requireContains(moduleConfig, "id: 'tum-zamanlar'", "all-time control navigation item");
+requireContains(sidebar, "Kontrol ve Çıktılar", "control outputs sidebar label");
+requireContains(controlView, "Yazdır / PDF", "print and PDF action");
+requireContains(controlView, "Kontrol tarihi", "daily date control");
+requireContains(controlView, "Alınan Ödemeler", "payment control table");
+requireContains(controlView, "Randevular", "appointment control table");
 requireAbsent(moduleConfig, "id: 'mesaj-sablonlari'", "unimplemented message template navigation");
 requireAbsent(moduleConfig, "id: 'gonderim-gecmisi'", "unimplemented delivery history navigation");
 requireAbsent(moduleConfig, "id: 'iletisim-izinleri'", "fake consent-setting navigation");
@@ -73,8 +83,10 @@ requireContains(prerequisites, "guardianId: true", "child appointment guardian p
 requireContains(prerequisites, "Object.keys(accessWhere).length === 0", "practitioner scope boundary");
 requireAbsent(prerequisites, "export async function POST", "unused appointment prerequisite write endpoint");
 requireContains(operationRead, "isReversed: Boolean(item.reversedBy)", "finance reversal state");
-requireContains(operationRead, '"REJECTED"', "appointment rejected history");
-requireContains(operationRead, 'readSettings(["PDF_RESOURCE_LIBRARY"])', "PDF metadata-only read");
+requireContains(operationRead, "businessTimeZone", "control report business timezone");
+requireContains(operationRead, 'where: { type: "PAYMENT" }', "control report payment source");
+requireContains(operationRead, "getAppointmentAccessWhere", "control report appointment scope");
+requireAbsent(operationRead, "PDF_RESOURCE_LIBRARY", "legacy PDF resource library");
 requireAbsent(operationRead, "MESSAGE_TEMPLATES", "unimplemented message-template exposure");
 requireAbsent(operationRead, "COMMUNICATION_CONSENTS", "fake communication-consent exposure");
 requireAbsent(operationRead, "PDF_DELIVERY_SETTINGS", "unimplemented PDF delivery exposure");

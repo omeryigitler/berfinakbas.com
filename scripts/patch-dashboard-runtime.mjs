@@ -23,6 +23,7 @@ const patches = [
   "./patch-dashboard-admin-payment-currency.mjs",
   "./patch-dashboard-admin-safe-workspaces.mjs",
   "./patch-dashboard-admin-overview-currency.mjs",
+  "./patch-dashboard-control-output.mjs",
 ];
 
 for (const patch of patches) await import(patch);

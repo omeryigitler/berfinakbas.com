@@ -1,7 +1,8 @@
 import AppointmentCreateView from './AppointmentCreateView';
 import AppointmentsView from './AppointmentsView';
 import AvailabilityView from './AvailabilityView';
-import { FinanceView, PdfView } from './FinancePdfViews';
+import ControlPrintView from './ControlPrintView';
+import { FinanceView } from './FinancePdfViews';
 import { RequestsView, ServicesView } from './RequestsServicesViews';
 import { ArchiveView, ReportsView, SettingsView, UsersView } from './SystemViews';
 import { EmptyState, LoadingGrid, type ModuleViewsProps } from './shared';
@@ -20,7 +21,7 @@ export default function ModuleViews(props: ModuleViewsProps) {
     case 'odeme-planlar':
       return <FinanceView {...props} />;
     case 'pdf-kaynaklar':
-      return <PdfView {...props} />;
+      return <ControlPrintView {...props} />;
     case 'raporlar':
       return <ReportsView {...props} />;
     case 'kullanicilar-yetkiler':

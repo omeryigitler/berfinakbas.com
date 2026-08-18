@@ -65,10 +65,11 @@ const configs: Record<string, ModuleConfig> = {
     ] }],
   },
   'pdf-kaynaklar': {
-    title: 'PDF ve Kaynaklar',
-    subtitle: 'Yayınlanan ve taslak kaynakları yönetin.',
-    groups: [{ title: 'Kaynaklar', items: [
-      { id: 'pdfler', label: 'PDF ve Kaynaklar', description: 'Yayınlanan ve taslak kaynaklar.' },
+    title: 'Kontrol ve Çıktılar',
+    subtitle: 'Randevu ve ödemeleri günlük veya tüm zamanlar için kontrol edin, yazdırın ya da PDF olarak kaydedin.',
+    groups: [{ title: 'Kontrol', items: [
+      { id: 'gunluk', label: 'Günlük Kontrol', description: 'Seçilen günün randevu ve alınan ödemelerini birlikte kontrol edin.' },
+      { id: 'tum-zamanlar', label: 'Tüm Zamanlar', description: 'Tüm randevu ve ödeme geçmişini tek listede inceleyin ve çıktı alın.' },
     ] }],
   },
   'site-icerigi': {

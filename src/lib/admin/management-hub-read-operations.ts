@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAppointmentAccessWhere } from "@/lib/booking/appointment-api-access";
 import { getDatabase } from "@/lib/db";
+import { getServerEnvironment } from "@/lib/env";
+import { formatDateTimeInputInZone } from "@/lib/time-zone";
 import {
   appointmentSelect,
   can,
@@ -171,9 +173,85 @@ export async function readOperationModule(session: ActiveSession, module: string
   }
 
   if (module === "pdf-kaynaklar") {
-    if (!can(session, "services:read")) return forbidden();
-    const settings = await readSettings(["PDF_RESOURCE_LIBRARY"]);
-    return NextResponse.json({ data: { settings } });
+    const appointmentAccessWhere = getAppointmentAccessWhere({
+      mode: "read",
+      roles: session.user.roles,
+      userId: session.user.id,
+    });
+    const canReadAppointments = appointmentAccessWhere !== null;
+    const canReadFinance = can(session, "finance:read");
+    if (!canReadAppointments && !canReadFinance) return forbidden();
+
+    const environment = getServerEnvironment();
+    const timeZone = environment.BUSINESS_TIME_ZONE;
+    const [appointments, paymentEntries] = await Promise.all([
+      canReadAppointments
+        ? database.appointment.findMany({
+            orderBy: { startsAt: "asc" },
+            select: {
+              client: { select: { firstName: true, id: true, lastName: true } },
+              durationMinutesSnapshot: true,
+              id: true,
+              practitioner: { select: { displayName: true, id: true } },
+              serviceNameSnapshot: true,
+              startsAt: true,
+              status: true,
+            },
+            where: appointmentAccessWhere ?? undefined,
+          })
+        : [],
+      canReadFinance
+        ? database.financeLedgerEntry.findMany({
+            orderBy: { occurredAt: "asc" },
+            select: {
+              amountMinor: true,
+              client: { select: { firstName: true, id: true, lastName: true } },
+              currency: true,
+              id: true,
+              note: true,
+              occurredAt: true,
+              plan: { select: { id: true, name: true } },
+              reversedBy: { select: { id: true } },
+            },
+            where: { type: "PAYMENT" },
+          })
+        : [],
+    ]);
+
+    const businessToday = formatDateTimeInputInZone(new Date(), timeZone).date;
+
+    return NextResponse.json({
+      data: {
+        access: { appointments: canReadAppointments, finance: canReadFinance },
+        businessTimeZone: timeZone,
+        businessToday,
+        appointments: appointments.map((appointment) => {
+          const local = formatDateTimeInputInZone(appointment.startsAt, timeZone);
+          return {
+            ...appointment,
+            localDate: local.date,
+            localTime: local.time,
+            startsAt: appointment.startsAt.toISOString(),
+          };
+        }),
+        payments: paymentEntries
+          .filter((entry) => !entry.reversedBy)
+          .map((entry) => {
+            const local = formatDateTimeInputInZone(entry.occurredAt, timeZone);
+            return {
+              amountMinor: (entry.amountMinor < 0n ? -entry.amountMinor : entry.amountMinor).toString(),
+              client: entry.client,
+              currency: entry.currency,
+              id: entry.id,
+              localDate: local.date,
+              localTime: local.time,
+              note: entry.note,
+              occurredAt: entry.occurredAt.toISOString(),
+              plan: entry.plan,
+            };
+          }),
+      },
+    });
   }
 
   return null;
