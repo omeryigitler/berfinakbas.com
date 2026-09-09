@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/components/public-shell";
-import { ServiceSketchIllustration } from "@/components/service-sketch-illustration";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/hizmetler" },
@@ -13,25 +13,29 @@ export const metadata: Metadata = {
 const serviceAreas = [
   {
     accent: "peach",
-    illustration: "children" as const,
+    image: "/service-children.webp",
+    imageAlt: "Halka dizme oyuncağı, ABC blokları, oyuncak ayı ve görsel kartların siyah beyaz çizimi",
     label: "Çocuklar",
     text: "İletişim ve konuşma ihtiyaçlarının yaş, aile ve gündelik yaşam bağlamında ele alındığı görüşmeler.",
   },
   {
     accent: "sage",
-    illustration: "teen" as const,
+    image: "/service-teen.webp",
+    imageAlt: "Tablet ve kulaklığın siyah beyaz çizimi",
     label: "Ergenler",
     text: "Ergenin kendini ifade etmesine ve sürece katılmasına alan açan, iş birliği odaklı görüşmeler.",
   },
   {
     accent: "sand",
-    illustration: "adult" as const,
+    image: "/service-adult.webp",
+    imageAlt: "Defter, açık ajanda, kalem ve kahve fincanının siyah beyaz çizimi",
     label: "Yetişkinler",
     text: "Kişinin iletişim hedefleri ve yaşam koşulları dikkate alınarak planlanan görüşmeler.",
   },
   {
     accent: "rose",
-    illustration: "family" as const,
+    image: "/service-family.webp",
+    imageAlt: "Aile not defteri, görsel kartlar, bitki ve yapboz parçalarının siyah beyaz çizimi",
     label: "Aileler",
     text: "Ailelerin süreci anlamasına ve doğru sonraki adımı görmesine yardımcı olan bilgilendirme görüşmeleri.",
   },
@@ -65,8 +69,14 @@ export default function ServicesPage() {
               <p>{service.text}</p>
               <Link href="/randevu">Randevu sürecini gör →</Link>
             </div>
-            <div className="service-visual-image" aria-hidden="true">
-              <ServiceSketchIllustration type={service.illustration} />
+            <div className="service-visual-image">
+              <Image
+                src={service.image}
+                alt={service.imageAlt}
+                width={320}
+                height={240}
+                className="service-visual-art"
+              />
             </div>
           </article>
         ))}
@@ -205,6 +215,28 @@ export default function ServicesPage() {
           align-self: stretch;
         }
 
+        .service-page-grid-visual .service-visual-art {
+          width: min(100%, 300px);
+          height: auto;
+          object-fit: contain;
+          opacity: 0.96;
+          transform-origin: 50% 60%;
+          transition:
+            transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+            filter 280ms ease,
+            opacity 280ms ease;
+        }
+
+        .service-page-grid-visual .service-visual-card:hover .service-visual-art {
+          filter: contrast(1.08);
+          opacity: 1;
+          transform: translateY(-8px) scale(1.045) rotate(-1deg);
+        }
+
+        .service-page-grid-visual .service-visual-card:nth-child(even):hover .service-visual-art {
+          transform: translateY(-8px) scale(1.045) rotate(1deg);
+        }
+
         @media (max-width: 980px) {
           .service-visual-hero {
             grid-template-columns: 1fr;
@@ -221,6 +253,10 @@ export default function ServicesPage() {
           .service-page-grid-visual .service-visual-card {
             grid-template-columns: minmax(0, 0.9fr) minmax(170px, 1.1fr);
             min-height: 300px;
+          }
+
+          .service-page-grid-visual .service-visual-art {
+            width: min(100%, 270px);
           }
         }
 
@@ -240,6 +276,10 @@ export default function ServicesPage() {
             grid-row: 1;
           }
 
+          .service-page-grid-visual .service-visual-art {
+            width: min(84vw, 300px);
+          }
+
           .service-page-grid-visual .service-visual-copy {
             grid-row: 2;
           }
@@ -247,12 +287,15 @@ export default function ServicesPage() {
 
         @media (prefers-reduced-motion: reduce) {
           .service-page-grid-visual .service-visual-card,
-          .service-page-grid-visual .service-visual-copy a {
+          .service-page-grid-visual .service-visual-copy a,
+          .service-page-grid-visual .service-visual-art {
             transition: none;
           }
 
           .service-page-grid-visual .service-visual-card:hover,
-          .service-page-grid-visual .service-visual-card:nth-child(even):hover {
+          .service-page-grid-visual .service-visual-card:nth-child(even):hover,
+          .service-page-grid-visual .service-visual-card:hover .service-visual-art,
+          .service-page-grid-visual .service-visual-card:nth-child(even):hover .service-visual-art {
             transform: none;
           }
         }
