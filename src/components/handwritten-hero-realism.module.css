@@ -1,0 +1,162 @@
+.notebook {
+  border-color: rgb(48 46 43 / 72%);
+  background-color: #dedbd5;
+  background-image:
+    radial-gradient(circle at 18% 12%, rgb(255 255 255 / 58%), transparent 28%),
+    linear-gradient(112deg, rgb(255 255 255 / 22%), transparent 38%, rgb(25 24 22 / 5%) 86%),
+    repeating-linear-gradient(0deg, rgb(55 53 49 / 2.6%) 0 1px, transparent 1px 4px);
+  box-shadow:
+    0 2px 0 rgb(255 255 255 / 72%) inset,
+    -1px 0 0 rgb(255 255 255 / 38%) inset,
+    8px 10px 0 rgb(36 34 31 / 8%),
+    0 22px 38px rgb(26 24 22 / 18%);
+  color: #2c2a27;
+}
+
+.notebook::before {
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 34%), transparent 17%, transparent 79%, rgb(24 23 21 / 8%)),
+    radial-gradient(circle at 76% 18%, rgb(255 255 255 / 20%), transparent 20%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 25px,
+      rgb(44 42 39 / 3.4%) 26px,
+      transparent 27px
+    );
+  box-shadow:
+    inset 10px 0 20px rgb(33 31 28 / 4%),
+    inset -9px 0 16px rgb(33 31 28 / 5%);
+}
+
+.notebook::after {
+  position: absolute;
+  z-index: -1;
+  top: 8px;
+  right: -7px;
+  bottom: -7px;
+  left: 7px;
+  border: 1px solid rgb(54 51 47 / 26%);
+  border-radius: 5px 8px 8px 5px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      #f6f4ef 0 2px,
+      #e7e4de 2px 3px,
+      #f8f6f2 3px 6px
+    );
+  box-shadow: 4px 5px 0 rgb(39 36 33 / 10%);
+  content: "";
+}
+
+.peach {
+  background-color: #ddd8d1;
+}
+
+.sage {
+  background-color: #d0d0ca;
+}
+
+.cream {
+  background-color: #eeece6;
+}
+
+.blue {
+  background-color: #d5d6d3;
+}
+
+.charcoal {
+  border-color: rgb(255 255 255 / 30%);
+  background-color: #454542;
+  background-image:
+    radial-gradient(circle at 18% 12%, rgb(255 255 255 / 9%), transparent 28%),
+    linear-gradient(112deg, rgb(255 255 255 / 5%), transparent 38%, rgb(0 0 0 / 12%) 86%),
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 2.2%) 0 1px, transparent 1px 4px);
+  box-shadow:
+    0 2px 0 rgb(255 255 255 / 10%) inset,
+    8px 10px 0 rgb(26 25 23 / 10%),
+    0 22px 38px rgb(20 19 18 / 25%);
+  color: #f5f3ee;
+}
+
+.charcoal::after {
+  border-color: rgb(38 36 33 / 28%);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      #ece9e2 0 2px,
+      #d7d4cd 2px 3px,
+      #f3f0e9 3px 6px
+    );
+}
+
+.spiral {
+  left: -12px;
+  width: 27px;
+  filter: drop-shadow(1px 2px 1px rgb(20 19 18 / 20%));
+  background:
+    radial-gradient(circle at 14px 12px, #292725 0 3px, #6e6963 3.2px 4px, transparent 4.2px)
+      0 0 / 27px 25px repeat-y;
+}
+
+.spiral::after {
+  width: 27px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 6px,
+      #858078 6px 7px,
+      #2d2a27 7px 9px,
+      transparent 9px 15px,
+      #858078 15px 16px,
+      #2d2a27 16px 18px,
+      transparent 18px 25px
+    );
+  clip-path: polygon(0 0, 72% 0, 72% 100%, 0 100%);
+  opacity: 0.92;
+}
+
+.charcoal .spiral {
+  background:
+    radial-gradient(circle at 14px 12px, #ddd9d1 0 3px, #8f8a82 3.2px 4px, transparent 4.2px)
+      0 0 / 27px 25px repeat-y;
+}
+
+.charcoal .spiral::after {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 6px,
+      #d8d4cc 6px 7px,
+      #7d7871 7px 9px,
+      transparent 9px 15px,
+      #d8d4cc 15px 16px,
+      #7d7871 16px 18px,
+      transparent 18px 25px
+    );
+}
+
+.notebook svg {
+  opacity: 0.9;
+  filter: drop-shadow(0 1px 0 rgb(255 255 255 / 28%));
+}
+
+.notebook > strong {
+  text-shadow: 0 1px 0 rgb(255 255 255 / 28%);
+}
+
+.notebook:hover,
+.notebook:focus-visible {
+  box-shadow:
+    0 2px 0 rgb(255 255 255 / 74%) inset,
+    8px 10px 0 rgb(36 34 31 / 8%),
+    0 30px 50px rgb(25 23 21 / 25%);
+}
+
+@media (max-width: 767px) {
+  .notebook::after {
+    right: -5px;
+    bottom: -5px;
+  }
+}

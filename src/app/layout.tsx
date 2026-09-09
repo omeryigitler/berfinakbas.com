@@ -7,6 +7,7 @@ import "./globals.css";
 import "./ui-polish.css";
 import "./public-sketch.css";
 import "./public-typography-refinement.css";
+import "./public-footer-sketch.css";
 
 export const metadata: Metadata = {
   metadataBase: publicSiteUrl,

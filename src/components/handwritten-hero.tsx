@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "@/components/public-shell";
 
 import styles from "./handwritten-hero.module.css";
+import realism from "./handwritten-hero-realism.module.css";
 
 type ServiceIcon = "fluency" | "plan" | "speech" | "voice" | "adult";
 
@@ -241,15 +242,15 @@ export default function HandwrittenHero() {
                 <button
                   aria-label={`${service.title} defterini öne getir`}
                   aria-pressed={active}
-                  className={`${styles.notebook} ${styles[service.tone]} ${
-                    active ? styles.active : ""
-                  }`}
+                  className={`${styles.notebook} ${styles[service.tone]} ${realism.notebook} ${
+                    realism[service.tone]
+                  } ${active ? styles.active : ""}`}
                   data-offset={offset}
                   key={service.title}
                   onClick={() => setActiveIndex(index)}
                   type="button"
                 >
-                  <span className={styles.spiral} aria-hidden="true" />
+                  <span className={`${styles.spiral} ${realism.spiral}`} aria-hidden="true" />
                   <span className={styles.notebookTopline}>
                     <span>{service.annotation}</span>
                     <i aria-hidden="true">↗</i>

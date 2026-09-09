@@ -1,0 +1,52 @@
+.art {
+  width: 112%;
+  max-width: none;
+  height: 100%;
+  overflow: visible;
+  color: #383532;
+  transform: translateY(0) scale(1) rotate(0deg);
+  transform-origin: 50% 70%;
+  filter: drop-shadow(0 14px 12px rgb(39 36 33 / 10%));
+  transition:
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 320ms ease;
+  will-change: transform;
+}
+
+.art :global(.service-sketch-lines) {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.15;
+}
+
+.art :global(.service-sketch-fill) {
+  fill: rgb(55 52 49 / 5.5%);
+  stroke: none;
+}
+
+:global(.service-page-grid-visual .service-visual-card:hover) .art {
+  transform: translateY(-10px) scale(1.055) rotate(-1.2deg);
+  filter: drop-shadow(0 22px 17px rgb(39 36 33 / 16%));
+}
+
+:global(.service-page-grid-visual .service-visual-card:nth-child(even):hover) .art {
+  transform: translateY(-10px) scale(1.055) rotate(1.2deg);
+}
+
+@media (max-width: 700px) {
+  .art {
+    width: 100%;
+    max-height: 235px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art,
+  :global(.service-page-grid-visual .service-visual-card:hover) .art,
+  :global(.service-page-grid-visual .service-visual-card:nth-child(even):hover) .art {
+    transform: none;
+    transition: none;
+  }
+}

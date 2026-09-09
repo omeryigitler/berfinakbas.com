@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/components/public-shell";
+import { ServiceSketchIllustration } from "@/components/service-sketch-illustration";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/hizmetler" },
@@ -13,25 +13,25 @@ export const metadata: Metadata = {
 const serviceAreas = [
   {
     accent: "peach",
-    image: "/audience-cocuk.png",
+    illustration: "children" as const,
     label: "Çocuklar",
     text: "İletişim ve konuşma ihtiyaçlarının yaş, aile ve gündelik yaşam bağlamında ele alındığı görüşmeler.",
   },
   {
     accent: "sage",
-    image: "/audience-ergen.png",
+    illustration: "teen" as const,
     label: "Ergenler",
     text: "Ergenin kendini ifade etmesine ve sürece katılmasına alan açan, iş birliği odaklı görüşmeler.",
   },
   {
     accent: "sand",
-    image: "/audience-yetiskin.png",
+    illustration: "adult" as const,
     label: "Yetişkinler",
     text: "Kişinin iletişim hedefleri ve yaşam koşulları dikkate alınarak planlanan görüşmeler.",
   },
   {
     accent: "rose",
-    image: "/audience-aile.png",
+    illustration: "family" as const,
     label: "Aileler",
     text: "Ailelerin süreci anlamasına ve doğru sonraki adımı görmesine yardımcı olan bilgilendirme görüşmeleri.",
   },
@@ -66,13 +66,7 @@ export default function ServicesPage() {
               <Link href="/randevu">Randevu sürecini gör →</Link>
             </div>
             <div className="service-visual-image" aria-hidden="true">
-              <Image
-                src={service.image}
-                alt=""
-                width={520}
-                height={430}
-                sizes="(max-width: 700px) 88vw, (max-width: 1100px) 42vw, 300px"
-              />
+              <ServiceSketchIllustration type={service.illustration} />
             </div>
           </article>
         ))}
@@ -101,70 +95,78 @@ export default function ServicesPage() {
         .service-visual-hero h1 {
           max-width: 670px;
           margin: 0;
-          font-family: var(--serif);
           font-size: clamp(3.2rem, 5.6vw, 5.6rem);
-          font-weight: 500;
-          letter-spacing: -0.05em;
           line-height: 0.96;
         }
 
         .service-visual-hero > p {
           max-width: 500px;
           margin: 0 0 10px;
-          color: var(--muted);
+          color: var(--sketch-muted);
           line-height: 1.75;
         }
 
         .service-page-grid-visual {
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 16px;
+          gap: 18px;
         }
 
         .service-page-grid-visual .service-visual-card {
           display: grid;
-          grid-template-columns: minmax(0, 0.9fr) minmax(220px, 1.1fr);
+          grid-template-columns: minmax(0, 0.92fr) minmax(220px, 1.08fr);
           align-items: center;
           gap: 18px;
           min-height: 320px;
           overflow: hidden;
           padding: 34px 18px 34px 34px;
-          background: rgb(255 255 255 / 62%);
+          border-color: rgb(63 60 56 / 54%);
+          background-color: rgb(255 255 255 / 70%);
+          background-image:
+            linear-gradient(rgb(63 60 56 / 3.4%) 1px, transparent 1px),
+            linear-gradient(90deg, rgb(63 60 56 / 3.4%) 1px, transparent 1px);
+          background-size: 25px 25px;
+          box-shadow: 6px 7px 0 rgb(63 60 56 / 10%);
+          transition:
+            transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 320ms ease,
+            border-color 320ms ease,
+            background-color 320ms ease;
         }
 
         .service-page-grid-visual .service-visual-card:hover {
-          transform: none;
-          border-color: var(--line);
-          box-shadow: 0 20px 46px rgb(102 68 47 / 7%);
+          transform: translateY(-7px) rotate(-0.3deg);
+          border-color: rgb(63 60 56 / 70%);
+          background-color: rgb(255 255 255 / 82%);
+          box-shadow:
+            8px 10px 0 rgb(63 60 56 / 11%),
+            0 28px 50px rgb(40 37 34 / 10%);
+        }
+
+        .service-page-grid-visual .service-visual-card:nth-child(even):hover {
+          transform: translateY(-7px) rotate(0.3deg);
         }
 
         .service-page-grid-visual .service-visual-card:hover > span {
-          color: rgb(217 111 77 / 42%);
-          font-size: 1.3rem;
-          text-shadow: none;
+          color: var(--sketch-teal);
+          font-size: 1rem;
+          text-shadow: 0 7px 16px rgb(8 164 156 / 18%);
+          transform: scale(1.08) rotate(-4deg);
         }
 
         .service-page-grid-visual .service-visual-card-peach {
-          background:
-            radial-gradient(circle at 84% 56%, rgb(247 223 208 / 92%), transparent 48%),
-            rgb(255 255 255 / 68%);
+          background-color: #f5f3ef;
         }
 
         .service-page-grid-visual .service-visual-card-sage {
-          background:
-            radial-gradient(circle at 84% 56%, rgb(226 232 220 / 95%), transparent 48%),
-            rgb(255 255 255 / 68%);
+          background-color: #efefeb;
         }
 
         .service-page-grid-visual .service-visual-card-sand {
-          background:
-            radial-gradient(circle at 84% 56%, rgb(239 226 200 / 95%), transparent 48%),
-            rgb(255 255 255 / 68%);
+          background-color: #f2f0eb;
         }
 
         .service-page-grid-visual .service-visual-card-rose {
-          background:
-            radial-gradient(circle at 84% 56%, rgb(242 216 211 / 94%), transparent 48%),
-            rgb(255 255 255 / 68%);
+          background-color: #f4f2ef;
         }
 
         .service-page-grid-visual .service-visual-copy {
@@ -185,6 +187,12 @@ export default function ServicesPage() {
 
         .service-page-grid-visual .service-visual-copy a {
           margin-top: 30px;
+          transition: transform 220ms ease, color 220ms ease;
+        }
+
+        .service-page-grid-visual .service-visual-card:hover .service-visual-copy a {
+          color: var(--sketch-teal);
+          transform: translateX(3px);
         }
 
         .service-page-grid-visual .service-visual-image {
@@ -195,24 +203,6 @@ export default function ServicesPage() {
           min-width: 0;
           place-items: center;
           align-self: stretch;
-        }
-
-        .service-page-grid-visual .service-visual-image img {
-          width: 112%;
-          max-width: none;
-          height: 100%;
-          object-fit: contain;
-          object-position: center;
-          transform: translateY(0) scale(1);
-          transition:
-            transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-            filter 320ms ease;
-          will-change: transform;
-        }
-
-        .service-page-grid-visual .service-visual-card:hover .service-visual-image img {
-          transform: translateY(-7px) scale(1.055);
-          filter: saturate(1.04) contrast(1.02);
         }
 
         @media (max-width: 980px) {
@@ -250,23 +240,20 @@ export default function ServicesPage() {
             grid-row: 1;
           }
 
-          .service-page-grid-visual .service-visual-image img {
-            width: 100%;
-          }
-
           .service-page-grid-visual .service-visual-copy {
             grid-row: 2;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .service-page-grid-visual .service-visual-image img {
+          .service-page-grid-visual .service-visual-card,
+          .service-page-grid-visual .service-visual-copy a {
             transition: none;
           }
 
-          .service-page-grid-visual .service-visual-card:hover .service-visual-image img {
+          .service-page-grid-visual .service-visual-card:hover,
+          .service-page-grid-visual .service-visual-card:nth-child(even):hover {
             transform: none;
-            filter: none;
           }
         }
       `}</style>
