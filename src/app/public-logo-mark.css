@@ -1,0 +1,60 @@
+/* Public BA logo override: crisp vector trace of the approved hand-drawn mark. */
+.brand-mark > .brand-symbol:first-child {
+  position: relative;
+  display: block;
+  width: 88px;
+  height: 58px;
+  flex: 0 0 88px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  filter: none !important;
+}
+
+.brand-mark > .brand-symbol:first-child img {
+  display: none !important;
+}
+
+.brand-mark > .brand-symbol:first-child::before {
+  position: absolute;
+  inset: 0;
+  background: url("/berfin-ba-logo.svg") center / contain no-repeat;
+  content: "";
+}
+
+.inner-page .site-header .brand-mark > .brand-symbol:first-child,
+.public-sketch .brand-mark > .brand-symbol:first-child {
+  width: 88px;
+  height: 58px;
+  flex-basis: 88px;
+  filter: none !important;
+}
+
+.site-footer-sketch .brand-mark > .brand-symbol:first-child {
+  width: 82px;
+  height: 50px;
+  flex-basis: 82px;
+  filter: none !important;
+}
+
+.site-footer-sketch .brand-mark > .brand-symbol:first-child::before {
+  filter: brightness(0) invert(1);
+  opacity: 0.96;
+}
+
+@media (max-width: 767px) {
+  .brand-mark > .brand-symbol:first-child,
+  .inner-page .site-header .brand-mark > .brand-symbol:first-child,
+  .public-sketch .brand-mark > .brand-symbol:first-child {
+    width: 70px;
+    height: 46px;
+    flex-basis: 70px;
+  }
+
+  .site-footer-sketch .brand-mark > .brand-symbol:first-child {
+    width: 74px;
+    height: 46px;
+    flex-basis: 74px;
+  }
+}

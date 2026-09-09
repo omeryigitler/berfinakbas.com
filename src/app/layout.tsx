@@ -8,6 +8,7 @@ import "./ui-polish.css";
 import "./public-sketch.css";
 import "./public-typography-refinement.css";
 import "./public-footer-sketch.css";
+import "./public-logo-mark.css";
 
 export const metadata: Metadata = {
   metadataBase: publicSiteUrl,
