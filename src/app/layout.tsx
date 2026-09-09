@@ -6,6 +6,7 @@ import { publicSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 import "./ui-polish.css";
 import "./public-sketch.css";
+import "./public-typography-refinement.css";
 
 export const metadata: Metadata = {
   metadataBase: publicSiteUrl,

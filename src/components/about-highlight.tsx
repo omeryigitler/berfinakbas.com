@@ -80,19 +80,19 @@ export default function AboutHighlight({
           />
         </div>
 
-        <div className={styles.nameCard}>
+        <div className={`${styles.nameCard} sketch-about-name-card`}>
           <span>Tanışın</span>
           <strong>Berfin Akbaş</strong>
           <small>Dil ve Konuşma Terapisti</small>
         </div>
 
-        <div className={styles.noteCard} aria-hidden="true">
+        <div className={`${styles.noteCard} sketch-about-note-card`} aria-hidden="true">
           <span>Yaklaşım</span>
           <strong>Sakin, anlaşılır ve güven veren süreç</strong>
         </div>
       </div>
 
-      <div className={styles.copyColumn}>
+      <div className={`${styles.copyColumn} sketch-about-copy`}>
         <p className="section-kicker">Hakkımda</p>
         {isPage ? <h1 id={resolvedHeadingId}>{title}</h1> : <h2 id={resolvedHeadingId}>{title}</h2>}
         <p className={styles.leadText}>{lead}</p>
@@ -100,7 +100,7 @@ export default function AboutHighlight({
           <p key={paragraph}>{paragraph}</p>
         ))}
 
-        <div className={styles.valueGrid} aria-label="Çalışma yaklaşımı">
+        <div className={`${styles.valueGrid} sketch-about-values`} aria-label="Çalışma yaklaşımı">
           {values.map((item) => (
             <article key={item.label}>
               <span>{item.label}</span>

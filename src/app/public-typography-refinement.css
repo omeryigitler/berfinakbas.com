@@ -1,0 +1,177 @@
+/*
+ * Public typography refinement for the handwritten clinical theme.
+ * Handwriting is reserved for headings, labels and short UI cues; dense copy,
+ * form values and user-entered data stay in the readable sans family.
+ */
+.inner-page,
+.public-sketch {
+  --sketch-sans: var(
+    --sans,
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
+}
+
+/* The old theme gave lead copy a serif face. Keep explanatory text readable
+   and let the handwritten display type do the expressive work. */
+.inner-page .inner-lead,
+.inner-page .service-visual-hero > p,
+.inner-page .booking-flow-intro > p,
+.inner-page .booking-flow--disabled > div > p,
+.inner-page .process-privacy-panel > p,
+.inner-page .legal-information-note > p {
+  font-family: var(--sketch-sans);
+}
+
+/* Eyebrows and small card labels use the same visual language as
+   “küçük notlar / net cevaplar”: short, handwritten and lightly tilted. */
+.inner-page .content-card-grid > article > span:first-child,
+.inner-page .service-page-grid-visual .service-visual-card > span {
+  color: var(--sketch-teal);
+  font-family: var(--sketch-hand);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  transform: rotate(-1deg);
+}
+
+/* About portrait cards: remove the remaining legacy serif / tracked-uppercase
+   treatment while preserving sans text for descriptive copy. */
+.inner-page .sketch-about-name-card > span,
+.inner-page .sketch-about-note-card > span {
+  color: var(--sketch-teal);
+  font-family: var(--sketch-hand);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-transform: none;
+  transform: rotate(-1.5deg);
+}
+
+.inner-page .sketch-about-name-card > strong {
+  color: var(--sketch-ink);
+  font-family: var(--sketch-hand);
+  font-size: 1.72rem;
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1.15;
+}
+
+.inner-page .sketch-about-name-card > small,
+.inner-page .sketch-about-note-card > strong {
+  font-family: var(--sketch-sans);
+}
+
+.inner-page .sketch-about-copy > h1,
+.inner-page .sketch-about-copy > h2 {
+  color: var(--sketch-ink);
+  font-family: var(--sketch-hand);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 1.02;
+  text-shadow: 0 4px 0 rgb(63 60 56 / 7%);
+}
+
+.inner-page .sketch-about-copy > p:not(.section-kicker),
+.inner-page .sketch-about-values small {
+  font-family: var(--sketch-sans);
+}
+
+.inner-page .sketch-about-values article > span,
+.inner-page .sketch-about-values article > strong {
+  font-family: var(--sketch-hand);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+.inner-page .sketch-about-values article > span {
+  color: var(--sketch-teal);
+}
+
+/* Booking form: labels get the handwritten note treatment, while controls,
+   entered values, selected options, dates and summary data remain plain sans. */
+.inner-page .booking-field > span,
+.inner-page .booking-subject-type legend,
+.inner-page .booking-guardian-fields legend,
+.inner-page .booking-consent h3,
+.inner-page .booking-calendar-head strong {
+  color: var(--sketch-ink);
+  font-family: var(--sketch-hand);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.inner-page .booking-field > span {
+  font-size: 0.78rem;
+  transform: rotate(-0.45deg);
+  transform-origin: left center;
+}
+
+.inner-page .booking-subject-type legend,
+.inner-page .booking-guardian-fields legend {
+  font-size: 1.02rem;
+}
+
+.inner-page .booking-flow-aside dt,
+.inner-page .booking-reference > span {
+  color: var(--sketch-teal);
+  font-family: var(--sketch-hand);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-transform: none;
+  transform: rotate(-0.7deg);
+  transform-origin: left center;
+}
+
+.inner-page .booking-field input,
+.inner-page .booking-field select,
+.inner-page .booking-field button,
+.inner-page .booking-control-trigger,
+.inner-page .booking-option,
+.inner-page .booking-day,
+.inner-page .booking-slot,
+.inner-page .booking-subject-type label,
+.inner-page .booking-guardian-fields > p,
+.inner-page .booking-consent-content,
+.inner-page .booking-consent > label,
+.inner-page .booking-flow-aside dd,
+.inner-page .booking-flow-aside > p:last-child,
+.inner-page .booking-hold-summary,
+.inner-page .booking-service-detail,
+.inner-page .booking-reference > strong {
+  font-family: var(--sketch-sans);
+}
+
+.inner-page .booking-flow-aside dd {
+  color: var(--sketch-ink);
+  font-size: 0.94rem;
+  font-weight: 560;
+}
+
+/* Keep the form hierarchy calm: heading is handwritten, instruction text is
+   deliberately plain. */
+.inner-page .booking-step-heading > div > p,
+.inner-page .booking-preview-steps small,
+.inner-page .booking-privacy-note,
+.inner-page .booking-live-message {
+  font-family: var(--sketch-sans);
+}
+
+@media (max-width: 700px) {
+  .inner-page .sketch-about-name-card > strong {
+    font-size: 1.48rem;
+  }
+
+  .inner-page .booking-field > span,
+  .inner-page .booking-flow-aside dt,
+  .inner-page .booking-reference > span {
+    transform: none;
+  }
+}
