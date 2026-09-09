@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BrandMark } from "@/components/public-shell";
 
@@ -18,31 +18,31 @@ type ServiceCard = {
 
 const serviceCards: ServiceCard[] = [
   {
-    annotation: "erken fark etme",
+    annotation: "Erken Müdahale",
     icon: "speech",
     title: "Gecikmiş Konuşma",
     tone: "peach",
   },
   {
-    annotation: "akıcılık gelişimi",
+    annotation: "Akıcılık Gelişimi",
     icon: "fluency",
     title: "Akıcı Konuşma",
     tone: "sage",
   },
   {
-    annotation: "değerlendir · planla",
+    annotation: "Check-list",
     icon: "plan",
-    title: "Konuşma Sesi",
+    title: "Klinik Plan",
     tone: "cream",
   },
   {
-    annotation: "iletişim hedefleri",
+    annotation: "İletişim Stratejileri",
     icon: "adult",
     title: "Yetişkin Terapisi",
     tone: "blue",
   },
   {
-    annotation: "ses sağlığı",
+    annotation: "Ses Sağlığı",
     icon: "voice",
     title: "Ses Terapisi",
     tone: "charcoal",
@@ -128,8 +128,64 @@ function ChevronRight() {
   );
 }
 
+function clamp01(value: number) {
+  return Math.min(1, Math.max(0, value));
+}
+
 export default function HandwrittenHero() {
   const [activeIndex, setActiveIndex] = useState(2);
+  const [isHovered, setIsHovered] = useState(false);
+  const trackRef = useRef<HTMLElement | null>(null);
+  const heroRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    const hero = heroRef.current;
+
+    if (!track || !hero) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let frame: number | null = null;
+
+    const update = () => {
+      frame = null;
+
+      if (reducedMotion.matches) {
+        hero.style.setProperty("--word-one", "1");
+        hero.style.setProperty("--word-two", "1");
+        hero.style.setProperty("--cards-reveal", "1");
+        return;
+      }
+
+      const rect = track.getBoundingClientRect();
+      const scrollDistance = Math.max(track.offsetHeight - window.innerHeight, 1);
+      const progress = clamp01(-rect.top / scrollDistance);
+      const wordOne = clamp01(progress / 0.24);
+      const wordTwo = clamp01((progress - 0.08) / 0.26);
+      const cards = clamp01((progress - 0.18) / 0.36);
+
+      hero.style.setProperty("--word-one", wordOne.toFixed(4));
+      hero.style.setProperty("--word-two", wordTwo.toFixed(4));
+      hero.style.setProperty("--cards-reveal", cards.toFixed(4));
+    };
+
+    const scheduleUpdate = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    reducedMotion.addEventListener("change", scheduleUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      reducedMotion.removeEventListener("change", scheduleUpdate);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   const previous = () => {
     setActiveIndex((current) => (current - 1 + serviceCards.length) % serviceCards.length);
@@ -140,73 +196,81 @@ export default function HandwrittenHero() {
   };
 
   return (
-    <section className={styles.hero} aria-labelledby="home-title">
-      <header className={styles.header}>
-        <Link className={styles.brand} href="/" aria-label="Berfin Akbaş ana sayfa">
-          <BrandMark />
-        </Link>
-
-        <nav className={styles.nav} aria-label="Ana menü">
-          <Link href="/hizmetler">Hizmetler</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/hakkimda">Hakkımda</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/surec">Terapi yaklaşımı</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/iletisim">İletişim</Link>
-        </nav>
-
-        <div className={styles.headerActions}>
-          <span className={styles.onlineNote}>online &amp; yüz yüze</span>
-          <Link className={styles.bookingPill} href="/randevu">
-            <span aria-hidden="true">◌</span>
-            Randevu talebi
+    <section className={styles.heroTrack} ref={trackRef} aria-labelledby="home-title">
+      <div className={styles.hero} ref={heroRef}>
+        <header className={styles.header}>
+          <Link className={styles.brand} href="/" aria-label="Berfin Akbaş ana sayfa">
+            <BrandMark />
           </Link>
+
+          <nav className={styles.nav} aria-label="Ana menü">
+            <Link href="/hizmetler">Hizmetler</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/hakkimda">Hakkımda</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/surec">Süreç</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/iletisim">İletişim</Link>
+          </nav>
+
+          <div className={styles.headerActions}>
+            <span className={styles.onlineNote}>online &amp; yüz yüze</span>
+            <Link className={styles.bookingPill} href="/randevu">
+              Randevu Al
+            </Link>
+          </div>
+        </header>
+
+        <div className={styles.heroCenter}>
+          <h1 className={styles.backgroundWords} id="home-title">
+            <span>Dil ve Konuşma Keşfi:</span>
+            <span>Kişiselleştirilmiş Notlarla</span>
+          </h1>
+
+          <div
+            className={`${styles.carousel} ${isHovered ? styles.carouselHovered : ""}`}
+            aria-label="Destek alanları"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {serviceCards.map((service, index) => {
+              const offset = wrappedOffset(index, activeIndex);
+              const active = index === activeIndex;
+
+              return (
+                <button
+                  aria-label={`${service.title} defterini öne getir`}
+                  aria-pressed={active}
+                  className={`${styles.notebook} ${styles[service.tone]} ${
+                    active ? styles.active : ""
+                  }`}
+                  data-offset={offset}
+                  key={service.title}
+                  onClick={() => setActiveIndex(index)}
+                  type="button"
+                >
+                  <span className={styles.spiral} aria-hidden="true" />
+                  <span className={styles.notebookTopline}>
+                    <span>{service.annotation}</span>
+                    <i aria-hidden="true">↗</i>
+                  </span>
+                  <DoodleIcon type={service.icon} />
+                  <strong>{service.title}</strong>
+                  <span className={styles.coverNote}>kişiye göre planlanan süreç</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </header>
 
-      <div className={styles.heroCenter}>
-        <h1 className={styles.backgroundWords} id="home-title">
-          <span>Dil ve Konuşma Keşfi:</span>
-          <span>Kişiselleştirilmiş Notlarla</span>
-        </h1>
-
-        <div className={styles.carousel} aria-label="Destek alanları">
-          {serviceCards.map((service, index) => {
-            const offset = wrappedOffset(index, activeIndex);
-            const active = index === activeIndex;
-
-            return (
-              <button
-                aria-label={`${service.title} defterini öne getir`}
-                aria-pressed={active}
-                className={`${styles.notebook} ${styles[service.tone]} ${active ? styles.active : ""}`}
-                data-offset={offset}
-                key={service.title}
-                onClick={() => setActiveIndex(index)}
-                type="button"
-              >
-                <span className={styles.spiral} aria-hidden="true" />
-                <span className={styles.notebookTopline}>
-                  <span>{service.annotation}</span>
-                  <i aria-hidden="true">↗</i>
-                </span>
-                <DoodleIcon type={service.icon} />
-                <strong>{service.title}</strong>
-                <span className={styles.coverNote}>bilgilendirme · değerlendirme</span>
-              </button>
-            );
-          })}
+        <div className={styles.mobileControls} aria-label="Defter seçimi">
+          <button aria-label="Önceki defter" onClick={previous} type="button">
+            <ChevronLeft />
+          </button>
+          <button aria-label="Sonraki defter" onClick={next} type="button">
+            <ChevronRight />
+          </button>
         </div>
-      </div>
-
-      <div className={styles.mobileControls} aria-label="Defter seçimi">
-        <button aria-label="Önceki defter" onClick={previous} type="button">
-          <ChevronLeft />
-        </button>
-        <button aria-label="Sonraki defter" onClick={next} type="button">
-          <ChevronRight />
-        </button>
       </div>
     </section>
   );

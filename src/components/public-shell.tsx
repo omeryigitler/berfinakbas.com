@@ -22,14 +22,14 @@ export function SiteHeader() {
         <BrandMark />
       </Link>
       <nav aria-label="Ana menü">
-        <Link href="/hakkimda">Hakkımda</Link>
         <Link href="/hizmetler">Hizmetler</Link>
+        <Link href="/hakkimda">Hakkımda</Link>
         <Link href="/surec">Süreç</Link>
         <Link href="/#sss">SSS</Link>
         <Link href="/iletisim">İletişim</Link>
       </nav>
       <Link className="header-cta" href="/randevu">
-        Randevu süreci
+        Randevu Al
       </Link>
     </header>
   );
@@ -48,7 +48,7 @@ export function SiteFooter() {
             terapisi.
           </p>
           <Link className="site-footer-cta" href="/randevu">
-            Randevu süreci
+            Randevu Al
             <span aria-hidden="true">→</span>
           </Link>
         </div>

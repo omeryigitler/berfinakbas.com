@@ -5,6 +5,7 @@ import { publicSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
 import "./ui-polish.css";
+import "./public-sketch.css";
 
 export const metadata: Metadata = {
   metadataBase: publicSiteUrl,
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: "light",
-  themeColor: "#fffaf4",
+  themeColor: "#fbfaf7",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

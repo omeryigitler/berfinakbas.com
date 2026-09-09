@@ -1,1162 +1,422 @@
 .page {
-  --notebook-ink: #171716;
-  --notebook-paper: #f4efe4;
-  --notebook-line: rgb(23 23 22 / 15%);
+  --sketch-ink: #3f3c38;
+  --sketch-muted: #807a73;
+  --sketch-teal: #08a49c;
+  --sketch-paper: #fbfaf7;
+  --sketch-grid: rgb(72 67 61 / 5%);
+  --sketch-hand: "Segoe Print", "Comic Sans MS", "Bradley Hand", "Chalkboard SE", cursive;
   min-height: 100vh;
   overflow: clip;
-  background:
-    radial-gradient(circle at 12% 10%, rgb(241 176 137 / 18%), transparent 24rem),
-    radial-gradient(circle at 90% 24%, rgb(162 190 175 / 17%), transparent 26rem),
-    #f6f1e7;
-  color: var(--notebook-ink);
+  background-color: var(--sketch-paper);
+  background-image:
+    linear-gradient(var(--sketch-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--sketch-grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--sketch-ink);
 }
 
-.handKicker,
-.onlineNote,
-.notebookTopline,
-.notebook h2,
-.notebook > a,
-.scribbleArrow,
-.portraitNote,
-.bookingHand {
-  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
-}
-
-.hero {
-  position: relative;
-  min-height: 980px;
-  padding: 0 max(24px, calc((100vw - 1420px) / 2));
-  border-bottom: 1px solid rgb(23 23 22 / 18%);
-}
-
-.header {
-  position: relative;
-  z-index: 20;
+.discovery {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
-  align-items: center;
-  gap: 28px;
-  min-height: 92px;
-  border-bottom: 1px solid rgb(23 23 22 / 16%);
+  min-height: 390px;
+  place-items: center;
+  padding: 70px 24px;
+  border-top: 1px solid rgb(63 60 56 / 10%);
+  border-bottom: 1px solid rgb(63 60 56 / 10%);
+  background: rgb(255 255 255 / 38%);
 }
 
-.brand {
-  justify-self: start;
-}
-
-.page :global(.brand-mark) {
-  color: #181817;
-}
-
-.page :global(.brand-symbol) {
-  border-color: rgb(23 23 22 / 18%);
-  background: rgb(255 255 255 / 42%);
-  filter: grayscale(1) contrast(1.2);
-}
-
-.page :global(.brand-mark strong) {
-  color: #181817;
-  font-family: var(--serif);
-}
-
-.page :global(.brand-mark small) {
-  color: rgb(23 23 22 / 62%);
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  white-space: nowrap;
-  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.nav a {
-  position: relative;
-  padding: 8px 1px;
-}
-
-.nav a::after {
-  position: absolute;
-  right: 0;
-  bottom: 3px;
-  left: 0;
-  height: 1px;
-  background: currentColor;
-  content: "";
-  opacity: 0;
-  transform: scaleX(0.6) rotate(-1deg);
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-}
-
-.nav a:hover::after,
-.nav a:focus-visible::after {
-  opacity: 0.7;
-  transform: scaleX(1) rotate(-1deg);
-}
-
-.nav > span {
-  color: rgb(23 23 22 / 38%);
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-}
-
-.onlineNote {
-  position: absolute;
-  top: 7px;
-  right: 8px;
-  font-size: 0.74rem;
-  transform: rotate(-3deg);
-}
-
-.bookingPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid #171716;
-  border-radius: 999px;
-  background: #171716;
-  color: #fffdf7;
-  font-size: 0.76rem;
-  font-weight: 760;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  transition:
-    transform 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.bookingPill:hover {
-  background: transparent;
-  color: #171716;
-  transform: translateY(-1px);
-}
-
-.heroCopy {
-  position: relative;
-  z-index: 8;
+.discoveryInner {
   display: grid;
-  grid-template-columns: minmax(0, 560px) auto;
-  align-items: end;
-  gap: 30px;
-  max-width: 980px;
-  padding-top: 44px;
-}
-
-.handKicker {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: 0.88rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  transform: rotate(-1.2deg);
-}
-
-.heroCopy h1 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: clamp(2.25rem, 4vw, 4.35rem);
-  font-weight: 500;
-  letter-spacing: -0.045em;
-  line-height: 0.98;
-}
-
-.heroCopy > p:not(.handKicker) {
-  max-width: 410px;
-  margin: 0 0 2px;
-  color: rgb(23 23 22 / 66%);
-  font-size: 0.92rem;
-  line-height: 1.7;
-}
-
-.heroCopy > a {
-  grid-column: 2;
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: -15px;
-  border-bottom: 1px solid rgb(23 23 22 / 45%);
-  padding-bottom: 4px;
-  font-size: 0.78rem;
-  font-weight: 720;
-}
-
-.editorialWords {
-  position: absolute;
-  z-index: 1;
-  top: 180px;
-  right: -12px;
-  left: -8px;
-  display: grid;
-  pointer-events: none;
-  color: #111110;
-  font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
-  font-size: clamp(7.2rem, 14vw, 14.5rem);
-  font-stretch: condensed;
-  font-weight: 900;
-  letter-spacing: -0.075em;
-  line-height: 0.69;
-  text-transform: uppercase;
-}
-
-.editorialWords span:last-child {
-  margin-left: 20vw;
-}
-
-.cardStage {
-  position: relative;
-  z-index: 6;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: end;
-  gap: clamp(8px, 1vw, 18px);
-  max-width: 1320px;
-  margin: 145px auto 0;
-  padding: 0 12px;
-  perspective: 1400px;
-}
-
-.notebook {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  min-height: 355px;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 30px 21px 21px 29px;
-  border: 1px solid rgb(23 23 22 / 24%);
-  border-radius: 3px 7px 5px 4px;
-  color: #171716;
-  box-shadow:
-    0 22px 30px rgb(42 33 25 / 14%),
-    0 3px 1px rgb(23 23 22 / 8%);
-  transform-origin: 50% 100%;
-  transition:
-    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 220ms ease;
-}
-
-.notebook::after {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent 0,
-      transparent 27px,
-      rgb(23 23 22 / 3%) 28px,
-      transparent 29px
-    ),
-    linear-gradient(90deg, rgb(255 255 255 / 14%), transparent 22%, transparent 78%, rgb(0 0 0 / 5%));
-  content: "";
-  mix-blend-mode: multiply;
-}
-
-.notebook:hover {
-  z-index: 8;
-  box-shadow:
-    0 30px 44px rgb(42 33 25 / 20%),
-    0 3px 1px rgb(23 23 22 / 9%);
-  transform: translateY(-12px) rotate(0deg);
-}
-
-.left {
-  transform: rotate(-5deg) translateY(15px);
-}
-
-.leftSoft {
-  transform: rotate(-2deg) translateY(3px);
-}
-
-.straight {
-  transform: rotate(0.4deg) translateY(-7px);
-}
-
-.rightSoft {
-  transform: rotate(2.4deg) translateY(2px);
-}
-
-.right {
-  transform: rotate(5deg) translateY(15px);
-}
-
-.peach {
-  background: #f2b992;
-}
-
-.sage {
-  background: #b9cdb4;
-}
-
-.cream {
-  background: #f2e7c9;
-}
-
-.blue {
-  background: #b8ced6;
-}
-
-.charcoal {
-  border-color: rgb(255 255 255 / 18%);
-  background: #444744;
-  color: #fffdf7;
-}
-
-.spiral {
-  position: absolute;
-  z-index: 3;
-  top: -7px;
-  left: 18px;
-  width: calc(100% - 36px);
-  height: 20px;
-  background:
-    radial-gradient(circle, #181817 0 2px, transparent 2.3px) 0 11px / 16px 10px repeat-x;
-}
-
-.spiral::after {
-  position: absolute;
-  top: 0;
-  right: 2px;
-  left: 2px;
-  height: 18px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 7px,
-      #1b1b1a 7px 9px,
-      transparent 9px 16px
-    );
-  content: "";
-  clip-path: polygon(0 0, 100% 0, 100% 56%, 0 56%);
-  opacity: 0.72;
-}
-
-.charcoal .spiral {
-  background:
-    radial-gradient(circle, #eeeae1 0 2px, transparent 2.3px) 0 11px / 16px 10px repeat-x;
-}
-
-.charcoal .spiral::after {
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 7px,
-      #eeeae1 7px 9px,
-      transparent 9px 16px
-    );
-}
-
-.notebookTopline {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  min-height: 38px;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: clamp(0.58rem, 0.78vw, 0.73rem);
-  font-weight: 600;
-}
-
-.notebookTopline span {
-  display: inline-block;
-  max-width: 112px;
-  border: 1px solid currentColor;
-  border-radius: 47% 53% 48% 52%;
-  padding: 4px 8px;
-  line-height: 1.15;
+  width: min(980px, 100%);
+  justify-items: center;
   text-align: center;
-  transform: rotate(-3deg);
 }
 
-.notebookTopline i {
-  font-size: 1rem;
-  font-style: normal;
-  transform: rotate(18deg);
-}
-
-.notebook svg {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  height: 82px;
-  margin: 8px 0 4px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.1;
-}
-
-.notebook h2 {
-  position: relative;
-  z-index: 2;
-  margin: 4px 0 0;
-  font-size: clamp(1.35rem, 1.85vw, 2rem);
-  font-weight: 650;
-  letter-spacing: -0.04em;
-  line-height: 1.03;
-}
-
-.notebook p {
-  position: relative;
-  z-index: 2;
-  margin: 13px 0 0;
-  color: rgb(23 23 22 / 67%);
-  font-size: 0.69rem;
-  line-height: 1.5;
-}
-
-.charcoal p {
-  color: rgb(255 253 247 / 72%);
-}
-
-.notebook > a {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  align-self: flex-start;
-  margin-top: auto;
-  border-bottom: 1px solid currentColor;
-  padding-top: 16px;
-  padding-bottom: 2px;
-  font-size: 0.67rem;
-  font-weight: 650;
-}
-
-.heroFootnote {
-  position: relative;
-  z-index: 7;
-  display: flex;
-  max-width: 780px;
-  align-items: flex-start;
-  gap: 16px;
-  margin: 43px auto 0;
-  color: rgb(23 23 22 / 62%);
-}
-
-.heroFootnote > span {
-  flex: 0 0 auto;
-  color: #171716;
-  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
-  font-size: 1.4rem;
-  letter-spacing: -0.35em;
-  transform: rotate(-7deg);
-}
-
-.heroFootnote p {
-  margin: 0;
-  font-size: 0.72rem;
-  line-height: 1.55;
-}
-
-.principles {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
-  gap: clamp(60px, 9vw, 150px);
-  width: min(1220px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 120px 0 132px;
-}
-
-.sectionIntro h2,
+.discovery h2,
+.sectionHeading h2,
 .aboutCopy h2,
 .faqHeading h2,
 .booking h2 {
   margin: 0;
-  font-family: var(--serif);
-  font-weight: 500;
-  letter-spacing: -0.045em;
-}
-
-.sectionIntro h2 {
-  max-width: 520px;
-  font-size: clamp(3rem, 5vw, 5rem);
-  line-height: 0.94;
-}
-
-.sectionIntro > p:last-child {
-  max-width: 490px;
-  margin: 28px 0 0;
-  color: rgb(23 23 22 / 65%);
-  font-size: 0.9rem;
-  line-height: 1.75;
-}
-
-.principleGrid {
-  display: grid;
-  border-top: 1px solid rgb(23 23 22 / 22%);
-}
-
-.principleGrid article {
-  display: grid;
-  grid-template-columns: 54px minmax(150px, 0.55fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 22px;
-  padding: 27px 4px 29px;
-  border-bottom: 1px solid rgb(23 23 22 / 22%);
-}
-
-.principleGrid article > span {
-  padding-top: 4px;
-  font-family: "Arial Narrow", sans-serif;
-  font-size: 0.72rem;
+  font-family: var(--sketch-hand);
   font-weight: 800;
+  letter-spacing: -0.07em;
 }
 
-.principleGrid h3 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 1.45rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
+.discovery h2 {
+  font-size: clamp(3.2rem, 6vw, 6.3rem);
+  line-height: 1.05;
+  text-shadow: 0 4px 0 rgb(63 60 56 / 8%);
 }
 
-.principleGrid p {
-  margin: 0;
-  color: rgb(23 23 22 / 63%);
-  font-size: 0.78rem;
-  line-height: 1.65;
-}
-
-.scribbleArrow {
-  position: absolute;
-  right: 3%;
-  bottom: 66px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.74rem;
-  transform: rotate(-4deg);
-}
-
-.scribbleArrow i {
-  font-size: 1.35rem;
+.discovery h2 em,
+.sectionHeading h2 em,
+.aboutCopy h2 em,
+.faqHeading h2 em,
+.booking h2 em {
+  color: var(--sketch-teal);
   font-style: normal;
 }
 
-.about {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(360px, 0.82fr) minmax(0, 1.18fr);
-  align-items: center;
-  gap: clamp(70px, 10vw, 160px);
-  width: min(1220px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 116px 0 132px;
-  border-top: 1px solid rgb(23 23 22 / 20%);
-}
-
-.aboutVisual {
-  position: relative;
-  display: grid;
-  min-height: 540px;
-  place-items: end center;
-  overflow: visible;
-  border: 1px solid rgb(23 23 22 / 22%);
-  background: #e9dfcf;
-  box-shadow: 16px 18px 0 rgb(23 23 22 / 7%);
-  transform: rotate(-1.2deg);
-}
-
-.graphPaper {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(rgb(23 23 22 / 7%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(23 23 22 / 7%) 1px, transparent 1px);
-  background-size: 26px 26px;
-  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 35%), transparent 68%);
-}
-
-.portrait {
-  position: relative;
-  z-index: 2;
-  width: min(78%, 390px);
-  height: auto;
-  filter: saturate(0.72) contrast(1.02);
-}
-
-.aboutLabel {
-  position: absolute;
-  z-index: 4;
-  right: -36px;
-  bottom: 38px;
-  display: grid;
-  width: 220px;
-  padding: 18px 20px 20px;
-  border: 1px solid rgb(23 23 22 / 22%);
-  background: #f3b58f;
-  box-shadow: 8px 9px 0 rgb(23 23 22 / 8%);
-  transform: rotate(3deg);
-}
-
-.aboutLabel span {
-  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
-  font-size: 0.68rem;
-}
-
-.aboutLabel strong {
-  margin-top: 4px;
-  font-family: var(--serif);
-  font-size: 1.35rem;
-  font-weight: 600;
-}
-
-.aboutLabel small {
-  margin-top: 4px;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.portraitNote {
-  position: absolute;
-  z-index: 4;
-  top: 25px;
-  left: -34px;
-  padding: 7px 11px;
-  border: 1px solid rgb(23 23 22 / 22%);
-  background: #b9cdb4;
-  font-size: 0.68rem;
-  transform: rotate(-5deg);
-}
-
-.aboutCopy {
+.discovery > div > p {
   max-width: 660px;
+  margin: 24px 0 0;
+  color: var(--sketch-muted);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.75;
 }
 
-.aboutCopy h2 {
-  max-width: 650px;
-  font-size: clamp(3rem, 5vw, 5.1rem);
-  line-height: 0.94;
-}
-
-.aboutCopy > p:not(.handKicker) {
-  max-width: 610px;
-  color: rgb(23 23 22 / 66%);
-  font-size: 0.88rem;
-  line-height: 1.78;
-}
-
-.aboutCopy .aboutLead {
-  margin-top: 30px;
-  color: #171716;
-  font-family: var(--serif);
-  font-size: 1.17rem;
-  line-height: 1.55;
-}
-
-.aboutActions {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin-top: 34px;
-}
-
+.outlineButton,
 .inkButton {
   display: inline-flex;
   min-height: 48px;
   align-items: center;
   justify-content: center;
-  border: 1px solid #171716;
+  gap: 7px;
+  border: 1.5px solid #292623;
   border-radius: 999px;
-  padding: 0 20px;
-  background: #171716;
-  color: #fffdf7;
-  font-size: 0.75rem;
-  font-weight: 760;
+  padding: 0 21px;
+  font-family: var(--sketch-hand);
+  font-size: 0.82rem;
+  font-weight: 800;
+  transition:
+    box-shadow 170ms ease,
+    transform 170ms ease;
 }
 
-.textLink {
-  border-bottom: 1px solid rgb(23 23 22 / 38%);
-  padding-bottom: 3px;
-  font-size: 0.75rem;
-  font-weight: 700;
+.outlineButton {
+  background: #fff;
+  box-shadow: 4px 5px 0 #35312e;
+  color: #35312e;
+  transform: rotate(-1deg);
+}
+
+.inkButton {
+  background: #292623;
+  box-shadow: 4px 4px 0 rgb(63 60 56 / 28%);
+  color: #fff;
+  transform: rotate(-0.7deg);
+}
+
+.outlineButton:hover,
+.inkButton:hover {
+  box-shadow: 2px 2px 0 #35312e;
+  transform: translate(2px, 2px) rotate(-0.7deg);
+}
+
+.discovery .outlineButton {
+  margin-top: 38px;
+}
+
+.principles,
+.about,
+.faq {
+  width: min(1220px, calc(100% - 48px));
+  margin-inline: auto;
+  padding: 118px 0;
+}
+
+.principles {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(64px, 9vw, 145px);
+}
+
+.sectionHeading > p,
+.handLabel,
+.bookingNote {
+  margin: 0 0 12px;
+  color: var(--sketch-teal);
+  font-family: var(--sketch-hand);
+  font-size: 0.83rem;
+  font-weight: 800;
+  transform: rotate(-1.5deg);
+}
+
+.sectionHeading h2 {
+  max-width: 520px;
+  font-size: clamp(3.2rem, 5vw, 5.3rem);
+  line-height: 0.98;
+}
+
+.sectionHeading > span {
+  display: block;
+  max-width: 500px;
+  margin-top: 28px;
+  color: var(--sketch-muted);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.principleGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.principleGrid article {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px minmax(150px, 0.52fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  padding: 25px 25px 27px;
+  border: 1.5px solid rgb(63 60 56 / 58%);
+  border-radius: 15px 18px 14px 17px;
+  background: rgb(255 255 255 / 60%);
+  box-shadow: 5px 6px 0 rgb(63 60 56 / 10%);
+}
+
+.principleGrid article:nth-child(1) { transform: rotate(-0.5deg); }
+.principleGrid article:nth-child(2) { transform: rotate(0.4deg); }
+.principleGrid article:nth-child(3) { transform: rotate(-0.2deg); }
+
+.circleNumber {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 47% 53% 50% 46%;
+  font-family: var(--sketch-hand);
+  font-size: 0.72rem;
+  font-weight: 800;
+  transform: rotate(-8deg);
+}
+
+.principleGrid h3 {
+  margin: 4px 0 0;
+  font-family: var(--sketch-hand);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.principleGrid p {
+  margin: 2px 0 0;
+  color: var(--sketch-muted);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.about {
+  display: grid;
+  grid-template-columns: minmax(350px, 0.82fr) minmax(0, 1.18fr);
+  align-items: center;
+  gap: clamp(70px, 9vw, 145px);
+  border-top: 1px solid rgb(63 60 56 / 15%);
+}
+
+.aboutVisual {
+  position: relative;
+  display: grid;
+  min-height: 550px;
+  place-items: end center;
+  border: 1.5px solid #3c3935;
+  border-radius: 12px 16px 13px 10px;
+  background:
+    linear-gradient(rgb(63 60 56 / 6%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(63 60 56 / 6%) 1px, transparent 1px),
+    #e9dfd1;
+  background-size: 27px 27px;
+  box-shadow: 9px 10px 0 rgb(63 60 56 / 15%);
+  transform: rotate(-1.1deg);
+}
+
+.paperTape {
+  position: absolute;
+  z-index: 5;
+  top: -16px;
+  left: 50%;
+  width: 112px;
+  height: 33px;
+  background: rgb(244 231 192 / 80%);
+  clip-path: polygon(4% 10%, 98% 0, 94% 88%, 0 100%);
+  transform: translateX(-50%) rotate(2deg);
+}
+
+.portrait {
+  position: relative;
+  z-index: 2;
+  width: min(78%, 380px);
+  height: auto;
+  filter: saturate(0.78) contrast(1.02);
+}
+
+.nameNote {
+  position: absolute;
+  z-index: 4;
+  right: -35px;
+  bottom: 33px;
+  display: grid;
+  width: 225px;
+  padding: 17px 20px 19px;
+  border: 1.5px solid #37332f;
+  border-radius: 7px 10px 8px 7px;
+  background: #c3ddd8;
+  box-shadow: 6px 7px 0 rgb(63 60 56 / 14%);
+  transform: rotate(3deg);
+}
+
+.nameNote small {
+  font-family: var(--sketch-hand);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.nameNote strong {
+  margin-top: 4px;
+  font-family: var(--sketch-hand);
+  font-size: 1.45rem;
+  letter-spacing: -0.05em;
+}
+
+.nameNote span {
+  margin-top: 3px;
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aboutCopy { max-width: 680px; }
+.aboutCopy h2 { font-size: clamp(3.1rem, 5vw, 5.15rem); line-height: 0.98; }
+.aboutCopy > p:not(.handLabel) {
+  max-width: 620px;
+  color: var(--sketch-muted);
+  font-size: 0.87rem;
+  line-height: 1.8;
+}
+.aboutCopy .aboutLead {
+  margin-top: 28px;
+  color: #4a4540;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.aboutActions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 33px;
 }
 
 .faq {
   display: grid;
-  grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(280px, 0.66fr) minmax(0, 1.34fr);
   gap: clamp(70px, 10vw, 150px);
-  width: min(1220px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 116px 0 126px;
-  border-top: 1px solid rgb(23 23 22 / 20%);
+  border-top: 1px solid rgb(63 60 56 / 15%);
 }
 
-.faqHeading h2 {
-  font-size: clamp(3rem, 4.7vw, 4.7rem);
-  line-height: 0.95;
-}
-
+.faqHeading h2 { font-size: clamp(3.2rem, 5vw, 5rem); line-height: 0.98; }
 .faqHeading > p:last-child {
   max-width: 360px;
-  margin: 24px 0 0;
-  color: rgb(23 23 22 / 62%);
+  margin: 23px 0 0;
+  color: var(--sketch-muted);
   font-size: 0.82rem;
   line-height: 1.7;
 }
 
-.faqList {
-  border-top: 1px solid rgb(23 23 22 / 28%);
-}
-
+.faqList { display: grid; gap: 12px; }
 .faqList details {
-  border-bottom: 1px solid rgb(23 23 22 / 28%);
+  border: 1.5px solid rgb(63 60 56 / 55%);
+  border-radius: 14px 17px 13px 16px;
+  background: rgb(255 255 255 / 62%);
+  box-shadow: 4px 5px 0 rgb(63 60 56 / 9%);
 }
 
 .faqList summary {
   display: grid;
   grid-template-columns: 48px 1fr;
   align-items: center;
-  gap: 14px;
-  padding: 26px 8px 26px 0;
+  gap: 12px;
+  padding: 22px 22px 22px 16px;
   cursor: pointer;
   list-style: none;
-  font-family: var(--serif);
-  font-size: clamp(1.2rem, 2vw, 1.6rem);
-  font-weight: 600;
+  font-family: var(--sketch-hand);
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
-.faqList summary::-webkit-details-marker {
-  display: none;
-}
-
+.faqList summary::-webkit-details-marker { display: none; }
 .faqList summary span {
-  font-family: "Arial Narrow", sans-serif;
-  font-size: 0.68rem;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1.3px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  transform: rotate(-5deg);
 }
-
 .faqList details p {
-  max-width: 620px;
-  margin: -5px 0 28px 62px;
-  color: rgb(23 23 22 / 63%);
+  max-width: 650px;
+  margin: -2px 22px 24px 76px;
+  color: var(--sketch-muted);
   font-size: 0.8rem;
   line-height: 1.72;
 }
 
 .booking {
-  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 52px;
-  width: min(1320px, calc(100% - 48px));
-  margin: 0 auto 72px;
-  overflow: hidden;
-  padding: clamp(46px, 6vw, 78px);
-  border-radius: 2px;
-  background: #1c1d1b;
-  color: #fffdf7;
-  box-shadow: 16px 18px 0 rgb(23 23 22 / 9%);
-  transform: rotate(0.3deg);
-}
-
-.bookingHand {
-  margin: 0 0 12px;
-  color: #f2b992;
-  font-size: 0.84rem;
-  transform: rotate(-2deg);
-}
-
-.booking h2 {
-  position: relative;
-  z-index: 2;
-  max-width: 790px;
-  font-size: clamp(3rem, 5.6vw, 5.8rem);
-  line-height: 0.9;
-}
-
-.booking > div:first-child > p:last-child {
-  position: relative;
-  z-index: 2;
-  max-width: 610px;
-  margin: 28px 0 0;
-  color: rgb(255 253 247 / 68%);
-  font-size: 0.86rem;
-  line-height: 1.7;
-}
-
-.bookingActions {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  gap: 10px;
-  min-width: 230px;
-}
-
-.bookingActions a {
-  display: grid;
-  min-height: 52px;
-  place-items: center;
-  border: 1px solid rgb(255 253 247 / 72%);
-  border-radius: 999px;
-  padding: 0 18px;
-  font-size: 0.72rem;
-  font-weight: 760;
+  width: min(1080px, calc(100% - 48px));
+  justify-items: center;
+  margin: 22px auto 105px;
+  padding: 74px 36px 72px;
+  border: 1.5px solid #393531;
+  border-radius: 20px 25px 19px 23px;
+  background: rgb(255 255 255 / 64%);
+  box-shadow: 8px 9px 0 rgb(63 60 56 / 14%);
   text-align: center;
+  transform: rotate(0.25deg);
+}
+.booking h2 { max-width: 900px; font-size: clamp(3.2rem, 5.6vw, 5.8rem); line-height: 1.03; }
+.booking > p:not(.bookingNote) {
+  max-width: 620px;
+  margin: 24px 0 0;
+  color: var(--sketch-muted);
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+.bookingActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 35px;
 }
 
-.bookingActions a:first-child {
-  background: #fffdf7;
-  color: #171716;
-}
-
-.bookingWave {
-  position: absolute;
-  right: -3%;
-  bottom: -38px;
-  color: rgb(255 253 247 / 9%);
-  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
-  font-size: clamp(6rem, 14vw, 12rem);
-  letter-spacing: -0.42em;
-  white-space: nowrap;
-}
-
-.page :global(.site-footer) {
-  border-top-color: rgb(23 23 22 / 20%);
-}
-
-.page :global(.site-footer-cta) {
-  color: #171716;
-}
-
-.page :global(.contact-fab-trigger) {
-  border-color: rgb(255 255 255 / 30%);
-  background: #1c1d1b;
-  box-shadow: 0 14px 32px rgb(23 23 22 / 22%);
-}
-
-@media (max-width: 1180px) {
-  .header {
-    grid-template-columns: 1fr auto;
-  }
-
-  .nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding: 10px 0 14px;
-    border-top: 1px solid rgb(23 23 22 / 10%);
-    scrollbar-width: none;
-  }
-
-  .nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .headerActions {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .onlineNote {
-    display: none;
-  }
-
-  .hero {
-    min-height: 1030px;
-  }
-
-  .editorialWords {
-    top: 220px;
-  }
-
-  .cardStage {
-    margin-top: 165px;
-  }
-
-  .notebook {
-    min-height: 335px;
-    padding-right: 17px;
-    padding-left: 24px;
-  }
-
-  .notebook p {
-    font-size: 0.65rem;
-  }
-}
-
-@media (max-width: 980px) {
-  .hero {
-    min-height: auto;
-    padding-bottom: 78px;
-  }
-
-  .heroCopy {
+@media (max-width: 900px) {
+  .principles, .about, .faq {
     grid-template-columns: 1fr;
-    max-width: 680px;
-    padding-top: 46px;
+    gap: 58px;
+    padding-block: 90px;
   }
-
-  .heroCopy > a {
-    grid-column: 1;
-    margin-top: 0;
-  }
-
-  .editorialWords {
-    position: relative;
-    top: auto;
-    right: auto;
-    left: auto;
-    margin: 58px -24px 0;
-    font-size: clamp(5.6rem, 18vw, 10rem);
-    line-height: 0.72;
-  }
-
-  .editorialWords span:last-child {
-    margin-left: 10vw;
-  }
-
-  .cardStage {
-    grid-template-columns: repeat(10, minmax(58px, 1fr));
-    align-items: stretch;
-    gap: 16px;
-    margin-top: -8px;
-    overflow-x: auto;
-    padding: 34px 24px 48px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-
-  .cardStage::-webkit-scrollbar {
-    display: none;
-  }
-
-  .notebook {
-    grid-column: span 4;
-    min-width: 260px;
-    min-height: 360px;
-    scroll-snap-align: center;
-  }
-
-  .left,
-  .leftSoft,
-  .straight,
-  .rightSoft,
-  .right {
-    transform: rotate(0deg);
-  }
-
-  .heroFootnote {
-    margin-top: 5px;
-  }
-
-  .principles,
-  .about,
-  .faq {
-    grid-template-columns: 1fr;
-  }
-
-  .principles {
-    gap: 56px;
-    padding-block: 96px 118px;
-  }
-
-  .scribbleArrow {
-    right: auto;
-    bottom: 56px;
-    left: 4px;
-  }
-
-  .about {
-    gap: 74px;
-    padding-block: 96px 110px;
-  }
-
-  .aboutVisual {
-    width: min(560px, calc(100% - 48px));
-    margin-inline: auto;
-  }
-
-  .faq {
-    gap: 54px;
-    padding-block: 96px 108px;
-  }
-
-  .booking {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-
-  .bookingActions {
-    width: min(100%, 330px);
-  }
+  .principleGrid article { grid-template-columns: 55px 1fr; }
+  .principleGrid p { grid-column: 2; }
+  .aboutVisual { width: min(560px, calc(100% - 44px)); margin-inline: auto; }
+  .faqHeading { max-width: 600px; }
 }
 
-@media (max-width: 700px) {
-  .hero {
-    padding-inline: 18px;
-  }
-
-  .header {
-    min-height: 82px;
-    gap: 12px;
-  }
-
-  .page :global(.brand-mark) {
-    gap: 8px;
-  }
-
-  .page :global(.brand-symbol) {
-    width: 38px;
-    height: 38px;
-    flex-basis: 38px;
-  }
-
-  .page :global(.brand-mark strong) {
-    font-size: 0.94rem;
-  }
-
-  .page :global(.brand-mark small) {
-    font-size: 0.5rem;
-  }
-
-  .bookingPill {
-    min-height: 40px;
-    padding-inline: 13px;
-    font-size: 0.64rem;
-  }
-
-  .nav {
-    gap: 9px;
-    margin-inline: -2px;
-    font-size: 0.76rem;
-  }
-
-  .heroCopy {
-    padding-top: 38px;
-  }
-
-  .heroCopy h1 {
-    max-width: 500px;
-    font-size: clamp(2.55rem, 12vw, 4rem);
-  }
-
-  .heroCopy > p:not(.handKicker) {
-    font-size: 0.82rem;
-  }
-
-  .editorialWords {
-    margin-inline: -18px;
-    font-size: clamp(4.5rem, 19vw, 7rem);
-  }
-
-  .cardStage {
-    margin-inline: -18px;
-    padding-inline: 24px;
-  }
-
-  .notebook {
-    min-width: min(78vw, 310px);
-  }
-
-  .heroFootnote {
-    padding-inline: 4px;
-  }
-
-  .principles,
-  .about,
-  .faq,
-  .booking {
-    width: min(100% - 36px, 1220px);
-  }
-
-  .principles {
-    padding-block: 82px 110px;
-  }
-
-  .sectionIntro h2,
-  .aboutCopy h2,
-  .faqHeading h2,
-  .booking h2 {
-    font-size: clamp(2.65rem, 12vw, 4.25rem);
-  }
-
-  .principleGrid article {
-    grid-template-columns: 38px 1fr;
-    gap: 12px;
-  }
-
-  .principleGrid article p {
-    grid-column: 2;
-  }
-
-  .about {
-    padding-block: 84px 100px;
-  }
-
-  .aboutVisual {
-    width: calc(100% - 28px);
-    min-height: 470px;
-  }
-
-  .aboutLabel {
-    right: -20px;
-    bottom: 24px;
-    width: 190px;
-  }
-
-  .portraitNote {
-    top: 18px;
-    left: -18px;
-  }
-
-  .aboutActions {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .faq {
-    padding-block: 84px 96px;
-  }
-
-  .faqList summary {
-    grid-template-columns: 34px 1fr;
-    gap: 10px;
-    padding-block: 22px;
-  }
-
-  .faqList details p {
-    margin-left: 44px;
-  }
-
-  .booking {
-    margin-bottom: 54px;
-    padding: 42px 28px;
-  }
+@media (max-width: 620px) {
+  .page { background-size: 26px 26px; }
+  .discovery { min-height: 330px; padding-inline: 18px; }
+  .discovery h2 { font-size: clamp(2.8rem, 13vw, 4.4rem); }
+  .discovery > div > p { font-size: 0.85rem; }
+  .principles, .about, .faq { width: calc(100% - 36px); padding-block: 76px; }
+  .sectionHeading h2, .aboutCopy h2, .faqHeading h2, .booking h2 { font-size: clamp(2.7rem, 12vw, 4.2rem); }
+  .principleGrid article { grid-template-columns: 44px 1fr; gap: 12px; padding: 20px 17px; }
+  .circleNumber { width: 38px; height: 38px; }
+  .aboutVisual { width: calc(100% - 30px); min-height: 470px; }
+  .nameNote { right: -18px; bottom: 22px; width: 195px; }
+  .aboutActions { align-items: flex-start; flex-direction: column; }
+  .faqList summary { grid-template-columns: 40px 1fr; padding-inline: 13px; }
+  .faqList details p { margin-left: 57px; }
+  .booking { width: calc(100% - 36px); margin-bottom: 70px; padding: 55px 22px; }
+  .bookingActions { align-items: center; flex-direction: column; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .notebook,
-  .bookingPill {
-    transition: none;
-  }
-
-  .notebook:hover,
-  .bookingPill:hover {
-    transform: none;
-  }
+  .outlineButton, .inkButton { transition: none; }
 }

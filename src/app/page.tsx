@@ -15,74 +15,89 @@ const principles = [
   },
   {
     number: "02",
-    title: "Sonra planlamak",
-    text: "Değerlendirme sonrasında hedeflerin, görüşme biçiminin ve sonraki adımların açıkça konuşulması.",
+    title: "Birlikte planlamak",
+    text: "Değerlendirme sonrasında hedeflerin ve sonraki adımların anlaşılır biçimde konuşulduğu bir süreç.",
   },
   {
     number: "03",
-    title: "Birlikte takip etmek",
-    text: "Çocuk, ergen ve yetişkin süreçlerinde kişiye ve gerektiğinde aileye alan açan iş birliği yaklaşımı.",
+    title: "Düzenli takip etmek",
+    text: "Süreç boyunca kişiye ve gerektiğinde aileye alan açan, açık ve iş birliğine dayalı takip.",
   },
 ];
 
 export default function Home() {
   return (
-    <main className={styles.page} id="ana-icerik">
+    <main className={`${styles.page} public-sketch`} id="ana-icerik">
       <HandwrittenHero />
 
-      <section className={styles.principles} aria-labelledby="principles-title">
-        <div className={styles.sectionIntro}>
-          <p className={styles.handKicker}>çalışma yaklaşımı</p>
-          <h2 id="principles-title">Klinik netlik, insani bir dil.</h2>
+      <section className={styles.discovery} aria-labelledby="discovery-title">
+        <div className={styles.discoveryInner}>
+          <h2 id="discovery-title">
+            <span>Süreci Beraber </span>
+            <em>Keşfedelim</em>
+          </h2>
           <p>
-            Süreç; anlaşılır bilgi, mahremiyet ve birlikte karar verme ilkeleriyle ilerler. Görsel
-            dil sıcak olabilir; profesyonel çerçeve her zaman nettir.
+            Kişiselleştirilmiş defterler, anlaşılır içerikler ve uygulamalarla terapi sürecini
+            birlikte takip edelim.
           </p>
+          <Link className={styles.outlineButton} href="/surec">
+            Daha Fazla Gör <span aria-hidden="true">↓</span>
+          </Link>
+        </div>
+      </section>
+
+      <section className={styles.principles} aria-labelledby="principles-title">
+        <div className={styles.sectionHeading}>
+          <p>çalışma yaklaşımı</p>
+          <h2 id="principles-title">
+            Klinik netlik,
+            <em> insani bir dil.</em>
+          </h2>
+          <span>
+            Görsel dil sıcak ve kişisel; değerlendirme, mahremiyet ve randevu akışı ise açık ve
+            profesyonel.
+          </span>
         </div>
 
         <div className={styles.principleGrid}>
           {principles.map((principle) => (
             <article key={principle.number}>
-              <span>{principle.number}</span>
+              <span className={styles.circleNumber}>{principle.number}</span>
               <h3>{principle.title}</h3>
               <p>{principle.text}</p>
             </article>
           ))}
         </div>
-
-        <div className={styles.scribbleArrow} aria-hidden="true">
-          <span>önce dinle</span>
-          <i>→</i>
-          <span>sonra planla</span>
-        </div>
       </section>
 
-      <section className={styles.about} id="hakkimda" aria-labelledby="about-title">
+      <section className={styles.about} aria-labelledby="about-title">
         <div className={styles.aboutVisual}>
-          <div className={styles.graphPaper} aria-hidden="true" />
+          <span className={styles.paperTape} aria-hidden="true" />
           <Image
             className={styles.portrait}
             src="/berfin-hero-standing.png"
             alt="Berfin Akbaş portresi"
             draggable={false}
             height={1353}
-            sizes="(max-width: 760px) 74vw, 390px"
+            sizes="(max-width: 760px) 72vw, 380px"
             width={413}
           />
-          <div className={styles.aboutLabel}>
-            <span>Tanışın</span>
+          <div className={styles.nameNote}>
+            <small>tanışın ↘</small>
             <strong>Berfin Akbaş</strong>
-            <small>Dil ve Konuşma Terapisti</small>
+            <span>Dil ve Konuşma Terapisti</span>
           </div>
-          <span className={styles.portraitNote}>sakin · anlaşılır · güven veren</span>
         </div>
 
         <div className={styles.aboutCopy}>
-          <p className={styles.handKicker}>hakkımda</p>
-          <h2 id="about-title">Sizi dinleyen, süreci anlaşılır kılan bir görüşme alanı.</h2>
+          <p className={styles.handLabel}>hakkımda</p>
+          <h2 id="about-title">
+            Sizi dinleyen,
+            <em> süreci anlaşılır kılan</em> bir görüşme alanı.
+          </h2>
           <p className={styles.aboutLead}>
-            Her bireyin iletişim süreci kendine özgüdür. İlk görüşmede ihtiyaçları anlamaya,
-            süreci sadeleştirmeye ve size uygun yol haritasını oluşturmaya odaklanıyorum.
+            Her bireyin iletişim süreci kendine özgüdür. İlk görüşmede ihtiyaçları anlamaya ve size
+            uygun yol haritasını birlikte oluşturmaya odaklanıyorum.
           </p>
           <p>
             Çocuklar, ergenler ve yetişkinler için değerlendirme ve terapi planlama süreci;
@@ -90,10 +105,10 @@ export default function Home() {
           </p>
           <div className={styles.aboutActions}>
             <Link className={styles.inkButton} href="/hakkimda">
-              Hakkımda daha fazla
+              Hakkımda
             </Link>
-            <Link className={styles.textLink} href="/surec">
-              Terapi yaklaşımını incele <span aria-hidden="true">→</span>
+            <Link className={styles.outlineButton} href="/surec">
+              Yaklaşımı Gör <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
@@ -101,8 +116,11 @@ export default function Home() {
 
       <section className={styles.faq} id="sss" aria-labelledby="faq-title">
         <div className={styles.faqHeading}>
-          <p className={styles.handKicker}>küçük notlar / net cevaplar</p>
-          <h2 id="faq-title">Merak ettikleriniz</h2>
+          <p className={styles.handLabel}>küçük notlar / net cevaplar</p>
+          <h2 id="faq-title">
+            Merak
+            <em> Ettikleriniz</em>
+          </h2>
           <p>Randevu ve ilk görüşme hakkında en sık karşılaşılan sorular.</p>
         </div>
 
@@ -134,21 +152,22 @@ export default function Home() {
       </section>
 
       <section className={styles.booking} id="randevu" aria-labelledby="booking-title">
-        <div>
-          <p className={styles.bookingHand}>birlikte planlayalım ↘</p>
-          <h2 id="booking-title">İlk adımı sakin ve kontrollü biçimde oluşturun.</h2>
-          <p>
-            Tercih ettiğiniz zamanı iletin. Saatiniz, uygunluk kontrolü ve onay sonrasında
-            kesinleşsin.
-          </p>
-        </div>
+        <p className={styles.bookingNote}>birlikte planlayalım ↘</p>
+        <h2 id="booking-title">
+          İlk Adımı Beraber <em>Planlayalım</em>
+        </h2>
+        <p>
+          Tercih ettiğiniz zamanı iletin. Saatiniz uygunluk kontrolü ve onay sonrasında
+          kesinleşsin.
+        </p>
         <div className={styles.bookingActions}>
-          <Link href="/randevu">Randevu talebi oluştur</Link>
-          <Link href="/iletisim">Önce iletişime geç</Link>
+          <Link className={styles.inkButton} href="/randevu">
+            Randevu Al
+          </Link>
+          <Link className={styles.outlineButton} href="/iletisim">
+            Önce İletişime Geç <span aria-hidden="true">→</span>
+          </Link>
         </div>
-        <span className={styles.bookingWave} aria-hidden="true">
-          ∿∿∿∿∿∿∿∿∿
-        </span>
       </section>
 
       <SiteFooter />
