@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const serviceAreas = [
   {
     accent: "peach",
-    image: "/service-children.webp",
+    image: "/service-children-clear.svg",
     imageAlt: "Halka dizme oyuncağı, ABC blokları, oyuncak ayı ve görsel kartların siyah beyaz çizimi",
     label: "Çocuklar",
     text: "İletişim ve konuşma ihtiyaçlarının yaş, aile ve gündelik yaşam bağlamında ele alındığı görüşmeler.",
