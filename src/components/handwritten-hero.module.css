@@ -1,0 +1,667 @@
+.hero {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100svh;
+  min-height: 720px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 92px max(24px, calc((100vw - 1420px) / 2)) 24px;
+  border-bottom: 1px solid rgb(23 23 22 / 18%);
+  background:
+    radial-gradient(circle at 12% 14%, rgb(241 176 137 / 14%), transparent 24rem),
+    radial-gradient(circle at 90% 30%, rgb(162 190 175 / 14%), transparent 26rem),
+    #f6f1e7;
+  isolation: isolate;
+}
+
+.header {
+  position: absolute;
+  z-index: 40;
+  top: 0;
+  right: max(24px, calc((100vw - 1420px) / 2));
+  left: max(24px, calc((100vw - 1420px) / 2));
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  align-items: center;
+  gap: 28px;
+  min-height: 92px;
+  border-bottom: 1px solid rgb(23 23 22 / 16%);
+}
+
+.brand {
+  justify-self: start;
+}
+
+.hero :global(.brand-mark) {
+  color: #181817;
+}
+
+.hero :global(.brand-symbol) {
+  border-color: rgb(23 23 22 / 18%);
+  background: rgb(255 255 255 / 42%);
+  filter: grayscale(1) contrast(1.2);
+}
+
+.hero :global(.brand-mark strong) {
+  color: #181817;
+  font-family: var(--serif);
+}
+
+.hero :global(.brand-mark small) {
+  color: rgb(23 23 22 / 62%);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  white-space: nowrap;
+  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.nav a {
+  position: relative;
+  padding: 8px 1px;
+}
+
+.nav a::after {
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  content: "";
+  opacity: 0;
+  transform: scaleX(0.6) rotate(-1deg);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.nav a:hover::after,
+.nav a:focus-visible::after {
+  opacity: 0.7;
+  transform: scaleX(1) rotate(-1deg);
+}
+
+.nav > span {
+  color: rgb(23 23 22 / 38%);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.onlineNote {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
+  font-size: 0.74rem;
+  transform: rotate(-3deg);
+}
+
+.bookingPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #171716;
+  border-radius: 999px;
+  background: #171716;
+  color: #fffdf7;
+  font-size: 0.76rem;
+  font-weight: 760;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.bookingPill:hover {
+  background: transparent;
+  color: #171716;
+  transform: translateY(-1px);
+}
+
+.heroCenter {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 1400px;
+  height: min(68vh, 620px);
+  min-height: 550px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 26px;
+}
+
+.backgroundWords {
+  position: absolute;
+  z-index: 0;
+  inset: 50% 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 16px;
+  color: #1b1b1a;
+  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
+  font-weight: 700;
+  line-height: 1.18;
+  opacity: 0.6;
+  pointer-events: none;
+  text-align: center;
+  transform: translateY(-53%);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.backgroundWords span {
+  display: block;
+}
+
+.backgroundWords span:first-child {
+  font-size: clamp(4.6rem, 8vw, 9rem);
+}
+
+.backgroundWords span:last-child {
+  font-size: clamp(3.6rem, 6.5vw, 7.4rem);
+}
+
+.carousel {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1400px;
+  height: 550px;
+  perspective: 1400px;
+}
+
+.notebook {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  width: 260px;
+  min-height: 390px;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 32px 22px 24px 30px;
+  border: 1px solid rgb(23 23 22 / 24%);
+  border-radius: 3px 7px 5px 4px;
+  color: #171716;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  box-shadow:
+    0 24px 34px rgb(42 33 25 / 18%),
+    0 3px 1px rgb(23 23 22 / 9%);
+  transform-origin: 50% 100%;
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms ease,
+    filter 260ms ease,
+    opacity 260ms ease;
+  will-change: transform;
+}
+
+.notebook::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 27px,
+      rgb(23 23 22 / 3%) 28px,
+      transparent 29px
+    ),
+    linear-gradient(90deg, rgb(255 255 255 / 14%), transparent 22%, transparent 78%, rgb(0 0 0 / 5%));
+  content: "";
+  mix-blend-mode: multiply;
+}
+
+.notebook[data-offset="-2"] {
+  z-index: 5;
+  opacity: 0.92;
+  transform: translate(-50%, -50%) translate(-390px, 44px) rotate(-8deg) scale(0.9);
+}
+
+.notebook[data-offset="-1"] {
+  z-index: 10;
+  transform: translate(-50%, -50%) translate(-205px, 16px) rotate(-4.5deg) scale(0.97);
+}
+
+.notebook[data-offset="0"] {
+  z-index: 20;
+  transform: translate(-50%, -50%) translate(0, -12px) rotate(0deg) scale(1.055);
+}
+
+.notebook[data-offset="1"] {
+  z-index: 10;
+  transform: translate(-50%, -50%) translate(205px, 16px) rotate(4.5deg) scale(0.97);
+}
+
+.notebook[data-offset="2"] {
+  z-index: 5;
+  opacity: 0.92;
+  transform: translate(-50%, -50%) translate(390px, 44px) rotate(8deg) scale(0.9);
+}
+
+.notebook:hover,
+.notebook:focus-visible,
+.active {
+  box-shadow:
+    0 32px 38px rgb(42 33 25 / 28%),
+    0 4px 1px rgb(23 23 22 / 10%);
+  filter: saturate(1.03) contrast(1.015);
+}
+
+.notebook:focus-visible {
+  outline: 3px solid rgb(23 23 22 / 30%);
+  outline-offset: 7px;
+}
+
+.peach {
+  background: #f2b992;
+}
+
+.sage {
+  background: #b9cdb4;
+}
+
+.cream {
+  background: #f2e7c9;
+}
+
+.blue {
+  background: #b8ced6;
+}
+
+.charcoal {
+  border-color: rgb(255 255 255 / 18%);
+  background: #444744;
+  color: #fffdf7;
+}
+
+.spiral {
+  position: absolute;
+  z-index: 3;
+  top: -7px;
+  left: 18px;
+  width: calc(100% - 36px);
+  height: 20px;
+  background:
+    radial-gradient(circle, #181817 0 2px, transparent 2.3px) 0 11px / 16px 10px repeat-x;
+}
+
+.spiral::after {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  left: 2px;
+  height: 18px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 7px,
+      #1b1b1a 7px 9px,
+      transparent 9px 16px
+    );
+  content: "";
+  clip-path: polygon(0 0, 100% 0, 100% 56%, 0 56%);
+  opacity: 0.72;
+}
+
+.charcoal .spiral {
+  background:
+    radial-gradient(circle, #eeeae1 0 2px, transparent 2.3px) 0 11px / 16px 10px repeat-x;
+}
+
+.charcoal .spiral::after {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 7px,
+      #eeeae1 7px 9px,
+      transparent 9px 16px
+    );
+}
+
+.notebookTopline {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 42px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.notebookTopline > span {
+  display: inline-block;
+  max-width: 130px;
+  border: 1px solid currentColor;
+  border-radius: 47% 53% 48% 52%;
+  padding: 4px 8px;
+  line-height: 1.15;
+  text-align: center;
+  transform: rotate(-3deg);
+}
+
+.notebookTopline i {
+  font-size: 1rem;
+  font-style: normal;
+  transform: rotate(18deg);
+}
+
+.notebook svg {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 104px;
+  margin: 16px 0 7px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.05;
+}
+
+.notebook strong {
+  position: relative;
+  z-index: 2;
+  display: block;
+  margin-top: 4px;
+  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
+  font-size: clamp(1.55rem, 2vw, 2rem);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 1.06;
+}
+
+.coverNote {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: auto;
+  border-bottom: 1px solid currentColor;
+  padding: 14px 0 2px;
+  font-family: "Segoe Print", "Chalkboard SE", "Bradley Hand", cursive;
+  font-size: 0.62rem;
+  font-weight: 600;
+  opacity: 0.74;
+  transform: rotate(-1.5deg);
+}
+
+.mobileControls {
+  position: absolute;
+  z-index: 30;
+  bottom: 28px;
+  left: 50%;
+  display: none;
+  gap: 18px;
+  transform: translateX(-50%);
+}
+
+.mobileControls button {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid #171716;
+  border-radius: 50%;
+  background: #171716;
+  color: #fffdf7;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgb(23 23 22 / 20%);
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.mobileControls button:hover {
+  transform: scale(1.06);
+}
+
+.mobileControls button:active {
+  transform: scale(0.96);
+}
+
+.mobileControls svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+@media (max-width: 1180px) {
+  .header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 10px 0 14px;
+    border-top: 1px solid rgb(23 23 22 / 10%);
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .headerActions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .onlineNote {
+    display: none;
+  }
+
+  .hero {
+    padding-top: 124px;
+  }
+
+  .heroCenter {
+    margin-top: 34px;
+  }
+
+  .notebook[data-offset="-2"] {
+    transform: translate(-50%, -50%) translate(-325px, 44px) rotate(-8deg) scale(0.88);
+  }
+
+  .notebook[data-offset="-1"] {
+    transform: translate(-50%, -50%) translate(-170px, 16px) rotate(-4.5deg) scale(0.95);
+  }
+
+  .notebook[data-offset="1"] {
+    transform: translate(-50%, -50%) translate(170px, 16px) rotate(4.5deg) scale(0.95);
+  }
+
+  .notebook[data-offset="2"] {
+    transform: translate(-50%, -50%) translate(325px, 44px) rotate(8deg) scale(0.88);
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    height: 100svh;
+    min-height: 680px;
+    padding: 108px 18px 96px;
+  }
+
+  .header {
+    right: 18px;
+    left: 18px;
+    min-height: 82px;
+    gap: 12px;
+  }
+
+  .hero :global(.brand-mark) {
+    gap: 8px;
+  }
+
+  .hero :global(.brand-symbol) {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .hero :global(.brand-mark strong) {
+    font-size: 0.94rem;
+  }
+
+  .hero :global(.brand-mark small) {
+    font-size: 0.5rem;
+  }
+
+  .bookingPill {
+    min-height: 40px;
+    padding-inline: 13px;
+    font-size: 0.64rem;
+  }
+
+  .nav {
+    gap: 9px;
+    margin-inline: -2px;
+    font-size: 0.76rem;
+  }
+
+  .heroCenter {
+    height: 100%;
+    min-height: 0;
+    margin-top: 26px;
+  }
+
+  .backgroundWords {
+    top: 45%;
+    width: calc(100% + 20px);
+    margin-left: -10px;
+    white-space: normal;
+  }
+
+  .backgroundWords span:first-child {
+    font-size: clamp(3.2rem, 15vw, 5.2rem);
+  }
+
+  .backgroundWords span:last-child {
+    margin-top: 8px;
+    font-size: clamp(2.45rem, 11.5vw, 4.2rem);
+  }
+
+  .carousel {
+    height: 430px;
+  }
+
+  .notebook {
+    width: min(68vw, 248px);
+    min-height: 360px;
+    padding: 30px 20px 22px 27px;
+  }
+
+  .notebook[data-offset="0"] {
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(0, -3px) rotate(0deg) scale(1);
+  }
+
+  .notebook[data-offset="-1"] {
+    opacity: 0.66;
+    transform: translate(-50%, -50%) translate(-145px, 25px) rotate(-7deg) scale(0.82);
+  }
+
+  .notebook[data-offset="1"] {
+    opacity: 0.66;
+    transform: translate(-50%, -50%) translate(145px, 25px) rotate(7deg) scale(0.82);
+  }
+
+  .notebook[data-offset="-2"],
+  .notebook[data-offset="2"] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+
+  .notebook svg {
+    height: 92px;
+    margin-top: 12px;
+  }
+
+  .notebook strong {
+    font-size: clamp(1.45rem, 7vw, 1.8rem);
+  }
+
+  .mobileControls {
+    display: flex;
+  }
+}
+
+@media (max-width: 430px) {
+  .header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .hero :global(.brand-mark small) {
+    display: none;
+  }
+
+  .bookingPill > span {
+    display: none;
+  }
+
+  .bookingPill {
+    padding-inline: 11px;
+    font-size: 0.58rem;
+  }
+
+  .nav {
+    font-size: 0.7rem;
+  }
+
+  .backgroundWords {
+    top: 43%;
+  }
+
+  .notebook[data-offset="-1"] {
+    transform: translate(-50%, -50%) translate(-124px, 28px) rotate(-7deg) scale(0.78);
+  }
+
+  .notebook[data-offset="1"] {
+    transform: translate(-50%, -50%) translate(124px, 28px) rotate(7deg) scale(0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notebook,
+  .bookingPill,
+  .mobileControls button {
+    transition: none;
+  }
+}
