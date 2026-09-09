@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" role="img" aria-label="İstanbul ve Kadıköy çevresinin el çizimi harita görünümü">
+  <defs>
+    <style>
+      .land{fill:#f7f5ef}.water{fill:#cfe9e8;stroke:#56524d;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+      .coast{fill:none;stroke:#4e4a45;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+      .road{fill:none;stroke:#bab5ad;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+      .road2{fill:none;stroke:#8e8982;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+      .road3{fill:none;stroke:#d6d1c9;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+      .ferry{fill:none;stroke:#74bfc2;stroke-width:2;stroke-dasharray:9 8;stroke-linecap:round}
+      .label{fill:#56514c;font-family:"Segoe Print","Comic Sans MS",cursive;font-size:19px;font-weight:700}
+      .minor{fill:#77716a;font-family:"Segoe Print","Comic Sans MS",cursive;font-size:13px;font-weight:650}
+      .sea{fill:#5e9fa4;font-family:"Segoe Print","Comic Sans MS",cursive;font-size:14px;font-weight:700}
+      .route{fill:#fff;stroke:#58534e;stroke-width:1.7}
+      .routeText{fill:#4c4945;font-family:Arial,sans-serif;font-size:11px;font-weight:800;text-anchor:middle;dominant-baseline:middle}
+      .poi{fill:#fff;stroke:#5f5a54;stroke-width:2}.poiDot{fill:#0aa69d}
+    </style>
+  </defs>
+
+  <rect class="land" width="1000" height="560"/>
+  <path class="water" d="M0 270C82 244 137 216 168 175c35-46 42-88 36-145h150c-16 53-9 95 22 124 31 29 72 54 109 88 36 33 57 75 58 117 1 55-34 96-94 121-82 33-163 55-256 80H0Z"/>
+  <path class="water" d="M354 0c-15 49-10 86 18 117 25 28 61 50 91 79 35 35 55 78 56 119 1 51-30 88-87 110-38 15-80 28-128 39l43 96H1000V0Z"/>
+  <path class="coast" d="M205 0c1 58-9 101-41 143-37 50-91 84-164 111"/>
+  <path class="coast" d="M355 0c-17 52-9 91 23 123 34 34 79 60 111 95 39 42 54 87 43 126-14 47-65 79-140 102-50 16-99 30-147 48"/>
+  <path class="ferry" d="M86 312c117 17 232 18 347 5"/>
+  <path class="ferry" d="M124 387c96-19 201-36 309-58"/>
+  <path class="ferry" d="M250 190c70 32 135 62 197 96"/>
+  <path class="road2" d="M0 94C63 99 118 114 166 143"/>
+  <path class="road2" d="M3 154c67 10 122 27 162 54"/>
+  <path class="road" d="M22 30c42 52 72 105 91 159M72 14c23 65 44 119 63 165M131 9c13 57 19 106 17 148"/>
+  <path class="road" d="M5 59c54 0 105 7 156 22M8 122c53 4 103 15 145 32M16 211c44 1 89 12 126 31"/>
+  <path class="road3" d="M20 79 135 9M30 174 163 59M19 238 155 121M69 249 172 167M4 195l129-117"/>
+  <path class="road2" d="M515 120c112 12 214 12 300-4 68-12 125-33 185-60"/>
+  <path class="road2" d="M530 239c88-19 160-27 226-23 76 4 151 27 244 66"/>
+  <path class="road2" d="M532 361c86-12 166-7 236 16 76 25 145 61 232 94"/>
+  <path class="road2" d="M616 0c-17 67-15 124 6 169 24 51 37 101 38 154 1 63-20 130-55 205"/>
+  <path class="road2" d="M811 0c-32 70-49 131-49 188 0 67 21 126 60 179 37 51 57 112 59 193"/>
+  <path class="road" d="M551 53c74 25 135 42 204 47 70 6 141-1 218-18"/>
+  <path class="road" d="M545 172c72-16 140-21 206-14 85 9 157 35 227 64"/>
+  <path class="road" d="M540 293c79-24 160-30 240-17 72 11 141 39 202 74"/>
+  <path class="road" d="M549 428c65-18 134-20 205-6 79 15 154 45 224 84"/>
+  <path class="road" d="M571 14c15 54 15 109 1 163-12 49-12 99 2 151 14 52 10 110-14 177"/>
+  <path class="road" d="M681 2c-8 49-9 99-2 149 8 54 26 102 35 150 10 55 7 114-12 181"/>
+  <path class="road" d="M732 0c-15 61-18 118-7 171 12 54 35 102 47 151 14 59 10 118-8 178"/>
+  <path class="road" d="M900 2c-28 67-38 126-31 177 7 50 27 98 51 143 26 48 43 105 49 171"/>
+  <path class="road3" d="M568 327l240-182M589 353l247-175M610 378l264-186M625 414l279-201M641 447l291-207"/>
+  <path class="road3" d="M552 202l332 243M560 174l351 243M582 146l354 240M611 123l342 222"/>
+  <path class="road3" d="M702 84l-112 390M741 71 640 486M786 60 688 499M843 52l-89 461"/>
+  <path class="road3" d="M582 98l372 54M568 130l393 61M553 266l421 18M545 330l437 7M552 402l418 23"/>
+  <path d="M665 430c36-17 75-13 103 8 21 16 20 48-10 62-39 18-79 15-109-3-23-14-17-50 16-67Z" fill="#dce8d6" stroke="#77716a" stroke-width="2"/>
+  <path d="M841 242c31-10 67-5 87 12 18 15 16 41-9 53-33 16-70 12-94-6-19-15-11-48 16-59Z" fill="#dce8d6" stroke="#77716a" stroke-width="2"/>
+  <g transform="translate(494 252)"><rect class="route" x="0" y="0" width="42" height="22" rx="6"/><text class="routeText" x="21" y="12">D100</text></g>
+  <g transform="translate(805 207)"><rect class="route" x="0" y="0" width="37" height="22" rx="6"/><text class="routeText" x="18.5" y="12">O-4</text></g>
+  <g transform="translate(871 367)"><rect class="route" x="0" y="0" width="42" height="22" rx="6"/><text class="routeText" x="21" y="12">D100</text></g>
+  <text class="label" x="63" y="204">İstanbul</text>
+  <text class="minor" x="48" y="82">Fatih</text>
+  <text class="minor" x="102" y="157">Karaköy</text>
+  <text class="minor" x="169" y="119">Beşiktaş</text>
+  <text class="label" x="523" y="109">Üsküdar</text>
+  <text class="minor" x="636" y="160">Acıbadem</text>
+  <text class="minor" x="792" y="102">Ümraniye</text>
+  <text class="minor" x="848" y="300">Ataşehir</text>
+  <text class="label" x="584" y="358">Kadıköy</text>
+  <text class="minor" x="558" y="441">Moda</text>
+  <text class="minor" x="698" y="475">Fenerbahçe</text>
+  <text class="minor" x="761" y="423">Göztepe</text>
+  <text class="minor" x="841" y="451">Caddebostan</text>
+  <text class="sea" x="247" y="260" transform="rotate(-28 247 260)">Boğaz</text>
+  <text class="sea" x="242" y="492" transform="rotate(-8 242 492)">Marmara Denizi</text>
+  <g transform="translate(590 309)"><circle class="poi" r="13"/><circle class="poiDot" r="5"/></g>
+  <g transform="translate(739 471)"><circle class="poi" r="11"/><path d="M-4 3 0-5 4 3Z" fill="#6f9f75"/></g>
+  <g transform="translate(869 246)"><circle class="poi" r="11"/><path d="M-5 2h10M0-5v10" stroke="#0aa69d" stroke-width="2.5"/></g>
+  <g transform="translate(632 331)">
+    <path d="M0-34c-21 0-38 17-38 38 0 28 38 69 38 69s38-41 38-69c0-21-17-38-38-38Z" fill="#0aa69d" stroke="#3f3c38" stroke-width="4"/>
+    <circle cx="0" cy="4" r="13" fill="#f8f6f0" stroke="#3f3c38" stroke-width="3"/>
+  </g>
+  <path d="M647 396c31 5 54 1 74-9" fill="none" stroke="#0aa69d" stroke-width="3" stroke-linecap="round"/>
+  <text class="minor" x="654" y="417" fill="#0aa69d">çalışma konumu</text>
+</svg>
