@@ -7,6 +7,7 @@ import "./globals.css";
 import "./ui-polish.css";
 import "./public-sketch.css";
 import "./public-typography-refinement.css";
+import "./public-header-unified.css";
 import "./public-footer-sketch.css";
 import "./public-logo-mark.css";
 

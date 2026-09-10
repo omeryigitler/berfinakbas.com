@@ -21,19 +21,26 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
 export function SiteHeader() {
   return (
     <header className="site-header">
-      <Link href="/" aria-label="Berfin Akbaş ana sayfa">
+      <Link className="site-header-brand" href="/" aria-label="Berfin Akbaş ana sayfa">
         <BrandMark />
       </Link>
-      <nav aria-label="Ana menü">
+
+      <nav className="site-header-nav" aria-label="Ana menü">
         <Link href="/hizmetler">Hizmetler</Link>
+        <span aria-hidden="true">·</span>
         <Link href="/hakkimda">Hakkımda</Link>
+        <span aria-hidden="true">·</span>
         <Link href="/surec">Süreç</Link>
-        <Link href="/#sss">SSS</Link>
+        <span aria-hidden="true">·</span>
         <Link href="/iletisim">İletişim</Link>
       </nav>
-      <Link className="header-cta" href="/randevu">
-        Randevu Al
-      </Link>
+
+      <div className="site-header-actions">
+        <span className="site-header-online-note">online &amp; yüz yüze</span>
+        <Link className="header-cta" href="/randevu">
+          Randevu Al
+        </Link>
+      </div>
     </header>
   );
 }
