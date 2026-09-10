@@ -39,7 +39,7 @@
 }
 
 .site-footer-sketch .brand-mark > .brand-symbol:first-child::before {
-  filter: brightness(0) invert(1);
+  filter: none;
   opacity: 0.96;
 }
 
