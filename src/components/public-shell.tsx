@@ -76,7 +76,7 @@ export function SiteFooter() {
           aria-label="Kadıköy konumunu Google Maps'te aç"
         >
           <Image
-            src="/footer-kadikoy-map.svg"
+            src="/footer-kadikoy-map.webp"
             alt=""
             width={1000}
             height={560}
