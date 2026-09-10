@@ -41,22 +41,11 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="site-footer site-footer-sketch">
-      <div className="site-footer-top">
-        <section className="site-footer-intro" aria-labelledby="footer-brand-title">
-          <p className="site-footer-handnote">klinik notları / iletişim ↘</p>
+      <div className="site-footer-main">
+        <section className="site-footer-essentials" aria-labelledby="footer-brand-title">
           <Link href="/" aria-label="Berfin Akbaş ana sayfa" id="footer-brand-title">
             <BrandMark compact />
           </Link>
-          <p className="site-footer-description">
-            Çocuklar, ergenler ve yetişkinler için sakin, anlaşılır ve kişiye göre planlanan dil ve
-            konuşma terapisi süreci.
-          </p>
-
-          <div className="site-footer-location-copy">
-            <span>yüz yüze görüşme</span>
-            <strong>Kadıköy, İstanbul</strong>
-            <small>Randevu öncesinde görüşme konumu netleştirilir.</small>
-          </div>
 
           <div className="site-footer-actions">
             <Link className="site-footer-cta" href="/randevu">
@@ -77,43 +66,13 @@ export function SiteFooter() {
         >
           <Image
             src="/footer-kadikoy-map.webp"
-            alt=""
+            alt="İstanbul, Üsküdar ve Kadıköy'ü gösteren el çizimi harita"
             width={1000}
-            height={560}
+            height={563}
             className="site-footer-map-drawing"
-            aria-hidden="true"
+            unoptimized
           />
-
-          <span className="site-footer-map-grid" aria-hidden="true" />
-          <div className="site-footer-map-label">
-            <span>konum ↗</span>
-            <strong>Kadıköy</strong>
-            <small>Google Maps&apos;te aç</small>
-          </div>
         </a>
-      </div>
-
-      <div className="site-footer-directory">
-        <nav className="site-footer-nav" aria-label="Alt menü">
-          <span>Keşfet</span>
-          <div>
-            <Link href="/hizmetler">Hizmetler</Link>
-            <Link href="/hakkimda">Hakkımda</Link>
-            <Link href="/surec">Süreç</Link>
-            <Link href="/randevu">Randevu</Link>
-            <Link href="/iletisim">İletişim</Link>
-          </div>
-        </nav>
-
-        <div className="site-footer-note">
-          <span>Bilgi notu</span>
-          <p>Bu site tanı koymaz, sonuç vaat etmez ve kişiye özel sağlık önerisi sunmaz.</p>
-        </div>
-
-        <div className="site-footer-mode">
-          <span>Görüşme biçimi</span>
-          <p>Online ve yüz yüze görüşme seçenekleri uygunluk değerlendirmesi sonrasında planlanır.</p>
-        </div>
       </div>
 
       <div className="site-footer-base">
