@@ -2,12 +2,16 @@
   position: relative;
   width: min(1160px, calc(100% - 48px));
   margin: 48px auto 24px;
-  padding: 0;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  padding: 26px 30px 16px 34px;
+  overflow: hidden;
+  border: 1.5px solid rgb(63 60 56 / 48%);
+  border-radius: 18px 24px 19px 22px;
+  background-color: #f7f4ed;
+  background-image:
+    linear-gradient(rgb(72 67 61 / 4.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(72 67 61 / 4.5%) 1px, transparent 1px);
+  background-size: 26px 26px;
+  box-shadow: 7px 8px 0 rgb(63 60 56 / 10%);
   color: var(--sketch-ink, #3f3c38);
   transform: none;
 }
@@ -19,7 +23,7 @@
 
 .site-footer.site-footer-sketch:hover {
   transform: none;
-  box-shadow: none;
+  box-shadow: 7px 8px 0 rgb(63 60 56 / 10%);
 }
 
 .site-footer-main {
@@ -27,16 +31,9 @@
   grid-template-columns: minmax(0, 1fr) minmax(320px, 410px);
   align-items: center;
   gap: clamp(34px, 5vw, 68px);
-  min-height: 248px;
-  padding: 26px 30px 26px 34px;
-  border: 1.5px solid rgb(63 60 56 / 48%);
-  border-radius: 18px 24px 19px 22px;
-  background-color: #f7f4ed;
-  background-image:
-    linear-gradient(rgb(72 67 61 / 4.5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(72 67 61 / 4.5%) 1px, transparent 1px);
-  background-size: 26px 26px;
-  box-shadow: 7px 8px 0 rgb(63 60 56 / 10%);
+  min-height: 222px;
+  padding: 0 0 24px;
+  border-bottom: 1px solid rgb(63 60 56 / 17%);
 }
 
 .site-footer-essentials {
@@ -151,8 +148,8 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 10px 20px;
-  margin-top: 14px;
-  padding: 0 4px;
+  margin: 0;
+  padding: 14px 4px 0;
   border: 0;
   color: rgb(63 60 56 / 58%);
   font-family: var(--sketch-sans, var(--sans));
@@ -227,14 +224,15 @@
   .site-footer.site-footer-sketch {
     width: calc(100% - 28px);
     margin-top: 34px;
+    padding: 22px 22px 14px;
+    border-radius: 16px 20px 17px 19px;
+    background-size: 24px 24px;
   }
 
   .site-footer-main {
     gap: 24px;
     min-height: 0;
-    padding: 22px;
-    border-radius: 16px 20px 17px 19px;
-    background-size: 24px 24px;
+    padding-bottom: 20px;
   }
 
   .site-footer-essentials {
@@ -251,7 +249,8 @@
   .site-footer-sketch .site-footer-base {
     grid-template-columns: 1fr;
     align-items: flex-start;
-    padding-inline: 2px;
+    gap: 8px;
+    padding: 12px 2px 0;
   }
 
   .site-footer-sketch .site-footer-legal {
