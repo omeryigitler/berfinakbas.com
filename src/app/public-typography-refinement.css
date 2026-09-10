@@ -28,10 +28,8 @@
   font-family: var(--sketch-sans);
 }
 
-/* Eyebrows and small card labels use the same visual language as
-   “küçük notlar / net cevaplar”: short, handwritten and lightly tilted. */
-.inner-page .content-card-grid > article > span:first-child,
-.inner-page .service-page-grid-visual .service-visual-card > span {
+/* Keep the compact handwritten treatment for general numbered cards. */
+.inner-page .content-card-grid > article > span:first-child {
   color: var(--sketch-teal);
   font-family: var(--sketch-hand);
   font-size: 0.76rem;
@@ -39,6 +37,24 @@
   letter-spacing: -0.02em;
   text-transform: none;
   transform: rotate(-1deg);
+}
+
+/* Restore only the service-card indices to the first 9 September handwritten
+   treatment: the same hand face at the original inherited 1.3rem size. */
+.inner-page .service-page-grid-visual .service-visual-card > span {
+  color: var(--sketch-teal);
+  font-family: var(--sketch-hand);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  transform: none;
+}
+
+.inner-page .service-page-grid-visual .service-visual-card:hover > span {
+  font-size: 1.3rem;
+  text-shadow: none;
+  transform: none;
 }
 
 /* About portrait cards: remove the remaining legacy serif / tracked-uppercase
