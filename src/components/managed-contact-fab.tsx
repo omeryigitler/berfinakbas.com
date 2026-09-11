@@ -90,15 +90,15 @@ function MailIcon() {
 }
 
 function channelHref(settings: SiteContactSettings, id: ChannelId): string {
-  if (id === "whatsapp") return settings.whatsappUrl;
-  if (id === "instagram") return settings.instagramUrl;
+  if (id === "whatsapp") return settings.whatsappUrl || "/iletisim";
+  if (id === "instagram") return settings.instagramUrl || "/iletisim";
   if (id === "phone") {
-    if (!settings.phone) return "";
+    if (!settings.phone) return "/iletisim";
     return settings.phone.startsWith("tel:")
       ? settings.phone
       : `tel:${settings.phone.replace(/[^+\d]/g, "")}`;
   }
-  if (!settings.email) return "";
+  if (!settings.email) return "/iletisim";
   return settings.email.startsWith("mailto:") ? settings.email : `mailto:${settings.email}`;
 }
 
