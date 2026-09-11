@@ -10,6 +10,7 @@ import "./public-typography-refinement.css";
 import "./public-header-unified.css";
 import "./public-footer-sketch.css";
 import "./public-logo-mark.css";
+import "./public-mobile-fixes.css";
 
 export const metadata: Metadata = {
   metadataBase: publicSiteUrl,

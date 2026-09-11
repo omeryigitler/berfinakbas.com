@@ -1,0 +1,55 @@
+/* Mobile-only visual corrections. Desktop/tablet composition remains unchanged. */
+
+@media (max-width: 700px) {
+  /* Keep the introduction label away from Berfin's face on the home portrait. */
+  .public-sketch .home-about-name-note {
+    top: auto;
+    right: auto;
+    bottom: 18px;
+    left: 14px;
+  }
+
+  /* The Hakkımda page has a page-local mobile rule; this selector intentionally
+     carries higher specificity so the label stays in the lower safe area. */
+  body .inner-page #hakkimda .sketch-about-name-card {
+    top: auto;
+    right: 14px;
+    bottom: 14px;
+    left: auto;
+  }
+
+  /* Only the mobile Çocuklar card swaps the baked-background WebP for the
+     existing transparent illustration. The original image keeps layout sizing. */
+  .inner-page
+    .service-page-grid-visual
+    .service-visual-card:first-child
+    .service-visual-image {
+    background: url("/service-children-clear.svg") center / contain no-repeat;
+  }
+
+  .inner-page
+    .service-page-grid-visual
+    .service-visual-card:first-child
+    .service-visual-image
+    .service-visual-art {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  /* Center the three footer base rows on mobile. */
+  .site-footer-sketch .site-footer-base {
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .site-footer-sketch .site-footer-legal {
+    justify-content: center;
+  }
+
+  .site-footer-sketch .site-footer-credit {
+    justify-self: center;
+    text-align: center;
+  }
+}
