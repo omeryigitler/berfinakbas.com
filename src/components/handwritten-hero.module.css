@@ -26,7 +26,7 @@
   min-height: 680px;
   flex-direction: column;
   overflow: hidden;
-  background: rgb(251 250 247 / 86%);
+  background: transparent;
   color: var(--ink);
 }
 
