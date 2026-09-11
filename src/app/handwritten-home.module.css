@@ -20,9 +20,7 @@
   min-height: 390px;
   place-items: center;
   padding: 70px 24px;
-  border-top: 1px solid rgb(63 60 56 / 10%);
   border-bottom: 1px solid rgb(63 60 56 / 10%);
-  background: rgb(255 255 255 / 38%);
 }
 
 .discoveryInner {
