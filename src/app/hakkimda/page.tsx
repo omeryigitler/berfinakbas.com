@@ -32,51 +32,110 @@ export default function AboutPage() {
     <main className="inner-page">
       <SiteHeader />
       <style>{`
+        /* Hakkımda page only: keep the shared visual language, but prevent the
+           absolutely-positioned portrait notes from colliding with the copy. */
         .inner-page #hakkimda {
-          gap: clamp(40px, 4.8vw, 70px);
-          padding-block: clamp(58px, 6vw, 78px) clamp(64px, 6.5vw, 88px);
+          align-items: start;
+          gap: clamp(52px, 5vw, 74px);
+          padding-block: clamp(52px, 5.4vw, 70px) clamp(58px, 6vw, 78px);
         }
 
         .inner-page #hakkimda > div:first-child {
-          min-height: 560px;
+          min-height: 530px;
         }
 
         .inner-page #hakkimda .sketch-about-name-card {
-          width: min(64%, 232px);
-          padding: 14px 18px 15px;
+          top: 24px;
+          right: -18px;
+          width: min(62%, 218px);
+          padding: 13px 16px 14px;
         }
 
         .inner-page #hakkimda .sketch-about-name-card > strong {
           margin-top: 4px;
+          font-size: 1.48rem;
         }
 
         .inner-page #hakkimda .sketch-about-name-card > small {
           margin-top: 2px;
         }
 
+        .inner-page #hakkimda .sketch-about-note-card {
+          bottom: -10px;
+          left: -42px;
+        }
+
+        .inner-page #hakkimda .sketch-about-copy > h1 {
+          max-width: 690px;
+          font-size: clamp(3.05rem, 4.35vw, 4.55rem);
+          line-height: 0.97;
+        }
+
         .inner-page #hakkimda .sketch-about-copy > p:not(.section-kicker) {
-          margin-top: 15px;
-          line-height: 1.72;
+          margin-top: 13px;
+          line-height: 1.64;
         }
 
         .inner-page #hakkimda .sketch-about-values {
-          margin-top: 24px;
+          gap: 10px;
+          margin-top: 20px;
         }
 
         .inner-page #hakkimda .sketch-about-values article {
-          min-height: 140px;
-          padding-top: 18px;
-          padding-bottom: 18px;
+          min-height: 128px;
+          padding: 16px 42px 16px 18px;
+        }
+
+        .inner-page #hakkimda .sketch-about-values article > strong {
+          margin-top: 13px;
+        }
+
+        .inner-page #hakkimda .sketch-about-values article > small {
+          margin-top: 7px;
+          line-height: 1.48;
+        }
+
+        .inner-page #hakkimda .sketch-about-copy > div:last-child {
+          margin-top: 22px;
+        }
+
+        @media (max-width: 980px) {
+          .inner-page #hakkimda {
+            gap: 38px;
+          }
+
+          .inner-page #hakkimda > div:first-child {
+            min-height: 500px;
+          }
+
+          .inner-page #hakkimda .sketch-about-name-card {
+            right: -8px;
+          }
+
+          .inner-page #hakkimda .sketch-about-copy > h1 {
+            font-size: clamp(2.8rem, 5.6vw, 4rem);
+          }
         }
 
         @media (max-width: 720px) {
           .inner-page #hakkimda {
-            gap: 34px;
-            padding-block: 52px 64px;
+            gap: 30px;
+            padding-block: 46px 58px;
           }
 
           .inner-page #hakkimda > div:first-child {
-            min-height: 520px;
+            min-height: 500px;
+          }
+
+          .inner-page #hakkimda .sketch-about-name-card {
+            top: 14px;
+            right: 14px;
+            width: min(62%, 210px);
+            padding: 13px 15px 14px;
+          }
+
+          .inner-page #hakkimda .sketch-about-note-card {
+            left: -18px;
           }
         }
       `}</style>
