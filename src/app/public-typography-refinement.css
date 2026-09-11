@@ -84,6 +84,99 @@
   font-family: var(--sketch-sans);
 }
 
+/* Keep the approved portrait image untouched. Only reposition and restyle the
+   small paper notes to match the supplied Tanışın reference. */
+.public-sketch .home-about-name-note {
+  top: 48px;
+  right: -26px;
+  bottom: auto;
+  width: 240px;
+  padding: 20px 24px 22px;
+  border: 1px solid rgb(63 60 56 / 10%);
+  border-radius: 28px;
+  background: #fffaf4;
+  box-shadow: 0 18px 38px rgb(63 60 56 / 12%);
+  transform: rotate(0.4deg);
+}
+
+.public-sketch .home-about-name-note > small {
+  color: var(--sketch-teal);
+  font-family: var(--sketch-hand);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  text-transform: none;
+}
+
+.public-sketch .home-about-name-note > strong {
+  margin-top: 8px;
+  color: var(--sketch-ink);
+  font-family: var(--sketch-hand);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+}
+
+.public-sketch .home-about-name-note > span {
+  margin-top: 6px;
+  color: var(--sketch-muted);
+  font-family: var(--sketch-sans);
+  font-size: 0.76rem;
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.inner-page .sketch-about-name-card {
+  top: 40px;
+  right: -16px;
+  bottom: auto;
+  left: auto;
+  width: min(72%, 268px);
+  border: 1px solid rgb(63 60 56 / 10%);
+  border-radius: 28px;
+  padding: 23px 26px 24px;
+  background: #fffaf4;
+  box-shadow: 0 20px 44px rgb(63 60 56 / 12%);
+  backdrop-filter: none;
+}
+
+.inner-page .sketch-about-name-card > span {
+  color: var(--sketch-teal);
+  font-family: var(--sketch-hand);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-transform: none;
+  transform: none;
+}
+
+.inner-page .sketch-about-name-card > strong {
+  margin-top: 8px;
+  font-size: 1.72rem;
+  line-height: 1.08;
+}
+
+.inner-page .sketch-about-name-card > small {
+  margin-top: 6px;
+  color: var(--sketch-muted);
+  font-family: var(--sketch-sans);
+  font-size: 0.76rem;
+  font-weight: 560;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.inner-page .sketch-about-note-card {
+  top: auto;
+  right: auto;
+  bottom: -22px;
+  left: -70px;
+}
+
 .inner-page .sketch-about-copy > h1,
 .inner-page .sketch-about-copy > h2 {
   color: var(--sketch-ink);
@@ -181,6 +274,27 @@
 }
 
 @media (max-width: 700px) {
+  .public-sketch .home-about-name-note {
+    top: 24px;
+    right: -12px;
+    bottom: auto;
+    width: 205px;
+    padding: 17px 19px 18px;
+  }
+
+  .public-sketch .home-about-name-note > strong {
+    font-size: 1.45rem;
+  }
+
+  .inner-page .sketch-about-name-card {
+    top: 20px;
+    right: 18px;
+    bottom: auto;
+    left: auto;
+    width: min(68%, 240px);
+    padding: 19px 21px 20px;
+  }
+
   .inner-page .sketch-about-name-card > strong {
     font-size: 1.48rem;
   }

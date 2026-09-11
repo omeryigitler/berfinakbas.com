@@ -82,8 +82,8 @@ export default function Home() {
             sizes="(max-width: 760px) 72vw, 380px"
             width={413}
           />
-          <div className={styles.nameNote}>
-            <small>tanışın ↘</small>
+          <div className={`${styles.nameNote} home-about-name-note`}>
+            <small>Tanışın</small>
             <strong>Berfin Akbaş</strong>
             <span>Dil ve Konuşma Terapisti</span>
           </div>
