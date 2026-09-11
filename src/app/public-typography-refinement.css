@@ -87,9 +87,10 @@
 /* Keep the approved portrait image untouched. Only reposition and restyle the
    small paper notes to match the supplied Tanışın reference. */
 .public-sketch .home-about-name-note {
-  top: 48px;
-  right: -26px;
+  top: 36px;
+  right: auto;
   bottom: auto;
+  left: -56px;
   width: 240px;
   padding: 20px 24px 22px;
   border: 1px solid rgb(63 60 56 / 10%);
@@ -131,8 +132,8 @@
 }
 
 .inner-page .sketch-about-name-card {
-  top: 40px;
-  right: -16px;
+  top: 22px;
+  right: -116px;
   bottom: auto;
   left: auto;
   width: min(72%, 268px);
@@ -275,9 +276,10 @@
 
 @media (max-width: 700px) {
   .public-sketch .home-about-name-note {
-    top: 24px;
-    right: -12px;
+    top: 18px;
+    right: auto;
     bottom: auto;
+    left: 10px;
     width: 205px;
     padding: 17px 19px 18px;
   }
@@ -287,8 +289,8 @@
   }
 
   .inner-page .sketch-about-name-card {
-    top: 20px;
-    right: 18px;
+    top: 14px;
+    right: -18px;
     bottom: auto;
     left: auto;
     width: min(68%, 240px);
