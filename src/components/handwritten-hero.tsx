@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { BrandMark } from "@/components/public-shell";
 
+import motion from "./handwritten-hero-motion.module.css";
 import styles from "./handwritten-hero.module.css";
 import realism from "./handwritten-hero-realism.module.css";
 
@@ -136,6 +138,7 @@ function clamp01(value: number) {
 export default function HandwrittenHero() {
   const [activeIndex, setActiveIndex] = useState(2);
   const [isHovered, setIsHovered] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const trackRef = useRef<HTMLElement | null>(null);
   const heroRef = useRef<HTMLDivElement | null>(null);
 
@@ -147,27 +150,29 @@ export default function HandwrittenHero() {
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame: number | null = null;
+    let introTimer: number | null = null;
 
     const update = () => {
       frame = null;
 
       if (reducedMotion.matches) {
-        hero.style.setProperty("--word-one", "1");
-        hero.style.setProperty("--word-two", "1");
-        hero.style.setProperty("--cards-reveal", "1");
+        hero.style.setProperty("--hero-scroll", "0");
+        hero.style.setProperty("--hero-exit", "0");
+        hero.style.setProperty("--spread-near", "0px");
+        hero.style.setProperty("--spread-far", "0px");
         return;
       }
 
       const rect = track.getBoundingClientRect();
       const scrollDistance = Math.max(track.offsetHeight - window.innerHeight, 1);
       const progress = clamp01(-rect.top / scrollDistance);
-      const wordOne = clamp01(progress / 0.24);
-      const wordTwo = clamp01((progress - 0.08) / 0.26);
-      const cards = clamp01((progress - 0.18) / 0.36);
+      const spread = clamp01((progress - 0.08) / 0.58);
+      const exit = clamp01((progress - 0.8) / 0.2);
 
-      hero.style.setProperty("--word-one", wordOne.toFixed(4));
-      hero.style.setProperty("--word-two", wordTwo.toFixed(4));
-      hero.style.setProperty("--cards-reveal", cards.toFixed(4));
+      hero.style.setProperty("--hero-scroll", progress.toFixed(4));
+      hero.style.setProperty("--hero-exit", exit.toFixed(4));
+      hero.style.setProperty("--spread-near", `${(spread * 28).toFixed(2)}px`);
+      hero.style.setProperty("--spread-far", `${(spread * 50).toFixed(2)}px`);
     };
 
     const scheduleUpdate = () => {
@@ -175,16 +180,36 @@ export default function HandwrittenHero() {
       frame = window.requestAnimationFrame(update);
     };
 
+    const syncMotionPreference = () => {
+      if (introTimer !== null) {
+        window.clearTimeout(introTimer);
+        introTimer = null;
+      }
+
+      if (reducedMotion.matches) {
+        setIntroDone(true);
+      } else {
+        introTimer = window.setTimeout(() => {
+          setIntroDone(true);
+          introTimer = null;
+        }, 1700);
+      }
+
+      scheduleUpdate();
+    };
+
     update();
+    syncMotionPreference();
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", scheduleUpdate);
-    reducedMotion.addEventListener("change", scheduleUpdate);
+    reducedMotion.addEventListener("change", syncMotionPreference);
 
     return () => {
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
-      reducedMotion.removeEventListener("change", scheduleUpdate);
+      reducedMotion.removeEventListener("change", syncMotionPreference);
       if (frame !== null) window.cancelAnimationFrame(frame);
+      if (introTimer !== null) window.clearTimeout(introTimer);
     };
   }, []);
 
@@ -196,10 +221,20 @@ export default function HandwrittenHero() {
     setActiveIndex((current) => (current + 1) % serviceCards.length);
   };
 
+  const heroMotionStyle = {
+    "--word-one": "1",
+    "--word-two": "1",
+    "--cards-reveal": "1",
+    "--hero-scroll": "0",
+    "--hero-exit": "0",
+    "--spread-near": "0px",
+    "--spread-far": "0px",
+  } as CSSProperties;
+
   return (
     <section className={styles.heroTrack} ref={trackRef} aria-labelledby="home-title">
-      <div className={styles.hero} ref={heroRef}>
-        <header className={styles.header}>
+      <div className={styles.hero} ref={heroRef} style={heroMotionStyle}>
+        <header className={`${styles.header} ${motion.headerMotion}`}>
           <Link className={styles.brand} href="/" aria-label="Berfin Akbaş ana sayfa">
             <BrandMark />
           </Link>
@@ -223,13 +258,15 @@ export default function HandwrittenHero() {
         </header>
 
         <div className={styles.heroCenter}>
-          <h1 className={styles.backgroundWords} id="home-title">
-            <span>Dil ve Konuşma Keşfi:</span>
-            <span>Kişiselleştirilmiş Notlarla</span>
+          <h1 className={`${styles.backgroundWords} ${motion.wordsMotion}`} id="home-title">
+            <span className={motion.wordOne}>Dil ve Konuşma Keşfi:</span>
+            <span className={motion.wordTwo}>Kişiselleştirilmiş Notlarla</span>
           </h1>
 
           <div
-            className={`${styles.carousel} ${isHovered ? styles.carouselHovered : ""}`}
+            className={`${styles.carousel} ${motion.carouselMotion} ${
+              introDone ? "" : motion.carouselIntro
+            } ${isHovered ? styles.carouselHovered : ""}`}
             aria-label="Destek alanları"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -237,6 +274,9 @@ export default function HandwrittenHero() {
             {serviceCards.map((service, index) => {
               const offset = wrappedOffset(index, activeIndex);
               const active = index === activeIndex;
+              const notebookMotionStyle = {
+                "--notebook-intro-delay": `${760 + Math.abs(index - 2) * 120}ms`,
+              } as CSSProperties;
 
               return (
                 <button
@@ -244,10 +284,11 @@ export default function HandwrittenHero() {
                   aria-pressed={active}
                   className={`${styles.notebook} ${styles[service.tone]} ${realism.notebook} ${
                     realism[service.tone]
-                  } ${active ? styles.active : ""}`}
+                  } ${motion.notebookMotion} ${active ? styles.active : ""}`}
                   data-offset={offset}
                   key={service.title}
                   onClick={() => setActiveIndex(index)}
+                  style={notebookMotionStyle}
                   type="button"
                 >
                   <span className={`${styles.spiral} ${realism.spiral}`} aria-hidden="true" />
