@@ -1,5 +1,5 @@
 .headerMotion {
-  animation: header-enter 760ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: header-enter 1400ms 150ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .wordsMotion {
@@ -13,11 +13,11 @@
 }
 
 .wordOne {
-  animation: handwriting-enter 900ms 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: handwriting-enter 1800ms 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .wordTwo {
-  animation: handwriting-enter 950ms 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: handwriting-enter 1900ms 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .carouselMotion {
@@ -28,11 +28,11 @@
 }
 
 .carouselIntro {
-  animation: carousel-enter 980ms 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: carousel-enter 1800ms 1600ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .notebookMotion {
-  animation: notebook-arrive 760ms var(--notebook-intro-delay, 760ms)
+  animation: notebook-arrive 1400ms var(--notebook-intro-delay, 1700ms)
     cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -53,7 +53,7 @@
 }
 
 .notebookMotion svg {
-  animation: doodle-reveal 820ms calc(var(--notebook-intro-delay, 760ms) + 200ms)
+  animation: doodle-reveal 1400ms calc(var(--notebook-intro-delay, 1700ms) + 400ms)
     cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 

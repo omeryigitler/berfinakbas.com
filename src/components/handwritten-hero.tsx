@@ -192,7 +192,7 @@ export default function HandwrittenHero() {
         introTimer = window.setTimeout(() => {
           setIntroDone(true);
           introTimer = null;
-        }, 1700);
+        }, 4300);
       }
 
       scheduleUpdate();
@@ -275,7 +275,7 @@ export default function HandwrittenHero() {
               const offset = wrappedOffset(index, activeIndex);
               const active = index === activeIndex;
               const notebookMotionStyle = {
-                "--notebook-intro-delay": `${760 + Math.abs(index - 2) * 120}ms`,
+                "--notebook-intro-delay": `${1700 + Math.abs(index - 2) * 240}ms`,
               } as CSSProperties;
 
               return (
