@@ -1,7 +1,6 @@
 /* Mobile-only visual corrections. Desktop/tablet composition remains unchanged. */
 
 @media (max-width: 700px) {
-  /* Keep the introduction label away from Berfin's face on the home portrait. */
   .public-sketch .home-about-name-note {
     top: auto;
     right: auto;
@@ -9,8 +8,6 @@
     left: 14px;
   }
 
-  /* The Hakkımda page has a page-local mobile rule; this selector intentionally
-     carries higher specificity so the label stays in the lower safe area. */
   body .inner-page #hakkimda .sketch-about-name-card {
     top: auto;
     right: 14px;
@@ -18,13 +15,11 @@
     left: auto;
   }
 
-  /* Only the mobile Çocuklar card swaps the baked-background WebP for the
-     existing transparent illustration. The original image keeps layout sizing. */
   .inner-page
     .service-page-grid-visual
     .service-visual-card:first-child
     .service-visual-image {
-    background: url("/service-children-clear.svg") center / contain no-repeat;
+    background: none;
   }
 
   .inner-page
@@ -32,12 +27,61 @@
     .service-visual-card:first-child
     .service-visual-image
     .service-visual-art {
-    opacity: 0;
+    opacity: 0.96;
+    mix-blend-mode: multiply;
+  }
+
+  .inner-page .booking-flow.booking-success {
+    min-height: 0;
+    align-content: start;
+    padding: 32px 22px 28px;
+    border-radius: 18px;
+  }
+
+  .inner-page .booking-success .section-kicker {
+    margin-bottom: 10px;
+  }
+
+  .inner-page .booking-success h1 {
+    max-width: none;
+    font-size: clamp(2.2rem, 10.8vw, 2.7rem);
+    line-height: 0.98;
+    letter-spacing: -0.06em;
+  }
+
+  .inner-page .booking-success > p {
+    margin-top: 15px;
+    font-size: 0.86rem;
+    line-height: 1.65;
+  }
+
+  .inner-page .booking-success .booking-reference {
+    display: grid;
+    width: 100%;
+    gap: 4px;
+    margin-top: 20px;
+    padding: 13px 15px;
+    border-radius: 15px;
+  }
+
+  .inner-page .booking-success .booking-reference span {
+    font-size: 0.6rem;
+  }
+
+  .inner-page .booking-success .booking-reference strong {
+    font-size: 1.04rem;
+    letter-spacing: 0.025em;
+    overflow-wrap: anywhere;
+  }
+
+  .inner-page .booking-success .booking-privacy-note {
+    margin-top: 12px;
+    font-size: 0.68rem;
+    line-height: 1.45;
   }
 }
 
 @media (max-width: 620px) {
-  /* Center the three footer base rows on mobile. */
   .site-footer-sketch .site-footer-base {
     align-items: center;
     justify-items: center;
