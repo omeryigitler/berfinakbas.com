@@ -31,6 +31,55 @@ export default function AboutPage() {
   return (
     <main className="inner-page">
       <SiteHeader />
+      <style>{`
+        .inner-page #hakkimda {
+          gap: clamp(40px, 4.8vw, 70px);
+          padding-block: clamp(58px, 6vw, 78px) clamp(64px, 6.5vw, 88px);
+        }
+
+        .inner-page #hakkimda > div:first-child {
+          min-height: 560px;
+        }
+
+        .inner-page #hakkimda .sketch-about-name-card {
+          width: min(64%, 232px);
+          padding: 14px 18px 15px;
+        }
+
+        .inner-page #hakkimda .sketch-about-name-card > strong {
+          margin-top: 4px;
+        }
+
+        .inner-page #hakkimda .sketch-about-name-card > small {
+          margin-top: 2px;
+        }
+
+        .inner-page #hakkimda .sketch-about-copy > p:not(.section-kicker) {
+          margin-top: 15px;
+          line-height: 1.72;
+        }
+
+        .inner-page #hakkimda .sketch-about-values {
+          margin-top: 24px;
+        }
+
+        .inner-page #hakkimda .sketch-about-values article {
+          min-height: 140px;
+          padding-top: 18px;
+          padding-bottom: 18px;
+        }
+
+        @media (max-width: 720px) {
+          .inner-page #hakkimda {
+            gap: 34px;
+            padding-block: 52px 64px;
+          }
+
+          .inner-page #hakkimda > div:first-child {
+            min-height: 520px;
+          }
+        }
+      `}</style>
       <AboutHighlight
         isPage
         title="İletişim ihtiyacını anlamak, doğru soruyla başlar."
