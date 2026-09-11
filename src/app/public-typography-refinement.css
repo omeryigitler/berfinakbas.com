@@ -90,9 +90,9 @@
   top: 36px;
   right: auto;
   bottom: auto;
-  left: -56px;
-  width: 240px;
-  padding: 20px 24px 22px;
+  left: -88px;
+  width: 220px;
+  padding: 17px 20px 18px;
   border: 1px solid rgb(63 60 56 / 10%);
   border-radius: 28px;
   background: #fffaf4;
@@ -103,7 +103,7 @@
 .public-sketch .home-about-name-note > small {
   color: var(--sketch-teal);
   font-family: var(--sketch-hand);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.1;
@@ -111,20 +111,20 @@
 }
 
 .public-sketch .home-about-name-note > strong {
-  margin-top: 8px;
+  margin-top: 6px;
   color: var(--sketch-ink);
   font-family: var(--sketch-hand);
-  font-size: 1.7rem;
+  font-size: 1.58rem;
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 1.08;
 }
 
 .public-sketch .home-about-name-note > span {
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--sketch-muted);
   font-family: var(--sketch-sans);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 560;
   letter-spacing: 0;
   line-height: 1.25;
@@ -136,10 +136,10 @@
   right: -116px;
   bottom: auto;
   left: auto;
-  width: min(72%, 268px);
+  width: min(66%, 240px);
   border: 1px solid rgb(63 60 56 / 10%);
   border-radius: 28px;
-  padding: 23px 26px 24px;
+  padding: 16px 19px 17px;
   background: #fffaf4;
   box-shadow: 0 20px 44px rgb(63 60 56 / 12%);
   backdrop-filter: none;
@@ -148,7 +148,7 @@
 .inner-page .sketch-about-name-card > span {
   color: var(--sketch-teal);
   font-family: var(--sketch-hand);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: -0.025em;
   text-transform: none;
@@ -156,16 +156,16 @@
 }
 
 .inner-page .sketch-about-name-card > strong {
-  margin-top: 8px;
-  font-size: 1.72rem;
+  margin-top: 5px;
+  font-size: 1.55rem;
   line-height: 1.08;
 }
 
 .inner-page .sketch-about-name-card > small {
-  margin-top: 6px;
+  margin-top: 3px;
   color: var(--sketch-muted);
   font-family: var(--sketch-sans);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 560;
   letter-spacing: 0;
   text-transform: none;
@@ -279,13 +279,13 @@
     top: 18px;
     right: auto;
     bottom: auto;
-    left: 10px;
-    width: 205px;
-    padding: 17px 19px 18px;
+    left: 4px;
+    width: 190px;
+    padding: 14px 16px 15px;
   }
 
   .public-sketch .home-about-name-note > strong {
-    font-size: 1.45rem;
+    font-size: 1.38rem;
   }
 
   .inner-page .sketch-about-name-card {
@@ -293,12 +293,12 @@
     right: -18px;
     bottom: auto;
     left: auto;
-    width: min(68%, 240px);
-    padding: 19px 21px 20px;
+    width: min(64%, 220px);
+    padding: 14px 16px 15px;
   }
 
   .inner-page .sketch-about-name-card > strong {
-    font-size: 1.48rem;
+    font-size: 1.38rem;
   }
 
   .inner-page .booking-field > span,
