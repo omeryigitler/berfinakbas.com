@@ -1,9 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+
+import { BrandMark } from "@/components/public-shell";
 
 type ChannelId = "whatsapp" | "instagram" | "phone" | "email";
 
@@ -176,15 +177,8 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
         {isOpen ? (
           <div className="contact-fab-menu" id="managed-contact-fab-menu" role="menu">
             <div className="contact-fab-heading">
-              <span className="contact-fab-mini-brand">
-                <span className="brand-symbol" aria-hidden="true">
-                  <Image src="/logo-mark.png" alt="" width={36} height={36} />
-                </span>
-                <span>
-                  <small>iletişim notu</small>
-                  <strong>Berfin Akbaş</strong>
-                </span>
-              </span>
+              <small className="contact-fab-kicker">iletişim notu</small>
+              <BrandMark compact />
             </div>
 
             {channelIds.map((id) => {
@@ -241,22 +235,21 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
           z-index: 9000;
           display: grid;
           justify-items: end;
-          gap: 13px;
+          gap: 11px;
         }
 
         .managed-contact-fab .contact-fab-trigger {
-          position: relative;
           display: grid;
-          width: 56px;
-          height: 56px;
+          width: 50px;
+          height: 50px;
           place-items: center;
-          border: 1.5px solid var(--fab-ink);
+          border: 1.35px solid var(--fab-ink);
           border-radius: 48% 52% 46% 54% / 52% 46% 54% 48%;
           background: var(--fab-ink);
-          box-shadow: 4px 5px 0 rgb(63 60 56 / 20%);
+          box-shadow: 3px 4px 0 rgb(63 60 56 / 18%);
           color: var(--fab-paper);
           cursor: pointer;
-          transform: rotate(-1.8deg);
+          transform: rotate(-1.4deg);
           transition:
             transform 170ms ease,
             box-shadow 170ms ease,
@@ -264,22 +257,10 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
             color 170ms ease;
         }
 
-        .managed-contact-fab .contact-fab-trigger::after {
-          position: absolute;
-          top: 8px;
-          right: 7px;
-          width: 8px;
-          height: 8px;
-          border: 1px solid var(--fab-paper);
-          border-radius: 50%;
-          background: var(--fab-teal);
-          content: "";
-        }
-
         .managed-contact-fab .contact-fab-trigger:hover,
         .managed-contact-fab .contact-fab-trigger:focus-visible {
-          box-shadow: 2px 3px 0 rgb(63 60 56 / 18%);
-          transform: translate(2px, 2px) rotate(0.8deg);
+          box-shadow: 2px 2px 0 rgb(63 60 56 / 16%);
+          transform: translate(1px, 1px) rotate(0.5deg);
         }
 
         .managed-contact-fab.is-open .contact-fab-trigger {
@@ -287,24 +268,20 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
           color: var(--fab-ink);
         }
 
-        .managed-contact-fab.is-open .contact-fab-trigger::after {
-          border-color: var(--fab-ink);
-        }
-
         .managed-contact-fab .contact-fab-trigger svg {
-          width: 25px;
-          height: 25px;
+          width: 22px;
+          height: 22px;
           fill: none;
           stroke: currentColor;
           stroke-linecap: round;
           stroke-linejoin: round;
-          stroke-width: 1.8;
+          stroke-width: 1.75;
         }
 
         .managed-contact-fab .contact-fab-close {
           margin-top: -2px;
           font-family: var(--fab-hand);
-          font-size: 2rem;
+          font-size: 1.72rem;
           font-weight: 500;
           line-height: 1;
         }
@@ -312,95 +289,86 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
         .managed-contact-fab .contact-fab-menu {
           position: relative;
           display: grid;
-          width: 300px;
+          width: 286px;
           overflow: visible;
-          border: 1.5px solid rgb(63 60 56 / 78%);
-          border-radius: 15px 19px 14px 18px;
+          border: 1.25px solid rgb(63 60 56 / 72%);
+          border-radius: 15px 18px 14px 17px;
           background-color: rgb(251 250 247 / 98%);
           background-image:
             linear-gradient(var(--fab-grid) 1px, transparent 1px),
             linear-gradient(90deg, var(--fab-grid) 1px, transparent 1px);
-          background-size: 22px 22px;
-          box-shadow: 7px 8px 0 rgb(63 60 56 / 14%);
+          background-size: 20px 20px;
+          box-shadow: 5px 6px 0 rgb(63 60 56 / 12%);
           color: var(--fab-ink);
-          transform: rotate(-0.35deg);
+          transform: rotate(-0.25deg);
           animation: contact-fab-note-in 180ms ease-out both;
         }
 
         .managed-contact-fab .contact-fab-menu::before {
           position: absolute;
-          top: -11px;
+          top: -9px;
           left: 50%;
-          width: 78px;
-          height: 20px;
-          background: rgb(235 218 172 / 72%);
-          box-shadow: 0 1px 0 rgb(63 60 56 / 7%);
+          width: 70px;
+          height: 17px;
+          background: rgb(235 218 172 / 70%);
+          box-shadow: 0 1px 0 rgb(63 60 56 / 6%);
           content: "";
-          transform: translateX(-50%) rotate(1.8deg);
+          transform: translateX(-50%) rotate(1.5deg);
         }
 
         .managed-contact-fab .contact-fab-heading {
-          display: flex;
-          justify-content: center;
-          padding: 20px 18px 14px;
-          border-bottom: 1px solid rgb(63 60 56 / 16%);
+          display: grid;
+          justify-items: center;
+          gap: 2px;
+          padding: 16px 16px 11px;
+          border-bottom: 1px solid rgb(63 60 56 / 14%);
         }
 
-        .managed-contact-fab .contact-fab-mini-brand {
+        .managed-contact-fab .contact-fab-kicker {
+          color: var(--fab-teal);
+          font-family: var(--fab-hand);
+          font-size: 0.55rem;
+          font-weight: 800;
+          letter-spacing: 0.01em;
+          transform: rotate(-1.2deg);
+        }
+
+        .managed-contact-fab .contact-fab-heading .brand-mark {
           display: inline-flex;
-          gap: 10px;
+          gap: 7px;
           align-items: center;
+          color: var(--fab-ink);
           font-family: var(--fab-hand);
         }
 
-        .managed-contact-fab .contact-fab-mini-brand > span:last-child {
-          display: grid;
-          gap: 1px;
+        .managed-contact-fab .contact-fab-heading .brand-mark > .brand-symbol:first-child {
+          width: 52px !important;
+          height: 34px !important;
+          flex: 0 0 52px !important;
+          filter: none !important;
         }
 
-        .managed-contact-fab .contact-fab-mini-brand small {
-          color: var(--fab-teal);
-          font-size: 0.58rem;
-          font-weight: 800;
-          transform: rotate(-1.5deg);
-        }
-
-        .managed-contact-fab .contact-fab-mini-brand strong {
-          font-size: 0.94rem;
+        .managed-contact-fab .contact-fab-heading .brand-mark > span:last-child strong {
+          display: block;
+          font-size: 0.87rem;
           font-weight: 800;
           letter-spacing: -0.045em;
-        }
-
-        .managed-contact-fab .contact-fab-mini-brand .brand-symbol {
-          display: grid;
-          width: 38px;
-          height: 38px;
-          place-items: center;
-          overflow: hidden;
-          border: 0;
-          border-radius: 0;
-          background: transparent;
-          filter: grayscale(1) contrast(1.18);
-        }
-
-        .managed-contact-fab .contact-fab-mini-brand .brand-symbol img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
+          line-height: 1.05;
         }
 
         .managed-contact-fab .contact-fab-menu > a {
           display: grid;
-          grid-template-columns: 1fr 38px;
-          gap: 12px;
+          grid-template-columns: minmax(0, 1fr) 30px;
+          gap: 10px;
           align-items: center;
-          min-height: 56px;
-          padding: 9px 13px 9px 17px;
-          border-bottom: 1px solid rgb(63 60 56 / 13%);
+          min-height: 49px;
+          padding: 8px 12px 8px 15px;
+          border-bottom: 1px solid rgb(63 60 56 / 12%);
           color: var(--fab-ink);
           font-family: var(--fab-hand);
-          font-size: 0.75rem;
+          font-size: 0.7rem;
           font-weight: 750;
+          line-height: 1.3;
           transition:
             background 150ms ease,
             transform 150ms ease;
@@ -408,8 +376,8 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
 
         .managed-contact-fab .contact-fab-menu > a:hover,
         .managed-contact-fab .contact-fab-menu > a:focus-visible {
-          background: rgb(8 164 156 / 7%);
-          transform: translateX(-2px);
+          background: rgb(8 164 156 / 6%);
+          transform: translateX(-1px);
         }
 
         .managed-contact-fab .contact-fab-menu > a:last-of-type {
@@ -422,32 +390,32 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
 
         .managed-contact-fab .contact-fab-action-icon {
           display: grid;
-          width: 36px;
-          height: 36px;
+          width: 30px;
+          height: 30px;
           place-items: center;
-          border: 1.25px solid rgb(63 60 56 / 70%);
+          border: 1px solid rgb(63 60 56 / 58%);
           border-radius: 48% 52% 46% 54%;
-          background: rgb(251 250 247 / 88%);
+          background: rgb(251 250 247 / 84%);
           color: var(--fab-teal);
-          box-shadow: 2px 2px 0 rgb(63 60 56 / 8%);
+          box-shadow: 1px 2px 0 rgb(63 60 56 / 7%);
         }
 
         .managed-contact-fab .contact-fab-menu > a:nth-of-type(odd) .contact-fab-action-icon {
-          transform: rotate(-2deg);
+          transform: rotate(-1.4deg);
         }
 
         .managed-contact-fab .contact-fab-menu > a:nth-of-type(even) .contact-fab-action-icon {
-          transform: rotate(2deg);
+          transform: rotate(1.4deg);
         }
 
         .managed-contact-fab .contact-fab-action-icon svg {
-          width: 18px;
-          height: 18px;
+          width: 15px;
+          height: 15px;
           fill: none;
           stroke: currentColor;
           stroke-linecap: round;
           stroke-linejoin: round;
-          stroke-width: 1.75;
+          stroke-width: 1.65;
         }
 
         .managed-contact-fab .contact-fab-action-icon svg .filled {
@@ -458,11 +426,11 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
         @keyframes contact-fab-note-in {
           from {
             opacity: 0;
-            transform: translateY(8px) scale(0.97) rotate(-1.1deg);
+            transform: translateY(7px) scale(0.98) rotate(-0.8deg);
           }
           to {
             opacity: 1;
-            transform: translateY(0) scale(1) rotate(-0.35deg);
+            transform: translateY(0) scale(1) rotate(-0.25deg);
           }
         }
 
@@ -478,73 +446,80 @@ export default function ManagedContactFab({ hideOnHome = false }: { hideOnHome?:
           }
 
           .managed-contact-fab.contact-fab {
-            right: 15px;
-            bottom: 17px;
-            gap: 10px;
+            right: 13px;
+            bottom: 15px;
+            gap: 9px;
           }
 
           .managed-contact-fab .contact-fab-menu {
-            width: auto;
-            border: 0;
-            background: transparent;
-            box-shadow: none;
-            transform: none;
-            animation: none;
+            width: min(264px, calc(100vw - 30px));
+            border-width: 1.15px;
+            border-radius: 14px 17px 13px 16px;
+            background-size: 18px 18px;
+            box-shadow: 4px 5px 0 rgb(63 60 56 / 11%);
+            transform: rotate(-0.15deg);
           }
 
-          .managed-contact-fab .contact-fab-menu::before,
+          .managed-contact-fab .contact-fab-menu::before {
+            top: -8px;
+            width: 62px;
+            height: 15px;
+          }
+
           .managed-contact-fab .contact-fab-heading {
-            display: none;
+            display: grid;
+            padding: 14px 14px 10px;
+          }
+
+          .managed-contact-fab .contact-fab-heading .brand-mark > .brand-symbol:first-child {
+            width: 46px !important;
+            height: 30px !important;
+            flex-basis: 46px !important;
+          }
+
+          .managed-contact-fab .contact-fab-heading .brand-mark > span:last-child strong {
+            font-size: 0.82rem;
           }
 
           .managed-contact-fab .contact-fab-menu > a {
-            display: flex;
-            min-height: 0;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 4px 0;
-            border: 0;
-            background: transparent;
-            font-family: var(--fab-hand);
-          }
-
-          .managed-contact-fab .contact-fab-menu > a:hover,
-          .managed-contact-fab .contact-fab-menu > a:focus-visible {
-            background: transparent;
-            transform: none;
+            grid-template-columns: minmax(0, 1fr) 28px;
+            min-height: 45px;
+            gap: 9px;
+            padding: 7px 10px 7px 13px;
+            font-size: 0.66rem;
           }
 
           .managed-contact-fab .contact-fab-label {
-            max-width: 200px;
-            border: 1.25px solid rgb(63 60 56 / 68%);
-            border-radius: 10px 13px 9px 12px;
-            background-color: rgb(251 250 247 / 98%);
-            background-image:
-              linear-gradient(var(--fab-grid) 1px, transparent 1px),
-              linear-gradient(90deg, var(--fab-grid) 1px, transparent 1px);
-            background-size: 18px 18px;
-            padding: 8px 10px;
-            box-shadow: 3px 4px 0 rgb(63 60 56 / 11%);
-            color: var(--fab-ink);
-            font-size: 0.67rem;
-            line-height: 1.35;
-            text-align: right;
-            transform: rotate(-0.5deg);
+            max-width: none;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            text-align: left;
+            transform: none;
           }
 
           .managed-contact-fab .contact-fab-action-icon {
-            width: 42px;
-            height: 42px;
-            flex: 0 0 42px;
-            border: 1.4px solid var(--fab-ink);
-            background: var(--fab-paper);
-            color: var(--fab-teal);
-            box-shadow: 3px 4px 0 rgb(63 60 56 / 14%);
+            width: 28px;
+            height: 28px;
+            flex: 0 0 28px;
+            border-width: 1px;
+            box-shadow: 1px 1px 0 rgb(63 60 56 / 7%);
+          }
+
+          .managed-contact-fab .contact-fab-action-icon svg {
+            width: 14px;
+            height: 14px;
           }
 
           .managed-contact-fab .contact-fab-trigger {
-            width: 54px;
-            height: 54px;
+            width: 48px;
+            height: 48px;
+          }
+
+          .managed-contact-fab .contact-fab-trigger svg {
+            width: 21px;
+            height: 21px;
           }
         }
 
